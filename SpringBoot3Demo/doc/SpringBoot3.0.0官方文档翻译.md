@@ -103,3 +103,102 @@ Spring Boot 自动配置会根据你添加的 jar 依赖来尝试自动配置你
 自动配置是非侵入式的。在任何时刻，你可以开始定义你自己的配置来替换自动配置的特定部分。例如如果你添加你的 `DataSource` bean，那么默认的嵌入式数据库支持就会失效。
 
 如果你需要查明当前被应用的自动配置是哪个以及为什么，可以使用 `--debug` 开关启动你的应用。这样启用了一些选定的核心日志的 debug 日志，并且记录条件日志到控制台。
+
+### 4.2 禁用特定自动配置类
+
+如果你发现特定的不想生效的自动配置类，可以使用 `@SpringBootApplication` 的 exclude 属性来禁用它们，就像下面例子中展示的这样：
+
+```java
+@SpringBootApplication(exclude={DataSourceAutoConfiguration.class})
+public class MyApplication {
+    
+}
+```
+
+如果类不在 classpath 上，你可以使用该注解的 `excludeName` 属性，并指明完整的限定名称作为替代。如果你更喜欢使用 `@EnableAutoConfiguration` 而不是 `@SpringBootApplication`，则 `exclude` 和 `excludeName` 也可使用。最后，您还可以使用 `spring.autoconfig.exclude` 属性来控制要排除的自动配置类的列表。
+
+> 你可以在注解级别和使用属性定义排除项。
+
+> 即使自动注解类是 `public` 的，但该类唯一被认为是公共 API 的切面是类的名称，可用于禁用自动配置。这些类的实际内容（如嵌套配置类或 bean 方法）仅供内部使用，我们不建议直接使用。
+
+## 5. Spring Beans 和依赖注入
+
+你可以自由使用任何标准 Spring Framework 技术定义你的 bean 以及它们的注入依赖。我们通常建议使用构造器注入来组织依赖以及使用 `@ComponentScan` 来找到 bean。
+
+如果你按照上面建议的方式构造你的代码（将你的应用类放在层级最高的包），你可以添加没有任何参数的 `@ComponentScan` ，或使用隐式地包含它的 `@SpringBootApplication` 注解。所有你应用的组件（`@Component`、`@Service`、`@Repository`、`@Controller` 以及其他）将自动注册为 Spring Bean。
+
+下面例子展示了一个使用构造器注入来获取一个所需 `RiskAssessor` bean 的 `@Service` Bean：
+
+```java
+@Service
+public class MyAccountService implements AccountService {
+    private final RiskAssessor riskAssessor;
+    public MyAccountService(RiskAssessor riskAssessor) {
+        this.riskAssessor = riskAssessor;
+    }
+    // ...
+}
+```
+
+如果一个 bean 有多于一个构造器，你将需要给你希望 Spring 使用的那个标记 `@Autowired`：
+
+```java
+@Service
+public class MyAccountService implements AccountService {
+    private final RiskAssessor riskAssessor;
+    private final PrintStream out;
+    @Autowired
+    public MyAccountService(RiskAssessor riskAssessor) {
+        this.riskAssessor = riskAssessor;
+        this.out = System.out;
+    }
+    public MyAccountService(RiskAssessor riskAssessor, PrintStream out) {
+        this.riskAssessor = riskAssessor;
+        this.out = out;
+    }
+}
+```
+
+> 注意使用构造器注入是如何让 `riskAssessor` 字段被标记为 `final` 的，说明它在之后不能被修改。
+
+## 6. 使用 @SpringBootApplication
+
+许多 Spring Boot 开发者喜欢他们的应用使用自动配置，组件扫描，以及可以在他们的“应用类”定义额外的配置。可以使用 `@SpringBootApplication` 一个注解来完成那三个特点：
+
+- `@EnableAutoConfiguration`：启用 Spring Boot 的自动配置机制
+- `@ComponentScan`：在应用所在的包内启用 `@Component` 扫描
+- `@SpringBootConfiguration`：启动额外 bean 在上下文的注册或额外配置类的导入。这是一个帮助你在集成测试中检测配置的 Spring 标准 `@Configuration` 的替代方案
+
+```java
+// 相等于 @SpringBootConfiguration @EnableAutoConfiguration @ComponentScan
+@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+```
+
+> `@SpringBootApplication` 也提供了别名来自定义 `@EnableAutoConfiguration` 和 `@ComponentScan` 的属性。
+
+> 这些特征都并非强制的，你可以选择用任何它启用的特征来替换这个注解。例如，你可能在你的应用中不想使用组件扫描或配置属性扫描：
+>
+> ```java
+> @SpringBootConfiguration(proxyBeanMethods = false)
+> @EnableAutoConfiguration
+> @Import({SomeConfiguration.class, AnotherConfiguration.class})
+> public class MyApplication {
+>     public static void main(String[] args) {
+>         SpringApplication.run(MyApplication.class, args);
+>     }
+> }
+> ```
+>
+> 示例中，`MyApplication` 除了 `@Component` 注解的类和 `@ConfigurationProperties` 注解的类不会自动被自动检测到并且用户定义的 bean 需要显式地导入（参见 `@Import`）
+
+## 7. 运行你的应用
+
+将你的应用打包成 jar 且使用内嵌的 HTTP 服务器的一大好处是你可以像运行其他应用程序一样运行你的应用。这同样适用于调试 Spring Boot 应用。你不需要任何特别的 IDE 插件或扩展。
+
+> 这一节只包含基于 jar 包的内容。如果你选择将你的应用打包为 war 文件，请参考你的服务器和 IDE 文档。
+
