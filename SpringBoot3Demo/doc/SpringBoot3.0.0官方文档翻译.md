@@ -1,4 +1,4 @@
-# 开始
+# 入门
 
 ## 1. 介绍 Spring Boot
 
@@ -324,6 +324,296 @@ dependencies {
 ```properties
 spring.devtools.restart.log-condition-evaluation-delta=false
 ```
+
+#### 8.3.2 排除资源
+
+特定资源并不必须在它们被修改时触发一次重启。例如，Thymeleaf 模板可以被就地编辑。默认情况下，改变在 `/META-INF/maven`，`/META-INF/resources`，`/resources`，`/static`，`/public`，或 `/templates` 中的资源不会触发一次重启，但会触发一次实时重载。如果你想自定义这些排除项，你可以使用 `spring.devtools.restart.exclude` 属性。例如，为了仅排除 `/static` 和 `/public`，你将配置如下属性：
+
+```properties
+spring.devtools.restart.exclude=static/**,public/**
+```
+
+> 如果你想保持这些默认值并添加额外的排除项，使用 `spring.devtools.restart.additional-exclude` 属性作为替代。
+
+#### 8.3.3 监控额外的路径
+
+你可能想要你的应用在你修改不在 classpath 的配置文件时被重启或重载。要做到这点，使用 `spring.devtools.restart.additional-paths` 属性来配置额外的路径来查看改变。你可以使用之前描述的 `spring.devtools.restart.exclude` 属性来控制在额外路径下的改变是否触发一次完整的重启或一次实时重载。
+
+#### 8.3.4 禁用重启
+
+如果你不想使用重启特性，你可以使用 `spring.devtools.restart.enabled` 属性来禁用它。在大多数情况下，你可以在你的 `application.properties` 中设置这个属性（这样做仍然会初始化重启类加载器，但它不会监控文件改变）。
+
+如果你需要完全禁用重启支持（例如，因为它和特定的库不兼容），你需要在调用 `SpringApplication.run(...)` 前将 `spring.devtools.restart.enabled` 系统属性设置为 `false`，就像下面例子中展示的那样：
+
+```java
+@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        System.setProperty("spring.devtools.restart.enabled", "false");
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+```
+
+#### 8.3.5 使用触发器文件
+
+如果你使用可以连续编译改变文件的 IDE，你可能更希望只在特定时机触发重启。为了这样，你可以使用一个“触发器文件”，即你想要真正触发一次重启检查时必须修改的一个特殊文件。
+
+> 任何对该文件的更新都会触发一次检查，但仅仅在开发工具检测到它有事情做时才真正发生重启。
+
+为了使用触发器文件，设置 `spring.devtools.restart.trigger-file` 属性为你触发器文件的名字（去掉任何路径）。这个触发器文件必须放在你的 classpath 中。
+
+例如，你有一个具有下面结构的项目：
+
+```
+src
++- main
+   +- resources
+      +- .reloadtrigger
+```
+
+那么你的 `trigger-file` 属性将是：
+
+```properties
+spring.devtools.restart.trigger-file=.reloadtrigger
+```
+
+重启将只在 `src/main/resources/.reloadtrigger` 更新时发生。
+
+> 你可能想把 `spring.devtools.restart.trigger-file` 设置为一个全局设置，这样所有你的项目都可以遵循一个行为方式。
+
+一些 IDE 拥有一些特性，可以帮助你摆脱手动更新你的触发器文件的工作。Spring Tools for Eclipse 和 IntelliJ IDEA（终极版）都有这样的支持。使用 Spring Tools，你可以从控制台视角使用“reload”按钮（只要你的 `trigger-file` 名字是 `.reloadtrigger`）。对于 Intellij IDEA，你可以按照它们文档的指示操作。
+
+#### 8.3.6 自定义重启类加载器
+
+正如早些在“重启 vs 重载”中描述的，重启功能是通过使用两个类加载器实现的。如果这导致了问题，你可能需要自定义每个类被哪个类加载器加载。
+
+默认情况下，所有 IDE 打开的项目被重启类加载器加载，而所有常规的 `.jar` 文件通过基础类加载器加载。同样也适用于你使用 `mvn spring-boot: run` 或 `gradle bootRun` 的情况：包含你的 `@SpringBootApplication` 的项目被重启类加载器加载，而其他的被基础类加载器加载。
+
+你可以通过创建一个 `META-INF/spring-devtools.properties` 文件来命令 Spring Boot 使用不同的类加载器来加载你的项目组成部分。这个 `spring-devtools.properties` 文件可以包含前缀为 `restart.exclude` 和 `restart.include` 的配置项。`include` 元素是需要上提到重启类加载器中的项，`exclude` 元素是应当下推到基础类加载器的项。配置文件的值是应用到 classpath 的正则表达式，如同下面例子展示的：
+
+```properties
+restart.exclude.companycommonlibs=/mycorp-common-[\\w\\d-\\.]+\\.jar
+restart.include.projectcommon=/mycorp-myproj-[\\w\\d-\\.]+\\.jar
+```
+
+> 所有的配置项键必须不一样。只要配置项是以 `restart.include.` 或 `restart.exclude.` 开始的，它就会生效。
+
+> 所有在 classpath 下的 `META-INF/spring-devtools.properties` 都会被加载。你可以在你的项目中或者在项目使用的库中将这些文件打包。
+
+#### 8.3.7 已知限制
+
+重启功能不能很好地处理使用标准 `ObjectInputStream` 反序列化的对象。如果你需要反序列化数据，你可能需要组合使用 Spring 的 `ConfigurableObjectInputStream` 和 `Thread.currentThread().getContextClassLoader()`。
+
+不幸的是，部分三方库反序列化没有考虑上下文类加载器。如果你找到了这样的问题，你需要请求原作者进行修复。
+
+### 8.4 LiveReload
+
+`spring-boot-devtools` 模组包括了一个嵌入式的 LiveReload 服务器，可以用来在资源改变时触发浏览器刷新。Chrome 的 LiveReload 浏览器插件可以免费获取，Firefox 和 Safari 的需要从 livereload.com 获取。
+
+如果你不想在你的应用运行时启动 LiveReload 服务器，你可以将 `spring.devtools.livereload.enabled` 配置项设置为 `false`。
+
+> 你只可以同时运行一个 LiveReload 服务器。在启动你的应用前，确保没有其他 LiveReload 服务器正在运行。如果你在 IDE 启动了多个应用，只有第一个拥有 LiveReload 支持。
+
+> 为了在一个文件更改时触发 LiveReload，自动化重启必须被开启。
+
+### 8.5 全局设置
+
+你可以通过在 `$HOME/.config/spring-boot` 目录增加下面任意文件来配置全局开发工具：
+
+1. `spring-boot-devtools.properties`
+2. `spring-boot-devtools.yaml`
+3. `spring-boot-devtools.yml`
+
+这些文件中增加的任意配置项会应用到你机器上使用开发工具的*所有* Spring Boot 应用。例如，为了配置一直使用触发器文件来重启，你需要在你的 `spring-boot-devtools` 文件中增加如下配置：
+
+```properties
+spring.devtools.restart.trigger-file=.reloadtrigger
+```
+
+默认情况下，`$HOME` 是用户的主目录。想要自定义这个位置的话，需要配置 `SPRING_DEVTOOLS_HOME` 环境变量或 `spring.devtools.home` 系统配置。
+
+> 如果开发工具配置文件没有在 `$HOME/.config/spring-boot` 下找到，会在 `$HOME` 目录的根目录寻找 `.spring-boot-devtools.properties` 的存在。这允许你使用不支持 `$HOME/.config/spring-boot` 的老版本 Spring Boot 分享的开发工具全局配置。
+
+> Profiles 在开发工具 properties/yaml 文件中不支持。
+>
+> 任何在 `.spring-boot-devtools.properties` 中激活的 profile 将不会影响 profile 指定配置文件的加载。Profile 特定文件名（之前 `spring-boot-devtools-<profile>.properties`）和 `spring.config.activate.on-profile` 文档在 YAML 和 Properties 文件中都不支持。
+
+#### 8.5.1 配置文件系统监视器
+
+FileSystemWatcher 的工作方式是以一定时间间隔轮询类的更改，然后等待预定义好的静默期来确保没有更多修改。因为 Spring Boot 完全依赖于 IDE 来编译和复制文件到 Spring Boot 可以读取到的位置，你可能发现在开发工具重新启动应用程序时，有时某些更改没有反映出来。如果你经常观察到此类问题，请尝试增加 `spring.devtools.restart.poll-interval` 和 `spring.devtools.restart.quiet-period` 参数到你开发环境合适的值：
+
+```properties
+spring.devtools.restart.poll-interval=2s
+spring.devtools.restart.quiet-period=1s
+```
+
+这个监视的 classpath 目录现在每 2 秒轮询一次改变，并且持续 1 秒的静默期来确保没有更多的类更改。
+
+### 8.6 远程应用
+
+Spring Boot 开发者工具不只限于本地开发。你可以在远程运行应用时使用一些特性。远程支持是可选的，因为启动它可能导致安全风险。它应该只在受信网络中运行或使用 SSL 保证安全时被启用。如果这两个选项都不可用，则不应该使用开发工具的远程支持。你永远不应该在生产环境里启动这个支持。
+
+为了启用它，你需要确保 `devtools` 被包括在重新打包的 archive 里，就像下面展示的：
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+                <excludeDevtools>false</excludeDevtools>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+然后你需要设置 `spring.devtools.remote.secret` 属性。就像所有的重要密码或密钥，这个值应该是独特的而且保密性强，这样它才不会被猜中或者暴力破解。
+
+远程开发工具支持在两个部分中提供：接受连接的服务器端终端和在你的 IDE 中运行的客户端应用。在 `spring.devtools.remote.secret` 属性被配置时，服务器组件会自动启动。客户端组件需要手动启动。
+
+> Spring WebFlux 应用不支持远程开发工具。
+
+#### 8.6.1 运行远程客户端应用
+
+远程客户端应用被设计在你的 IDE 中运行。你需要在和你要连接的远程项目相同的 classpath 运行 `org.springframework.boot.devtools.RemoteSpringApplication` 。这个应用唯一需要的参数是它要连接的远程 URL。
+
+例如，如果你在使用 Eclipse 或 Spring Tools ，并且你拥有一个已经部署在 Cloud Foundry 的叫 `my-app` 的项目，你应该按下面步骤操作：
+
+- 选择 `Run` 目录的 `Run Configurations...`
+- 创建一个新的 `Java 应用` “启动配置”
+- 浏览 `my-app` 项目
+- 使用 `org.springframework.boot.devtools.RemoteSpringApplication` 作为主类
+- 将 `https://myapp.cfapps.io` 增加到 `程序参数`（或者任何你的远程 URL）
+
+运行远程客户端可能和下面内容相似：
+
+```
+  .   ____          _                                              __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _          ___               _      \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` |        | _ \___ _ __  ___| |_ ___ \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| []::::::[]   / -_) '  \/ _ \  _/ -_) ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, |        |_|_\___|_|_|_\___/\__\___|/ / / /
+ =========|_|==============|___/===================================/_/_/_/
+ :: Spring Boot Remote ::  (v3.0.0)
+
+2022-11-24T17:03:45.349Z  INFO 20660 --- [           main] o.s.b.devtools.RemoteSpringApplication   : Starting RemoteSpringApplication v3.0.0 using Java 17.0.5 with PID 20660 (/Users/myuser/.m2/repository/org/springframework/boot/spring-boot-devtools/3.0.0/spring-boot-devtools-3.0.0.jar started by myuser in /opt/apps/)
+2022-11-24T17:03:45.353Z  INFO 20660 --- [           main] o.s.b.devtools.RemoteSpringApplication   : No active profile set, falling back to 1 default profile: "default"
+2022-11-24T17:03:46.281Z  INFO 20660 --- [           main] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2022-11-24T17:03:46.364Z  INFO 20660 --- [           main] o.s.b.devtools.RemoteSpringApplication   : Started RemoteSpringApplication in 2.675 seconds (process running for 3.514)
+```
+
+> 因为远程客户端使用和真实应用相同的 classpath，它可以直接读取应用配置。这是读取 `spring.devtools.remote.secret` 配置然后将其传递到服务端验证的方式。
+
+> 始终建议使用 `https://` 作为连接协议，这样流量会被加密且密钥不会被拦截。
+
+> 如果你需要使用代理来访问远程应用，请配置 `spring.devtools.remote.proxy.host` 和 `spring.devtools.remote.proxy.port` 配置项
+
+#### 8.6.2 远程更新
+
+远程客户端像本地重启一样监控你的应用 classpath 的更改。任何更新的资源会被推送到远程应用并（如果需要的话）触发一次重启。这有助于你使用本地没有的云服务进行迭代特性。一般地，远程更新和重启比全量重新构建和部署的循环快很多。
+
+在更慢的开发环境，可能出现静默期不够的情况，类的改变可能被分到不同的批次中。服务器在第一批处理的类修改被上传时就重启了。下一批处理不能被发送到应用，因为服务器正在被重启。
+
+这通常表现为关于上传一些类失败以及随后的重试的 `RemoteSpringApplication` 日志中的警告。但它可能导致应用代码的不一致并导致在第一批修改被上传时重启失败。如果你经常观察到这样的问题，试着增加 `spring.devtools.restart.poll-interval` 和 `spring.devtools.restart.quiet-period` 参数到适合你的开发环境的值。参考配置文件系统监视器一节来配置这些。
+
+> 文件只在远程客户端运行时被监视。如果你在远程客户端启动前改变一个文件，它将不会被推送到远程服务端。
+
+## 9. 为生产环境打包你的应用
+
+可执行的 jar 能够被生产环境部署使用。因为它们是独立的，所以它们也适合基于云的部署。
+
+为了额外的“生产就绪”特性，例如健康、审计和度量 REST 或 JMX 终端，考虑添加 `spring-boot-actuator`。
+
+# 核心特性
+
+这一部分深入到 Spring Boot 的细节中。这里你可以学习到你可能想要使用和自定义的关键特性。如果你还没有这样做，你可能需要阅读“入门”和“使用 Spring Boot 开发”部分，这样你就有了良好的基础知识储备。
+
+## 1. SpringApplication
+
+`SpringApplication` 类提供了一个简便的方式来从一个 `main()` 方法来启动 Spring 应用。很多情况下，你可以委托给静态的 `SpringApplication.run()` 方法，就像下面例子展示的：
+
+```java
+@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+```
+
+当你的应用启动时，你应该看到类似下面的输出：
+
+```
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.0.0)
+
+2022-11-24T17:03:48.214Z  INFO 20764 --- [           main] o.s.b.d.f.s.MyApplication                : Starting MyApplication using Java 17.0.5 with PID 20764 (/opt/apps/myapp.jar started by myuser in /opt/apps/)
+2022-11-24T17:03:48.219Z  INFO 20764 --- [           main] o.s.b.d.f.s.MyApplication                : No active profile set, falling back to 1 default profile: "default"
+2022-11-24T17:03:50.511Z  INFO 20764 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2022-11-24T17:03:50.524Z  INFO 20764 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2022-11-24T17:03:50.524Z  INFO 20764 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.1]
+2022-11-24T17:03:50.623Z  INFO 20764 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2022-11-24T17:03:50.625Z  INFO 20764 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2269 ms
+2022-11-24T17:03:51.380Z  INFO 20764 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2022-11-24T17:03:51.418Z  INFO 20764 --- [           main] o.s.b.d.f.s.MyApplication                : Started MyApplication in 3.872 seconds (process running for 5.008)
+2022-11-24T17:03:51.506Z  INFO 20764 --- [ionShutdownHook] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+```
+
+默认情况下，`INFO` 日志消息被展示，包括一些相关的启动细节，例如启动应用的用户。如果你需要 `INFO` 之外的其他日志级别，你可以设置它，在“日志级别“中描述。应用版本使用主应用类的包中的实现版本来决定的。启动信息日志可以使用 `spring.main.log-startup-info` 配置为 `false` 来关闭。这也关闭了应用激活的 profile 的日志。
+
+> 为了在启动时添加额外的日志，你可以在 `SpringApplication` 的子类中重写 `logStartupInfo(boolean)`
+
+### 1.1 启动失败
+
+如果你的应用启动失败，注册的 `FailureAnalyzers` 获得了提供独立错误信息和执行修复错误的具体行为的机会。例如，如果你在端口 `8080` 上启动一个 web 应用且端口已经被使用，你可以看到类似下面的信息：
+
+```
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Embedded servlet container failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that is listening on port 8080 or configure this application to listen on another port.
+```
+
+> Spring Boot 提供很多的 `FailureAnalyzer` 实现，并且你可以增加你自己的实现。
+
+如果没有失败分析器可以处理这个异常，你仍然可以展示全部状态报告来更好地理解哪里出错了。要这样做，你需要为 `org.springframework.boot.autoconfigure.logging.ConfitionEvaluationReportLoggingListener` 启用 `debug` 属性或启用 `DEBUG` 日志。
+
+例如，如果你使用 `java -jar` 来运行你的应用，你可以像下面这样启用 `debug` 配置：
+
+```shell
+$ java -jar myproject-0.0.1-SNAPSHOT.jar --debug
+```
+
+### 1.2 延迟初始化
+
+`SpringApplication` 允许一个应用延迟初始化。当延迟初始化被启用时，bean 在它们被需要使用时被创建而不是在应用启动时。作为结果，启动延迟初始化可以降低你的应用启动的耗时。在 web 应用，启动延迟初始化会导致很多 web 相关的 bean 在收到一个 HTTP 请求前不被初始化。
+
+延迟初始化的一个缺点是它会延迟应用问题的发现。如果一个错误配置的 bean 被延迟初始化，错误不会再在启动时出现，而问题将在 bean 初始化时才可见。还必须注意确保 JVM 拥有足够的内存来容纳全部应用 bean 而不仅仅是启动时初始化的那些。因为这些原因，延迟初始化默认是不启用的，并且建议在启用延迟初始化前对 JVM 的堆大小进行细致的调校。
+
+延迟初始化可以使用 `SpringApplicationBuilder` 的 `lazyInitialization` 方法或 `SpringApplication` 的 `setLazyInitialization` 方法在程序中启用。此外，也可以使用如下例子的 `spring.main.lazy-initialization` 属性来启用：
+
+```properties
+spring.main.lazy-initialization=true
+```
+
+> 如果你希望在对应用的其他部分启用延迟初始化时对特定 bean 禁用延迟初始化，你可以显式地使用 `@Lazy(false)` 注解来设置它们的 lazy 属性为 false。
+
+### 1.3 自定义横幅
 
 
 
