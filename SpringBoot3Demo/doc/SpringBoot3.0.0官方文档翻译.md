@@ -615,9 +615,193 @@ spring.main.lazy-initialization=true
 
 ### 1.3 自定义横幅
 
+启动时打印的横幅可以通过增加 `banner.txt` 文件到你的 classpath 或设置 `spring.banner.location` 属性来指定该文件的位置来改变。如果文件的编码不是 UTF-8，你可设置 `spring.banner.charset`。
+
+在你的 `banner.txt` 文件中，你可以使用所有在 `Environment` 中可用的键，也可以使用下面所有的占位符。
+
+| 变量                                                         | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `${application.version}`                                     | 在 `MANIFEST.MF` 中声明的你的应用版本号。例如，`Implementation-Version: 1.0` 被打印为 `1.0` |
+| `${application.formatted-version}`                           | 在 `MANIFEST.MF` 中声明的且为展示而格式化好了（使用小括号包裹且增加 `v` 前缀）的你的应用版本号。例如 `(v1.0)`. |
+| `${spring-boot.version}`                                     | 你使用的 Spring Boot 版本，例如 `3.0.0`.                     |
+| `${spring-boot.formatted-version}`                           | 为展示而格式化好了（使用小括号包裹且增加 `v` 前缀）的你使用的 Spring Boot 版本，例如 `(v3.0.0)`. |
+| `${Ansi.NAME}` (or `${AnsiColor.NAME}`, `${AnsiBackground.NAME}`, `${AnsiStyle.NAME}`) | `NAME` 是 ANSI 转义代码的名称。有关详细信息，请参见 `AnsiPropertySource`。 |
+| `${application.title}`                                       | 在 `MANIFEST.MF` 中声明的你的应用标题。例如 `Implementation-Title: MyApp` 被打印为 `MyApp`. |
+
+> 在你想要用程序生成一个横幅时，可以使用 `SpringApplication.setBanner(...)` 方法。使用 `org.springframework.boot.Banner` 接口并实现你自己的 `printBanner()` 方法。
+
+你也可以使用 `spring.main.banner-mode` 属性来决定横幅需要打印到 `System.out`（`console`），发送到配置的日志（`log`）或者根本不需要生成（`off`）。
+
+打印的横幅被注册为一个单例 bean，使用以下名字： `springBootBanner`。
+
+> `${application.version}` 和 `${application.formatted-version}` 属性仅在你使用 Spring Boot 启动器时可用。如果你使用 `java -cp <classpath> <mainclass>` 启动运行一个没打包的 jar，这些值将不会被解析。
+>
+> 这正是我们建议你总是使用 `java org.springframework.boot.loader.JarLauncher` 启动未打包的 jar。这将在构建 classpath 前初始化 `application.*` 横幅变量并启动你的应用。
+
+### 1.4 自定义 SpringApplication
+
+如果 `SpringApplication` 默认值不符合你的品味，你可以创建一个本地实例并自定义它。例如，为了关闭横幅，你可以写：
+
+```java
+@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication application = new SpringApplication(MyApplication.class);
+        application.setBannerMode(Banner.Mode.OFF);
+        application.run(args);
+    }
+}
+```
+
+> 传递给 `SpringApplication` 的构造器参数是 Spring bean 的配置来源。大多数情况下，这些是 `@Configuration` 类的引用，但它们也可以是 `@Component` 类的直接引用。
+
+它也可能使用 `application.properties` 文件配置 `SpringApplication`。细节请参考“外部化配置”。
+
+获取完整的配置选项列表，请参看 `SpringApplication` 的 javadoc。
+
+### 1.5 流式建造者（Fluent Builder） API
+
+如果你需要建造一个 `ApplicationContext` 层级结构（多个具有父子关系的上下文）或如果你更喜欢使用一个“流式”（fluent）的建造者 API，你可以使用 `SpringApplicationBuilder`。
+
+`SpringApplicationBuilder` 让你将多个方法调用锁定在一起并包含可以让你创建一个层级结构的 `parent` 和 `child` 方法，就像下面例子展示的那样：
+
+```java
+new SpringApplicationBuilder()
+        .sources(Parent.class)
+        .child(Application.class)
+        .bannerMode(Banner.Mode.OFF)
+        .run(args);
+```
+
+> 在创建 `ApplicationContext`  层级结构时有一些限制。例如，Web 组件必须包含在子上下文中，并且父上下文和子上下文使用相同的 `Environment`。参考 `SpringApplicationBuilder` 的 Javadoc 获取完整细节。
+
+### 1.6 应用可用性
+
+当部署在平台上时，应用可以使用例如 Kubernetes Probes 之类的基础设施给平台提供它们的可用性信息。Spring Boot 包含对常用的“活跃”（liveness）和“就绪”（readiness）可用性状态的开箱即用支持。如果你正在使用 Spring Boot 的 “actuator” 支持，那么这些状态将作为健康端点组公开出来。
+
+另外的，你也可以通过注入 `ApplicationAvailability` 接口到你自己的 bean 来获取可用性状态。
+
+#### 1.6.1 活跃状态
+
+一个应用的“活跃”状态指示它的内部状态是否让它可以正确工作，或者如果它正在失败状态中的话能否恢复它自己。一个中断（broken）的“活跃状态”意味着应用处于一个它不能恢复的状态，基础设施应该重启应用。
+
+> 一般来说，“活跃”状态不应该基于外部的检查，例如“健康检查”。如果这样做的话，一个故障的外部系统（数据库、Web API、外部缓存）将触发大量的重启和跨平台的级联故障。
+
+Spring Boot 应用的内部状态大多数通过 Spring `ApplicationContext` 展示。如果应用上下文成功地启动，Spring Boot 假设应用处于一个可效（valid）的状态。当上下文已经被刷新时，应用被认为是活跃的，参考 Spring Boot 应用生命周期和相关的应用事件。
+
+#### 1.6.2 就绪状态
+
+一个应用的“就绪”状态指示了应用是否准备好处理流量。一个失败的“就绪”状态告诉平台现在不应该将流量路由到应用。这经常发生在启动期间，即当 `CommandLineRunner` 和 `ApplicationRunner` 组件正在被处理时，或者任何应用认为它过于忙以至于无法处理更多流量的时候。
+
+一旦应用和命令行运行程序被调用时，应用被认为就绪，参考 Spring Boot 应用生命周期和相关的应用事件。
+
+> 需要在启动时运行的任务应该被 `CommandLineRunner` 和 `ApplicationRunner` 组件执行，而不是使用 Spring 组件的生命周期回调，例如 `@PostConstuct`
+
+#### 1.6.3 处理应用可用性状态
+
+应用组件可以通过注入 `ApplicationAvailability` 接口并调用其上的方法在任何时间取得当前的可用性状态。更加通常地，应用希望监听状态更新或更新应用状态。
+
+例如，我们将应用“就绪”状态导出到文件中，这样 Kubernetes 的“执行 Probe”就可以查看这个文件：
+
+```java
+@Component
+public class MyReadinessStateExporter {
+
+    @EventListener
+    public void onStateChange(AvailabilityChangeEvent<ReadinessState> event) {
+        switch (event.getState()) {
+            case ACCEPTING_TRAFFIC:
+                // create file /tmp/healthy
+                break;
+            case REFUSING_TRAFFIC:
+                // remove file /tmp/healthy
+                break;
+        }
+    }
+
+}
+```
+
+当应用崩溃且无法恢复时，我们也可以更新应用的状态：
+
+```java
+@Component
+public class MyLocalCacheVerifier {
+
+    private final ApplicationEventPublisher eventPublisher;
+
+    public MyLocalCacheVerifier(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    public void checkLocalCache() {
+        try {
+            // ...
+        }
+        catch (CacheCompletelyBrokenException ex) {
+            AvailabilityChangeEvent.publish(this.eventPublisher, ex, LivenessState.BROKEN);
+        }
+    }
+
+}
+```
+
+Spring Boot 通过 Actuator Health Endpoints 提供“活跃” 和“就绪”的 Kubernetes HTTP 探针。你可以在专门部分获取更多关于在 Kubernetes 部署 Spring Boot 应用的指导。
+
+### 1.7 应用事件和监听器
+
+除了常用的 Spring Framework 事件，例如 `ContextRefreshedEvent`，`SpringApplication` 会发送一些额外的应用事件。
+
+> 一些事件其实在 `ApplicationContext` 创建前就实际被触发了，所以你不能在那些 `@Bean` 上注册监听器。你可以使用 `SpringApplication.addListeners(...)` 方法或 `SpringApplicationBuilder.listeners(...)` 方法注册它们。
+>
+> 如果你想要那些监听器被自动注册，而不管应用是如何创建的，你可以添加一个 `META-INF/spring.factories` 文件到你的项目中，并且使用 `org.springframework.context.ApplicationListener` 键来引用你的监听器，就像下面例子中展示的：
+>
+> ```
+> org.springframework.context.ApplicationListener=com.example.project.MyListener
+> ```
+
+当你的应用运行时，应用事件按照下面顺序发送：
+
+1. 在一次运行开始时但在任何除了监听器和初始化器注册以外的处理前，发送一个 `ApplicationStartingEvent`
+2. 当上下文中要使用的 `Environment` 已知而在上下文创建前，发送一个 `ApplicationEnvironmentPreparedEvent`
+3. 当 `ApplicationContext` 准备好且 ApplicationContextInitializer 已经被调用但在任何 bean 定义被加载前，发送一个 `ApplicationContextInitializedEvent`
+4. 在刷新开始前，bean 定义加载后，发送一个 `ApplicationPreparedEvent`
+5. 在上下文刷新后，但任何应用和命令行启动程序还没被调用前，发送一个 `ApplicationStartedEvent`
+6. 在 `LivenessState.CORRECT` 指示应用已经被认为活跃后，发送一个 `AvailabilityChangeEvent`
+7. 任何应用和命令行启动程序被调用后，发送一个 `ApplicationReadyEvent`
+8. 在 `ReadinessState.ACCEPTING_TRAFFIC` 指示应用准备好接受服务请求后，发送一个 `AvailabilityChangeEvent` 
+9. 如果启动过程中有异常，发送一个 `ApplicationFailedEvent`
+
+上面的列表只包含了绑定在 `SpringApplication` 上的 `SpringApplicationEvent`。除此之外，下面事件也在 `ApplicationPreparedEvent` 之后和 `ApplicationStartedEvent` 之前：
+
+- 在 `WebServer` 准备好之后，发送一个 `WebServerInitializedEvent`。`ServletWebServerInitializedEvent` 和 `ReactiveWebServerInitializedEvent` 是 servlet 和响应式各自的变种。
+- 当 `ApplicationContext` 被刷新时，发送一个 `ContextRefreshedEvent`
+
+> 你通常不需要使用应用事件，但知道它们的存在会有所帮助。Spring Boot 在内部使用事件来处理各种任务。
+
+> 默认情况下，事件监听器不应该运行可能耗时很长的任务，因为它们在同一个线程中执行。考虑使用应用和命令行运行程序作为替代。
+
+应用事件使用 Spring 框架的事件发布机制来发送。这个机制的一部分确保在子上下文中发布给监听器的事件也发布给所有祖先上下文中的监听器。结果就是，如果你的应用使用 `SpringApplication` 实例的层级结构，一个监听器可能接受到多个相同实例的应用事件。
+
+为了让你的监听器可以分辨它上下文的事件和后代上下文的事件，它应该请求注入其应用程序上下文，然后将注入的上下文与事件上下文进行比较。上下文可以通过实现 `ApplicationContextAware` 来注入，如果监听器是bean，则可以使用 `@Autowired` 来注入。
+
+### 1.8 Web 环境
+
+`SpringApplication` 尝试代表你来创建正确的 `ApplicationContext` 类型。用于决定 `WebApplicationType` 的算法如下：
+
+- 如果有 Spring MVC，使用 `AnnotationConfigServletWebServerApplicationContext`
+- 如果没有 Spring MVC 且出现了 Spring WebFlux，使用 `AnnotationConfigReactiveWebServerApplicationContext`
+- 否则，使用 `AnnotationConfigApplicationContext`
+
+这说明如果你正在使用 Spring MVC 且 Spring WebFlux 中新的 `WebClient` 也在同一个应用中，则默认使用 Spring MVC。你可以通过调用 `setWebApplicationType(WebApplicationType)` 轻松地覆写这个。
+
+也可以通过调用 `setApplicationContextClass(...)` 来完全控制 `ApplicationContext` 的类型。
+
+> 在 JUnit 测试中使用 `SpringApplication` 时通常最好调用 `setWebApplicationType(WebApplicationType.NONE)`
+
+### 1.9 访问应用参数
 
 
-# 数据
 
 ## 2. 和 NoSQL 技术一同工作
 
