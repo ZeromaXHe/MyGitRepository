@@ -801,7 +801,170 @@ Spring Boot 通过 Actuator Health Endpoints 提供“活跃” 和“就绪”�
 
 ### 1.9 访问应用参数
 
+如果你需要访问传递到 `SpringApplication.run(...)` 的应用参数，你可以注入一个 `org.springframework.boot.ApplicationArguments` bean。`ApplicationArguments` 接口提供了访问原始 `String[]` 参数和解析好的 `option` 和 `non-option` 参数，就像下面例子展示的：
 
+```java
+@Component
+public class MyBean {
+
+    public MyBean(ApplicationArguments args) {
+        boolean debug = args.containsOption("debug");
+        List<String> files = args.getNonOptionArgs();
+        if (debug) {
+            System.out.println(files);
+        }
+        // if run with "--debug logfile.txt" prints ["logfile.txt"]
+    }
+
+}
+```
+
+> Spring Boot 也会注册一个拥有 Spring `Environment` 的 `CommandLinePropertySource`。这使得你也可以通过 `@Value` 注解来注入单个应用参数。
+
+### 1.10 使用 ApplicationRunner 或 CommandLineRunner
+
+如果你需要在 `SpringApplication` 启动时运行一些特定的代码，你可以实现 `ApplicationRunner` 或 `CommandLineRunner` 接口。两个接口都按同样的方式运行，提供一个独立的 `run` 方法，它会在 `SpringApplication.run(...)` 完成前被调用。
+
+> 这个合约非常适合在应用程序启动之后但在开始接受流量之前运行的任务
+
+`CommandLineRunner` 接口以字符串数组的形式提供应用参数的访问，而 `ApplicationRunner` 使用前面讨论的 `ApplicationArguments` 接口。下面例子展示了一个具有 `run` 方法的 `CommandLineRunner`：
+
+```java
+@Component
+public class MyCommandLineRunner implements CommandLineRunner {
+
+    @Override
+    public void run(String... args) {
+        // Do something...
+    }
+
+}
+```
+
+如果多个需要按指定顺序调用的 `CommandLineRunner` 或 `ApplicationRunner` bean 被定义，你可以额外实现 `org.springframework.core.Ordered` 接口或使用 `org.springframework.core.annotation.Order` 注解。
+
+### 1.11 应用退出
+
+每个 `SpringApplication` 都会向 JVM 注册一个关闭钩子来确保 `ApplicationContext` 在退出时优雅地关闭。所有标准 Spring 生命周期回调（例如 `DisposableBean` 接口或 `@PreDestroy` 注解）可以被使用。
+
+此外，bean 如果想要在调用 `SpringApplication.exit()` 时返回一个特定的退出码可以实现 `org.springframework.boot.ExitCodeGenerator` 接口。这个退出码能够传递给 `System.exit()` 来作为一个状态码返回，就像下面例子展示的：
+
+```java
+@SpringBootApplication
+public class MyApplication {
+
+    @Bean
+    public ExitCodeGenerator exitCodeGenerator() {
+        return () -> 42;
+    }
+
+    public static void main(String[] args) {
+        System.exit(SpringApplication.exit(SpringApplication.run(MyApplication.class, args)));
+    }
+
+}
+```
+
+同样地，`ExitCodeGenerator` 接口可以被异常实现。当遇到这样的异常时，Spring Boot 返回实现的 `getExitCode()` 方法中提供的退出码。
+
+如果有多个 `ExitCodeGenerator`，生成的第一个非零的退出码将被使用。为了控制生成器调用的顺序，可以额外实现 `org.springframework.core.Ordered` 接口或使用 `org.springframework.core.annotation.Order` 注解。
+
+### 1.12 管理员特性
+
+通过指定 `spring.application.admin.enabled` 配置可以为应用启用管理员相关特性。这将在 `MBeanServer` 平台上公开 `SpringApplicationAdminMXBean`。你可以使用这个特性来远程管理你的 Spring Boot 应用。这个特性对于任何服务包装器实现都很有用。
+
+> 如果你想要知道正在运行的应用使用哪个 HTTP 端口，通过 `local.server.port` 键获取配置项
+
+### 1.13 应用启动跟踪
+
+在应用启动时，`SpringApplication` 和 `ApplicationContext` 展示了许多和应用生命周期、bean 生命周期或甚至运行中应用事件等相关的任务。通过 `ApplicationStartup`，Spring 框架允许你通过 `StartupStep` 对象追踪应用启动序列。收集这些数据可以用于分析目的，或者只是为了更好地了解应用程序启动过程。
+
+你可以在设置 `SpringApplication` 实例时选择一个 `ApplicationStartup` 实现。例如，要使用 `BufferingApplicationStartup`，你可以写下：
+
+```java
+@SpringBootApplication
+public class MyApplication {
+
+    public static void main(String[] args) {
+        SpringApplication application = new SpringApplication(MyApplication.class);
+        application.setApplicationStartup(new BufferingApplicationStartup(2048));
+        application.run(args);
+    }
+
+}
+```
+
+第一个可用的实现，`FlightRecorderApplicationStartup` 由 Spring 框架提供。它将 Spring 特定的启动事件添加到 Java 飞行记录仪（Flight Recorder）会话中，用于分析应用程序并将其 Spring 上下文生命周期与 JVM 事件相关联（如分配、GC、类加载……）。一旦被配置，你可以通过运行启用了飞行记录仪的应用来记录数据：
+
+```shell
+$ java -XX:StartFlightRecording:filename=recording.jfr,duration=10s -jar demo.jar
+```
+
+Spring Boot 装载 `BufferingApplicationStartup` 变体，这个实现类用于缓存启动步骤并将它们输出到外部统计系统。应用可以在任何的组件中请求 `BufferingApplicationStartup` 类型的 bean。
+
+Spring Boot 也可以被配置为公开一个 `startup` 端点来提供 JSON 文档格式的信息。
+
+## 2. 外部化配置
+
+Spring Boot 允许你外部化你的配置，这样你可以在不同的环境使用同一套应用代码。你可以使用各种外部配置资源，包括 Java 属性文件，YAML 文件，环境变量和命令行参数。
+
+属性值可以使用 `@Value` 注解直接注入到你的 bean 中，通过 Spring 的 `Environment` 抽象来访问，或通过 `@ConfigurationProperties` 来绑定到结构化对象上。
+
+Spring Boot 使用一个非常特别的 `PropertySource` 顺序，设计的目的是允许合理地覆写值。后面的属性源可以覆写前面定义的值。源被按照下面的顺序排列：
+
+1. 默认配置文件（被设置的 `SpringApplication.setDefaultProperties` 指定）。
+2. 在你 `@Configuration` 类上的 `@PropertySource` 注解。请注意这属性源直到应用上下文被刷新时并不会添加到 `Environment` 中。配置特定的属性会为时已晚，例如在刷新开始前读取的 `logging.*` 和 `spring.main.*`。
+3. 配置数据（例如 `application.properties` 文件）
+4. 只在 `random.*` 中拥有属性的 `RandomValuePropertySource`
+5. 操作系统环境变量
+6. Java 系统属性（`System.getProperties()`）
+7. `java:comp/env` 中的 JNDI 属性
+8. `ServletContext` 初始化参数
+9. `ServletConfig` 初始化参数
+10. `SPRING_APPLICATION_JSON` 中的属性（内嵌在一个环境变量或者系统属性中的内联 JSON）
+11. 命令行参数
+12. 你的测试的 `properties` 属性。在 `@SpringBootTest` 和为了测试你应用的特定切片的测试注解中可用。
+13. 你测试中的 `@TestPropertySource` 注解
+14. 开发工具启用时在 `$HOME/.config/spring-boot` 文件夹中的开发工具全局设置属性
+
+配置数据文件按照如下顺序排列：
+
+1. 打包在你的 jar 包内的应用属性（`application.properties` 和 YAML 变体）
+2. 打包在你的 jar 包内的特定 profile 的应用属性（`application-{profile}.properties` 和 YAML 变体）
+3. 在你的 jar 包外的应用属性（`application.properties` 和 YAML 变体）
+4. 在你的 jar 包外的特定 profile 的应用属性（`application-{profile}.properties` 和 YAML 变体）。
+
+> 建议在你的整个应用中坚持一个格式。如果你在同一个位置既有 `.properties` 又有 `.yml` 格式的配置文件，`.properties` 优先
+
+提供一个具体的例子，假设你开发了一个使用 `name` 属性的 `@Component`，就像下面例子展示的：
+
+```java
+@Component
+public class MyBean {
+
+    @Value("${name}")
+    private String name;
+
+    // ...
+
+}
+```
+
+在你的应用 classpath（例如，在你的 jar 中）你可以设置一个为 `name` 提供合理默认属性值的 `application.properties` 文件。当在一个新环境中运行时，可以在你的 jar 包外提供一个 `application.properties` 文件来覆写 `name`。对于一次性测试，可以使用特定的命令行开关启动（例如，`java -jar app.jar --name="Spring"`）。
+
+> `env` 和 `configprops` 端点可以用于确定属性具有特定值的原因。可以使用这两个端点来诊断意外的属性值。参考“生产环境就绪特性”一节来获取细节。
+
+### 2.1 访问命令行属性
+
+默认情况下，`SpringApplication` 转换所有的命令行可选参数（即，`--` 开始的参数，例如 `--server.port=9000`）到一个 `property` 中，并将它们添加到 Spring `Environment`。像前面提到的，命令行属性总是优先于基于文件的属性源。
+
+如果你不想希望命令行被添加到 `Environment`，你可以使用 `SpringApplication.setAddCommandLineProperties(false)` 禁用它们。
+
+### 2.2 JSON 应用属性
+
+
+
+# 数据
 
 ## 2. 和 NoSQL 技术一同工作
 
