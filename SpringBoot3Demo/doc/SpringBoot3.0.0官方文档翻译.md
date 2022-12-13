@@ -962,7 +962,118 @@ public class MyBean {
 
 ### 2.2 JSON 应用属性
 
+环境变量和系统变量经常有限制，这意味着不能使用部分属性名。为了帮助改变这点，Spring Boot 允许你将一个属性块编码为一个 JSON 结构。
 
+当你的应用启动时，任何 `spring.application.json` 或 `SPRING_APPLICATION_JSON` 属性将被编译和添加到 `Environment`。
+
+例如，`SRPING_APPLICATION_JSON` 属性可以作为环境变量在 UN*X shell 的命令行中提供：
+
+```shell
+$ SPRING_APPLICATION_JSON='{"my":{"name":"test"}}' java -jar myapp.jar
+```
+
+在前面的例子中，你最后在 Spring `Environment` 中添加了 `my.name=test`
+
+一样的 JSON 可以作为系统属性提供：
+
+```shell
+$ java -Dspring.application.json='{"my":{"name":"test"}}' -jar myapp.jar
+```
+
+或者你可以使用一个命令行参数来提供 JSON：
+
+```shell
+$ java -jar myapp.jar --spring.application.json='{"my":{"name":"test"}}'
+```
+
+如果你正在部署一个经典的应用服务器，你也可以使用命名为 `java:comp/env/spring.application.json` 的 JNDI 变量。
+
+> 虽然 JSON 的 `null` 值被添加到生成的属性源中，但 `PropertySourcesPropertyResolver` 将 `null` 属性视为缺失值。这意味着 JSON 不能使用 `null` 值覆盖更低顺序的属性源。
+
+### 2.3 外部应用属性
+
+Spring Boot 将在你的应用启动时从下面位置自动找到并加载 `application.properties` 和 `application.yaml` 文件：
+
+1. 从 classpath
+   1. classpath 根目录
+   2. classpath `/config` 包
+2. 从当前的目录
+   1. 当前目录
+   2. 当前目录的 `config/` 子目录
+   3. `config/` 子目录的直接子目录
+
+列表按优先级排序（较低项目的值优先于较早项目的值）。加载文件中的文档将作为 `PropertySources` 添加到 Spring `Environment`。
+
+如果你不喜欢 `application` 作为配置文件名字，你可以指定 `spring.config.name` 环境属性来切换到其他文件名。例如，为了寻找 `myproject.properties` 和 `myproject.yaml` 文件，你可以按下面运行你的应用：
+
+```shell
+$ java -jar myproject.jar --spring.config.name=myproject
+```
+
+你也可以使用 `spring.config.location` 环境属性来引用显式位置。这个属性接受用逗号分隔的一个或多个要检查的位置的列表。
+
+下面例子展示了怎么指定两个不同的文件：
+
+```shell
+$ java -jar myproject.jar --spring.config.location=\
+    optional:classpath:/default.properties,\
+    optional:classpath:/override.properties
+```
+
+> 如果位置是可选的且你不介意它们不存在时，使用 `optional:` 前缀。
+
+> `spring.config.name`，`spring.config.location`，和 `spring.config.additional-location` 很早就决定必须加载哪些文件。它们必须定义为环境属性（通常是操作系统环境变量、系统属性或命令行参数）。
+
+如果 `spring.config.location` 包含目录（而不是文件），它们应该以 `/` 结尾。运行时它们会在加载前拼接上 `spring.config.name` 生成的名字。在 `spring.config.location` 中指定的文件则直接被导入。
+
+> 目录和文件位置值也都会扩展到检查指定 profile 的文件。例如，如果你有一个为 `classpath:myconfig.properties` 的 `spring.config.location`，你将会发现合适的 `classpath:myconfig-<profile>.properties` 文件也被加载了。
+
+大多数场景下，你添加的每个 `spring.config.location` 项目会引用一个独立的文件或目录。位置是按它们定义的顺序处理的，所以后面的可以覆写前面的值。
+
+如果你有复杂的位置设置，且你需要 profile 特定的配置文件，你可能需要提供更多提示来让 Spring Boot 知道它们应该如何分组。一个位置组是指一个被认为处于同一层级的位置的集合。例如，你可能想要把全部 classpath 位置分组，然后把所有外部位置分组。在位置组中的项目应该使用 `;` 分隔。参考“指定 profile 的文件”一节获取更多细节。
+
+使用 `spring.config.location` 配置的位置会替代默认位置。例如，如果 `spring.config.location` 被配置为 `optional:classpath:/custom-config/,optional:file:./custom-config/`，完整的位置集是如下：
+
+1. `optional:classpath:/;optional:classpath:/config/`
+2. `optional:file:./;optional:file:./config/;optional:file:./config/*/`
+3. `optional:classpath:custom-config/`
+4. `optional:file:./custom-config/`
+
+这个搜索顺序可以让你在一个配置文件中指定默认值，然后有选择性的覆写其他文件里的值。你可以在 `application.properties`（或者其他你用 `spring.config.name` 选择的基础名字）在默认位置中的一个中给你的应用提供默认值。这些默认值可以在运行时被其他在自定义位置之一中的不同的文件所覆写。
+
+> 如果你使用环境变量而不是系统属性，大多数的操作系统不允许使用句号分隔的键名，但可以使用下划线（例如，`SPRING_CONFIG_NAME` 而不是 `spring.config.name`）。参考“从环境变量绑定”来获取细节。
+
+> 如果你的应用运行在 servlet 容器或者应用服务器里，则可以使用 JNDI 属性（在 `java:comp/env`）或 servlet 上下文初始化参数来替代环境变量或系统属性。
+
+#### 2.3.1 可选位置
+
+默认情况下，当指定的配置数据位置不存在时，Spring Boot 将抛出 `ConfigDataLocationNotFoundException` 且你的应用不会启动。
+
+如果你希望指定一个位置，但你并不介意它是否存在，你可以使用 `optional:` 前缀。你可以通过 `spring.config.location` 和 `spring.config.additional-location` 属性和 `spring.config.import` 声明使用这个前缀。
+
+例如，一个值为 `optional:file:./myconfig.properties` 的 `spring.config.import` 允许即使在没有 `myconfig.properties` 文件的情况下你的应用仍可以启动。
+
+如果你希望忽略所有 `ConfigDataLocationNotFoundExceptions` 且总是继续启动你的应用，你可以使用 `spring.config.on-not-found` 属性。使用 `SpringApplication.setDefaultProperties(...)` 或使用系统/环境变量设置值为 `ignore`。
+
+#### 2.3.2 通配符位置
+
+如果一个配置文件位置包括最后路径部分的 `*` 字符，它被视为一个通配符位置。通配符是在配置被加载时被扩展，这样直接子目录也被检查。通配符位置在有多个配置属性来源的例如 Kubernetes 的环境特别有用。
+
+例如，如果你有一些 Redis 配置和一些 MySQL 配置，你可能想让那两部分配置保持分离，同时要求 `application.properties` 文件中出现这两者。这可能导致两个分离的 `application.properties` 文件装载在不同位置例如 `/config/redis/application.properties` 和 `/config/mysql/application.properties`。在这种情况下，拥有一个 `config/*/` 通配符位置，可以使两个文件都被处理。
+
+默认情况下，Spring Boot 在默认的搜索位置中包括了 `config/*/`。它意味着将搜索所有你的 jar 外的 `/config` 目录的子目录。
+
+你可以用 `spring.config.location` 和 `spring.config.additional-location` 属性使用通配符位置。
+
+> 一个通配符位置必须只包括一个 `*` 和以 `*/` 结束来搜索那些文件夹或 `*/<filename>` 来搜索文件位置。通配符位置会根据文件名的绝对路径字母表顺序排序
+
+> 通配符位置仅可在外部目录使用。你不能在 `classpath:` 位置使用通配符
+
+#### 2.3.3 指定 profile 的文件
+
+和 `application` 属性文件一样，Spring Boot 将尝试使用 `application-{profile}` 命名规范加载指定 profile 的文件。例如，如果你的应用激活了一个叫 `prod` 的 profile 且使用 YAML 文件，那么 `application.yml` 和 `application-prod.yml` 将被考虑。
+
+profile 指定属性从和标准的 `application.properties` 同样的位置加载，且指定 profile 的文件
 
 # 数据
 
