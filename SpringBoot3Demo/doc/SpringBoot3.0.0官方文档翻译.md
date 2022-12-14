@@ -1073,7 +1073,76 @@ $ java -jar myproject.jar --spring.config.location=\
 
 和 `application` 属性文件一样，Spring Boot 将尝试使用 `application-{profile}` 命名规范加载指定 profile 的文件。例如，如果你的应用激活了一个叫 `prod` 的 profile 且使用 YAML 文件，那么 `application.yml` 和 `application-prod.yml` 将被考虑。
 
-profile 指定属性从和标准的 `application.properties` 同样的位置加载，且指定 profile 的文件
+profile 指定属性从和标准的 `application.properties` 同样的位置加载，且指定 profile 的文件总会覆写不指定的。如果指定了几个 profile，采用后来者胜策略。例如，如果 profile `prod,live` 被 `spring.profiles.active` 属性指定，则 `application-prod.properties` 中的值可以被 `application-live.properties` 覆写。
+
+> 后来者胜策略在位置组维度应用。一个 `classpath:/cfg/,classpath:/ext/` 的 `spring.config.location` 的覆写规则将和 `classpath:/cfg/;classpath:/ext/` 不同。
+>
+> 例如，继续我们前面的 `prod,live` 例子，我们可能拥有下面的文件：
+>
+> ```
+> /cfg
+> 	application-live.properties
+> /ext
+> 	application-live.properties
+> 	application-prod.properties
+> ```
+>
+> 当我们拥有 `classpath:/cfg/,classpath:/ext/` 的 `spring.config.location` 时，我们将在所有 `/ext` 文件前处理所有 `/cfg` 文件：
+>
+> 1. `/cfg/application-live.properties`
+> 2. `/ext/application-prod.properties`
+> 3. `/ext/application-live.properties`
+>
+> 当我们拥有 `classpath:/cfg/;classpath:/ext/` 作为替换时（使用 `;` 分隔符），我们在同样的层级处理 `/cfg` 和 `/ext`：
+>
+> 1. `/ext/application-prod.properties`
+> 2. `/cfg/application-live.properties`
+> 3. `/ext/application-live.properties`
+
+`Environment` 具有一组默认的 profile（默认情况下，`[default]`）会在没有激活的 profile 被设置时使用。换句话说，如果没有 profile 被显式的激活的话，使用 `application-default` 的属性 。
+
+> 属性文件只被加载一次。如果你已经直接导入一个指定 profile 的文件，那么它将不会被第二次导入。
+
+#### 2.3.4 导入额外的数据
+
+应用属性可能使用 `spring.config.import` 属性从其他位置导入更多配置数据。导入在被发现时被处理，且被视为插入声明导入的文档下面的附加文档。
+
+例如，你可能在你的 classpath 中有如下 `application.properties` 文件：
+
+```properties
+spring.application.name=myapp
+spring.config.import=optional:file:./dev.properties
+```
+
+这将在当前文件夹触发 `dev.properties` 文件的导入（如果这样的文件存在）。导入的 `dev.properties` 的值将优先于触发导入的文件。在上面的例子中，`dev.properties` 可以重新定义 `spring.application.name` 为一个不同的值。
+
+无论被声明多少次，一个导入只会被导入一次。导入在一个 properties 或 yaml 文件中被定义的顺序并无影响。例如，下面两个例子产生相同的结果：
+
+```properties
+spring.config.import=my.properties
+my.property=value
+```
+
+```properties
+my.property=value
+spring.config.import=my.properties
+```
+
+在上面两个例子中，`my.properties` 文件的值将优先于触发导入的文件。
+
+一个 `spring.config.import` 可以指定几个位置。位置会按它们被定义的顺序处理，后导入的优先。
+
+> 适当的时候，还会考虑指定 profile 的变体来导入。上面例子将导入 `my.properties` 和 `my-<profile>.properties` 变体。
+
+> Spring Boot 包含允许支持不同的位置地址的可插拔 API。默认情况下，你可以导入 Java Properties，YAML 和 “配置树”。
+>
+> 三方 jar 可以提供额外的技术支持（并不需要文件在本地）。例如，你可以想象从外部存储，例如 Consul，Apache ZooKeeper 或 Netflix Archaius，来的配置数据。
+>
+> 如果你希望支持你自己的位置，参考 `org.springframework.boot.context.config` 包的 `ConfigDataLocationResolver` 和 `ConfigDataLoader` 类。
+
+#### 2.3.5 导入无扩展名文件
+
+
 
 # 数据
 
