@@ -1142,6 +1142,107 @@ spring.config.import=my.properties
 
 #### 2.3.5 导入无扩展名文件
 
+一些云平台不能向卷加载的文件添加文件扩展名。要导入这些无扩展名文件，你需要给 Spring Boot 一个提示，以便它知道如何加载它们。你可以通过在方括号中放置扩展提示来完成此操作。
+
+例如，假设你有一个你想作为 yaml 导入的 `/etc/config/myconfig` 文件。你可以使用下面语句从你的 `application.properties` 中导入它：
+
+```properties
+spring.config.import=file:/etc/config/myconfig[.yaml]
+```
+
+#### 2.3.6 使用配置树
+
+当在云平台（例如 Kubernetes）运行应用时，你经常需要读取平台提供的配置值。这种目的下使用环境变量并不罕见，但这可能会有缺点，特别是如果值应该保密的话。
+
+作为环境变量的替代品，许多云平台现在允许你将配置映射到装载的数据卷中。例如，Kubernetes 可以卷装载 `ConfigMaps` 和 `Secrets`。
+
+可以使用两种常见的卷装载模式：
+
+1. 单个文件包含一组完整的属性（通常写成 YAML）
+2. 多个文件被写入目录树，文件名变为“key”，内容变为“value”。
+
+对于第一种情况，可以像上面所述直接使用 `spring.config.import` 直接导入 YAML 或 Properties 文件。对于第二种情况，你需要使用 `configtree:` 前缀，这样 Spring Boot 才知道它需要将所有文件作为属性公开。
+
+例如，让我们假设 Kubernetes 加载了以下卷：
+
+```
+etc/
+  config/
+    myapp/
+      username
+      password
+```
+
+`username` 文件的内容将作为一个配置值，且 `password` 的内容将作为密钥。
+
+为了导入这些属性，你可以添加下面的内容到你的 `application.properties` 或 `application.yaml` 文件：
+
+```properties
+spring.config.import=optional:configtree:/etc/config/
+```
+
+你可以按通常的方式从 `Environment` 访问或注入 `myapp.username` 和 `myapp.password` 属性。
+
+> 配置树下的文件夹构成属性名称。在上面的示例中，要访问作为 `username` 和 `password` 的属性，可以设置 `spring.config.import` 为 `optional:configtree:/etc/config/myapp`
+
+> 点符号的文件名也会正确映射。例如，在上面的示例中，一个名叫 `myapp.username` 的文件在 `/etc/config` 中的话，将在 `Environment` 中生成 `myapp.username` 属性。
+
+> 配置树值可以根据期待的内容绑定到 `String` 和 `byte[]` 类型。
+
+如果你有多个配置树要从一个父文件夹导入的话，你可以使用通配符快捷方式。任何以 `/*/` 结尾的  `configtree:` 位置将所有直接子级作为配置树导入。
+
+例如，有下面卷：
+
+```
+etc/
+  config/
+    dbconfig/
+      db/
+        username
+        password
+    mqconfig/
+      mq/
+        username
+        password
+```
+
+你可以使用 `configtree:/etc/config/*/` 作为导入位置：
+
+```properties
+spring.config.import=optional:configtree:/etc/config/*/
+```
+
+这将增加 `db.username`，`db.password`，`mq.username` 和 `mq.password` 属性。
+
+> 使用通配符加载的目录按照字母表顺序排序。如果你需要不同的顺序，那么你应该将每个位置单独导入。
+
+配置树也可以用作 Docker 密钥。当 Docker swarm 服务被授权访问一个密钥，密钥被装载到容器。例如，如果一个叫作 `db.password` 的密钥被装载到 `/run/secrets/` 位置，你可以使用以下内容让 `db.password`  在 Spring 环境可用：
+
+```properties
+spring.config.import=optional:configtree:/run/secrets/
+```
+
+#### 2.3.7 属性占位符
+
+在 `application.properties` 和 `application.yml` 中的值在它们被使用时会使用已存在的 `Environment` 过滤，所以你可以引用前面定义的值（例如，从系统属性或环境变量）。标准的 `${name}` 属性占位符语法可以在任何值中使用。属性占位符可以使用分隔默认值和属性名的 `:` 来指定一个默认值，例如 `${name:default}`。
+
+使用有默认值和没有默认值的占位符都在下面的例子中展示：
+
+```properties
+app.name=MyApp
+app.description=${app.name} is a Spring Boot application written by ${username:Unknown}
+```
+
+假设 `username` 属性没有在其他地方被定义，`app.description` 将具有值 `MyApp is a Spring Boot application written by Unknown`。
+
+> 你应该总是使用规范形式（只使用小写字符的中划线格式，即 kebab-case）使用占位符的属性名。这将使得 Spring Boot 可以使用和宽松绑定 `@ConfigurationProperties` 相同的逻辑。
+>
+> 例如，`${demo.item-prive}` 会将 `demo.item-price` 和 `demo.itemPrice` 格式都从 `application.properties` 文件中匹配起来，以及系统环境中的 `DEMO_ITEMPRICE`。如果你使用 `${demo.itemPrice}` 的话，`demo.item-price` 和 `DEMO_ITEMPRICE` 将不会被认为是。
+
+> 你也可以使用这个技术来创建现有 Spring Boot 属性的“短”变体。
+
+#### 2.3.8 使用多文档文件
+
 
 
 # 数据
