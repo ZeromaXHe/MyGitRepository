@@ -1243,6 +1243,250 @@ app.description=${app.name} is a Spring Boot application written by ${username:U
 
 #### 2.3.8 使用多文档文件
 
+Spring Boot 允许你将一个物理文件分割成多个各自独立添加的逻辑文档。文档按顺序处理，从上至下。后面的文档可以覆写前面定义的属性。
+
+对于 `application.yml` 文档，使用标准 YAML 多文档语法。三个连续的连字符表示一个文档的结尾和下一个文档的开始。
+
+例如，下面文件有两个逻辑文档：
+
+```yaml
+spring:
+  application:
+    name: "MyApp"
+---
+spring:
+  application:
+    name: "MyCloudApp"
+  config:
+    activate:
+      on-cloud-platform: "kubernetes"
+```
+
+对于 `application.properties` 文件，特殊的 `#---` 或 `!---` 注释被用来标记文档分隔：
+
+```properties
+spring.application.name=MyApp
+#---
+spring.application.name=MyCloudApp
+spring.config.activate.on-cloud-platform=kubernetes
+```
+
+> 属性文件分隔符不可以有先导空格，且必须是刚好三个连字符字符。分隔符前后的行不能是相同的注释前缀。
+
+> 多文档属性文件经常与 `spring.config.activate.on-profile` 属性一同使用。参考下一节来获取细节。
+
+> 多文档属性文件不能使用 `@PropertySource` 或 `@TestPropertySource` 注解加载。
+
+#### 2.3.9 激活属性
+
+在某些时候，特定的条件下，只激活给定的一组属性会很有用。例如，你可能有一些当特定 profile 被激活时才相关的属性。
+
+你可以使用 `spring.config.activate.*` 条件性地激活一个属性文档。
+
+下面激活属性是可用的：
+
+| 属性                | 备注                                         |
+| ------------------- | -------------------------------------------- |
+| `on-profile`        | 要使文档被激活而必须匹配的 profile 表达式    |
+| `on-cloud-platform` | 要使文档被激活而必须被检测的 `CloudPlatform` |
+
+例如，下面指定了第二个文件只在运行于 Kubernetes 时且只当“prod”或“staging” profile 被激活时激活：
+
+```properties
+myprop=always-set
+#---
+spring.config.activate.on-cloud-platform=kubernetes
+spring.config.activate.on-profile=prod | staging
+myotherprop=sometimes-set
+```
+
+### 2.4 加密属性
+
+Spring Boot 并没有提供任何内建的加密属性值的支持，但是，它提供了必要的钩点来修改 Spring `Environment` 中装载的值。`EnvironmentPostProcessor` 接口允许你在应用启动前操作 `Environment`。
+
+如果你需要一种安全的存储证书和密码的方式，Spring Cloud Vault 项目提供了存储在 HashiCorp Vault 中的外部化配置的支持。
+
+### 2.5 使用 YAML
+
+YAML 是 JSON 的超集，因此是指定分层配置数据的方便格式。只要类路径(classpath)上有 SnakeYAML 库，`SpringApplication` 类就会自动支持 YAML 作为属性的替代。
+
+> 如果你使用“Starter”，SnakeYAML 在 `spring-boot-starter` 中自动提供。
+
+#### 2.5.1 映射 YAML 到 Properties
+
+YAML 文档需要从它们的分层格式转换为可用于 Spring 环境的平面结构。例如，考虑如下 YAML 文件：
+
+```yaml
+environments:
+	dev:
+		url: "https://dev.example.com"
+		name: "Develop Setup"
+	prod:
+		url: "https://another.example.com"
+		name: "My Cool App"
+```
+
+为了从 `Environment` 中访问这些属性，他们将按如下方式展开：
+
+```properties
+environments.dev.url=https://dev.example.com
+environments.dev.name=Developer Setup
+environments.prod.url=https://another.example.com
+environments.prod.name=My Cool App
+```
+
+类似的，YAML list 也需要被展开。它们表示为有 `[index]` 解引用器的属性键。例如，考虑以下 YAML：
+
+```yaml
+my:
+ servers:
+ - "dev.example.com"
+ - "another.example.com"
+```
+
+前面的例子将被转为这些属性：
+
+```properties
+my.servers[0]=dev.example.com
+my.servers[1]=another.example.com
+```
+
+> 使用 `[index]` 符号的属性可以使用 Spring Boot 的 `Binder` 类绑定到 Java `List` 或 `Set` 对象。有关详细信息，请参阅下面的“类型安全配置属性”部分。
+
+> YAML 文件不能使用 `@PropertySource` 或 `@TestPropertySource` 注解加载。所以如果你需要通过那些方式加载值的话，你需要使用属性文件。
+
+#### 2.5.2 直接加载 YAML
+
+Spring 框架提供两个方便的可以用来加载 YAML 文档的类。`YamlPropertiesFactoryBean` 将 YAML 加载为 `Properties` 以及 `YamlMapFactoryBean` 将 YAML 加载为 `Map`。
+
+你也可以使用 `YamlPropertySourceLoader` 类如果你想将 YAML 加载为 Spring 的 `PropertySource`。
+
+### 2.6 配置随机值
+
+`RandomValuePropertySource` 在注入随机值（例如，作为密钥或测试用例）时很有用。它可以提供 integer、long、uuid 或字符串，例子如下：
+
+```properties
+my.secret=${random.value}
+my.number=${random.int}
+my.bignumber=${random.long}
+my.uuid=${random.uuid}
+my.number-less-than-ten=${random.int(10)}
+my.number-in-range=${random.int[1024,65536]}
+```
+
+`random.int*` 语法是 `OPEN value (,max) CLOSE`，其中 `OPEN,CLOSE` 是任意字符而 `value,max` 是 integer。如果 `max` 被提供，那么 `value` 就是最小值而 `max` 是最大值（不包含）。
+
+### 2.7 配置系统环境属性
+
+Spring Boot 支持设置一个环境属性的前缀。这在系统环境被多个需要不同配置的 Spring Boot 应用分享时很有用。系统环境属性前缀可以直接在 `SpringApplication` 上被设置。
+
+例如，如果你想将前缀设置为 `input`，一个类似 `remote.timeout` 的属性也将在系统环境中被解析为 `input.remote.timeout`。
+
+### 2.8 类型安全的配置属性
+
+使用 `@Value("${property}")` 注解来注入配置属性有时会显得笨重，尤其是你在处理多个属性或你的数据本质上具有层级结构时。Spring Boot 提供了一种使用属性的替代方法，该方法允许强类型 Bean 管理和验证应用程序的配置。
+
+> 参考“`@Value` 和类型安全的配置属性的差别”
+
+#### 2.8.1 JavaBean 属性绑定
+
+可以绑定一个声明了标准 JavaBean 属性的 bean，就像下面例子中展示的：
+
+```java
+@ConfigurationProperties("my.service")
+public class MyProperties {
+    private boolean enabled;
+    private InetAddress remoteAddress;
+    private final Security security = new Security();
+
+    // getters / setters...
+
+    public static class Security {
+        private String username;
+        private String password;
+        private List<String> roles = new ArrayList<>(Collections.singleton("USER"));
+
+        // getters / setters...
+    }
+}
+```
+
+前面的 POJO 定义了下面的属性：
+
+- `my.service.enabled`，默认值为 `false`
+- `my.service.remote-address`，具有一个可以从 `String` 强转的类型
+- `my.service.security.username`，带有一个名字被该属性决定的嵌套的 “security” 对象。特别的，该类型根本没有被使用时，可能是 `SecurityProperties`。
+- `my.service.security.password`
+- `my.service.security.roles`，一个 `String` 的集合默认为 `USER`。
+
+> 通过属性文件、YAML文件、环境变量和其他机制进行配置的，映射到 Spring Boot 中可用的 `@ConfigurationProperties` 类的属性是公共API，但类本身的访问器（getter/setter）并不能直接使用。
+
+> 这种安排依赖于默认的空构造函数，getter 和 setter 通常是强制性的，因为绑定是通过标准的JavaBeans属性描述符进行的，就像在SpringMVC中一样。在下列情况下，可以省略 setter：
+>
+> - 只要映射被初始化，就需要 getter，但不一定需要 setter，因为它们可以被绑定器改变。
+> - 可以通过索引（通常使用 YAML）或使用单个逗号分隔的值（属性）访问集合和数组。在后一种情况下，setter 是必需的。我们建议始终为此类类型添加 setter。如果初始化集合，请确保它不是不可变的（如前一个示例所示）。
+> - 如果初始化了嵌套的 POJO 属性（如前面示例中的 `Security` 字段），则不需要 setter。如果希望绑定器使用其默认构造函数动态创建实例，则需要 setter。
+>
+> 有些人使用 Project Lombok 自动添加 getter 和 setter。确保 Lombok 不会为此类类型生成任何特定的构造函数，因为容器会自动使用它来实例化对象。
+>
+> 最后，只考虑标准 JavaBean 属性，不支持对静态属性的绑定。
+
+#### 2.8.2 构造器绑定
+
+之前一节的例子可以使用不可变的方式重写，如下所示：
+
+```java
+@ConfigurationProperties("my.service")
+public class MyProperties {
+    // fields...
+
+    public MyProperties(boolean enabled, InetAddress remoteAddress, Security security) {
+        this.enabled = enabled;
+        this.remoteAddress = remoteAddress;
+        this.security = security;
+    }
+
+    // getters...
+
+    public static class Security {
+        // fields...
+
+        public Security(String username, String password, @DefaultValue("USER") List<String> roles) {
+            this.username = username;
+            this.password = password;
+            this.roles = roles;
+        }
+
+        // getters...
+    }
+
+}
+```
+
+在这个设置中，单独的参数化的构造器的出现说明应该使用构造器绑定。这说明绑定将找到一个包含你希望绑定参数的构造函数。如果类有多个构造函数，则 `@ConstructorBinding` 注解可用于指定要用于构造器绑定的构造函数。若要选择不使用带有单个参数化构造函数的类的构造器绑定，必须使用 `@Autowired` 对构造函数进行绑定。如果您使用的是 Java 16 或更高版本，则可以对记录（record）使用构造器绑定。除非你的记录有多个构造函数，否则不需要使用 `@ConstructorBinding`。
+
+构造函数绑定类（如上面示例中的 `Security`）的嵌套成员也将通过其构造函数绑定。
+
+可以在构造函数参数和记录组件上使用 `@DefaultValue` 指定默认值。转换服务将应用于将注释的 `String` 值强制转换为缺少属性的目标类型。
+
+参考上一个示例，如果没有属性绑定到 `Security`，则 `MyProperties` 实例将包含一个 `null` 的 `security` 值。要使其包含非空的 `Security` 实例，即使没有属性绑定到它（使用 Kotlin 时，这将要求 `Security` 的 `username` 和 `password` 参数声明为可空，因为它们没有默认值），请使用空的 `@DefaultValue` 注释：
+
+```java
+public MyProperties(boolean enabled, InetAddress remoteAddress, @DefaultValue Security security) {
+    this.enabled = enabled;
+    this.remoteAddress = remoteAddress;
+    this.security = security;
+}
+```
+
+> 若要使用构造器绑定，必须使用 `@EnableConfigurationProperties` 或配置属性扫描来启用类。不能将构造函数绑定用于由常规 Spring 机制创建的 Bean（例如 `@Component` Bean、使用 `@Bean` 方法创建的 Bean 或使用 `@Import` 加载的 Bean）
+
+>要在本地镜像中使用构造器绑定，必须使用 `-parameters` 编译该类。如果您使用 Spring Boot 的 Gradle 插件或使用 Maven 和 `spring-boot-starter-parent`，这将自动发生。
+
+> 不建议将 `java.util.Optional` 与 `@ConfigurationProperties` 一起使用，因为它主要用作返回类型。因此，它不太适合配置属性注入。为了与其他类型的属性保持一致，如果您声明了一个 `Optional` 属性并且它没有值，那么将绑定 `null` 而不是空的 `Optional`。
+
+#### 2.8.3 启用 @ConfigurationProperties 注解的类型
+
 
 
 # 数据
