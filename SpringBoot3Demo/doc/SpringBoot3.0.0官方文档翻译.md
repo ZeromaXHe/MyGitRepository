@@ -1487,6 +1487,745 @@ public MyProperties(boolean enabled, InetAddress remoteAddress, @DefaultValue Se
 
 #### 2.8.3 启用 @ConfigurationProperties 注解的类型
 
+Spring Boot 提供了绑定 `@ConfigurationProperties` 类型的基础设施，且将它们注册为 bean。你可以逐个类地启用配置属性，也可以启用配置属性扫描，其工作方式与组件扫描类似。
+
+有时，注解 `@ConfigurationProperties` 的类可能不适合扫描，例如，如果你正在开发你自己的自动配置或者你希望条件性地启用它们。在这些情况下，使用 `@EnableConfigurationProperties` 注解指明要处理的类型列表。这可以在任何 `@Configuration` 类上完成，如下例所示：
+
+```java
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(SomeProperties.class)
+public class MyConfiguration {
+
+}
+```
+
+要使用配置属性扫描，请将 `@ConfigurationPropertiesScan` 注解添加到应用程序中。通常，它被添加到用 `@SpringBootApplication` 注解的主应用程序类中，但它也可以添加到任何 `@Configuration` 类中。默认情况下，扫描将从声明注解的类的包中进行。如果你希望定义要扫描的特定包，可以按以下示例所示进行操作：
+
+```java
+@SpringBootApplication
+@ConfigurationPropertiesScan({ "com.example.app", "com.example.another" })
+public class MyApplication {
+
+}
+```
+
+> 当使用配置属性扫描或通过 `@EnableConfigurationProperties` 注册 `@ConfigurationProperties` bean 时，bean 具有常规名称：`<prefix>-<fqn>`，其中 `<prefix>` 是 `@ConfigurationProperties` 注解中指定的环境键前缀，`<fqn>` 是 bean 的完全限定名称。如果注解不提供任何前缀，则只使用 bean 的完全限定名称。
+>
+> 上面示例中的 bean 名称是 `com.example.app-com.example.app.SomeProperties`。
+
+我们建议 `@ConfigurationProperties` 只处理环境，特别是不从上下文注入其他 bean。对于边界情况，可以使用 setter 注入或框架提供的任何 `*Aware` 接口（如需要访问环境时使用 `EnvironmentAware`）。如果您仍然希望使用构造函数注入其他 bean，则必须使用 `@Component` 注解配置属性 bean，并使用基于 JavaBean 的属性绑定。
+
+#### 2.8.4 使用 @ConfigurationProperties 注解的类型
+
+这种配置在 `SpringApplication` 外部的 YAML 配置中尤其适用，如下例所示：
+
+```yaml
+my:
+  service:
+    remote-address: 192.168.1.1
+    security:
+      username: "admin"
+      roles:
+      - "USER"
+      - "ADMIN"
+```
+
+为了和 `@ConfigurationProperties` bean 一同工作，你可以用和其他 bean 相同的方式注入它们，如下例所示：
+
+```java
+@Service
+public class MyService {
+
+    private final MyProperties properties;
+
+    public MyService(MyProperties properties) {
+        this.properties = properties;
+    }
+
+    public void openConnection() {
+        Server server = new Server(this.properties.getRemoteAddress());
+        server.start();
+        // ...
+    }
+
+    // ...
+
+}
+```
+
+> 使用 `@ConfigurationProperties` 也让你可以生成用于 IDE 给你的自定义键提供自动补全的元数据文件。参考附录来获取细节。
+
+#### 2.8.5 三方配置
+
+就和使用 `@ConfigurationProperties` 来注解类一样，你也可以在公共的 `@Bean` 方法上使用它。当您希望将属性绑定到不受您控制的第三方组件时，这样做特别有用。
+
+为了配置来自 `Environment` 属性的 bean，给它的 bean 注册添加 `@ConfigurationProperties`，如下例所示：
+
+```java
+@Configuration(proxyBeanMethods = false)
+public class ThirdPartyConfiguration {
+    @Bean
+    @ConfigurationProperties(prefix = "another")
+    public AnotherComponent anotherComponent() {
+        return new AnotherComponent();
+    }
+}
+```
+
+使用 `another` 前缀定义的任何 JavaBean 属性会被映射到 `AnotherComponent` bean，使用和前面 `SomeProperties` 例子类似的方式。
+
+#### 2.8.6 宽松绑定
+
+Spring Boot 使用一些宽松的规则将 `Environment` 属性绑定到 `@ConfigurationProperties` bean，因此 `Environment` 属性名称和 bean 属性名称之间不需要完全匹配。这很有用的常见示例包括用破折号分隔的环境属性（例如，`context-path` 绑定到 `contextPath`）和大写环境属性（如，`PORT` 绑定到 `port`）。
+
+例如，考虑以下 `@ConfigurationProperties` 类：
+
+```java
+@ConfigurationProperties(prefix = "my.main-project.person")
+public class MyPersonProperties {
+
+    private String firstName;
+
+    public String getFirstName() {
+        return this.firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+}
+```
+
+对于前面的代码，可以使用以下属性名称：
+
+| 属性                                | 备注                                                        |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `my.main-project.person.first-name` | 中划线方式，建议在 `.properties` 和 `.yml` 文件中使用       |
+| `my.main-project.person.firstName`  | 标准驼峰式语法                                              |
+| `my.main-project.person.first_name` | 下划线表示法，使用 `.properties` 和 `.yml` 文件时的可选格式 |
+| `MY_MAINPROJECT_PERSON_FIRSTNAME`   | 大写格式，推荐在系统环境变量时使用                          |
+
+> 注解的 `prefix` 值必须是中划线方式的（小写且使用 `-` 分隔，例如 `my.main-project.person`）
+
+| 属性源          | 简单值                                         | List                                           |
+| --------------- | ---------------------------------------------- | ---------------------------------------------- |
+| Properties 文件 | 驼峰式，中划线式，或者下划线表示法             | 使用 `[]` 的标准 list 语法或逗号分隔的值       |
+| YAML 文件       | 驼峰式，中划线式，或者下划线表示法             | 标准 YAML 队列语法或者逗号分隔的值             |
+| 环境变量        | 使用下划线分隔的大写格式（参考环境变量的绑定） | 使用下划线包裹的数字型值（参考环境变量的绑定） |
+| 系统属性        | 驼峰式，中划线式，或者下划线表示法             | 使用 `[]` 的标准 list 语法或逗号分隔的值       |
+
+> 我们建议，在可能的情况下，属性使用小写中划线格式存储，例如 `my.person.first-name=Rod`
+
+##### 绑定 Map
+
+当绑定 `Map` 属性时你可能需要使用特定的括号表示法来保留原始的 `key` 值。如果键没有被 `[]` 包裹，则任何非字母的字符 `-` 或 `.` 会被移除。
+
+例如，考虑绑定下面的属性到 `Map<String, String>`：
+
+```properties
+my.map.[/key1]=value1
+my.map.[/key2]=value2
+my.map./key3=value3
+```
+
+> 对于 YAML 文件，括号需要用引号括起来，以便正确解析键。
+
+上面的属性将绑定一个具有 `/key1`，`/key2` 和 `key3` 的 `Map` 作为映射中的键。斜线已从 `key3` 中移除，因为它没有被方括号包围。
+
+当绑定到标量值时，有 `.` 的键就不需要被 `[]` 包围了。标量值包括枚举和除了 `Object` 以外所有 `java.lang` 包的类型。绑定 `a.b=c` 到 `Map<String, String>` 将在键中保留 `.` 且返回一个具有 `{"a.b"="c"}` 条目的 Map。对于任何其他类型，如果你的 `key` 包括 `.`，你需要使用括号表达式。例如，绑定 `a.b=c` 到 `Map<String, Object>` 将返回一个具有 `{"a"={"b"="c"}}` 条目的 Map，而 `[a.b]=c` 将返回一个具有 `{"a.b"="c"}` 条目的 Map。
+
+##### 绑定环境变量
+
+大多数操作系统对可用于环境变量的名称施加严格的规则。例如 Linux shell 变量只能包含字母（`a` 到 `z` 或 `A` 到 `Z`），数字（`0` 到 `9`）或下划线字符（`_`）。通常，Unix shell 变量也将使用大写的名字。
+
+Spring Boot 的宽松绑定规则尽可能地设计为和这些命名限制兼容。
+
+要将规范形式的属性名称转换为环境变量名称，可以遵循以下规则：
+
+- 使用下划线（`_`）替换点（`.`）
+- 移除任何中划线（`-`）
+- 转为大写
+
+例如，配置属性 `spring.main.log-startup-info` 将转为一个名为 `SPRING_MAIN_LOGSTARTUPINFO` 的环境变量。
+
+环境变量也可以在绑定到对象列表时使用。为了绑定到一个 `List`，元素编号应在变量名称中用下划线包围。
+
+例如，配置属性 `my.service[0].other` 将使用名为 `MY_SERVICE_0_OTHER` 的环境变量。
+
+#### 2.8.7 合并复杂类型
+
+当队列在多于一处地方配置时，通过替换整个队列来覆写。
+
+例如，假设一个有默认值为 `null` 的 `name` 和 `description` 属性的 `MyPojo` 对象。下面例子展示一个 `MyProperties` 中的 `MyPojo` 对象队列：
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+    private final List<MyPojo> list = new ArrayList<>();
+
+    public List<MyPojo> getList() {
+        return this.list;
+    }
+}
+```
+
+考虑下面配置：
+
+```properties
+my.list[0].name=my name
+my.list[0].description=my description
+#---
+spring.config.activate.on-profile=dev
+my.list[0].name=my another name
+```
+
+如果 `dev` profile 没有激活，`MyProperties.list` 包括一个 `MyPojo` 条目，就像前面定义的那样。如果 `dev` profile 被激活，然而，`list` 仍然仅包含一个条目（名字为 `my another name` 且描述为 `null`）。这个配置并不给队列添加第二个 `MyPojo` 实例，且它并不合并这些条目。
+
+当在多个 profile 中指定 `List`，具有最高优先级的（且只有那个）会被使用。考虑如下例子：
+
+```properties
+my.list[0].name=my name
+my.list[0].description=my description
+my.list[1].name=another name
+my.list[1].description=another description
+#---
+spring.config.activate.on-profile=dev
+my.list[0].name=my another name
+```
+
+在前面的例子中，如果 `dev` profile 被激活，`MyProperties.list` 包含一个 `MyPojo` 条目（具有 `my another name`  的名字和一个 `null` 的描述）。对于 YAML，逗号分隔的队列和 YAML 队列可以用于完全覆写队列的内容。
+
+对于 `Map` 属性，你可以绑定从多个源中获取的属性值。然而，对于多个源中同一个属性，高优先级的那个会被使用。下面例子展示了 `MyProperties` 中的 `Map<String, MyPojo>`：
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+    private final Map<String, MyPojo> map = new LinkedHashMap<>();
+
+    public Map<String, MyPojo> getMap() {
+        return this.map;
+    }
+}
+```
+
+考虑下面的配置：
+
+```properties
+my.map.key1.name=my name 1
+my.map.key1.description=my description 1
+#---
+spring.config.activate.on-profile=dev
+my.map.key1.name=dev name 1
+my.map.key2.name=dev name 2
+my.map.key2.description=dev description 2
+```
+
+如果 `dev` profile 没有激活，`MyProperties.map` 包含一个具有键 `key1` 的条目（名字为 `my name 1` 且描述为 `my description 1`）。如果 `dev` profile 被激活，则 `map` 包含两个条目，键 `key1`（名字为 `dev name 1` 且描述为 `my description 1`）和 `key2`（名字为 `dev name 2` 和描述为 `dev description 2`）。
+
+> 前面合并的规则适用于所有属性源的属性，而不只是文件。
+
+#### 2.8.8 属性转换
+
+Spring Boot 在绑定到 `@ConfigurationProperties` bean 时，尝试强制转换外部应用属性到合适的类型。如果你需要自定义类型转换，你可以提供一个 `ConversionService` bean（具有一个名叫 `conversionService` 的 bean）或自定义属性编辑器（通过一个 `CustomEditorConfigurer` bean）或自定义 `Converters`（具有注解了 `@ConfigurationPropertiesBinding` 的 bean 定义）
+
+> 当 bean 在应用生命周期的非常早期被请求时，请确保限制你 `ConversionService` 使用的依赖。通常，任何你需要的依赖可能在创建时并没有完全初始化。在它不需要配置键强转且只依赖于 `@ConfigurationPropertiesBinding` 限定的自定义转换器时，你可能需要重命名你的自定义 `ConversionService`。
+
+##### 转换 Duration
+
+Spring Boot 致力于支持表示持续时间。如果你使用了一个 `java.time.Duration` 属性，应用属性中的下面格式可用：
+
+- 普通的 `long` 表示（在没有使用 `@DurationUnit` 指定时，默认使用毫秒单位）
+- `java.time.Duration` 使用的标准 ISO-8601 格式
+- 值和单位组合（`10s` 表示 10 秒）的更可读的格式
+
+考虑如下例子：
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+    @DurationUnit(ChronoUnit.SECONDS)
+    private Duration sessionTimeout = Duration.ofSeconds(30);
+
+    private Duration readTimeout = Duration.ofMillis(1000);
+
+    // getters / setters...
+}
+```
+
+为了指定 30 秒的会话超时时间，`30`，`PT30S` 和 `30s` 都起到同样效果。读取超时时间可以通过下面格式：`500`，`PT0.5S` 和 `500ms` 来指定。
+
+你也可以使用任意支持的单位，它们是：
+
+- `ns` 纳秒
+- `us` 微秒
+- `ms` 毫秒
+- `s` 秒
+- `m` 分钟
+- `h` 小时
+- `d` 天
+
+默认单位是毫秒，且可以使用 `@DurationUnit` 按上面的示例阐释的那样覆写。
+
+如果你希望使用构造器绑定，相同属性可以被公开，像下面例子展示的：
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+    // fields...
+
+    public MyProperties(@DurationUnit(ChronoUnit.SECONDS) @DefaultValue("30s") Duration sessionTimeout,
+            @DefaultValue("1000ms") Duration readTimeout) {
+        this.sessionTimeout = sessionTimeout;
+        this.readTimeout = readTimeout;
+    }
+
+    // getters...
+}
+```
+
+> 如果你正在升级一个 `Long` 属性，如果单位不是毫秒的话，请确保定义了单位（使用 `@DurationUnit`）。这样使你可以透明的升级而同时支持富格式。
+
+##### 转换 Period
+
+除了持续时间，Spring Boot 可以使用 `java.time.Period` 类型。下面格式可以在应用属性中使用：
+
+- 一个普通的 `int` 表示法（除非使用 `@PeriodUnit` 指定，否则使用天作为默认单位）
+- `java.time.Period` 使用的标准的 ISO-8601 格式
+- 值和单位对组合的更简单的格式（`1y3d` 表示 1 年 3 天）
+
+下面单位支持更简单的格式：
+
+- `y` 年
+- `m` 月
+- `w` 周
+- `d` 天
+
+> `java.time.Period` 类型从不实际保存周数的数量，这是表示“7 天”的简便方式。
+
+##### 转换 DataSize
+
+Spring 框架具有一个 `DataSize` 值类型来表达字节单位的大小。如果你公开一个 `DataSize` 属性，下面应用属性中的格式可用：
+
+- 普通 `long` 表达式（除非使用 `@DataSizeUnit` 指定，否则使用字节作为默认单位）
+- 值和单位组合的更可读的格式（`10MB` 表示 10 兆字节）
+
+考虑下面例子：
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+    @DataSizeUnit(DataUnit.MEGABYTES)
+    private DataSize bufferSize = DataSize.ofMegabytes(2);
+
+    private DataSize sizeThreshold = DataSize.ofBytes(512);
+
+    // getters/setters...
+}
+```
+
+为了指定一个 10 兆字节的缓存大小，`10` 和 `10MB` 等效。256 字节的大小阈值可以通过 `256` 或 `256B` 指定。
+
+你也可以使用任何支持的单位。它们是：
+
+- `B` 字节
+- `KB` 千字节
+- `MB` 兆字节
+- `GB` 吉字节
+- `TB` 太字节
+
+默认单位是字节，且可以像上面示例中阐释的那样使用 `@DataSizeUnit` 覆写。
+
+如果你更希望使用构造器绑定，相同的属性可以按下面的例子展示那样被公开：
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+    // fields...
+
+    public MyProperties(@DataSizeUnit(DataUnit.MEGABYTES) @DefaultValue("2MB") DataSize bufferSize,
+            @DefaultValue("512B") DataSize sizeThreshold) {
+        this.bufferSize = bufferSize;
+        this.sizeThreshold = sizeThreshold;
+    }
+
+    // getters...
+}
+```
+
+> 如果你升级一个 `Long` 属性，如果单位不是字节的话，请确保定义了单位（使用 `@DataSizeUnit`）。这样使你可以透明的升级，同时支持富格式。
+
+#### 2.8.9 @ConfigurationProperties 验证
+
+Spring Boot 会尝试验证 `@ConfigurationProperties` 类，当它们被 Spring 的 `@Validated` 注解时。你可以直接在配置类上使用 JSR-303 `javax.validation` 约束注解。为了做到这点，确保兼容的 JSR-303 实现在你的 classpath 上，然后添加约束注解到你的字段上，像下面例子展示：
+
+```java
+@ConfigurationProperties("my.service")
+@Validated
+public class MyProperties {
+    @NotNull
+    private InetAddress remoteAddress;
+
+    // getters/setters...
+}
+```
+
+> 你也可以通过使用 `@Validated` 注解创建配置属性的 `@Bean` 方法触发验证。
+
+为了确保验证在嵌套属性总是被触发，即使没有属性被发现时，相关联的字段必须使用 `@Valid` 注解。下面例子基于前面 `MyProperties` 例子构建：
+
+```java
+@ConfigurationProperties("my.service")
+@Validated
+public class MyProperties {
+    @NotNull
+    private InetAddress remoteAddress;
+
+    @Valid
+    private final Security security = new Security();
+
+    // getters/setters...
+
+    public static class Security {
+        @NotEmpty
+        private String username;
+
+        // getters/setters...
+    }
+}
+```
+
+你也可以通过创建一个叫作 `configurationPropertiesValidator` 的 bean 定义添加一个自定义 Spring `Validator`。`@Bean` 方法应该被声明为 `static`。配置属性验证器在应用声明周期的很早就被创建，且声明 `@Bean` 方法作为静态方法使得 bean 可以无须初始化 `@Configuration` 就被创建。这样避免了可能因为过早初始化导致的问题。
+
+> `spring-boot-actuator` 模块包括一个公开所有 `@ConfigurationProperties` bean 的端点。指定你的 web 浏览器到 `/actuator/configprops` 或使用等效的 JMX 端点。参考“生产就绪特性”一节以获取细节。
+
+#### 2.8.10 @ConfigurationProperties vs @Value
+
+`@Value` 注解是一个核心容器特性，且它不提供和类型安全的配置属性相同的特性。下面的表总结了 `@ConfigurationProperties` 和 `@Value` 支持的特性：
+
+| 特性        | `@ConfigurationProperties` | `@Value`                 |
+| ----------- | -------------------------- | ------------------------ |
+| 宽松绑定    | 是                         | 受限的（参考下面的备注） |
+| 支持元数据  | 是                         | 否                       |
+| `SpEL` 求值 | 否                         | 是                       |
+
+> 如果你希望使用 `@Value`，我们建议你使用规范形式引用属性名称（仅使用小写字母的中划线格式）。这将允许 Spring Boot 使用和 `@ConfigurationProperties` 宽松绑定相同的逻辑。
+>
+> 例如，`@Value("${demo.item-price}")` 将从 `application.properties` 文件中匹配 `demo.item-price` 和 `demo.itemPrice` 格式，还从系统环境中匹配 `DEMO_ITEMPRICE`。如果你使用 `@Value("${demo.itemPrice}")`，`demo.item-price` 和 `DEMO_ITEMPRICE` 将不被考虑。
+
+如果你为你自己的组件定义了一组配置键，我们建议你使用 `@ConfigurationProperties` 注解的 POJO 将它们组合起来。这样将提供给你可以注入到你自己 bean 中的结构化的类型安全的对象。
+
+应用属性文件中的 `SpEL` 表达式并不在解析这些文件和填充环境时处理。然而，可以在 `@Value` 中写一个 `SpEL` 表达式。如果一个应用属性文件中的属性值是 `SpEL` 表达式，它将在被 `@Value` 消费时求值。
+
+## 3. Profile
+
+Spring Profile 提供了一种隔离应用程序配置部分的方式，使其仅在特定环境可用。任何 `@Component`，`@Configuration` 或 `@ConfigurationProperties` 可以被 `@Profile` 标记来限制它何时被加载，就像下面例子展示那样：
+
+```java
+@Configuration(proxyBeanMethods = false)
+@Profile("production")
+public class ProductionConfiguration {
+    // ...
+}
+```
+
+> 如果 `@ConfigurationProperties` bean 通过 `@EnableConfigurationProperties` 注册而不是自动扫描，`@Profile` 注解需要在拥有 `@EnableConfigurationProperties` 注解的 `@Configuration` 类上指定。在 `@ConfigurationProperties` 被扫描的情况中，`@Profile` 可以在 `@ConfigurationProperties` 类上指定。
+
+你可以使用 `spring.profiles.active` `Environment` 属性来指定激活哪个 profile。你可以通过这一章早些时候描述的方法来指定属性。例如，你可以在你的 `application.properties` 中包括它，就像下面例子中展示的那样：
+
+```properties
+spring.profiles.active=dev,hsqldb
+```
+
+你也可以通过下面开关：`--spring.profiles.active=dev.hsqldb` 在命令行中指定。
+
+如果没有 profile 被激活，默认的 profile 将被启用。默认 profile 的名字是 `default` 且它可以使用 `spring.profiles.default` `Environment` 属性来修改，就像下面例子展示的：
+
+```properties
+spring.profiles.default=none
+```
+
+`spring.profiles.active` 和 `spring.profiles.default` 仅可以在非 profile 指定的文档中使用。这意味着它们不能被包含在 profile 特定文件或通过 `spring.config.activate.on-profile` 激活的文件中。
+
+例如，第二个文档配置是无效的：
+
+```properties
+# this document is valid
+spring.profiles.active=prod
+#---
+# this document is invalid
+spring.config.activate.on-profile=prod
+spring.profiles.active=metrics
+```
+
+### 3.1 添加激活的 Profile
+
+`spring.profiles.active` 属性遵循和其他属性相同的排序规则：最高的 `PropertySource` 胜选。这意味着你可以指定在 `application.properties` 中激活的 profile 然后使用命令行开关来替换它们。
+
+有时，有一个添加激活 profile 的属性比替换它们有用。`spring.profiles.include` 属性可以被用来在 `spring.profiles.active` 属性前添加激活 profile。`SpringApplication` 入口点也有设置额外 profile 的 Java API。参考 SpringApplication 中的 `setAdditionalProfiles()` 方法。
+
+例如，当具有下面属性的应用运行时，common 和 local profile 将被激活，即使在使用 --spring.profiles.active 开关运行时：
+
+```properties
+spring.profiles.include[0]=common
+spring.profiles.include[1]=local
+```
+
+> 和 `spring.profiles.active` 相似的，`spring.profiles.include` 只能在非 profile 指定的文档中使用。这意味着它不能包含在 profile 特定文件或 `spring.config.activate.on-profile` 激活的文档中。
+
+下一节中描述的 Profile 组可以用来在给定 profile 激活时添加激活 profile。
+
+### 3.2 Profile 组
+
+有时，你在应用程序中定义和使用的配置文件过于细粒度，使用起来很麻烦。例如，你可以使用 `proddb` 和 `prodmq` profile 来分别独立启用数据库和消息传递特性。
+
+为了帮助实现这一点，Spring Boot 允许你定义 profile 组。一个 profile 组允许你为一组相关的 profile 定义一个逻辑名称。
+
+例如，我们可以创建一个包括我们 `proddb` 和 `prodmq` profile 的 `production` 组。
+
+```properties
+spring.profiles.group.production[0]=proddb
+spring.profiles.group.production[1]=prodmq
+```
+
+我们的应用现在可以使用 `--spring.profiles.active=production` 来激活 `production`，一次启动 `proddb` 和 `prodmq` profile。
+
+### 3.3 程序化设置 Profile
+
+你可以通过在你的应用运行前调用 `SpringApplication.setAdditionalProfiles(...)` 程序化地设置激活的 profile。也可以使用 Spring 的 `ConfigurableEnvironment` 接口来激活 profile。
+
+### 3.4 指定 Profile 的配置文件
+
+`application.properties` （或 `application.yml`）和通过 `@ConfigurationProperties` 引入的文件的指定 Profile 的变体被视为文件而加载。有关细节请参考“指定 Profile 的文件”。
+
+## 4. 日志
+
+Spring Boot 对所有内部的日志使用 Commons Logging，但让底层日志实现开放。默认配置提供了 Java Util Logging，Log4j2，和 Logback。在每个情况下，日志将先配置为使用控制台输出，而可选的文件输出也是可用的。
+
+默认情况下，如果你使用“Starter”的话，Logback 将被用于日志。合适的 Logback 路由将被包含，来保证使用 Java Util Logging，Commons Logging，Log4J，或 SLF4J 的依赖库运行正常。
+
+> Java 有很多可用的日志框架。如果上述的列表看上去很迷惑，不要担心。通常来说，你不需要改变你的日志依赖，Spring Boot 默认就能工作得很好。
+
+> 当你将你的应用部署到 servlet 容器或者应用服务器时，Java Util Logging API 执行的日志不会路由到你的应用日志。这防止了容器或其他已经部署的应用运行的日志出现在你的应用日志中。
+
+### 4.1 日志格式
+
+Spring Boot 中默认的日志输出和下面例子相似：
+
+```
+2022-11-24T17:02:47.423Z  INFO 18487 --- [           main] o.s.b.d.f.s.MyApplication                : Starting MyApplication using Java 17.0.5 with PID 18487 (/opt/apps/myapp.jar started by myuser in /opt/apps/)
+2022-11-24T17:02:47.428Z  INFO 18487 --- [           main] o.s.b.d.f.s.MyApplication                : No active profile set, falling back to 1 default profile: "default"
+2022-11-24T17:02:49.682Z  INFO 18487 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2022-11-24T17:02:49.709Z  INFO 18487 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2022-11-24T17:02:49.710Z  INFO 18487 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.1]
+2022-11-24T17:02:49.877Z  INFO 18487 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2022-11-24T17:02:49.880Z  INFO 18487 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2384 ms
+2022-11-24T17:02:50.499Z  INFO 18487 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2022-11-24T17:02:50.524Z  INFO 18487 --- [           main] o.s.b.d.f.s.MyApplication                : Started MyApplication in 4.578 seconds (process running for 5.179)
+```
+
+下面项会被输出：
+
+- 日期和时间：毫秒级别且可以轻松排序。
+- 日志级别：`ERROR`，`WARN`，`INFO`，`DEBUG`，或 `TRACE`。
+- 进程 ID。
+- 一个 `---` 分隔符，用来区分真正日志信息的开始。
+- 线程名称：包裹在方括号中（可能在控制台输出时被删减）。
+- 日志名称：这通常是源类的名字（经常被简写）。
+- 日志信息。
+
+> Logback 并不具有 `FATAL` 级别，它将被映射到 `ERROR`。
+
+### 4.2 控制台输出
+
+默认日志配置在信息被写下时，将其回显到控制台。默认情况下，`ERROR`-级别，`WARN`-级别，以及 `INFO`-级别的信息被记入日志。你可以通过使用 `--debug` 标记启动你的应用来启用“debug”模式。
+
+```shell
+$ java -jar myapp.jar --debug
+```
+
+> 你也可以在你的 `application.properties` 中指定 `debug=true`
+
+当 debug 模式被启用时，选定的核心日志（内嵌容器，Hibernate，和 Spring Boot）被配置为输出更多信息。启用 debug 模式不会将你的应用配置为记录全部 `DEBUG` 级别的日志。
+
+可选的，你可以通过使用 `--trace` 标记（或在你的 `application.properties` 中配置 `trace=true`）来启动你的应用来启用“trace”模式。这样将启用选定的核心日志（内嵌容器，Hibernate schema 生成，以及整个 Spring portfolio） 的 trace 日志。
+
+#### 4.2.1 有颜色的输出
+
+如果你的终端支持 ANSI，颜色输出将被使用来提高可读性。你可以设置 `spring.output.ansi.enabled` 为一个支持的值来覆盖自动检测。
+
+颜色代码使用 `%clr` 转换词来配置。在它最简单的形式，转换器根据日志级别给输出赋颜色，就像下面的例子展示的：
+
+```
+%clr(%5p)
+```
+
+下面表格描述了日志级别和颜色的映射：
+
+| 级别    | 颜色 |
+| ------- | ---- |
+| `FATAL` | 红色 |
+| `ERROR` | 红色 |
+| `WARN`  | 黄色 |
+| `INFO`  | 绿色 |
+| `DEBUG` | 绿色 |
+| `TRACE` | 绿色 |
+
+或者，您可以通过将其作为转换选项来指定应使用的颜色或样式。例如，要使文本变为黄色，请使用以下设置：
+
+```
+%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){yellow}
+```
+
+支持下列颜色和样式：
+
+- `blue`
+- `cyan`
+- `faint`
+- `green`
+- `magenta`
+- `red`
+- `yellow`
+
+### 4.3 文件输出
+
+默认情况，Spring Boot 日志仅输出到控制台且并不写日志文件。如果你希望在控制台输出外也写日志文件，你需要设置 `logging.file.name` 或 `logging.file.path` 属性（例如，在你的 `application.properties`）。
+
+下面的表格展示 `logging.*` 属性怎么一起使用的：
+
+| `logging.file.name` | `logging.file.path` | 例子       | 描述                                                         |
+| ------------------- | ------------------- | ---------- | ------------------------------------------------------------ |
+| （无）              | （无）              |            | 仅在控制台记录日志                                           |
+| 特定文件            | （无）              | `my.log`   | 写到特定日志文件。名字可以是一个精确位置或是和当前目录的相对位置 |
+| （无）              | 特定目录            | `/var/log` | 写 `spring.log` 到特定目录。名字可以是精确位置或和当前目录的相对位置 |
+
+日志文件在大小达到 10 MB 时会轮替，和控制台输出一样，默认情况下 `ERROR`-级别，`WARN`-级别，和 `INFO`-级别信息会被记录日志。
+
+> 日志属性和实际日志基础设施独立。作为结果，特定配置键（例如 Logback 的 `logback.configurationFile`）不会被 Spring Boot 管理。
+
+### 4.4 文件轮替
+
+如果你使用 Logback，可以使用 `application.properties` 或 `application.yaml` 文件微调日志循环设置。对于所有其他日志记录系统，你需要自己直接配置轮替设置（例如，如果使用 Log4j2，则可以添加 `log4j2.xml` 或 `log4j2-spring.xml` 文件）。
+
+支持以下轮换策略属性：
+
+| 名字                                                   | 描述                                   |
+| ------------------------------------------------------ | -------------------------------------- |
+| `logging.logback.rollingpolicy.file-name-pattern`      | 用于创建日志归档的文件名模式           |
+| `logging.logback.rollingpolicy.clean-history-on-start` | 在应用程序启动时，是否需要清理日志归档 |
+| `logging.logback.rollingpolicy.max-file-size`          | 日志文件在归档前的最大大小             |
+| `logging.logback.rollingpolicy.total-size-cap`         | 归档日志在删除前可以保有的最大大小     |
+| `logging.logback.rollingpolicy.max-history`            | 保留的归档日志文件最大数量（默认为 7） |
+
+### 4.5 日志级别
+
+所有支持的日志系统可以在 Spring `Environment` 中（例如，在 `application.properties` 中）使用 `logging.level.<logger-name>=<level>` 来设置日志级别，这里的 `level` 是 TRACE, DEBUG, INFO, WARN, ERROR, FATAL 或 OFF 中的一个。`root` 日志可以通过 `logging.level.root` 配置。
+
+下面例子展示了在 `application.properties` 中可能的日志设置：
+
+```properties
+logging.level.root=warn
+logging.level.org.springframework.web=debug
+logging.level.org.hibernate=error
+```
+
+可能使用环境变量来设置日志级别。例如，`LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=DEBUG` 将设置 `org.springframework.web` 为 `DEBUG`。
+
+> 上面的方法将仅在包级别日志生效。因为宽松绑定经常将环境变量转为小写，它不能以这种方式给一个独立的类配置日志。如果你需要给一个类配置日志，你可以使用 `SPRING_APPLICAION_JSON` 变量。
+
+### 4.6 日志组
+
+将相关的日志组在一起来让它们可以同时被配置，这经常会很有用。例如，你可能通常会更改所有 Tomcat 相关日志的日志级别，但你不容易记住顶级包。
+
+为了帮助做到这点，Spring Boot 允许你在你的 Spring `Environment` 中定义日志组。例如，这是你如何通过增加到你的 `application.properties` 定义一个“tomcat”组：
+
+```properties
+logging.group.tomcat=org.apache.catalina,org.apache.coyote,org.apache.tomcat
+```
+
+一旦被定义，你可以在一行内改变所有组内日志的级别：
+
+```properties
+logging.level.tomcat=trace
+```
+
+Spring Boot 包含了下面预定义的日志组，可以开箱即用：
+
+| 名字 | 日志                                                         |
+| ---- | ------------------------------------------------------------ |
+| web  | `org.springframework.core.codec`, `org.springframework.http`, `org.springframework.web`, `org.springframework.boot.actuate.endpoint.web`, `org.springframework.boot.web.servlet.ServletContextInitializerBeans` |
+| sql  | `org.springframework.jdbc.core`, `org.hibernate.SQL`, `org.jooq.tools.LoggerListener` |
+
+### 4.7 使用日志关闭钩子
+
+为了在你的应用终止时释放日志资源，提供了一个在 JVM 退出时触发日志系统清理的关闭钩子。除非你的应用被部署为一个 war 文件，关闭钩子将自动被注册。如果你的应用拥有复杂的上下文层级结构，关闭钩子可能不能满足你的需要。如果它不能，则请停用关闭钩子且调查底层日志系统直接提供的选项。例如，Logback 将提供允许每个日志在其上下文中创建的上下文选择器。你可以使用 `logging.register-shutdown-hook` 属性来停用关闭钩子。将其设置为 `false` 将停用注册。你可以在你的 `application.properties` 或 `application.yaml` 文件中设置该属性：
+
+```properties
+logging.register-shutdown-hook=false
+```
+
+### 4.8 自定义日志配置
+
+不同的日志系统可以通过在 classpath 中包含合适的库来激活，且可以通过在 classpath 根目录或 Spring `Environment` 属性 `logging.config` 指定的位置下提供合适的配置文件来进一步自定义。
+
+你可以通过用 `org.springframework.boot.logging.LoggingSystem` 系统属性来强制 Spring Boot 使用特定的日志系统。该值应该是一个 `LoggingSystem` 实现的完全限定类名。你可以通过使用 `none` 值来完全停用 Spring Boot 的日志配置。
+
+> 因为日志在 `ApplicationContext` 创建前初始化，不可能在 Spring`@Configuration` 文件中从 `@PropertySource` 控制日志。唯一的办法是改变日志系统或通过系统属性完全停用它
+
+取决于你的日志系统，下面文件被加载：
+
+| 日志系统                 | 自定义                                                       |
+| ------------------------ | ------------------------------------------------------------ |
+| Logback                  | `logback-spring.xml`, `logback-spring.groovy`, `logback.xml`, 或 `logback.groovy` |
+| Log4j2                   | `log4j2-spring.xml` 或 `log4j2.xml`                          |
+| JDK（Java Util Logging） | `logging.properties`                                         |
+
+> 可能的话，我们建议你为你的日志配置使用 `-spring` 变体（例如，使用 `logback-spring.xml` 而不是 `logback.xml`）。如果你使用标准的配置位置，Spring 不能完全控制日志初始化。
+
+> Java Util Logging 已知的类加载问题会导致从“可执行 jar”运行时出问题。在一切可能的情况下，我们建议你避免从一个“可执行 jar”运行。
+
+为了帮助自定义，一些其他属性从 Spring `Environment` 中转移到系统属性，如下表中描述的那样：
+
+| Spring Environment                  | 系统属性                        | 解释                                                         |
+| ----------------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| `logging.exception-conversion-word` | `LOG_EXCEPTION_CONVERSION_WORD` | 日志记录异常时使用的转换词                                   |
+| `logging.file.name`                 | `LOG_FILE`                      | 如果定义了，将在默认日志配置中使用                           |
+| `logging.file.path`                 | `LOG_PATH`                      | 如果定义了，将在默认日志配置中使用                           |
+| `logging.pattern.console`           | `CONSOLE_LOG_PATTERN`           | 控制台（stdout）上使用的日志模式                             |
+| `logging.pattern.dateformat`        | `LOG_DATEFORMAT_PATTERN`        | 日志日期格式的拼接器模式                                     |
+| `logging.charset.console`           | `CONSOLE_LOG_CHARSET`           | 控制台日志使用的字符集                                       |
+| `logging.pattern.file`              | `FILE_LOG_PATTERN`              | 在文件中使用的日志模式（如果 `LOG_FILE` 启用了）             |
+| `logging.charset.file`              | `FILE_LOG_CHARSET`              | 在文件中字符集（如果 `LOG_FILE` 启用了）                     |
+| `logging.pattern.level`             | `LOG_LEVEL_PATTERN`             | 渲染日志级别时使用的格式（默认为 `%5p`）                     |
+| `PID`                               | `PID`                           | 当前进程 ID （在可能时并且尚未定义为操作系统环境变量时被发现） |
+
+如果你使用 Logback，下面属性也会被转移：
+
+| Spring Environment                                     | 系统属性                                       | 解释                                                         |
+| ------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------ |
+| `logging.logback.rollingpolicy.file-name-pattern`      | `LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN`      | 轮换日志文件名字模式（默认 `${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz`） |
+| `logging.logback.rollingpolicy.clean-history-on-start` | `LOGBACK_ROLLINGPOLICY_CLEAN_HISTORY_ON_START` | 是否需要在启动时清理归档日志文件                             |
+| `logging.logback.rollingpolicy.max-file-size`          | `LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE`          | 日志文件大小最大值                                           |
+| `logging.logback.rollingpolicy.total-size-cap`         | `LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP`         | 保留日志备份的总大小                                         |
+| `logging.logback.rollingpolicy.max-history`            | `LOGBACK_ROLLINGPOLICY_MAX_HISTORY`            | 保留归档日志文件的最大数量                                   |
+
+所有支持的日志系统在解析其配置文件时都可以查询系统属性。有关示例，请参见 `spring-boot.jar` 中的默认配置：
+
+- Logback
+- Log4j 2
+- Java Util logging
+
+> 如果你想在日志属性中使用一个占位符，你应该使用 Spring Boot 的语法而不是底层框架的语法。值得注意的是，如果你使用 Logback，你应该使用 `:` 作为属性名和它默认值之间的分隔符，而不是 `:-`。
+
+> 你可以通过仅覆盖 `LOG_LEVEL_PATTERN`（或 Logback 中的 `logging.pattern.level`）添加 MDC 和其他点对点的内容到日志行中。例如，如果你使用 `logging.pattern.level=user:%X{user} %5p`，则默认日志格式包含一个给 “user” 的 MDC 条目，如果它存在的话，就如同下面例子展示那样：
+>
+> ```
+> 2019-08-30 12:30:04.031 user:someone INFO 22174 --- [  nio-8080-exec-0] demo.Controller
+> Handling authenticated request
+> ```
+
+### 4.9 Logback 扩展
+
 
 
 # 数据
