@@ -2226,6 +2226,218 @@ logging.register-shutdown-hook=false
 
 ### 4.9 Logback 扩展
 
+Spring Boot 包括了一些可以帮助进行进阶配置的 Logback 扩展。你可以在你的 `logback-spring.xml` 配置文件中使用这些扩展。
+
+> 因为标准 `logback.xml` 配置文件被太早加载，你在它里面使用扩展。你需要要么使用 `logback-spring.xml` 或定义一个 `logging.config` 属性。
+
+> 扩展不能通过 Logback 的配置扫描被使用。如果你想要这样做，修改配置文件将导致一个类似于下面日志的错误：
+>
+> ```
+> ERROR in ch.qos.logback.core.joran.spi.Interpreter@4:71 - no applicable action for [springProperty], current ElementPath is [[configuration][springProperty]]
+> ERROR in ch.qos.logback.core.joran.spi.Interpreter@4:71 - no applicable action for [springProfile], current ElementPath is [[configuration][springProfile]]
+> ```
+
+#### 4.9.1 指定 Profile 的配置
+
+`<springProfile>` 标签使你可以根据激活的 Spring profile 来包括或者不包括配置的部分。Profile 部分在 `<configuration>` 元素内部的任何位置都支持。使用 `name` 属性来指定哪个 profile 使用该配置。`<springProfile>` 标签可以包含一个 profile 名（例如 `staging`）或一个 profile 表达式。一个 profile 表达式允许表达更复杂的 profile 逻辑，例如 `production & (eu-central | eu-west)`。参阅 Spring 框架参考指南获取更多细节。下面列举了三个范例 profile：
+
+```xml
+<springProfile name="staging">
+    <!-- configuration to be enabled when the "staging" profile is active -->
+</springProfile>
+
+<springProfile name="dev | staging">
+    <!-- configuration to be enabled when the "dev" or "staging" profiles are active -->
+</springProfile>
+
+<springProfile name="!production">
+    <!-- configuration to be enabled when the "production" profile is not active -->
+</springProfile>
+```
+
+#### 4.9.2 环境属性
+
+`<springProperty>` 标签允许你从 Spring `Environment` 中公开属性来在 Logback 中使用。在你希望在你的 Logback 配置中访问你 `application.properties` 中的值时，这样做很有用。这个标签和 Logback 的标准 `<property>` 标签以相似方式工作。然而，你需要指定（从 `Environment` 中的）属性的 `source`，而不是指定一个直接的 `value`。如果你需要在 `local` 作用域以外的任意地方存储属性，你可以使用 `scope` 属性。如果你需要一个回退值（防止属性在 `Environment` 中没被设置），你可以使用 `defaultValue` 属性。下面例子展示了怎么公开属性以在 Logback 使用：
+
+```xml
+<springProperty scope="context" name="fluentHost" source="myapp.fluentd.host" defaultValue="localhost"/>
+<appender name="FLUENT" class="ch.qos.logback.more.appenders.DataFluentAppender">
+    <remoteHost>${fluentHost}</remoteHost>
+    ...
+</appender>
+```
+
+> `source` 必须用中划线式指定（例如，`my.property-name`）。然而，属性可以使用宽松规则被加入到 `Environment` 中。
+
+### 4.10 Log4j2 扩展
+
+Spring Boot 包括一些 Log4j2 的扩展，可以帮助其进行进阶配置。你可以在任何 `log4j2-spring.xml` 配置文件中使用这些扩展。
+
+> 因为标准 `log4j2.xml` 配置加载得非常早，你不能在其中使用扩展。你需要要么使用 `log4j2-spring.xml` 或定义一个 `logging.config` 属性。
+
+> 这些扩展取代了 Log4J 提供的 Spring Boot 支持。你应该确保在你的构建中不要包含 `org.apache.logging.log4j:log4j-spring-boot` 模组。
+
+#### 4.10.1 指定 Profile 配置
+
+`<SpringProfile>` 标签让你基于激活的 Spring profile 可选包括或不包括配置的部分。Profile 部分在 `<Configuration>` 元素内部任意位置都支持。使用 `name` 属性来指定哪个 profile 使用该配置。`<SpringProfile>` 标签可以包含一个 profile 名字（例如 `staging`）或一个 profile 表达式。一个 profile 表达式允许表达更加复杂的 profile 逻辑，例如 `production & (eu-central | eu-west)`。参阅 Spring 框架参考指南获取更多细节。下面列举了三个范例 profile：
+
+```xml
+<SpringProfile name="staging">
+    <!-- configuration to be enabled when the "staging" profile is active -->
+</SpringProfile>
+
+<SpringProfile name="dev | staging">
+    <!-- configuration to be enabled when the "dev" or "staging" profiles are active -->
+</SpringProfile>
+
+<SpringProfile name="!production">
+    <!-- configuration to be enabled when the "production" profile is not active -->
+</SpringProfile>
+```
+
+#### 4.10.2 环境属性查找
+
+如果你希望在你的 Log4j2 配置中引用你的 Spring `Environment` 中的属性，你可以使用 `spring:` 前缀查找。如果你希望在你的 Log4j2 配置中访问你 `application.properties` 文件中的值，这么做会很有帮助。
+
+下面例子展示了怎么设置一个 Log4j2 的名叫 `applicationName` 的属性，它从 Spring `Environment` 中读取 `spring.application.name`：
+
+```xml
+<Properties>
+    <Property name="applicationName">${spring:spring.application.name}</property>
+</Properties>
+```
+
+> 查找键必须使用中划线式（例如 `my.property-name`）指定。
+
+#### 4.10.3 Log4j2 系统属性
+
+Log4j2 支持一些可用于配置多种项目的系统属性。例如，`log4j2.skipJansi` 系统属性可用于配置 `ConsoleAppender` 是否尝试在 Windowns 使用 Jansi 输出流。
+
+所有在 Log4j2 初始化后加载的系统属性可以从 Spring `Environment` 中获取。例如，你可以添加 `log4j2.skipJansi=false` 到你的 `application.properties` 文件来让 `ConsoleAppender` 在 Windows 使用 Jansi。
+
+> Spring `Environment` 仅仅在系统属性和操作系统环境变量都没有包含该值时被考虑。
+
+> 在 Log4j2 早期初始化加载的系统属性不能引用 Spring `Environment`。例如，Log4j2 用来允许默认 Log4j2 实现被选择的属性就是在 Spring Environment 可用前被使用的。
+
+## 5. 国际化
+
+Spring Boot 支持本地化信息，这样你的应用可以迎合不同语言偏好的用户。默认情况下，Spring Boot 会在 classpath 的根位置查找 `message` 资源包的存在。
+
+> 当配置资源包的默认配置文件（默认为 `messages.properties`）可用时，自动配置会应用。如果你的资源包仅包含特定语言的属性文件，你需要添加默认的。如果没有任何匹配配置基础名字的配置文件被找到，则将不会有自动配置的 `MessageSource`。
+
+可是使用 `spring.messages` 命名空间配置资源包的基础名字和几个其他属性，如下例所示：
+
+```properties
+spring.messages.basename=messages,config.i18n.messages
+spring.messages.fallback-to-system-locale=false
+```
+
+> `spring.message.basename` 支持逗号分隔的位置列表，可以是包限定符，也可以是从 classpath 根路径解析的资源。
+
+参考 `MessageSourceProperties` 获取更多支持的选项。
+
+## 6. JSON
+
+Spring Boot 提供三个 JSON 映射库的整合：
+
+- Gson
+- Jackson
+- JSON-B
+
+Jackson 是首选和默认的库。
+
+### 6.1 Jackson
+
+Jackson 的自动配置是被提供的，且 Jackson 是 `spring-boot-starter-json` 的一部分。当 Jackson 在 classpath 时，一个 `ObjectMapper` bean 就被自动配置了。提供一些配置属性来自定义 `ObjectMapper` 配置。
+
+#### 6.1.1 自定义序列化器和反序列化器
+
+如果你使用 Jackson 来序列化和反序列化 JSON 数据，你可能想要写你自己的 `JsonSerializer` 和 `JsonDeserializer` 类。自定义序列化器经常和 Jackson 一起通过模组被注册，但 Spring Boot 提供了另一种 `@JsonComponent` 注解，可以帮助更方便地直接注册 Spring Bean。
+
+你可以直接在 `JsonSerializer`，`JsonDeserializer` 或 `KeyDeserializer` 实现上使用 `@JsonComponent` 注解。你也可以在包含序列化器/反序列化器作为内部类的类上使用它，如下所示：
+
+```java
+@JsonComponent
+public class MyJsonComponent {
+
+    public static class Serializer extends JsonSerializer<MyObject> {
+
+        @Override
+        public void serialize(MyObject value, JsonGenerator jgen, SerializerProvider serializers) throws IOException {
+            jgen.writeStartObject();
+            jgen.writeStringField("name", value.getName());
+            jgen.writeNumberField("age", value.getAge());
+            jgen.writeEndObject();
+        }
+
+    }
+
+    public static class Deserializer extends JsonDeserializer<MyObject> {
+
+        @Override
+        public MyObject deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
+            ObjectCodec codec = jsonParser.getCodec();
+            JsonNode tree = codec.readTree(jsonParser);
+            String name = tree.get("name").textValue();
+            int age = tree.get("age").intValue();
+            return new MyObject(name, age);
+        }
+
+    }
+
+}
+```
+
+所有在 `ApplicationContext` 中的 `@JsonComponent` bean 都会和 Jackson 一起被自动注册。因为 `@JsonComponent` 是用了 `@Component` 元注解，所以适用于常规的组件扫描规则。
+
+Spring Boot 也提供了 `JsonObjectSerializer` 和 `JsonObjectDeserializer` 基本类，可以提供标准 Jackson 版本外的有用的序列化对象的其他选项。参考 javadoc 中的 `JsonObjectSerializer` 和 `JsonObjectDeserializer` 获取细节。
+
+上面例子可以使用 `JsonObjectSerializer`/`JsonObjectDeserializer` 重写如下：
+
+```java
+@JsonComponent
+public class MyJsonComponent {
+
+    public static class Serializer extends JsonObjectSerializer<MyObject> {
+
+        @Override
+        protected void serializeObject(MyObject value, JsonGenerator jgen, SerializerProvider provider)
+                throws IOException {
+            jgen.writeStringField("name", value.getName());
+            jgen.writeNumberField("age", value.getAge());
+        }
+
+    }
+
+    public static class Deserializer extends JsonObjectDeserializer<MyObject> {
+
+        @Override
+        protected MyObject deserializeObject(JsonParser jsonParser, DeserializationContext context, ObjectCodec codec,
+                JsonNode tree) throws IOException {
+            String name = nullSafeValue(tree.get("name"), String.class);
+            int age = nullSafeValue(tree.get("age"), Integer.class);
+            return new MyObject(name, age);
+        }
+
+    }
+
+}
+```
+
+#### 6.1.2 混入
+
+Jackson 支持可以用于将附加注解混合到目标类上已经声明的注解中的混入。Spring Boot 的 Jackson 自动配置将扫描应用程序的包，查找用 `@JsonMixin` 注解的类，并将它们注册到自动配置的 `ObjectMapper` 中。注册由 Spring Boot 的 `JsonMixinModule` 执行。
+
+### 6.2 Gson
+
+Gson 自动配置被提供。当 Gson 在 classpath 下时，`Gson` bean 将自动配置。几个用于自定义配置的 `spring.gson.*` 配置属性被提供。为了获得更多控制，一个或更多 `GsonBuilderCustomizer` bean 可以被使用。
+
+### 6.3 JSON-B
+
+提供了 JSON-B 的自动配置。当 JSON-B API 和实现位于 classpath 上时，将自动配置 `Jsonb` bean。首选的 JSON-B 实现是 Eclipse Yasson，它提供了依赖管理。
+
+## 7. 任务执行和调度
+
 
 
 # 数据
