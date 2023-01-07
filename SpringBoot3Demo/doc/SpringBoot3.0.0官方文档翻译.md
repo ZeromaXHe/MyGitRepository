@@ -2438,6 +2438,131 @@ Gson 自动配置被提供。当 Gson 在 classpath 下时，`Gson` bean 将自�
 
 ## 7. 任务执行和调度
 
+在上下文中没有 `Executor` bean 的情况下，Spring Boot 会自动配置 `ThreadPoolTaskExecutor`，并使用可自动关联到异步任务执行（`@EnableAsync`）和 Spring MVC 异步请求处理的合理默认值。
+
+> 如果你在上下文定义一个自定义的 `Executor`，常规任务执行（即 `@EnableAsync`）将透明地使用它，但 Spring MVC 支持将不会被配置，因为它需要一个 `AsyncTaskExecutor` 实现（命名为 `applicationTaskExecutor`）。取决于你的目标安排，你可以改变你的 `Executor` 为 `ThreadPoolTaskExecutor` 或定义一个 `ThreadPoolTaskExecutor` 和一个包裹你的自定义 `Executor` 的 `AsyncConfigurer` 。
+>
+> 自动配置的 `TaskExecutorBuilder` 允许你简单地创建复制默认自动配置的实例。
+
+线程池使用可以根据负载增加和减少的 8 个核心线程。默认设置可以使用 `spring.task.execution` 命名空间进行微调，如下例所示：
+
+```properties
+spring.task.execution.pool.max-size=16
+spring.task.execution.pool.queue-capacity=100
+spring.task.execution.pool.keep-alive=10s
+```
+
+这将线程池改变为使用一个有界队列，这样当队列满时（100 个任务），线程池增加到最大 16 个线程。池的缩小变得更为激进，因为线程在闲置 10 秒钟后就会被回收（而不是默认的 60 秒）。
+
+当一个 `ThreadPoolTaskScheduler` 需要被关联到定时任务执行（例如使用 `@EnableScheduling`）时，它也可以被自动配置。该线程池默认使用一个线程，且它的设置可以使用 `spring.task.scheduling` 命名空间来微调，如下例所示：
+
+```properties
+spring.task.scheduling.thread-name-prefix=scheduling-
+spring.task.scheduling.pool.size=2
+```
+
+在需要创建一个自定义执行器或调度器时，可以在上下文中使用 `TaskExecutorBuilder` bean 和 `TaskSchedulerBuilder` bean。
+
+## 8. 测试
+
+Spring Boot 提供了许多工具类和注解，以帮助测试应用程序。测试支持由两个模块提供：`spring-boot-test` 包含核心内容，和 `spring-boot-test-autoconfigure` 支持测试自动配置。
+
+大多数开发者使用 `spring-boot-starter-test` Starter，它将导入 Spring Boot 测试模组和 JUnit Jupiter，AssertJ，Hamcrest 和一些其他有用的库。
+
+> 如果你有使用 JUnit 4 的测试，可以使用 JUnit 5 的 vintage 引擎来运行它们。要使用 vintage 引擎，需要增加一个 `junit-vintage-engine` 的依赖，如下例所示：
+>
+> ```xml
+> <dependency>
+>     <groupId>org.junit.vintage</groupId>
+>     <artifactId>junit-vintage-engine</artifactId>
+>     <scope>test</scope>
+>     <exclusions>
+>         <exclusion>
+>             <groupId>org.hamcrest</groupId>
+>             <artifactId>hamcrest-core</artifactId>
+>         </exclusion>
+>     </exclusions>
+> </dependency>
+> ```
+
+`hamcrest-core` 被排除了，因为 `org.hamcrest:hamcrest` 是 `spring-boot-starter-test` 的一部分。
+
+### 8.1 测试作用域依赖项
+
+`spring-boot-starter-test` Starter（在 `test` 作用域下）包含下面提供的库：
+
+- JUnit 5：Java 应用的单元测试的事实标准。
+- Spring Test 和 Spring Boot Test：工具类和 Spring Boot 应用的集成测试支持。
+- AssertJ：一个流式断言库。
+- Hamcrest：一个匹配器对象（也称为约束或谓词）库。
+- Mockito：一个 Java 模拟框架。
+- JSONassert：一个 JSON 的断言库。
+- JsonPath：JSON 的 XPath。
+
+我们通常认为这些公用库对于写测试非常有用。如果这些库不符合你的需要，你可以添加自己额外的测试依赖。
+
+### 8.2 测试 Spring 应用
+
+依赖注入的一个主要优点就是它可以使你的代码更容易单元测试。你可以在不涉及 Spring 的情况下使用 `new` 操作符实例化对象。你也可以使用 *mock* 对象而不是真正的依赖。
+
+经常地，你需要超越单元测试并开始集成测试（使用 Spring `ApplicationContext`）。能够在不需要部署应用程序或连接到其他基础设施的情况下执行集成测试是非常有用的。
+
+Spring 框架包含了一个用于此类集成测试的专用测试模块。您可以直接向 `org.springframework:spring-test` 声明一个依赖项，或者使用 `spring-boot-starter-test` “Starter” 以传递的方式将其引入。
+
+如果你之前还没有使用过 `spring-test` 模块，你应该通过阅读 Spring 框架参考文档的相关章节来开始。
+
+### 8.3 测试 Spring Boot 应用
+
+一个 Spring Boot 应用是一个 Spring `ApplicationContext`，所以测试不需要做任何超过你通常对普通 Spring 上下文的操作的特别操作。
+
+> 只要你使用 `SpringApplication` 来创建，外部属性，日志，和其他 Spring Boot 的特性默认被安装在上下文中。
+
+Spring Boot 提供了 `@SpringBootTest` 注解，可以在你需要 Spring Boot 特性时用来替代标准 `spring-test` `@ContextConfiguration` 注解。这个注解通过 `SpringApplication` 创建你测试中需要的 `ApplicationContext`。`@SpringBootTest` 外，还提供了一些其他用于测试应用更具体切面的注解。
+
+> 如果你正在使用 JUnit 4，不要忘记给你的测试添加 `@RunWith(SpringRunner.class)`，否则注解将被忽视。如果你正在使用 JUnit 5，就不需要添加等效的 `@ExtendWith(SpringExtension.class)`，因为 `@SpringBootTest` 和其他 `@...Test` 注解已经注解了它。
+
+默认情况下，`@SpringBootTest` 将不会启动一个服务器。你可以使用 `@SpringBootTest` 的 `webEnvironment` 属性来进一步改善你测试的运行：
+
+- `MOCK`（默认）：加载一个 web `ApplicationContext` 和提供一个 mock web 环境。使用该注解时，嵌入服务器将不会启动。如果一个 web 环境在你的 classpath 下不可用，这个模式会透明地降级为创建一个常规非 web `ApplicationContext`。它可以和 `@AutoConfigureMockMvc` 或 `@AutoConfigureWebTestClient` 结合使用，用于对 web 应用进行基于 mock 的测试
+- `RANDOM_PORT`：加载一个 `WebServerApplicationContext` 且提供一个真正的 web 环境。嵌入服务器将被启动且监听一个随机接口。
+- `DEFINED_PORT`：加载一个 `WebServerApplicationContext` 且提供一个真正 web 环境。嵌入服务器被启动且监听一个指定的端口（从你的 `application.properties` 中指定）或默认端口 `8080`。
+- `NONE`：通过使用 `SpringApplication` 加载一个 `ApplicationContext`，但不提供任何 web 环境（mock 或其他）。
+
+> 如果你的测试是 `@Transactional` 注解的，它将在每个测试方法执行结束时默认回滚事务。然而，由于将这种安排与 `RANDOM_PORT` 或 `DEFINED_PORT` 一起使用会隐式地提供一个真正的 servlet 环境，HTTP 客户端和服务器在单独的线程中运行，因此在单独的事务中运行。在这种情况下，在服务器上启动的任何事务都不会回滚。
+
+> 如果应用程序为管理服务器使用不同的端口，具有 `webEnvironment = WebEnvironment.RANDOM_PORT` 的 `@SpringBootTest` 将在一个独立的随机端口启动管理服务器。
+
+#### 8.3.1 检测 Web 应用类型
+
+如果 Spring MVC 可用，一个常规基于 MVC 的应用上下文被配置。如果你只有 Spring WebFlux，我们将检测到这一点，且配置一个基于 WebFlux 的应用上下文作为替代。
+
+如果两者都出现，Spring MVC 优先。如果你想在这种情况下测试一个响应式 web 应用，你必须设置 `spring.main.web-application-type` 属性：
+
+```java
+@SpringBootTest(properties = "spring.main.web-application-type=reactive")
+class MyWebFluxTests {
+    // ...
+}
+```
+
+#### 8.3.2 检测测试配置
+
+如果你熟悉 Spring Test 框架，你可能习惯使用 `@ContextConfiguration(class=...)` 来指定加载的 Spring `@Configuration`。或者，你可能经常在测试中使用嵌套的 `@Configuration` 类。
+
+当测试 Spring Boot 应用的时候，这往往不是必须的。Spring Boot 的 `@*Test` 注解将在你没有特意指定一个时自动搜索你的主配置。
+
+搜索的算法从包含测试的包开始，直到它找到一个注解了 `@SpringBootApplication` 或 `@SpringBootConfiguration` 的类。只要你用合理方式组织你的代码，你的主配置一般都可以被找到。
+
+> 如果你使用测试注解来测试你应用的一个更特定的切片，你应该避免添加特定于主方法应用程序类上特定区域的配置设置。
+>
+> `@SpringBootApplication` 的底层组件扫描配置定义了用于确保切片按预期工作的排除过滤器。如果在你的 `@SpringBootApplication` 注解的类上使用显式 `@ComponentScan` 指令，请注意这些过滤器将被禁用。如果使用切片，则应再次定义它们。
+
+如果你想要自定义主配置，你可以使用嵌套的 `@TestConfiguration` 类。不像会替代你应用主配置使用的嵌套的 `@Configuration` 类，一个嵌套的 `@TestConfiguration` 类是在你应用主配置之外使用的。
+
+> Spring 测试框架会在测试之间缓存应用上下文。因此，只要你的测试分享相同配置（无论它怎么被发现的），潜在的加载上下文的耗时进程将只发生一次。
+
+#### 8.3.3 使用测试配置主方法
+
 
 
 # 数据
