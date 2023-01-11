@@ -2563,6 +2563,203 @@ class MyWebFluxTests {
 
 #### 8.3.3 使用测试配置主方法
 
+通常，`@SpringBootTest` 发现的测试配置将是您的主 `@SpringBootApplication`。在大多数结构良好的应用程序中，该配置类还将包括用于启动应用程序的 `main` 方法。
+
+例如，以下是典型 Spring Boot 应用程序的一个非常常见的代码模式：
+
+```java
+@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+```
+
+在上面例子中，`main` 方法除了委托给 `SpringApplication.run` 之外，不做任何其他事情。但是可以使用更复杂的 `main` 方法，在调用 `SpringApplication.run` 之前应用自定义。
+
+例如，这是一个改变横幅模式和设置额外 profile 的应用：
+
+```java
+@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication application = new SpringApplication(MyApplication.class);
+        application.setBannerMode(Banner.Mode.OFF);
+        application.setAdditionalProfiles("myprofile");
+        application.run(args);
+    }
+}
+```
+
+因为 `main` 方法中的自定义可以影响结果 `ApplicationContext`，所以可能你也想使用 `main` 方法来创建你测试使用的 `ApplicationContext`。默认情况下，`@SpringBootTest` 将不会调用你的 `main` 方法，且类自己直接用于创建 `ApplicationContext` 作为替代。
+
+如果你想改变这个行为，你可以改变`@SpringBootTest` 的 `useMainMethod` 属性为 `UseMainMethod.ALWAYS` 或 `UseMainMethod.WHEN_AVAILABLE`。当被设置为 `ALWAYS`，如果没有 `main` 方法被找到时测试将失败。当被设置为 `WHEN_AVAILABLE` 时，`main` 方法将在可用时被使用，否则标准载入机制将被使用。
+
+例如，下面测试将调用 `MyApplication` 的 `main` 方法来创建 `ApplicationContext`。如果主方法设置额外的 profile，则它们将在 `ApplicationContext` 启动时被激活。
+
+```java
+@SpringBootTest(useMainMethod = UseMainMethod.ALWAYS)
+public class MyApplicationTests {
+    @Test
+    void exampleTest() {
+        // ...
+    }
+}
+```
+
+#### 8.3.4 排除测试配置
+
+如果你的应用使用组件扫描（例如，如果你使用 `@SpringBootApplication` 或 `@ComponentScan`），你可能发现你创建的只为特定测试使用的顶级的配置类被到处使用。
+
+就如同我们早些时候看到的，`@TestConfiguration` 可以被使用在测试的内部类来定制主配置。当放在顶级类上时，`@TestConfiguration` 表示 `/src/test/java` 中的类不应该通过扫描来获取。然后，可以在需要的地方显式导入该类，如下例所示：
+
+```java
+@SpringBootTest
+@Import(MyTestsConfiguration.class)
+class MyTests {
+    @Test
+    void exampleTest() {
+        // ...
+    }
+}
+```
+
+> 如果你直接使用 `@ComponentScan` （即，不通过 `@SpringBootApplication`），你需要注册 `TypeExcludeFilter`。参考 Javadoc 获取细节。
+
+#### 8.3.5 使用应用参数
+
+如果你的应用需要参数，你可以使用 `@SpringBootTest` 通过 `args` 属性注入它们。
+
+```java
+@SpringBootTest(args = "--app.test=one")
+class MyApplicationArgumentTests {
+    @Test
+    void applicationArgumentsPopulated(@Autowired ApplicationArguments args) {
+        assertThat(args.getOptionNames()).containsOnly("app.test");
+        assertThat(args.getOptionValues("app.test")).containsOnly("one");
+    }
+}
+```
+
+#### 8.3.6 在 Mock 环境下测试
+
+默认情况下，`@SpringBootTest` 不启动服务器，但启动 mock 环境作为替代来测试 web 端点。
+
+通过 Spring MVC，我们可以使用 `MockMvc` 或 `WebTestClient` 查询我们的 web 端点，就像下面例子展示的一样：
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+class MyMockMvcTests {
+    @Test
+    void testWithMockMvc(@Autowired MockMvc mvc) throws Exception {
+        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(content().string("Hello World"));
+    }
+
+    // If Spring WebFlux is on the classpath, you can drive MVC tests with a WebTestClient
+    @Test
+    void testWithWebTestClient(@Autowired WebTestClient webClient) {
+        webClient
+                .get().uri("/")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).isEqualTo("Hello World");
+    }
+}
+```
+
+> 如果你想只关注 web 层，且不启动一个完整的 `ApplicationContext`，考虑使用 `@WebMvcTest` 作为替代。
+
+通过 Spring WebFlux 端点，你可以使用 `WebTestClient` 如下例展示：
+
+```java
+@SpringBootTest
+@AutoConfigureWebTestClient
+class MyMockWebTestClientTests {
+    @Test
+    void exampleTest(@Autowired WebTestClient webClient) {
+        webClient
+            .get().uri("/")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class).isEqualTo("Hello World");
+    }
+}
+```
+
+> 在模拟环境下的测试通常比启动一个完整的 servlet 容器快很多。然而，因为模拟发生在 Spring MVC 层，依赖低层 servlet 容器行为的代码不能直接在 MockMvc 中测试。
+>
+> 例如，Spring Boot 的错误处理基于 servlet 容器提供的“错误页面”支持。这意味着，虽然你可以像预期那样测试你的 MVC 层扔出和处理异常，但你不能直接测试特定的自定义错误页面被渲染的过程。如果你需要测试这些低层问题，可以启动一个完全运行的服务器，如下一节所述。
+
+#### 8.3.7 在运行的服务器中测试
+
+如果你需要启动一个完全运行的服务器，我们建议你使用随机端口。如果你使用 `@SpringBootTest(webEnvironment=WebEnvironment.RANDOM_PORT)`，每次你测试启动时将随机选择一个可用端口。
+
+`@LocalServerPort` 注解可以被用来注入实际使用的端口到你的测试。为了方便起见，需要对启动的服务器进行 REST 调用的测试可以另外 `@Autowire` 一个`WebTestClient`，它解析到正在运行的服务器的相对链接，并附带一个用于验证响应的专用 API，如下例所示：
+
+```java
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+class MyRandomPortWebTestClientTests {
+    @Test
+    void exampleTest(@Autowired WebTestClient webClient) {
+        webClient
+            .get().uri("/")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class).isEqualTo("Hello World");
+    }
+}
+```
+
+> `WebTestClient` 可以被使用在在线服务器和模拟环境。
+
+这一套配置需要 `spring-webflux` 在 classpath 下。如果你不能或不会添加 webflux，Spring Boot 也将提供一个 `TestRestTemplate` 工具：
+
+```java
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+class MyRandomPortTestRestTemplateTests {
+    @Test
+    void exampleTest(@Autowired TestRestTemplate restTemplate) {
+        String body = restTemplate.getForObject("/", String.class);
+        assertThat(body).isEqualTo("Hello World");
+    }
+}
+```
+
+#### 8.3.8 自定义 WebTestClient
+
+为了自定义 `WebTestClient` bean，需要配置一个 `WebTestClientBuildCustomizer` bean。任何这样的通过 `WebTestClient.Builder` 被调用的 bean 将用来创建 `WebTestClient`。
+
+#### 8.3.9 使用 JMX
+
+因为测试上下文框架缓存上下文，JMX 默认被禁用，来防止相同的组件在同一个域上注册。如果此类测试需要访问 `MBeanServer`，考虑也将其标记为脏：
+
+```java
+@SpringBootTest(properties = "spring.jmx.enabled=true")
+@DirtiesContext
+class MyJmxTests {
+
+    @Autowired
+    private MBeanServer mBeanServer;
+
+    @Test
+    void exampleTest() {
+        assertThat(this.mBeanServer.getDomains()).contains("java.lang");
+        // ...
+    }
+
+}
+```
+
+#### 8.3.10 使用 Metrics
+
+无论你的 classpath 如何，在使用 `@SpringBootTest` 时，仪表注册表（除了内存中支持的注册表）都不会自动配置。
+
+如果需要将 metrics 导出到其他后端作为集成测试的一部分，请使用`@AutoConfigureObservability` 对其进行注释。
+
+#### 8.3.11 使用 Tracing
+
 
 
 # 数据
