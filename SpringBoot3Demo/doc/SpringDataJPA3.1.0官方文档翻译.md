@@ -506,3 +506,184 @@ Vavr 是一个 Java 中拥抱函数式编程概念的库。它附带了一组自
 根据实际查询结果的 Java 类型（第三列），您可以将第一列中的类型（或其子类型）用作查询方法返回类型，并获取第二列中用作实现类型的类型。或者，您可以声明 `Traversable`（Vavr `Iterable` 等价物），然后从实际返回值派生实现类。也就是说，`java.util.List` 变成 Vavr `List` 或 `Seq`，`java.util.Set` 变成 Vavr `LinkedHashSet` `Set`，依此类推。
 
 ### 4.4.7 存储库方法空处理
+
+对于 Spring Data 2.0，返回单个聚合实例的存储库 CRUD 方法使用 Java 8 的 `Optional` 来说明可能值缺失。除此之外，Spring Data 支持在查询方法上返回下面包装类：
+
+- `com.google.common.base.Optional`
+- `scala.Option`
+- `io.vavr.control.Option`
+
+可选地，查询方法可以选择根本不使用包装类。查询结果的缺失会通过返回 `null` 来表示。返回集合、集合替代物、包装类以及 stream 的存储库方法会保证永远不返回 `null`，而是返回相应的空表示。有关详细信息，请参阅“存储库查询返回类型”。
+
+#### 可空性注解
+
+你可以通过使用 Spring 框架的可空性注解来为存储库方法表示可空性限制。他们提供一个工具友好的方式和运行时可选的 `null` 检查，如下所示：
+
+- `@NonNullApi`：用在包级别上来分别声明参数和返回值的默认行为是既不接受也不生成 `null` 值。
+- `@NonNull`：用于不能为 `null` 的参数或返回值（`@NonNullApi` 适用的参数和返回值不需要）。
+- `@Nullable`：用于可以为 `null` 的参数或返回值。
+
+Spring 注解使用 JSR 305 注解（一种休眠但广泛使用的 JSR）。JSR 305 元注解使得工具供应商（如 IDEA、Eclipse 和 Kotlin）可以以通用方式提供空安全支持，而无须对 Spring 注解进行硬编码支持。要启用查询方法的可空性约束的运行时检查，需要在 `package-info.java` 中使用 Spring 的 `@NonNullApi` 在包级别激活不可空性，如下例所示：
+
+```java
+@org.springframework.lang.NonNullApi
+package com.acme;
+```
+
+一旦设置了非空默认值，存储库查询方法调用将在运行时验证可空性约束。如果查询结果违反了已定义的约束，则会引发异常。当方法返回 `null` 但声明为不可为空时（默认情况下，在存储库所在的包上定义了注解），就会发生这种情况。如果您想再次选择可为空的结果，请在单个方法上选择性地使用 `@Nullable`。使用本节开头提到的结果包装器类型继续按预期工作：将空结果转换为表示缺席的值。
+
+下面例子展示了刚刚描述的一些技术：
+
+```java
+package com.acme;                                                       (1)
+
+import org.springframework.lang.Nullable;
+
+interface UserRepository extends Repository<User, Long> {
+
+  User getByEmailAddress(EmailAddress emailAddress);                    (2)
+
+  @Nullable
+  User findByEmailAddress(@Nullable EmailAddress emailAdress);          (3)
+
+  Optional<User> findOptionalByEmailAddress(EmailAddress emailAddress); (4)
+}
+// (1) 存储库位于我们为其定义了非空行为的包（或子包）中。
+// (2) 当查询未生成结果时，引发 `EmptyResultDataAccessException`。当传递给方法的 `emailAddress` 为空时，引发 `IllegalArgumentException`。
+// (3) 当查询不产生结果时，返回 `null`。还接受 `null` 作为 `emailAddress` 的值。
+// (4) 当查询不产生结果时，返回 `Optional.empty()`。当传递给方法的 `emailAddress` 为 `null` 时，引发 `IllegalArgumentException`。
+```
+
+#### 在基于 Kotlin 的存储库中的可空性
+
+Kotlin 在语言中定义了可空性的约束。Kotlin 代码编译成字节码，字节码不通过方法签名来表达可空性约束，而是通过编译的元数据来表达。确保在您的项目中包含 `kotlin-reflect` JAR，以便能够对 Kotlin 的可空性约束进行内省。Spring Data 存储库使用语言机制来定义这些约束，以应用相同的运行时检查，如下所示：
+
+```kotlin
+interface UserRepository : Repository<User, String> {
+
+  fun findByUsername(username: String): User     (1)
+
+  fun findByFirstname(firstname: String?): User? (2)
+}
+
+// (1) 该方法将参数和结果都定义为不可为空（Kotlin 默认值）。Kotlin 编译器拒绝向方法传递 `null` 的方法调用。如果查询产生空结果，则引发 `EmptyResultDataAccessException`。
+// (2) 此方法接受 `firstname` 参数的 `null`，如果查询未生成结果，则返回 `null`。
+```
+
+### 4.4.8 流查询结果
+
+通过使用 Java 8 `Stream<T>` 作为返回类型，可以增量处理查询方法的结果。不是将查询结果包装在 `Stream` 中，而是使用特定于数据存储的方法来执行流，如以下示例所示：
+
+```java
+@Query("select u from User u")
+Stream<User> findAllByCustomQueryAndStream();
+
+Stream<User> readAllByFirstnameNotNull();
+
+@Query("select u from User u")
+Stream<User> streamAllPaged(Pageable pageable);
+```
+
+> `Stream` 可能会包装底层数据存储特定的资源，因此在使用后必须关闭。您可以使用 `close()` 方法或使用 Java 7 `try-with-resources` 块手动关闭 `Stream`，如下例所示：
+>
+> ```java
+> try (Stream<User> stream = repository.findAllByCustomQueryAndStream()) {
+>   stream.forEach(…);
+> }
+> ```
+
+> 不是所有 Spring Data 模块现在都支持 `Stream<T>` 作为返回值。
+
+### 4.4.9 异步查询结果
+
+你可以通过 Spring 的异步方法运行功能异步运行存储库查询。这意味着当实际查询发生在已提交给 Spring `TaskExecutor` 的任务中时，方法在调用时立即返回。异步查询不同于反应式查询，不应混合使用。有关反应式支持的更多详细信息，请参阅特定于存储的文档。以下示例显示了许多异步查询：
+
+```java
+@Async
+Future<User> findByFirstname(String firstname);               (1)
+
+@Async
+CompletableFuture<User> findOneByFirstname(String firstname); (2)
+
+// (1) 使用 `java.util.concurrent.Future` 作为返回类型。
+// (2) 使用一个 Java 8 `java.util.concurrent.CompletableFuture` 作为返回类型。
+```
+
+## 4.5 创建存储库实例
+
+这一节介绍如何为已定义的存储库接口创建实例和 bean 定义。
+
+### 4.5.1 Java 配置
+
+在 Java 配置类上使用特定于存储的 `@EnableJpaRepositorys` 注解来定义存储库激活的配置。有关 Spring 容器基于 Java 的配置的介绍，请参阅 Spring 参考文档中的 JavaConfig。
+
+启用 Spring Data 存储库的示例配置如下所示：
+
+```java
+@Configuration
+@EnableJpaRepositories("com.acme.repositories")
+class ApplicationConfiguration {
+
+  @Bean
+  EntityManagerFactory entityManagerFactory() {
+    // …
+  }
+}
+```
+
+> 前面的示例使用特定于 JPA 的注解，您可以根据实际使用的存储模块进行更改。这同样适用于 `EntityManagerFactory` bean 的定义。请参阅涵盖特定于存储的配置的部分。
+
+### 4.5.2 XML 配置
+
+每个 Spring Data 模块都包含一个存储库元素，允许您定义 Spring 为您扫描的基本包，如下例所示：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.springframework.org/schema/data/jpa"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    https://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/jpa
+    https://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+
+  <jpa:repositories base-package="com.acme.repositories" />
+
+</beans:beans>
+```
+
+在前面的示例中，指示 Spring 扫描 `com.acme.resources` 及其所有子包以查找扩展 `Repository` 或其子接口之一的接口。对于找到的每个接口，基础结构都注册特定于持久性技术的 `FactoryBean`，以创建处理查询方法调用的适当代理。每个 bean 都注册在从接口名称派生的 bean 名称下，因此 `UserRepository` 的接口将注册在 `userRepository` 下。嵌套存储库接口的 Bean 名称以其封闭类型名称为前缀。基本包属性允许通配符，以便您可以定义扫描包的模式。
+
+### 4.5.3 使用过滤器
+
+默认情况下，基础结构会选择每个扩展位于配置的基本包下的持久性技术特定的 `Repository` 子接口的接口，并为其创建一个 bean 实例。但是，您可能需要对哪些接口创建了 bean 实例进行更细粒度的控制。为此，请在存储库声明中使用过滤器元素。语义完全等同于 Spring 组件过滤器中的元素。有关详细信息，请参阅这些元素的 Spring 参考文档。
+
+例如，要将某些接口从实例化中排除为存储库 bean，可以使用以下配置：
+
+```java
+@Configuration
+@EnableJpaRepositories(basePackages = "com.acme.repositories",
+    includeFilters = { @Filter(type = FilterType.REGEX, pattern = ".*SomeRepository") },
+    excludeFilters = { @Filter(type = FilterType.REGEX, pattern = ".*SomeOtherRepository") })
+class ApplicationConfiguration {
+
+  @Bean
+  EntityManagerFactory entityManagerFactory() {
+    // …
+  }
+}
+```
+
+前面的示例排除了以 `SomeRepository` 结尾的所有接口，而且包括以 `SomeOtherRepository` 结尾。
+
+### 4.5.4 独立使用
+
+您还可以在 Spring 容器之外使用存储库基础结构——例如在 CDI 环境中。在类路径中仍然需要一些 Spring 库，但通常，您也可以以编程方式设置存储库。提供存储库支持的 Spring Data 模块附带了一个持久性技术特定的 `RepositoryFactory`，您可以使用它，如下所示：
+
+```java
+RepositoryFactorySupport factory = … // Instantiate factory here
+UserRepository repository = factory.getRepository(UserRepository.class);
+```
+
+## 4.6 Spring Data 存储库的自定义实现
+
