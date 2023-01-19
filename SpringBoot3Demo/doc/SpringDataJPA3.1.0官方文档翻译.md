@@ -687,3 +687,531 @@ UserRepository repository = factory.getRepository(UserRepository.class);
 
 ## 4.6 Spring Data 存储库的自定义实现
 
+Spring Data 提供了各种选项来创建代码少的查询方法。但当这些选项不符合您的需要时，您也可以为存储库方法提供自己的自定义实现。本节介绍如何做到这一点。
+
+### 4.6.1 自定义独立存储库
+
+要使用自定义功能让存储库功能更丰富，必须首先定义自定义功能的片段（fragment）接口和实现，如下所示：
+
+```java
+interface CustomizedUserRepository {
+  void someCustomMethod(User user);
+}
+```
+
+```java
+class CustomizedUserRepositoryImpl implements CustomizedUserRepository {
+
+  public void someCustomMethod(User user) {
+    // Your custom implementation
+  }
+}
+```
+
+> 与片段接口对应的类名中最重要的部分是 `Impl` 后缀。
+
+实现本身不依赖于 Spring Data，可以是一个普通的 Spring bean。因此，您可以使用标准依赖注入行为来注入对其他 bean（例如 `JdbcTemplate`）的引用，参与切面，等等。
+
+然后，您可以让存储库接口扩展片段接口，如下所示：
+
+```java
+interface UserRepository extends CrudRepository<User, Long>, CustomizedUserRepository {
+
+  // Declare query methods here
+}
+```
+
+使用存储库接口扩展片段接口结合了 CRUD 和自定义功能，使其可供客户端使用。
+
+Spring Data 存储库是通过使用组成存储库组合的片段来实现的。片段是基本存储库、功能切面（如 QueryDsl）和自定义接口及其实现。每次向存储库接口添加接口时，都会通过添加片段来增强组合。基础存储库和存储库切面的实现由每个 Spring Data 模块提供。
+
+以下示例显示了自定义接口及其实现：
+
+```java
+interface HumanRepository {
+  void someHumanMethod(User user);
+}
+
+class HumanRepositoryImpl implements HumanRepository {
+
+  public void someHumanMethod(User user) {
+    // Your custom implementation
+  }
+}
+
+interface ContactRepository {
+
+  void someContactMethod(User user);
+
+  User anotherContactMethod(User user);
+}
+
+class ContactRepositoryImpl implements ContactRepository {
+
+  public void someContactMethod(User user) {
+    // Your custom implementation
+  }
+
+  public User anotherContactMethod(User user) {
+    // Your custom implementation
+  }
+}
+```
+
+以下示例显示了扩展 `CrudRepository` 的自定义存储库的接口：
+
+```java
+interface UserRepository extends CrudRepository<User, Long>, HumanRepository, ContactRepository {
+
+  // Declare query methods here
+}
+```
+
+存储库可以由多个自定义实现组成，这些实现按照声明的顺序导入。自定义实现的优先级高于基本实现和存储库切面。这种排序允许您重写基本存储库和切面方法，并在两个片段提供相同的方法签名时解决歧义。存储库片段不限于在单个存储库接口中使用。多个存储库可以使用片段接口，允许您在不同的存储库中重用自定义项。
+
+```java
+interface CustomizedSave<T> {
+  <S extends T> S save(S entity);
+}
+
+class CustomizedSaveImpl<T> implements CustomizedSave<T> {
+
+  public <S extends T> S save(S entity) {
+    // Your custom implementation
+  }
+}
+```
+
+以下示例显示了使用前面存储库片段的存储库：
+
+```java
+interface UserRepository extends CrudRepository<User, Long>, CustomizedSave<User> {
+}
+
+interface PersonRepository extends CrudRepository<Person, Long>, CustomizedSave<Person> {
+}
+```
+
+#### 配置
+
+存储库基础设施尝试通过扫描它找到存储库的包下的类来自动检测自定义实现片段。这些类需要遵循添加默认后缀 `Impl` 的命名规范。
+
+下面的例子展示了一个使用默认后缀的存储库和一个设置自定义后缀值的存储库：
+
+```java
+@EnableJpaRepositories(repositoryImplementationPostfix = "MyPostfix")
+class Configuration { … }
+```
+
+前一个示例中的第一个配置尝试查找一个名为 `com.acme.repository.CustomizedUserRepositoryImpl` 的类，以充当自定义存储库实现。第二个示例尝试查找 `com.acme.restory.CustomizedUserRepositoryMyPostfix`。
+
+##### 模糊性的解决
+
+如果在不同的包中找到多个具有匹配类名的实现，Spring Data 将使用 bean 名称来确定要使用哪个。
+
+假定前面展示的 `CustomizedUserRepository` 有以下两个自定义实现，将使用第一个实现。它的 bean 名称是 `customizedUserRepositoryImpl`，它与片段接口（`CustomizedUserRepository`）加上后缀 `Impl` 的名称相匹配。
+
+```java
+package com.acme.impl.one;
+
+class CustomizedUserRepositoryImpl implements CustomizedUserRepository {
+
+  // Your custom implementation
+}
+```
+
+```java
+package com.acme.impl.two;
+
+@Component("specialCustomImpl")
+class CustomizedUserRepositoryImpl implements CustomizedUserRepository {
+
+  // Your custom implementation
+}
+```
+
+如果您使用 `@Component(“specialCustom”)` 注解 `UserRepository` 接口，那么 bean 名称加上 `Impl` 将与 `com.acme.Impl.two` 中为存储库实现定义的名称相匹配，并使用它来代替第一个。
+
+##### 手动匹配
+
+如果您的自定义实现仅使用基于注解的配置和自动匹配，则前面所示的方法效果很好，因为它被视为任何其他 Spring bean。如果您的实现片段 bean 需要特殊的匹配，您可以声明 bean 并根据前面一节中描述的约定对其进行命名。然后，基础结构通过名称引用手动定义的 bean 定义，而不是自己创建。以下示例显示了如何手动匹配自定义实现：
+
+```java
+class MyClass {
+  MyClass(@Qualifier("userRepositoryImpl") UserRepository userRepository) {
+    …
+  }
+}
+```
+
+### 4.6.2 自定义基本存储库
+
+当您想要定制基本存储库行为以使所有存储库都受到影响时，上一节中描述的方法需要定制每个存储库接口。为了改变所有存储库的行为，您可以创建一个扩展特定于持久性技术存储库基类的实现。然后，该类充当给存储库代理使用的自定义基类，如下例所示：
+
+```java
+class MyRepositoryImpl<T, ID>
+  extends SimpleJpaRepository<T, ID> {
+
+  private final EntityManager entityManager;
+
+  MyRepositoryImpl(JpaEntityInformation entityInformation,
+                          EntityManager entityManager) {
+    super(entityInformation, entityManager);
+
+    // Keep the EntityManager around to used from the newly introduced methods.
+    this.entityManager = entityManager;
+  }
+
+  @Transactional
+  public <S extends T> S save(S entity) {
+    // implementation goes here
+  }
+}
+```
+
+> 该类需要有一个特定于存储的存储库工厂实现所使用的超类的构造函数。如果存储库基类有多个构造函数，请重写采用 `EntityInformation` 加上特定于存储的基础结构对象（例如 `EntityManager` 或模板类）的构造函数。
+
+最后一步是让 Spring Data 基础设施知道定制的存储库基类。在配置中，可以通过使用 `repositoryBaseClass` 来执行此操作，如下例所示：
+
+```java
+@Configuration
+@EnableJpaRepositories(repositoryBaseClass = MyRepositoryImpl.class)
+class ApplicationConfiguration { … }
+```
+
+## 4.7 从聚合根发布事件
+
+由存储库管理的实体是聚合根。在域驱动设计应用程序中，这些聚合根通常发布域事件。Spring Data 提供了一个名为 `@DomainEvents` 的注释，您可以在聚合根的方法上使用该注释，以使发布尽可能简单，如下例所示：
+
+```java
+class AnAggregateRoot {
+
+    @DomainEvents (1)
+    Collection<Object> domainEvents() {
+        // … return events you want to get published here
+    }
+
+    @AfterDomainEventPublication (2)
+    void callbackMethod() {
+       // … potentially clean up domain events list
+    }
+}
+
+// (1) 使用 `@DomainEvents` 的方法可以返回单个事件实例或事件集合。它不能有任何参数。
+// (2) 发布所有事件后，我们有一个用 `@AfterDomainEventPublication` 注解的方法。您可以使用它清除要发布的事件列表（以及其他用途）。
+```
+
+每次调用 Spring Data 存储库的 `save(…)`、`saveAll(…)` 或 `delete(…)` 方法之一时，都会调用这些方法。
+
+## 4.8 Spring Data 扩展
+
+本节介绍了一组 Spring Data 扩展，这些扩展支持在各种上下文中使用 Spring Data。目前，大多数集成都针对 SpringMVC。
+
+### 4.8.1 Querydsl 扩展
+
+Querydsl 是一个框架，可以通过其流式 API 构建静态类型的类似 SQL 的查询。
+
+几个 Spring Data 模块通过 `QuerydslPredicateExecutor` 提供与 Querydsl 的集成，如下例所示：
+
+```java
+public interface QuerydslPredicateExecutor<T> {
+
+  Optional<T> findById(Predicate predicate);  (1)
+
+  Iterable<T> findAll(Predicate predicate);   (2)
+
+  long count(Predicate predicate);            (3)
+
+  boolean exists(Predicate predicate);        (4)
+
+  // … more functionality omitted.
+}
+
+// (1) 查找并返回与 `Predicate` 匹配的单个实体。
+// (2) 查找并返回与 `Predicate` 匹配的所有实体。
+// (3) 返回与 `Predicate` 匹配的实体数。
+// (4) 返回是否存在与 `Predicate` 匹配的实体。
+```
+
+要使用 Querydsl 支持，请在存储库接口上扩展 `QuerydslPredicateExecutor`，如下例所示：
+
+```java
+interface UserRepository extends CrudRepository<User, Long>, QuerydslPredicateExecutor<User> {
+}
+```
+
+前面的示例允许您使用 Querydsl `Predicate` 实例编写类型安全查询，如下例所示：
+
+```java
+Predicate predicate = user.firstname.equalsIgnoreCase("dave")
+	.and(user.lastname.startsWithIgnoreCase("mathews"));
+
+userRepository.findAll(predicate);
+```
+
+### 4.8.2 Web 支持
+
+支持存储库编程模型的 Spring Data 模块附带各种 web 支持。web 相关组件要求 Spring MVC JAR 位于 classpath 中。其中一些甚至提供了与 Spring HATEOAS 的集成。通常，通过在 JavaConfig 配置类中使用 `@EnableSpringDataWebSupport` 注释来启用集成支持，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+@EnableSpringDataWebSupport
+class WebConfiguration {}
+```
+
+`@EnableSpringDataWebSupport` 注解注册了一些组件。我们将在本节稍后讨论这些问题。它还检测类路径上的 Spring HATEOAS，并为其注册集成组件（如果存在）。
+
+#### 基本 Web 支持
+
+上一节中显示的配置注册了一些基本组件：
+
+- 一个使用 `DomainClassConverter` 类让 Spring MVC 从请求参数或路径变量解析存储库管理的域类的实例。
+- `HandlerMethodArgumentResolver` 的实现，让 Spring MVC 从请求参数解析 `Pageable` 和 `Sort` 实例。
+- Jackson 模块可以对 `Point` 和 `Distance` 等类型进行序列化和反序列化或存储特定类型，具体取决于所使用的 Spring 数据模块。
+
+##### 使用 DomainClassConverter 类
+
+`DomainClassConverter` 类允许您直接在 Spring MVC 控制器方法签名中使用域类型，因此您不需要通过存储库手动查找实例，如下例所示：
+
+```java
+@Controller
+@RequestMapping("/users")
+class UserController {
+
+  @RequestMapping("/{id}")
+  String showUserForm(@PathVariable("id") User user, Model model) {
+
+    model.addAttribute("user", user);
+    return "userForm";
+  }
+}
+```
+
+该方法直接接收 `User` 实例，无需进一步查找。该实例可以通过让 Spring MVC 首先将路径变量转换为域类的 id 类型，然后通过调用为域类型注册的存储库实例上的 `findById(…)` 来最终访问该实例来解决。
+
+> 目前，存储库必须实现 `CrudRepository` 才能被发现以进行转换。
+
+##### Pageable 和 Sort 的 HandlerMethodArgumentResolvers
+
+上一节中显示的配置片段还注册了 `PageableHandlerMethodArgumentResolver` 以及 `SortHandlerMethodargumentResolve` 的实例。这些注册启用了 `Pageable` 和 `Sort` 作为有效的控制器方法参数，如下例所示：
+
+```java
+@Controller
+@RequestMapping("/users")
+class UserController {
+
+  private final UserRepository repository;
+
+  UserController(UserRepository repository) {
+    this.repository = repository;
+  }
+
+  @RequestMapping
+  String showUsers(Model model, Pageable pageable) {
+
+    model.addAttribute("users", repository.findAll(pageable));
+    return "users";
+  }
+}
+```
+
+前面的方法签名导致 Spring MVC 尝试使用以下默认配置从请求参数派生 `Pageable` 实例：
+
+|        |                                                              |
+| ------ | ------------------------------------------------------------ |
+| `page` | 你想要获取的页。索引从 0 开始且默认为 0。                    |
+| `size` | 你想要获取的页面尺寸。默认为 20。                            |
+| `sort` | 需要排序的属性，格式为 `property,property(,ASC|DESC)(,IgnoreCase)`。默认排序方向是大小写敏感的升序。如果你想要切换方向或大小写敏感，可以使用多个 `sort` 参数，例如， `?sort=firstname&sort=lastname,asc&sort=city,ignorecase`. |
+
+要自定义此行为，请分别注册一个实现 `PageableHandlerMethodArgumentResolverCustomizer` 接口或 `SortHandlerMethodargumentResolveCustomizer` 界面的 bean。它的 `customize()` 方法被调用，允许您更改设置，如下例所示：
+
+```java
+@Bean SortHandlerMethodArgumentResolverCustomizer sortCustomizer() {
+    return s -> s.setPropertyDelimiter("<-->");
+}
+```
+
+如果设置现有 `MethodArgumentResolver` 的属性不足以满足您的需要，请扩展 `SpringDataWebConfiguration` 或启用 HATEOAS 的等效方法，重写 `pageableResolver()` 或 `sortResolver()` 方法，并导入自定义配置文件，而不是使用 `@Enable` 注解。
+
+如果需要从请求中解析多个 `Pageable` 或 `Sort` 实例（例如，对于多个表），可以使用 Spring 的 `@Qualifier` 注解来区分它们。然后，请求参数必须以 `${qualifier}_` 作为前缀。以下示例显示了生成的方法签名：
+
+```java
+String showUsers(Model model,
+      @Qualifier("thing1") Pageable first,
+      @Qualifier("thing2") Pageable second) { … }
+```
+
+您必须填充 `thing1_page`、`thing2_page` 等。
+
+传递到方法中的默认 `Pageable` 相当于 `PageRequest.of(0，20)`，但您可以通过在 `Pageable` 参数上使用 `@PageableDefault` 注解来自定义它。
+
+#### 对 Pageable 的超媒体支持
+
+Spring HATEOAS 附带了一个表示模型类（`PagedResources`），该类允许使用必要的 `Page` 元数据以及链接来丰富 `Page` 实例的内容，从而让客户端轻松浏览页面。`Page` 到 `PagedResources` 的转换是通过 Spring HATEOAS `ResourceAssembler` 接口的实现完成的，该接口称为 `PagedResosourcesAssembler`。以下示例显示如何将 `PagedResourcesAssembler` 用作控制器方法参数：
+
+```java
+@Controller
+class PersonController {
+
+  @Autowired PersonRepository repository;
+
+  @RequestMapping(value = "/persons", method = RequestMethod.GET)
+  HttpEntity<PagedResources<Person>> persons(Pageable pageable,
+    PagedResourcesAssembler assembler) {
+
+    Page<Person> persons = repository.findAll(pageable);
+    return new ResponseEntity<>(assembler.toResources(persons), HttpStatus.OK);
+  }
+}
+```
+
+如前一个示例所示，启用该配置可以将 `PagedResourcesAssembler` 用作控制器方法参数。对其调用 `toResources(…)` 具有以下效果：
+
+- `Page` 的内容成为 `PagedResources` 实例的内容。
+- `PagedResources` 对象获取附加的 `PageMetadata` 实例，并使用来自 `Page` 和底层 `PageRequest` 的信息填充该实例。
+- `PagedResources` 可能会附加 `prev` 和 `next` 链接，具体取决于页面的状态。链接指向方法映射到的 URI。添加到方法中的分页参数与 `PageableHandlerMethodArgumentResolver` 的设置相匹配，以确保以后可以解析链接。
+
+假设数据库中有 30 个 `Person` 实例。您现在可以触发请求（`GET http://localhost:8080/persons`)并看到类似于以下内容的输出：
+
+```json
+{ "links" : [ { "rel" : "next",
+                "href" : "http://localhost:8080/persons?page=1&size=20" }
+  ],
+  "content" : [
+     … // 20 Person instances rendered here
+  ],
+  "pageMetadata" : {
+    "size" : 20,
+    "totalElements" : 30,
+    "totalPages" : 2,
+    "number" : 0
+  }
+}
+```
+
+汇编器生成了正确的 URI，并选择了默认配置，以将参数解析为即将到来的请求的 `Pageable`。这意味着，如果您更改了配置，链接将自动遵守更改。默认情况下，汇编器指向在其中调用的控制器方法，但您可以通过传递自定义 `Link` 来自定义该方法，该链接将用作构建分页链接的基础，从而重载 `PagedResourcesAssembler.toResource(…)` 方法。
+
+#### Spring Data Jackson 模块
+
+核心模块和一些特定于存储的模块附带一组 Jackson 模块，用于 Spring Data 域使用的类型，如 `org.springframework.data.geo.Distance` 和 `org.springfframework.data.geo.Point`。一旦启用了 web 支持，并且 `com.fasterxml.jackson.databind.ObjectMapper` 可用，就会导入这些模块。
+
+在初始化过程中，`SpringDataJacksonModules`（如 `SpringDataJacksonConfiguration`）会被基础结构获取，因此声明的 `com.fasterxml.jackson.databind.Modules` 可用于 jackson `ObjectMapper`。
+
+以下域类型的数据绑定混合由公共基础结构注册。
+
+```
+org.springframework.data.geo.Distance
+org.springframework.data.geo.Point
+org.springframework.data.geo.Box
+org.springframework.data.geo.Circle
+org.springframework.data.geo.Polygon
+```
+
+> 单个模块可以提供额外的 `SpringDataJacksonModules`。
+>
+> 有关详细信息，请参阅存储特定部分。
+
+#### Web 数据绑定支持
+
+通过使用 JSONPath 表达式（需要 Jayway JSONPath）或 XPath 表达式（需要 XmlBeam），可以使用 Spring Data 投影（在 projections 中描述）绑定传入的请求负载，如下例所示：
+
+```java
+@ProjectedPayload
+public interface UserPayload {
+
+  @XBRead("//firstname")
+  @JsonPath("$..firstname")
+  String getFirstname();
+
+  @XBRead("/lastname")
+  @JsonPath({ "$.lastname", "$.user.lastname" })
+  String getLastname();
+}
+```
+
+您可以将上一个示例中显示的类型用作 Spring MVC 处理程序方法参数，或者在 `RestTemplate` 的一个方法上使用 `ParameterizedTypeReference`。前面的方法声明将尝试在给定文档中的任何位置查找 `firstname`。`lastname` XML 查找是在传入文档的顶层执行的。JSON 变体首先尝试顶级 `lastname`，但如果前者没有返回值，则也尝试 `user` 子文档中嵌套的 `lastname`。这样，可以很容易地减轻源文档结构的更改，而无需客户端调用公开的方法（通常是基于类的负载绑定的缺点）。
+
+嵌套投射受支持，如“投射”中所述。如果该方法返回复杂的非接口类型，则使用Jackson `ObjectMapper` 映射最终值。
+
+对于 Spring MVC，只要 `@EnableSpringDataWebSupport` 处于活动状态，并且所需的依赖项在类路径上可用，就自动注册必要的转换器。要使用 `RestTemplate`，请手动注册 `ProjectingJackson2HttpMessageConverter`（JSON）或 `XmlBeamHttpMessageConverter`。
+
+有关更多信息，请参阅规范的 Spring Data Examples 库中的web投射示例。
+
+#### Querydsl Web 支持
+
+对于那些集成了 QueryDSL 的存储，您可以从请求查询字符串中包含的属性派生查询。
+
+考虑以下查询字符串：
+
+```java
+?firstname=Dave&lastname=Matthews
+```
+
+给定前面示例中的 `User` 对象，可以使用 `QuerydslPredicateArgumentResolver` 将查询字符串解析为以下值，如下所示：
+
+```java
+QUser.user.firstname.eq("Dave").and(QUser.user.lastname.eq("Matthews"))
+```
+
+> 当在类路径上找到 Querydsl 时，该功能会自动启用，同时还会启用 `@EnableSpringDataWebSupport`。
+
+向方法签名中添加 `@QuerydslPredicate` 提供了一个随时可用的 `Predicate`，您可以使用 `QuerydslPredicateExecutor` 来运行它。
+
+> 类型信息通常从方法的返回类型解析。由于该信息不一定与域类型匹配，因此使用 `QuerydslPredicate` 的根属性可能是一个好主意。
+
+以下示例显示了如何在方法签名中使用 `@QuerydslPredicate`：
+
+```java
+@Controller
+class UserController {
+
+  @Autowired UserRepository repository;
+
+  @RequestMapping(value = "/", method = RequestMethod.GET)
+  String index(Model model, @QuerydslPredicate(root = User.class) Predicate predicate,    (1)
+          Pageable pageable, @RequestParam MultiValueMap<String, String> parameters) {
+
+    model.addAttribute("users", repository.findAll(predicate, pageable));
+
+    return "index";
+  }
+}
+
+// (1) 解析查询字符串参数来为 `User` 匹配 `Predicate`
+```
+
+默认绑定如下：
+
+- 简单属性上的 `Object`，例如 `eq`。
+- 集合类属性上的 `Object`，例如 `contains`。
+- 简单属性的 `Collection`，例如 `in`。
+
+您可以通过 `@QuerydslPredicate` 的 `bindings` 属性或通过使用 Java 8 `default methods` 并将 `QuerydslBinderCustomizer` 方法添加到存储库接口来自定义这些绑定，如下所示：
+
+```java
+interface UserRepository extends CrudRepository<User, String>,
+                                 QuerydslPredicateExecutor<User>,                (1)
+                                 QuerydslBinderCustomizer<QUser> {               (2)
+
+  @Override
+  default void customize(QuerydslBindings bindings, QUser user) {
+
+    bindings.bind(user.username).first((path, value) -> path.contains(value))    (3)
+    bindings.bind(String.class)
+      .first((StringPath path, String value) -> path.containsIgnoreCase(value)); (4)
+    bindings.excluding(user.password);                                           (5)
+  }
+}
+
+// (1) `QuerydslPredicateExecutor` 提供对 `Predicate` 特定查找器方法的访问。
+// (2) 在存储库接口上定义的 `QuerydslBinderCustomizer` 将被自动拾取，以及快捷方式 `@QuerydslPredicate(bindings=…)`.
+// (3) 将 `username` 属性的绑定定义为简单的 `contains` 绑定。
+// (4) 将 `String` 属性的默认绑定定义为不区分大小写的 `contains` 匹配。
+// (5) 从 `Predicate` 解析中排除 `password` 属性。
+```
+
+在从存储库或 `@QuerydslPredicate` 应用特定绑定之前，您可以注册保存默认 Querydsl 绑定的 `QuerydslBinderCustomizerDefaults` bean。
+
+### 4.8.3 存储库填充器
+
