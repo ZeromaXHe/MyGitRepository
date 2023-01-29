@@ -2208,3 +2208,585 @@ void someMethod(PersonRepository people) {
 > 检查 `Class` 类型的查询参数是否符合动态投影参数。如果查询的实际返回类型等于 `Class` 参数的泛型参数类型，则匹配的 `Class` 参数在查询或 SpEL 表达式中不可用。如果要将 `Class` 参数用作查询参数，请确保使用其他泛型参数，例如 `Class<?>`。
 
 ### 5.1.4 存储过程
+
+JPA 2.1 规范引入了对使用 JPA 标准查询 API 调用存储过程的支持。我们引入了 `@Procedure` 注解，用于在存储库方法上声明存储过程元数据。
+
+下面的示例使用以下存储过程：
+
+```sql
+/;
+DROP procedure IF EXISTS plus1inout
+/;
+CREATE procedure plus1inout (IN arg int, OUT res int)
+BEGIN ATOMIC
+ set res = arg + 1;
+END
+/;
+```
+
+可以通过对实体类型使用 `NamedStoredProcedureQuery` 注解来配置存储过程的元数据。
+
+```java
+@Entity
+@NamedStoredProcedureQuery(name = "User.plus1", procedureName = "plus1inout", parameters = {
+  @StoredProcedureParameter(mode = ParameterMode.IN, name = "arg", type = Integer.class),
+  @StoredProcedureParameter(mode = ParameterMode.OUT, name = "res", type = Integer.class) })
+public class User {}
+```
+
+请注意，`@NamedStoredProcedureQuery` 有两个不同的存储过程名称。`name` 是 JPA 使用的名称。`procedureName` 是存储过程在数据库中的名称。
+
+您可以通过多种方式引用存储库方法中的存储过程。要调用的存储过程可以使用 `@Procedure` 注解的 `value` 或 `procedureName` 属性直接定义。这直接引用数据库中的存储过程，并通过 `@NamedStoredProcedureQuery` 忽略任何配置。
+
+或者，您可以将 `@NamedStoredProcedureQuery.name` 属性指定为 `@Procedure.name` 属性。如果未配置 `value`、`procedureName` 或 `name`，则存储库方法的名称将用作 `name` 属性。
+
+以下示例显示了如何引用显式映射过程：
+
+```java
+@Procedure("plus1inout")
+Integer explicitlyNamedPlus1inout(Integer arg);
+```
+
+以下示例与前面的示例等效，但使用 `procedureName` 别名：
+
+```java
+@Procedure(procedureName = "plus1inout")
+Integer callPlus1InOut(Integer arg);
+```
+
+以下内容同样与前两个等效，但使用了方法名而不是显式注释属性。
+
+```java
+@Procedure
+Integer plus1inout(@Param("arg") Integer arg);
+```
+
+以下示例显示了如何通过引用 `@NamedStoredProcedureQuery.name` 属性来引用存储过程。
+
+```java
+@Procedure(name = "User.plus1IO")
+Integer entityAnnotatedCustomNamedProcedurePlus1IO(@Param("arg") Integer arg);
+```
+
+如果被调用的存储过程具有单个输出参数，则该参数可以作为方法的返回值返回。如果在 `@NamedStoredProcedureQuery` 注解中指定了多个 out 参数，则这些参数可以作为 `Map` 返回，其中键是 `@NamedSstoredProcedurequery` 注解中给定的参数名称。
+
+### 5.1.5 规范(Specifications)
+
+JPA 2 引入了一个标准 API，您可以使用它以编程方式构建查询。通过编写 `criteria`，可以定义域类查询的 where 子句。再退一步，这些标准可以被视为 JPA 标准 API 约束所描述的实体的谓词。
+
+Spring Data JPA 采用了 Eric Evans 的书“领域驱动设计”中的规范概念，遵循相同的语义，并提供了一个 API 来使用 JPA 标准 API 定义此类规范。为了支持规范，可以使用 `JpaSpecificationExecutor` 接口扩展存储库接口，如下所示：
+
+```java
+public interface CustomerRepository extends CrudRepository<Customer, Long>, JpaSpecificationExecutor<Customer> {
+ …
+}
+```
+
+附加的接口具有允许您以各种方式运行规范的方法。例如，`findAll` 方法返回符合规范的所有实体，如下例所示：
+
+```java
+List<T> findAll(Specification<T> spec);
+```
+
+`Specification` 接口定义如下：
+
+```java
+public interface Specification<T> {
+  Predicate toPredicate(Root<T> root, CriteriaQuery<?> query,
+            CriteriaBuilder builder);
+}
+```
+
+规范可以很容易地用于在实体之上构建一组可扩展的谓词，然后可以与 `JpaRepository` 组合使用，而无需为每个所需的组合声明查询（方法），如下例所示：
+
+```java
+public class CustomerSpecs {
+
+
+  public static Specification<Customer> isLongTermCustomer() {
+    return (root, query, builder) -> {
+      LocalDate date = LocalDate.now().minusYears(2);
+      return builder.lessThan(root.get(Customer_.createdAt), date);
+    };
+  }
+
+  public static Specification<Customer> hasSalesOfMoreThan(MonetaryAmount value) {
+    return (root, query, builder) -> {
+      // build query here
+    };
+  }
+}
+```
+
+`Customer_` 类型是使用 JPA 元模型生成器生成的元模型类型（有关示例，请参阅 Hibernate 实现的文档）。因此，表达式 `Customer_.createdAt` 假定 `Customer` 具有 `Date` 类型的 `createdAt` 属性。除此之外，我们在业务需求抽象级别上表达了一些标准，并创建了可执行 `Specifications`。因此，客户可以使用 `Specification` 如下：
+
+```java
+List<Customer> customers = customerRepository.findAll(isLongTermCustomer());
+```
+
+为什么不为这种数据访问创建查询？与普通查询声明相比，使用单一规范并不能获得很多好处。当您将规范结合起来创建新的规范对象时，规范的力量真的很强大。您可以通过我们提供的规范的默认方法来实现这一点，以构建类似于以下内容的表达式：
+
+```java
+MonetaryAmount amount = new MonetaryAmount(200.0, Currencies.DOLLAR);
+List<Customer> customers = customerRepository.findAll(
+  isLongTermCustomer().or(hasSalesOfMoreThan(amount)));
+```
+
+`Specification` 提供了一些“粘合代码”默认方法来链接和组合 `Specification` 实例。这些方法允许您通过创建新的 `Specification` 实现并将其与现有实现结合来扩展数据访问层。
+
+在 JPA 2.1 中，`CriteriaBuilder` API 引入了 `CriteriaDelete`。这是通过 `JpaSpecificationExecutor` 的 `delete(Specification)` API 提供的。
+
+```java
+Specification<User> ageLessThan18 = (root, query, cb) -> cb.lessThan(root.get("age").as(Integer.class), 18)
+
+userRepository.delete(ageLessThan18);
+```
+
+该 `Specification` 建立了 `age` 字段（以整数表示）小于 `18` 的标准。传递给 `userRepository` 后，它将使用 JPA 的 `CriteriaDelete` 功能生成正确的 `DELETE` 操作。然后返回删除的实体数。
+
+### 5.1.6 按示例查询
+
+#### 导言
+
+本章介绍“按示例查询”，并解释如何使用它。
+
+按示例查询（Query by Example, QBE）是一种用户友好的查询技术，具有简单的界面。它允许动态创建查询，不需要编写包含字段名的查询。事实上，按示例查询根本不要求您使用特定于存储的查询语言编写查询。
+
+#### 用法
+
+按示例查询 API 由四部分组成：
+
+- 探针（Probe）：具有填充字段的域对象的实际示例。
+- `ExampleMatcher`: `ExampleMatcher` 包含如何匹配特定字段的详细信息。它可以在多个示例中重复使用。
+- `Example`：`Example` 由探针和 `ExampleMatcher` 组成。它用于创建查询。
+- `FetchableFluentQuery`：`FetchableFluentQuery` 提供了一个流式 API，允许进一步自定义从 `Example` 派生的查询。使用流式 API可以指定查询的排序投射和结果处理。
+
+按示例查询对一些使用场景很合适：
+
+- 使用一组静态或动态约束查询数据存储。
+- 频繁重构域对象，而不用担心破坏现有查询。
+- 独立于底层数据存储 API 工作。
+
+按示例查询也有几个限制：
+
+- 不支持嵌套或分组的属性约束，例如 `firstname = ?0 or (firstname = ?1 and lastname = ?2)`。
+- 仅支持字符串的 starts/contains/ends/regex 匹配和其他属性类型的精确匹配。
+
+在开始使用按示例查询之前，您需要有一个域对象。要开始，请为存储库创建一个接口，如下例所示：
+
+```java
+public class Person {
+
+  @Id
+  private String id;
+  private String firstname;
+  private String lastname;
+  private Address address;
+
+  // … getters and setters omitted
+}
+```
+
+前面的示例显示了一个简单的域对象。您可以使用它创建 `Example`。默认情况下，忽略具有 `null` 值的字段，并使用特定于存储的默认值匹配字符串。
+
+> 将属性包含在“按示例查询”条件中是基于可为空性的。除非 `ExampleMatcher` 忽略属性路径，否则始终包含使用基元类型（`int`、`double`、…）的属性。
+
+可以通过使用工厂方法 `of` 或使用 `ExampleMatcher` 来构建示例。`Example` 是不可变的。下面的列表显示了一个简单的示例：
+
+```java
+Person person = new Person();                         (1)
+person.setFirstname("Dave");                          (2)
+
+Example<Person> example = Example.of(person);         (3)
+
+// (1) 创建域对象的新实例。
+// (2) 设置要查询的属性。
+// (3) 创建 `Example`。
+```
+
+您可以使用存储库运行示例查询。为此，让存储库接口扩展`QueryByExampleExecutor<T>`。以下列表显示了 `QueryByExampleExecutor` 接口的摘录：
+
+```java
+public interface QueryByExampleExecutor<T> {
+
+  <S extends T> S findOne(Example<S> example);
+
+  <S extends T> Iterable<S> findAll(Example<S> example);
+
+  // … more functionality omitted.
+}
+```
+
+#### 示例匹配器
+
+示例不限于默认设置。您可以使用 `ExampleMatcher` 为字符串匹配、空处理和特定于属性的设置指定自己的默认值，如下例所示：
+
+```java
+Person person = new Person();                          (1)
+person.setFirstname("Dave");                           (2)
+
+ExampleMatcher matcher = ExampleMatcher.matching()     (3)
+  .withIgnorePaths("lastname")                         (4)
+  .withIncludeNullValues()                             (5)
+  .withStringMatcher(StringMatcher.ENDING);            (6)
+
+Example<Person> example = Example.of(person, matcher); (7)
+
+// (1) 创建域对象的新实例。
+// (2) 设置属性。
+// (3) 创建 `ExampleMatcher` 以期望所有值都匹配。即使没有进一步的配置，它也可以在这个阶段使用。
+// (4) 构造一个新的 `ExampleMatcher` 以忽略 `lastname` 属性路径。
+// (5) 构造一个新的 `ExampleMatcher` 以忽略 `lastname` 属性路径并包含空值。
+// (6) 构造一个新的 `ExampleMatcher` 来忽略 `lastname` 属性路径，包括空值，并执行后缀字符串匹配。
+// (7) 基于域对象和配置的 `ExampleMatcher` 创建一个新的 `Example`。
+```
+
+默认情况下，`ExampleMatcher` 期望探针上设置的所有值都匹配。如果希望获得与隐式定义的任何谓词匹配的结果，请使用 `ExampleMatcher.matchingAny()`。
+
+您可以为单个属性指定行为（例如 “firstname” 和 “lastname”，或者为嵌套属性指定 “address.city”）。您可以使用匹配的选项和区分大小写对其进行调整，如下例所示：
+
+```java
+ExampleMatcher matcher = ExampleMatcher.matching()
+  .withMatcher("firstname", endsWith())
+  .withMatcher("lastname", startsWith().ignoreCase());
+}
+```
+
+配置匹配器选项的另一种方法是使用 lambda（在 Java 8 中引入）。这种方法创建一个回调，要求实现者修改匹配器。您不需要返回匹配器，因为配置选项保存在匹配器实例中。以下示例显示了使用 lambda 的匹配器：
+
+```java
+ExampleMatcher matcher = ExampleMatcher.matching()
+  .withMatcher("firstname", match -> match.endsWith())
+  .withMatcher("firstname", match -> match.startsWith());
+}
+```
+
+`Example` 创建的查询使用配置的合并视图。默认匹配设置可以在 `ExampleMatcher` 级别设置，而单独的设置可以应用于特定的属性路径。在 `ExampleMatcher` 上设置的设置由属性路径设置继承，除非明确定义。属性修补程序上的设置具有比默认设置更高的优先级。下表描述了各种 `ExampleMatcher` 设置的作用域：
+
+| 设置       | 作用域                      |
+| ---------- | --------------------------- |
+| 空处理     | `ExampleMatcher`            |
+| 字符串匹配 | `ExampleMatcher` 和属性路径 |
+| 忽略属性   | 属性路径                    |
+| 大小写敏感 | `ExampleMatcher` 和属性路径 |
+| 值转换     | 属性路径                    |
+
+#### 流式 API
+
+`QueryByExampleExecutor` 提供了另外一种方法，我们到目前为止还没有提到：`<S extends T, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction)`。与其他方法一样，它执行从 `Example` 派生的查询。然而，使用第二个参数，您可以控制执行的某些方面，否则无法动态控制这些方面。通过在第二个参数中调用 `FetchableFluentQuery` 的各种方法来实现。`sortBy` 允许您为结果指定排序。`as` 允许您指定要将结果转换为的类型。`project` 限制了查询的属性。`first`、`firstValue`、`one`、`oneValue`、`all`、`page`、`stream`、`count` 和 `exists` 定义了当可用的结果数超过预期数时，获得的结果类型以及查询的行为。
+
+```java
+Optional<Person> match = repository.findBy(example,
+    q -> q
+        .sortBy(Sort.by("lastname").descending())
+        .first()
+);
+```
+
+#### 运行一个示例
+
+在 Spring Data JPA 中，可以对存储库使用按示例查询，如下例所示：
+
+```java
+public interface PersonRepository extends JpaRepository<Person, String> { … }
+
+public class PersonService {
+
+  @Autowired PersonRepository personRepository;
+
+  public List<Person> findPeople(Person probe) {
+    return personRepository.findAll(Example.of(probe));
+  }
+}
+```
+
+> 当前，只有 `SingularAttribute` 属性可用于属性匹配。
+
+属性说明符接受属性名称（例如 `firstname` 和 `lastname`）。您可以通过将属性与点（`address.city`）链接在一起进行导航。您还可以使用匹配选项和区分大小写对其进行调整。
+
+下表显示了可以使用的各种 `StringMatcher` 选项，以及在名为 `firstname` 的字段上使用这些选项的结果：
+
+| 匹配                        | 逻辑结果                                      |
+| --------------------------- | --------------------------------------------- |
+| `DEFAULT` (大小写敏感)      | `firstname = ?0`                              |
+| `DEFAULT` (大小写不敏感)    | `LOWER(firstname) = LOWER(?0)`                |
+| `EXACT` (大小写敏感)        | `firstname = ?0`                              |
+| `EXACT` (大小写不敏感)      | `LOWER(firstname) = LOWER(?0)`                |
+| `STARTING` (大小写敏感)     | `firstname like ?0 + '%'`                     |
+| `STARTING` (大小写不敏感)   | `LOWER(firstname) like LOWER(?0) + '%'`       |
+| `ENDING` (大小写敏感)       | `firstname like '%' + ?0`                     |
+| `ENDING` (大小写不敏感)     | `LOWER(firstname) like '%' + LOWER(?0)`       |
+| `CONTAINING` (大小写敏感)   | `firstname like '%' + ?0 + '%'`               |
+| `CONTAINING` (大小写不敏感) | `LOWER(firstname) like '%' + LOWER(?0) + '%'` |
+
+### 5.1.7 事务性
+
+默认情况下，从 `SimpleJpaRepository` 继承的存储库实例上的 CRUD 方法是事务性的。对于读取操作，事务配置 `readOnly` 标志设置为 `true`。所有其他的都配置了一个普通的 `@Transactional`，以便应用默认的事务配置。由事务性存储库片段支持的存储库方法从实际的片段方法继承事务性属性。
+
+如果需要调整存储库中声明的方法之一的事务配置，请在存储库接口中重新声明该方法，如下所示：
+
+```java
+public interface UserRepository extends CrudRepository<User, Long> {
+
+  @Override
+  @Transactional(timeout = 10)
+  public List<User> findAll();
+
+  // Further query method declarations
+}
+```
+
+这样做会导致 `findAll()` 方法在超时限制为 10 秒的情况下运行，并且没有 `readOnly` 标志。
+
+另一种改变事务行为的方法是使用覆盖多个存储库的外观（facade）或服务实现。其目的是为非 CRUD 操作定义事务边界。以下示例显示了如何对多个存储库使用这样的外观：
+
+```java
+@Service
+public class UserManagementImpl implements UserManagement {
+
+  private final UserRepository userRepository;
+  private final RoleRepository roleRepository;
+
+  public UserManagementImpl(UserRepository userRepository,
+    RoleRepository roleRepository) {
+    this.userRepository = userRepository;
+    this.roleRepository = roleRepository;
+  }
+
+  @Transactional
+  public void addRoleToAllUsers(String roleName) {
+
+    Role role = roleRepository.findByName(roleName);
+
+    for (User user : userRepository.findAll()) {
+      user.addRole(role);
+      userRepository.save(user);
+    }
+  }
+}
+```
+
+此示例导致对 `addRoleToAllUsers(…)` 的调用在事务内运行（参与现有事务或创建新事务，如果没有正在运行的事务）。然后忽略存储库中的事务配置，因为外部事务配置决定了实际使用的事务配置。请注意，您必须激活 `<tx:annotation-driven/>` 或显式使用 `@EnableTransactionManagement` 来获得基于注释的外观配置。本示例假设您使用组件扫描。
+
+请注意，从 JPA 的角度来看，调用 `save` 并不是绝对必要的，但为了保持与 Spring Data 提供的存储库抽象一致，它应该仍然存在。
+
+#### 事务的查询方法
+
+要使查询方法具有事务性，请在定义的存储库界面使用 `@transactional`，如下例所示：
+
+```java
+@Transactional(readOnly = true)
+interface UserRepository extends JpaRepository<User, Long> {
+
+  List<User> findByLastname(String lastname);
+
+  @Modifying
+  @Transactional
+  @Query("delete from User u where u.active = false")
+  void deleteInactiveUsers();
+}
+```
+
+通常，您希望将 `readOnly` 标志设置为 `true`，因为大多数查询方法只读取数据。与此相反，`deleteInactiveUsers()` 使用 `@Modifying` 注解并重写事务配置。因此，该方法在 `readOnly` 标志设置为 `false` 的情况下运行。
+
+> 您可以将事务用于只读查询，并通过设置 `readOnly` 标志将其标记为只读查询。然而，这样做并不能作为检查您是否触发操作查询（尽管某些数据库拒绝只读事务中的 `INSERT` 和 `UPDATE` 语句）。`readOnly` 标志作为提示传播到底层 JDBC 驱动程序，以进行性能优化。此外，Spring 对底层 JPA 提供程序执行一些优化。例如，当与 Hibernate 一起使用时，当您将事务配置为 `readOnly` 时，刷新模式设置为 `NEVER`，这会导致 Hibernate 跳过脏检查（这对大型对象树有明显的改进）。
+
+### 5.1.8 锁
+
+为了指定使用的锁模式，你可以在查询方法上使用 `@Lock` 注解，如下所示：
+
+```java
+interface UserRepository extends Repository<User, Long> {
+
+  // Plain query method
+  @Lock(LockModeType.READ)
+  List<User> findByLastname(String lastname);
+}
+```
+
+此方法声明导致被触发的查询配备了 `READ` 的 `LockModeType`。您还可以通过在存储库接口中重新定义 CRUD 方法并添加 `@Lock` 注解来定义 CRUD 的锁，如下例所示：
+
+```java
+interface UserRepository extends Repository<User, Long> {
+
+  // Redeclaration of a CRUD method
+  @Lock(LockModeType.READ)
+  List<User> findAll();
+}
+```
+
+### 5.1.9 审计
+
+#### 基础
+
+Spring Data 提供了复杂的支持，以透明地跟踪谁创建或更改了实体以及更改发生的时间。要从该功能中获益，您必须为实体类配备审计元数据，这些元数据可以使用注释或通过实现接口来定义。此外，必须通过注解配置或 XML 配置启用审计，以注册所需的基础结构组件。有关配置示例，请参阅存储特定部分。
+
+> 只跟踪创建和修改日期的应用程序不需要使其实体实现 `AuditorAware`。
+
+##### 基于注解的审计元数据
+
+我们提供 `@CreatedBy` 和 `@LastModifiedBy` 来捕获创建或修改实体的用户，以及 `@CreatedDate` 和 `@LastModifiedDate` 来捕获更改发生的时间。
+
+```java
+class Customer {
+
+  @CreatedBy
+  private User user;
+
+  @CreatedDate
+  private Instant createdDate;
+
+  // … further properties omitted
+}
+```
+
+正如您所看到的，可以根据要捕获的信息选择性地应用注释。可以在 JDK8 日期和时间类型、`long`、`Long` 和传统 Java `Date` 和 `Calendar` 的属性上使用注解，以指示何时进行更改。
+
+审计元数据不一定需要存在于根级实体中，但可以添加到嵌入式实体中（取决于实际使用的存储），如下面的代码段所示。
+
+```java
+class Customer {
+
+  private AuditMetadata auditingMetadata;
+
+  // … further properties omitted
+}
+
+class AuditMetadata {
+
+  @CreatedBy
+  private User user;
+
+  @CreatedDate
+  private Instant createdDate;
+
+}
+```
+
+##### 基于接口的审计元数据
+
+如果不想使用注解来定义审计元数据，可以让域类实现 `Auditable` 接口。它公开了所有审计属性的 setter 方法。
+
+**AuditorAware**
+
+在使用 `@CreatedBy` 或 `@LastModifiedBy` 的情况下，审计基础结构需要了解当前主体。为此，我们提供了 `AuditorAware<T>` SPI 接口，您必须实现该接口来告诉基础结构当前与应用程序交互的用户或系统是谁。通用类型 `T` 定义了用 `@CreatedBy` 或 `@LastModifiedBy` 注解的属性必须是什么类型。
+
+以下示例显示了使用 Spring Security 的 `Authentication` 对象的接口的实现：
+
+```java
+class SpringSecurityAuditorAware implements AuditorAware<User> {
+
+  @Override
+  public Optional<User> getCurrentAuditor() {
+
+    return Optional.ofNullable(SecurityContextHolder.getContext())
+            .map(SecurityContext::getAuthentication)
+            .filter(Authentication::isAuthenticated)
+            .map(Authentication::getPrincipal)
+            .map(User.class::cast);
+  }
+}
+```
+
+该实现访问 Spring Security 提供的 `Authentication` 对象，并查找您在 `UserDetailsService` 实现中创建的自定义 `UserDetails` 实例。我们在这里假设您通过 `UserDetails` 实现公开域用户，但根据找到的身份验证，您也可以在任何地方查找它。
+
+**ReactiveAuditorAware**
+
+使用反应式基础设施时，您可能希望利用上下文信息来提供 `@CreatedBy` 或 `@LastModifiedBy` 信息。我们提供了一个 `ReactiveAuditorAware<T>` SPI 接口，您必须实现该接口来告诉基础结构当前与应用程序交互的用户或系统是谁。通用类型 `T` 定义了用 `@CreatedBy` 或 `@LastModifiedBy` 注解的属性必须是什么类型。
+
+以下示例显示了使用反应式 Spring Security 的 Authentication 对象的接口的实现：
+
+```java
+class SpringSecurityAuditorAware implements ReactiveAuditorAware<User> {
+
+  @Override
+  public Mono<User> getCurrentAuditor() {
+
+    return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getPrincipal)
+                .map(User.class::cast);
+  }
+}
+```
+
+该实现访问 Spring Security 提供的 `Authentication` 对象，并查找您在 `UserDetailsService` 实现中创建的自定义 `UserDetails` 实例。我们在这里假设您通过 `UserDetails` 实现公开域用户，但根据找到的 `Authentication` 您也可以在任何地方查找它。
+
+还有一个方便的基类 `AbstractAuditable`，您可以对其进行扩展，以避免手动实现接口方法。这样做会增加域类与 Spring Data 的耦合，这可能是您需要避免的。通常，基于注解的定义审计元数据的方式是首选的，因为它侵入性较小，而且更灵活。
+
+### 5.1.10 JPA 审计
+
+#### 普通审计配置
+
+Spring Data JPA 附带了一个实体监听器，可以用来触发审计信息的捕获。首先，您必须在 `orm.xml` 文件中注册 `AuditingEntityListener`，以用于持久性上下文中的所有实体，如下例所示：
+
+```xml
+<persistence-unit-metadata>
+  <persistence-unit-defaults>
+    <entity-listeners>
+      <entity-listener class="….data.jpa.domain.support.AuditingEntityListener" />
+    </entity-listeners>
+  </persistence-unit-defaults>
+</persistence-unit-metadata>
+```
+
+您还可以使用 `@EntityListeners` 注解按每个实体启用 `AuditingEntityListener`，如下所示：
+
+```java
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+public class MyEntity {
+
+}
+```
+
+> 审计功能要求 `spring-aspects.jar` 位于类路径中。
+
+通过适当修改 `orm.xml` 并在类路径上使用 `spring-aspects.jar`，激活审计功能只需将 Spring Data JPA 审计命名空间元素添加到配置中，如下所示：
+
+```xml
+<jpa:auditing auditor-aware-ref="yourAuditorAwareBean" />
+```
+
+从 Spring Data JPA 1.5 开始，您可以通过使用 `@EnableJpaAuditing` 注解来注解配置类来启用审计。您仍然必须修改 `orm.xml` 文件，并在类路径上具有 `spring-aspects.jar`。以下示例显示了如何使用 `@EnableJpaAuditing` 注解：
+
+```java
+@Configuration
+@EnableJpaAuditing
+class Config {
+
+  @Bean
+  public AuditorAware<AuditableUser> auditorProvider() {
+    return new AuditorAwareImpl();
+  }
+}
+```
+
+如果您向 `ApplicationContext` 公开 `AuditorAware` 类型的 bean，审计基础结构会自动选择它并使用它来确定要在域类型上设置的当前用户。如果在 `ApplicationContext` 中注册了多个实现，则可以通过显式设置 `@EnableJpaAuditing` 的 `auditorAwareRef` 属性来选择要使用的实现。
+
+## 5.2 其他注意事项
+
+### 5.2.1 在自定义实现中使用 JpaContext
+
+使用多个 `EntityManager` 实例和自定义存储库实现时，需要将正确的 `EntityManager` 连接到存储库实现类中。您可以通过在 `@PersistenceContext` 注解中显式命名 `EntityManager`，或者如果 `EntityManager` 是 `@Autowired`，则使用 `@Qualifier`。
+
+从 Spring Data JPA 1.9 开始，Spring Data JPA 包含一个名为 `JpaContext` 的类，该类允许您通过托管域类获取 `EntityManager`，假设它仅由应用程序中的一个 `EntityManager` 实例管理。以下示例显示如何在自定义存储库中使用 `JpaContext`：
+
+```java
+class UserRepositoryImpl implements UserRepositoryCustom {
+
+  private final EntityManager em;
+
+  @Autowired
+  public UserRepositoryImpl(JpaContext context) {
+    this.em = context.getEntityManagerByManagedType(User.class);
+  }
+
+  …
+}
+```
+
+这种方法的优点是，如果将域类型分配给不同的持久性单元，则不必使用存储库来更改对持久性单元的引用。
+
+### 5.2.2 合并持久层单位
