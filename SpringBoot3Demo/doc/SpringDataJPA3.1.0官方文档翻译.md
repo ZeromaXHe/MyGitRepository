@@ -2790,3 +2790,398 @@ class UserRepositoryImpl implements UserRepositoryCustom {
 这种方法的优点是，如果将域类型分配给不同的持久性单元，则不必使用存储库来更改对持久性单元的引用。
 
 ### 5.2.2 合并持久层单位
+
+Spring 支持具有多个持久性单元。然而，有时，您可能希望将应用程序模块化，但仍然要确保所有这些模块都在一个持久性单元中运行。为了实现这种行为，Spring Data JPA 提供了一个 `PersistenceUnitManager` 实现，该实现根据持久性单元的名称自动合并持久性单元，如下例所示：
+
+```xml
+<bean class="….LocalContainerEntityManagerFactoryBean">
+  <property name="persistenceUnitManager">
+    <bean class="….MergingPersistenceUnitManager" />
+  </property>
+</bean>
+```
+
+#### @Entity 类和 JPA 映射文件的 Classpath 扫描
+
+普通的 JPA 设置要求在 `orm.xml` 中列出所有注释映射的实体类。这同样适用于 xml 映射文件。Spring Data JPA 提供了一个 `ClasspathScanningPersistenceUnitPostProcessor`，它配置了一个基本包，并可选地采用映射文件名模式。然后，它扫描给定的包，查找用 `@Entity` 或 `@MappedSuperclass` 注解的类，加载与文件名模式匹配的配置文件，并将它们交给 JPA 配置。后置处理器必须配置如下：
+
+```xml
+<bean class="….LocalContainerEntityManagerFactoryBean">
+  <property name="persistenceUnitPostProcessors">
+    <list>
+      <bean class="org.springframework.data.jpa.support.ClasspathScanningPersistenceUnitPostProcessor">
+        <constructor-arg value="com.acme.domain" />
+        <property name="mappingFileNamePattern" value="**/*Mapping.xml" />
+      </bean>
+    </list>
+  </property>
+</bean>
+```
+
+> 从 Spring 3.1 开始，可以在 `LocalContainerEntityManagerFactoryBean` 上直接配置要扫描的包，以启用实体类的类路径扫描。有关详细信息，请参阅 JavaDoc。
+
+### 5.2.3 CDI 整合
+
+存储库接口的实例通常由一个容器创建，因此在使用 Spring Data 时，Spring 是最自然的选择。Spring 为创建 bean 实例提供了复杂的支持，如创建存储库实例中所述。从 1.1.0 版开始，Spring Data JPA 附带了一个自定义 CDI 扩展，允许在 CDI 环境中使用存储库抽象。该扩展是 JAR 的一部分。要激活它，请在类路径中包含Spring Data JPA JAR。
+
+现在，您可以通过为 `EntityManagerFactory` 和 `EntityManager` 实现 CDI Producer 来设置基础结构，如下例所示：
+
+```java
+class EntityManagerFactoryProducer {
+
+  @Produces
+  @ApplicationScoped
+  public EntityManagerFactory createEntityManagerFactory() {
+    return Persistence.createEntityManagerFactory("my-persistence-unit");
+  }
+
+  public void close(@Disposes EntityManagerFactory entityManagerFactory) {
+    entityManagerFactory.close();
+  }
+
+  @Produces
+  @RequestScoped
+  public EntityManager createEntityManager(EntityManagerFactory entityManagerFactory) {
+    return entityManagerFactory.createEntityManager();
+  }
+
+  public void close(@Disposes EntityManager entityManager) {
+    entityManager.close();
+  }
+}
+```
+
+所需的设置可能因 JavaEE 环境而异。您可能只需要将 `EntityManager` 重新声明为 CDI bean，如下所示：
+
+```java
+class CdiConfig {
+
+  @Produces
+  @RequestScoped
+  @PersistenceContext
+  public EntityManager entityManager;
+}
+```
+
+在前面的示例中，容器必须能够创建 JPA `EntityManagers` 本身。所有的配置都是将 JPA `EntityManager` 重新导出为 CDI bean。
+
+Spring Data JPA CDI 扩展将所有可用的 `EntityManager` 实例作为 CDI bean，并在容器请求存储库类型的 bean 时为 Spring Data 存储库创建代理。因此，获取 Spring Data 存储库的实例需要声明 `@Injected` 属性，如下例所示：
+
+```java
+class RepositoryClient {
+
+  @Inject
+  PersonRepository repository;
+
+  public void businessMethod() {
+    List<Person> people = repository.findAll();
+  }
+}
+```
+
+## 5.3 Spring Data Envers
+
+### 5.3.1 什么是 Spring Data Envers？
+
+Spring Data Envers 使典型的 Envers 查询在 Spring Data JPA 的存储库中可用。它与其他 Spring Data 模块的不同之处在于，它总是与另一个 Spring Data 模块结合使用：Spring Data JPA。
+
+### 5.3.2 什么是 Envers？
+
+Envers 是一个 Hibernate 模块，它为 JPA 实体添加了审计功能。本文档假设您熟悉Envers，因为 Spring Data Envers 依赖于正确配置 Envers 一样。
+
+### 5.3.3 配置
+
+作为使用 Spring Data Envers 的一个起点，您需要一个在类路径上具有 Spring Data JPA 的项目，以及一个附加的 `spring-data-envers` 依赖项：
+
+```xml
+<dependencies>
+
+  <!-- other dependency elements omitted -->
+
+  <dependency>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-envers</artifactId>
+    <version>3.0.1</version>
+  </dependency>
+
+</dependencies>
+```
+
+这也将 `hibernate-envers` 作为暂时依赖项引入项目。
+
+要启用 Spring Data Envers 和 Spring Data JPA，我们需要配置两个 bean 和一个特殊的 `repositoryFactoryBeanClass`：
+
+```java
+@Configuration
+@EnableEnversRepositories
+@EnableTransactionManagement
+public class EnversDemoConfiguration {
+
+	@Bean
+	public DataSource dataSource() {
+
+		EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+		return builder.setType(EmbeddedDatabaseType.HSQL).build();
+	}
+
+	@Bean
+	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+
+		HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+		vendorAdapter.setGenerateDdl(true);
+
+		LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+		factory.setJpaVendorAdapter(vendorAdapter);
+		factory.setPackagesToScan("example.springdata.jpa.envers");
+		factory.setDataSource(dataSource());
+		return factory;
+	}
+
+	@Bean
+	public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+
+		JpaTransactionManager txManager = new JpaTransactionManager();
+		txManager.setEntityManagerFactory(entityManagerFactory);
+		return txManager;
+	}
+}
+```
+
+要实际使用 Spring Data Envers，请将一个或多个存储库作为扩展接口添加到{springdata-commonsjavadoc-base}/org/springframework/Data/resources/history/RevisionRepository.html[`RevisionRepository`]中：
+
+```java
+interface PersonRepository
+    extends CrudRepository<Person, Long>,
+    RevisionRepository<Person, Long, Long> (1)
+{}
+
+// (1) 第一个类型参数（`Person`）表示实体类型，第二个参数（`Long`）表示 id 属性的类型，最后一个参数（`Long`）表示修订号的类型。对于默认配置中的 Envers，修订号参数应为 `Integer` 或 `Long`。
+```
+
+该存储库的实体必须是启用了 Envers 审核的实体（即，必须具有 `@Audited` 注解）：
+
+```java
+@Entity
+@Audited
+class Person {
+
+	@Id @GeneratedValue
+	Long id;
+	String name;
+	@Version Long version;
+}
+```
+
+### 5.3.4 使用
+
+现在，您可以使用 `RevisionRepository` 中的方法来查询实体的修订号，如下测试用例所示：
+
+```java
+@ExtendWith(SpringExtension.class)
+@Import(EnversDemoConfiguration.class) (1)
+class EnversIntegrationTests {
+
+	final PersonRepository repository;
+	final TransactionTemplate tx;
+
+	EnversIntegrationTests(@Autowired PersonRepository repository, @Autowired PlatformTransactionManager tm) {
+		this.repository = repository;
+		this.tx = new TransactionTemplate(tm);
+	}
+
+	@Test
+	void testRepository() {
+
+		Person updated = preparePersonHistory();
+
+		Revisions<Long, Person> revisions = repository.findRevisions(updated.id);
+
+		Iterator<Revision<Long, Person>> revisionIterator = revisions.iterator();
+
+		checkNextRevision(revisionIterator, "John", RevisionType.INSERT);
+		checkNextRevision(revisionIterator, "Jonny", RevisionType.UPDATE);
+		checkNextRevision(revisionIterator, null, RevisionType.DELETE);
+		assertThat(revisionIterator.hasNext()).isFalse();
+
+	}
+
+	/**
+    * Checks that the next element in the iterator is a Revision entry referencing a Person
+    * with the given name after whatever change brought that Revision into existence.
+    * <p>
+    * As a side effect the Iterator gets advanced by one element.
+    *
+    * @param revisionIterator the iterator to be tested.
+    * @param name the expected name of the Person referenced by the Revision.
+    * @param revisionType the type of the revision denoting if it represents an insert, update or delete.
+    */
+	private void checkNextRevision(Iterator<Revision<Long, Person>> revisionIterator, String name,
+			RevisionType revisionType) {
+
+		assertThat(revisionIterator.hasNext()).isTrue();
+		Revision<Long, Person> revision = revisionIterator.next();
+		assertThat(revision.getEntity().name).isEqualTo(name);
+		assertThat(revision.getMetadata().getRevisionType()).isEqualTo(revisionType);
+	}
+
+	/**
+    * Creates a Person with a couple of changes so it has a non-trivial revision history.
+    * @return the created Person.
+    */
+	private Person preparePersonHistory() {
+
+		Person john = new Person();
+		john.setName("John");
+
+		// create
+		Person saved = tx.execute(__ -> repository.save(john));
+		assertThat(saved).isNotNull();
+
+		saved.setName("Jonny");
+
+		// update
+		Person updated = tx.execute(__ -> repository.save(saved));
+		assertThat(updated).isNotNull();
+
+		// delete
+		tx.executeWithoutResult(__ -> repository.delete(updated));
+		return updated;
+	}
+}
+
+// (1) 这引用了前面介绍的应用程序上下文配置（在配置部分）。
+```
+
+### 5.3.5 其他资源
+
+您可以在 Spring Data Examples 仓库中下载 Spring Data Envers 示例并使用来了解库的工作方式。
+
+您还应该查看 {springdata-commonsjavadoc-base}.org/springframework/data/resources/history/RevisionRepository.html[`RevisionStore` Javadoc] 和相关类。
+
+您可以使用 `spring-data-envers` 标签在 Stacksoverflow 中提问。
+
+Spring Data Envers 的源代码和问题跟踪器托管在 GitHub 上。
+
+# 6 附录
+
+## 附录 A：命名空间引用
+
+### `<repositories/>` 元素
+
+`<repositions/>` 元素触发 Spring Data 存储库基础设施的设置。最重要的属性是 `base-package`，它定义了要扫描 Spring Data 存储库接口的包。请参阅“XML 配置”。下表描述了 `<repositories/>` 元素的属性：
+
+| 名字                           | 描述                                                         |
+| ------------------------------ | ------------------------------------------------------------ |
+| `base-package`                 | 定义要扫描的包，以查找在自动检测模式下扩展 `*repository`（实际接口由特定的 Spring Data 模块确定）的存储库接口。也会扫描配置包下的所有包。允许使用通配符。 |
+| `repository-impl-postfix`      | 定义后缀以自动检测自定义存储库实现。名称以配置的后缀结尾的类被视为候选类。默认为 `Impl`。 |
+| `query-lookup-strategy`        | 确定用于创建查找器查询的策略。有关详细信息，请参阅“查询查找策略”。默认为 `create-if-not-found`。 |
+| `named-queries-location`       | 定义搜索包含外部定义查询的属性文件的位置。                   |
+| `consider-nested-repositories` | 是否应考虑嵌套存储库接口定义。默认为 `false`。               |
+
+## 附录 B：填充器命名空间引用
+
+### `<populator/>` 元素
+
+`<populator/>` 元素允许通过 Spring Data 存储库基础结构填充数据存储。
+
+| 名字        | 描述                                               |
+| ----------- | -------------------------------------------------- |
+| `locations` | 查找从应填充的存储库中要读取的的对象的文件的位置。 |
+
+## 附录C：存储库查询关键字
+
+### 支持的查询方法主题关键字
+
+下表列出了 Spring Data 存储库查询派生机制通常支持的主题关键字，以表示谓词。有关支持的关键字的确切列表，请参阅特定于存储的文档，因为此处列出的某些关键字可能在特定存储中不受支持。
+
+| 关键字                                                       | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `find…By`, `read…By`, `get…By`, `query…By`, `search…By`, `stream…By` | 常规查询方法通常返回存储库类型、`Collection `或 `Streamable` 子类型或结果包装器，如 `Page`、`GeoResults` 或任何其他特定于存储的结果包装器。可以用作 `findBy…`、`findMyDomainTypeBy…` 或与其他关键字组合使用。 |
+| `exists…By`                                                  | 存在投射，通常返回 `boolean` 结果。                          |
+| `count…By`                                                   | 返回数字结果的计数投射。                                     |
+| `delete…By`, `remove…By`                                     | 删除查询方法不返回结果（`void`）或返回删除计数。             |
+| `…First<number>…`, `…Top<number>…`                           | 将查询结果限制为第一个 `<number>` 结果。此关键字可以出现在主题的 `find`（以及其他关键字）和 `by` 之间的任何位置。 |
+| `…Distinct…`                                                 | 使用 distinct 查询只返回独特各异的结果。是否支持该功能，请查阅特定于存储的文档。此关键字可以出现在主题的 `find`（以及其他关键字）和 `by` 之间的任何位置。 |
+
+### 支持的查询方法谓词关键字和修饰符
+
+下表列出了 Spring Data 存储库查询派生机制通常支持的谓词关键字。但是，请查阅特定于存储的文档以获取支持的关键字的确切列表，因为此处列出的某些关键字可能在特定存储中不受支持。
+
+| 逻辑关键字            | 关键字表达式                                   |
+| :-------------------- | :--------------------------------------------- |
+| `AND`                 | `And`                                          |
+| `OR`                  | `Or`                                           |
+| `AFTER`               | `After`, `IsAfter`                             |
+| `BEFORE`              | `Before`, `IsBefore`                           |
+| `CONTAINING`          | `Containing`, `IsContaining`, `Contains`       |
+| `BETWEEN`             | `Between`, `IsBetween`                         |
+| `ENDING_WITH`         | `EndingWith`, `IsEndingWith`, `EndsWith`       |
+| `EXISTS`              | `Exists`                                       |
+| `FALSE`               | `False`, `IsFalse`                             |
+| `GREATER_THAN`        | `GreaterThan`, `IsGreaterThan`                 |
+| `GREATER_THAN_EQUALS` | `GreaterThanEqual`, `IsGreaterThanEqual`       |
+| `IN`                  | `In`, `IsIn`                                   |
+| `IS`                  | `Is`, `Equals`, (or no keyword)                |
+| `IS_EMPTY`            | `IsEmpty`, `Empty`                             |
+| `IS_NOT_EMPTY`        | `IsNotEmpty`, `NotEmpty`                       |
+| `IS_NOT_NULL`         | `NotNull`, `IsNotNull`                         |
+| `IS_NULL`             | `Null`, `IsNull`                               |
+| `LESS_THAN`           | `LessThan`, `IsLessThan`                       |
+| `LESS_THAN_EQUAL`     | `LessThanEqual`, `IsLessThanEqual`             |
+| `LIKE`                | `Like`, `IsLike`                               |
+| `NEAR`                | `Near`, `IsNear`                               |
+| `NOT`                 | `Not`, `IsNot`                                 |
+| `NOT_IN`              | `NotIn`, `IsNotIn`                             |
+| `NOT_LIKE`            | `NotLike`, `IsNotLike`                         |
+| `REGEX`               | `Regex`, `MatchesRegex`, `Matches`             |
+| `STARTING_WITH`       | `StartingWith`, `IsStartingWith`, `StartsWith` |
+| `TRUE`                | `True`, `IsTrue`                               |
+| `WITHIN`              | `Within`, `IsWithin`                           |
+
+除了筛选器谓词，还支持以下修饰符列表：
+
+| 关键字                             | 描述                                                         |
+| :--------------------------------- | :----------------------------------------------------------- |
+| `IgnoreCase`, `IgnoringCase`       | 与谓词关键字一起用于不区分大小写的比较。                     |
+| `AllIgnoreCase`, `AllIgnoringCase` | 忽略所有适用属性的大小写。在查询方法谓词的某处使用。         |
+| `OrderBy…`                         | 指定静态排序顺序，后跟属性路径和方向（例如`OrderByFirstnameAscLastnameDesc`）。 |
+
+## 附录 D：存储库查询返回类型
+
+### 支持的查询返回类型
+
+下表列出了 Spring Data 存储库通常支持的返回类型。但是，请查阅特定于存储的文档，以获得支持的返回类型的确切列表，因为此处列出的某些类型可能在特定存储中不受支持。
+
+> 地理空间类型（如 `GeoResult`、`GeoResults` 和 `GeoPage`）仅适用于支持地理空间查询的数据存储。一些存储模块可以定义自己的结果包装器类型。
+
+| 返回类型                                                     | 描述                                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| `void`                                                       | 表示无返回值。                                               |
+| 基本类型                                                     | Java 基本类型.                                               |
+| 包装类型                                                     | Java 包装类型.                                               |
+| `T`                                                          | 唯一的实体。要求查询方法最多返回一个结果。如果未找到结果，则返回 `null`。多个结果触发 `IncorrectResultSizeDataAccessException`。 |
+| `Iterator<T>`                                                | 一个 `Iterator`.                                             |
+| `Collection<T>`                                              | 一个 `Collection`.                                           |
+| `List<T>`                                                    | 一个 `List`.                                                 |
+| `Optional<T>`                                                | Java 8 或 Guava `Optional`。要求查询方法最多返回一个结果。如果未找到结果，则返回 `Optional.empty()` 或 `Optional.absent()`。多个结果触发 `IncorrectResultSizeDataAccessException`。 |
+| `Option<T>`                                                  | Scala 或 Vavr `Option` 类型。在语义上与前面描述的 Java 8 的 `Optional` 行为相同。 |
+| `Stream<T>`                                                  | 一个 Java 8 `Stream`.                                        |
+| `Streamable<T>`                                              | `Iterable` 的一个方便扩展，它直接将方法公开给流、映射和过滤结果，并将它们连接起来。 |
+| 实现 `Streamable` 并采用 `Streamable` 构造函数或工厂方法参数的类型 | 公开构造函数或以 `Streamable` 为参数的 `….of(…)`/`….valueOf(…)`工厂方法的类型。请参阅[返回自定义可流式包装类型](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.collections-和iterables.streamablewrapper)获取详细信息。 |
+| Vavr `Seq`, `List`, `Map`, `Set`                             | Vavr 集合类型。参见[支持Vavr集合](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.collections-and-iterables.vavr)获取详细信息。 |
+| `Future<T>`                                                  | 一个 `Future`。要求使用 `@Async` 注解方法，并要求启用 Spring 的异步方法执行功能。 |
+| `CompletableFuture<T>`                                       | Java 8 `CompletableFuture`。要求使用 `@Async` 注解方法，并要求启用 Spring 的异步方法执行功能。 |
+| `Slice<T>`                                                   | 带有是否有更多可用数据指示的大小数据块。需要 `Pageable` 方法参数。 |
+| `Page<T>`                                                    | 带有附加信息（如结果总数）的 `Slice`。需要 `Pageable` 方法参数。 |
+| `GeoResult<T>`                                               | 带有附加信息的结果条目，例如到参考位置的距离。               |
+| `GeoResults<T>`                                              | `GeoResult<T>` 列表，其中包含其他信息，例如到参考位置的平均距离。 |
+| `GeoPage<T>`                                                 | 带有 `GeoResult<T>` 的 `Page`，例如到参考位置的平均距离。    |
+| `Mono<T>`                                                    | 一个使用反应性存储库发射零个或一个元素的 Project Reactor `Mono`。要求查询方法最多返回一个结果。如果未找到结果，则返回 `Mono.empty()`。多个结果触发 `IncorrectResultSizeDataAccessException`。 |
+| `Flux<T>`                                                    | 使用反应性储存库排放零、一或多个元素的 Project Reactor `Flux`。返回 `Flux` 的查询还可以发出无限数量的元素。 |
+| `Single<T>`                                                  | 使用反应式存储库发出单个元素的 RxJava `Single`。要求查询方法最多返回一个结果。如果未找到结果，则返回 `Mono.empty()`。多个结果触发 `IncorrectResultSizeDataAccessException`。 |
+| `Maybe<T>`                                                   | 使用反应式存储库发射零个或一个元素的 RxJava `Maybe`。要求查询方法最多返回一个结果。如果未找到结果，则返回 `Mono.empty()`。多个结果触发 `IncorrectResultSizeDataAccessException`。 |
+| `Flowable<T>`                                                | 使用反应式存储库发射零个、一个或多个元素的 RxJava `Flowable`。返回 `Flowable` 的查询还可以发出无限数量的元素。 |
+
+## 附录 E：经常问的问题
+
+## 附录 F：术语表
