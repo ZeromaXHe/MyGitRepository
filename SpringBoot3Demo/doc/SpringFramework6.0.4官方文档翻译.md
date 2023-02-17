@@ -1,3 +1,5 @@
+https://spring.io/projects/spring-framework#learn
+
 # Spring Framework 概览
 
 Spring 使创建 Java 企业应用程序变得容易。它提供了在企业环境中使用 Java 语言所需的一切，支持 Groovy 和 Kotlin 作为 JVM 上的替代语言，并具有根据应用程序需求创建多种体系结构的灵活性。从 Spring Framework 6.0 开始，Spring 需要 Java 17+。
@@ -4282,3 +4284,749 @@ public class AppConfig {
 ```
 
 ### 1.12.4 使用 @Configuration 注解
+
+`@Configuration` 是一个类级注解，指示对象是 bean 定义的源。`@Configuration` 类通过 `@Bean` 注解方法声明 Bean。对 `@Configuration` 类上的 `@Bean` 方法的调用也可用于定义 Bean 间依赖关系。请参阅“基本概念：@Bean和@Configuration”了解一般介绍。
+
+#### 注入跨 bean 依赖
+
+当 bean 之间存在依赖关系时，表达这种依赖关系就像让一个 bean 方法调用另一个一样简单，如下例所示：
+
+```java
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public BeanOne beanOne() {
+        return new BeanOne(beanTwo());
+    }
+
+    @Bean
+    public BeanTwo beanTwo() {
+        return new BeanTwo();
+    }
+}
+```
+
+在前面的示例中，`beanOne` 通过构造函数注入接收对 `beanTwo` 的引用。
+
+> 只有在 `@Configuration` 类中声明 `@Bean` 方法时，这种声明 bean 间依赖关系的方法才有效。不能使用普通的 `@Component` 类声明 bean 间依赖关系。
+
+#### 查找方法注入
+
+如前所述，查找方法注入是一种高级功能，您应该很少使用。它在单例作用域 bean 依赖于原型作用域 bean 的情况下非常有用。将 Java 用于这种类型的配置为实现这种模式提供了一种自然的方法。以下示例显示了如何使用查找方法注入：
+
+```java
+public abstract class CommandManager {
+    public Object process(Object commandState) {
+        // grab a new instance of the appropriate Command interface
+        Command command = createCommand();
+        // set the state on the (hopefully brand new) Command instance
+        command.setState(commandState);
+        return command.execute();
+    }
+
+    // okay... but where is the implementation of this method?
+    protected abstract Command createCommand();
+}
+```
+
+通过使用 Java 配置，您可以创建 `CommandManager` 的子类，其中抽象的 `createCommand()` 方法被重写，从而查找新的（原型）命令对象。以下示例显示了如何执行此操作：
+
+```java
+@Bean
+@Scope("prototype")
+public AsyncCommand asyncCommand() {
+    AsyncCommand command = new AsyncCommand();
+    // inject dependencies here as required
+    return command;
+}
+
+@Bean
+public CommandManager commandManager() {
+    // return new anonymous implementation of CommandManager with createCommand()
+    // overridden to return a new prototype Command object
+    return new CommandManager() {
+        protected Command createCommand() {
+            return asyncCommand();
+        }
+    }
+}
+```
+
+#### 关于基于 Java 的配置内部如何运作的更多信息
+
+考虑以下示例，其中显示了两次调用 `@Bean` 注解方法：
+
+```java
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public ClientService clientService1() {
+        ClientServiceImpl clientService = new ClientServiceImpl();
+        clientService.setClientDao(clientDao());
+        return clientService;
+    }
+
+    @Bean
+    public ClientService clientService2() {
+        ClientServiceImpl clientService = new ClientServiceImpl();
+        clientService.setClientDao(clientDao());
+        return clientService;
+    }
+
+    @Bean
+    public ClientDao clientDao() {
+        return new ClientDaoImpl();
+    }
+}
+```
+
+`clientDao()` 在 `clientService1()` 和 `clientService2()` 中分别调用了一次。由于此方法创建了 `ClientDaoImpl` 的新实例并将其返回，因此通常需要两个实例（每个服务一个）。这肯定是有问题的：在 Spring 中，实例化的 bean 默认具有 `singleton` 作用域。这就是神奇之处：所有 `@Configuration` 类在启动时都使用 `CGLIB` 进行子类化。在子类中，子方法在调用父方法并创建新实例之前，首先检查容器中是否有任何缓存（作用域）bean。
+
+> 根据 bean 的作用域，行为可能有所不同。我们在这里谈论的是单例。
+
+> 从 Spring 3.2 开始，不再需要将 CGLIB 添加到类路径中，因为 CGLIB 类已在 `org.springframework.CGLIB` 下重新打包，并直接包含在 Spring 核心 JAR中。
+
+> 由于 CGLIB 在启动时动态添加特性，因此存在一些限制。特别是，配置类不能是 final 的。但是，从 4.3 开始，配置类上允许使用任何构造函数，包括使用 `@Autowired` 或单个非默认构造函数声明进行默认注入。
+>
+> 如果您希望避免任何 CGLIB 强加的限制，请考虑在非 `@Configuration` 类（例如，在普通的 `@Component` 类上）。`@Bean` 方法之间的跨方法调用不会被拦截，因此您必须在构造函数或方法级别专门依赖依赖注入。
+
+### 1.12.5 组合基于 Java 配置
+
+Spring 基于 Java 的配置特性允许您编写注解，这可以降低配置的复杂性。
+
+#### 使用 @Import 注解
+
+正如 `<import/>` 元素在 Spring XML 文件中用于帮助模块化配置一样，`@Import` 注解允许从另一个配置类加载 `@Bean` 定义，如下例所示：
+
+```java
+@Configuration
+public class ConfigA {
+
+    @Bean
+    public A a() {
+        return new A();
+    }
+}
+
+@Configuration
+@Import(ConfigA.class)
+public class ConfigB {
+
+    @Bean
+    public B b() {
+        return new B();
+    }
+}
+```
+
+现在，实例化上下文时不需要同时指定 `ConfigA.class` 和 `ConfigB.class`，只需要显式提供 `ConfigB`，如下例所示：
+
+```java
+public static void main(String[] args) {
+    ApplicationContext ctx = new AnnotationConfigApplicationContext(ConfigB.class);
+
+    // now both beans A and B will be available...
+    A a = ctx.getBean(A.class);
+    B b = ctx.getBean(B.class);
+}
+```
+
+这种方法简化了容器实例化，因为只需要处理一个类，而不需要在构造过程中记住大量的 `@Configuration` 类。
+
+> 从 Spring Framework 4.2 开始，`@Import` 还支持对常规组件类的引用，类似于 `AnnotationConfigApplicationContext.register` 方法。如果您想避免组件扫描，这是非常有用的，通过使用一些配置类作为入口点来显式定义所有组件。
+
+##### 在导入 @Bean 定义中注入依赖
+
+前面的示例有效，但过于简单。在大多数实际场景中，bean 在配置类之间相互依赖。当使用 XML 时，这不是一个问题，因为不涉及编译器，您可以声明 `ref="someBean"` 并信任 Spring 在容器初始化期间解决它。当使用 `@Configuration` 类时，Java 编译器对配置模型施加约束，因为对其他 bean 的引用必须是有效的 Java 语法。
+
+幸运的是，解决这个问题很简单。正如我们已经讨论过的，`@Bean` 方法可以有任意数量的参数来描述 Bean 依赖关系。考虑以下具有多个 `@Configuration` 类的更真实的场景，每个类都取决于其他类中声明的 bean：
+
+```java
+@Configuration
+public class ServiceConfig {
+
+    @Bean
+    public TransferService transferService(AccountRepository accountRepository) {
+        return new TransferServiceImpl(accountRepository);
+    }
+}
+
+@Configuration
+public class RepositoryConfig {
+
+    @Bean
+    public AccountRepository accountRepository(DataSource dataSource) {
+        return new JdbcAccountRepository(dataSource);
+    }
+}
+
+@Configuration
+@Import({ServiceConfig.class, RepositoryConfig.class})
+public class SystemTestConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        // return new DataSource
+    }
+}
+
+public static void main(String[] args) {
+    ApplicationContext ctx = new AnnotationConfigApplicationContext(SystemTestConfig.class);
+    // everything wires up across configuration classes...
+    TransferService transferService = ctx.getBean(TransferService.class);
+    transferService.transfer(100.00, "A123", "C456");
+}
+```
+
+还有另一种方法可以达到同样的结果。请记住，`@Configuration` 类最终只是容器中的另一个 bean：这意味着它们可以利用 `@Autowired` 和 `@Value` 注入以及与任何其他 bean 相同的其他特性。
+
+> 确保以这种方式注入的依赖关系仅是最简单的类型。`@Configuration` 类在上下文初始化期间很早就被处理，强制以这种方式注入依赖项可能会导致意外的早期初始化。如前所述，尽可能采用基于参数的注入。
+>
+> 此外，通过 `@Bean` 对 `BeanPostProcessor` 和 `BeanFactoryPostProcessor` 的定义要特别小心。这些方法通常应声明为 `static @Bean` 方法，而不会触发其包含的配置类的实例化。否则，`@Autowired` 和 `@Value` 可能无法在配置类本身上工作，因为可以将其创建为早于 `AutowiredAnnotationBeanPostProcessor` 的 bean 实例。
+
+以下示例显示了如何将一个 bean 自动装配到另一个 bean：
+
+```java
+@Configuration
+public class ServiceConfig {
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Bean
+    public TransferService transferService() {
+        return new TransferServiceImpl(accountRepository);
+    }
+}
+
+@Configuration
+public class RepositoryConfig {
+
+    private final DataSource dataSource;
+
+    public RepositoryConfig(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    @Bean
+    public AccountRepository accountRepository() {
+        return new JdbcAccountRepository(dataSource);
+    }
+}
+
+@Configuration
+@Import({ServiceConfig.class, RepositoryConfig.class})
+public class SystemTestConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        // return new DataSource
+    }
+}
+
+public static void main(String[] args) {
+    ApplicationContext ctx = new AnnotationConfigApplicationContext(SystemTestConfig.class);
+    // everything wires up across configuration classes...
+    TransferService transferService = ctx.getBean(TransferService.class);
+    transferService.transfer(100.00, "A123", "C456");
+}
+```
+
+> `@Configuration` 类中的构造函数注入仅从 Spring Framework 4.3 开始受支持。还要注意，如果目标 bean 只定义了一个构造函数，则不需要指定 `@Autowired`。
+
+在前面的场景中，使用 `@Autowired` 可以很好地工作，并提供所需的模块化，但确定自动装配 bean 定义的确切声明位置仍然有些模糊。例如，作为一名查看 `ServiceConfig` 的开发人员，您如何确切地知道 `@Autowired AccountRepository` bean 的声明位置？它在代码中并不明确，这可能很好。请记住，Spring Tools for Eclipse 提供了一种工具，可以渲染显示所有内容如何装配的图形，这可能就是您所需要的。此外，Java IDE 可以轻松找到 `AccountRepository` 类的所有声明和用法，并快速显示返回该类型的 `@Bean` 方法的位置。
+
+如果这种模糊性是不可接受的，并且您希望在 IDE 中从一个 `@Configuration` 类直接导航到另一个，请考虑自动装配配置类本身。以下示例显示了如何执行此操作：
+
+```java
+@Configuration
+public class ServiceConfig {
+
+    @Autowired
+    private RepositoryConfig repositoryConfig;
+
+    @Bean
+    public TransferService transferService() {
+        // navigate 'through' the config class to the @Bean method!
+        return new TransferServiceImpl(repositoryConfig.accountRepository());
+    }
+}
+```
+
+在前面的情况中，`AccountRepository` 的定义是完全明确的。但是，`ServiceConfig` 现在与 `RepositoryConfig` 紧密耦合。这就是权衡。通过使用基于接口或基于抽象类的 `@Configuration` 类，可以稍微减轻这种紧密耦合。考虑以下示例：
+
+```java
+@Configuration
+public class ServiceConfig {
+
+    @Autowired
+    private RepositoryConfig repositoryConfig;
+
+    @Bean
+    public TransferService transferService() {
+        return new TransferServiceImpl(repositoryConfig.accountRepository());
+    }
+}
+
+@Configuration
+public interface RepositoryConfig {
+
+    @Bean
+    AccountRepository accountRepository();
+}
+
+@Configuration
+public class DefaultRepositoryConfig implements RepositoryConfig {
+
+    @Bean
+    public AccountRepository accountRepository() {
+        return new JdbcAccountRepository(...);
+    }
+}
+
+@Configuration
+@Import({ServiceConfig.class, DefaultRepositoryConfig.class})  // import the concrete config!
+public class SystemTestConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        // return DataSource
+    }
+
+}
+
+public static void main(String[] args) {
+    ApplicationContext ctx = new AnnotationConfigApplicationContext(SystemTestConfig.class);
+    TransferService transferService = ctx.getBean(TransferService.class);
+    transferService.transfer(100.00, "A123", "C456");
+}
+```
+
+现在，`ServiceConfig` 与具体的 `DefaultRepositoryConfig` 松散耦合，内置的 IDE 工具仍然很有用：您可以轻松获得 `RepositoryConfig` 实现的类型层次结构。通过这种方式，导航 `@Configuration` 类及其依赖项与导航基于接口的代码的通常过程没有什么不同。
+
+> 如果您想影响某些 bean 的启动创建顺序，请考虑将其中一些 bean 声明为 `@Lazy`（用于在首次访问时创建，而不是在启动时创建）或 `@DependsOn` 某些其他 bean（确保在当前 bean 之前创建特定的其他 bean，而不是后者的直接依赖关系）。
+
+#### 有条件的引入 @Configuration 类或 @Bean 方法
+
+根据某些任意的系统状态，有条件地启用或禁用完整的 `@Configuration` 类或甚至单个 `@Bean` 方法通常很有用。一个常见的例子是，只有在 Spring 环境中启用了特定 profile 时，才使用 `@Profile` 注解来激活 Bean（有关详细信息，请参阅 “Bean 定义 Profiles”）。
+
+`@Profile` 注解实际上是通过使用一个更加灵活的注解 `@Conditional` 实现的。`@Conditional` 注解指示在注册 `@Bean` 之前应咨询的特定 `org.springframework.context.annotation.Condition` 实现。
+
+`Condition` 接口的实现提供了 `matches(...)` 返回 `true` 或 `false` 的方法。例如，以下列表显示了 `@Profile` 使用的实际 `Condition` 实现：
+
+```java
+@Override
+public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+    // Read the @Profile annotation attributes
+    MultiValueMap<String, Object> attrs = metadata.getAllAnnotationAttributes(Profile.class.getName());
+    if (attrs != null) {
+        for (Object value : attrs.get("value")) {
+            if (context.getEnvironment().acceptsProfiles(((String[]) value))) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return true;
+}
+```
+
+参考 `@Conditional` javadoc 来获取细节
+
+#### 组合 Java 和 XML 配置
+
+Spring 的 `@Configuration` 类支持并不旨在 100% 完全替代 Spring XML。一些设施（如 Spring XML 命名空间）仍然是配置容器的理想方式。在 XML 方便或必要的情况下，您可以选择：要么使用 `ClassPathXmlApplicationContext` 以“以 XML 为中心”的方式实例化容器，要么使用 `AnnotationConfigApplicationContext` 和 `@ImportResource` 注解以“以 Java 为中心”方式实例化容器以根据需要导入 XML。
+
+##### 以 XML 为中心使用 @Configuration 类
+
+最好从 XML 中引导 Spring 容器，并以特殊方式包含 `@Configuration` 类。例如，在使用 Spring XML 的大型现有代码库中，根据需要创建 `@Configuration` 类并从现有的 XML 文件中包含这些类更容易。在本节后面，我们将介绍在这种“以 XML 为中心”的情况下使用 `@Configuration` 类的选项。
+
+**将 `@Configuration` 类声明为纯 Spring `<bean/>` 元素**
+
+请记住，`@Configuration` 类最终是容器中的 bean 定义。在本系列示例中，我们创建了一个名为 `AppConfig` 的 `@Configuration` 类，并将其作为 `<bean/>` 定义包含在 `system-test-config.xml` 中。由于 `<context:annotation-config/>` 已打开，容器识别 `@Configuration` 注解并正确处理 `AppConfig` 中声明的 `@Bean` 方法。
+
+以下示例显示了 Java 中的一个普通配置类：
+
+```java
+@Configuration
+public class AppConfig {
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Bean
+    public AccountRepository accountRepository() {
+        return new JdbcAccountRepository(dataSource);
+    }
+
+    @Bean
+    public TransferService transferService() {
+        return new TransferService(accountRepository());
+    }
+}
+```
+
+以下示例显示了示例 `system-test-config.xml` 文件的一部分：
+
+```xml
+<beans>
+    <!-- enable processing of annotations such as @Autowired and @Configuration -->
+    <context:annotation-config/>
+    <context:property-placeholder location="classpath:/com/acme/jdbc.properties"/>
+
+    <bean class="com.acme.AppConfig"/>
+
+    <bean class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+</beans>
+```
+
+以下示例显示了可能的 `jdbc.properties` 文件：
+
+```properties
+jdbc.url=jdbc:hsqldb:hsql://localhost/xdb
+jdbc.username=sa
+jdbc.password=
+```
+
+```java
+public static void main(String[] args) {
+    ApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:/com/acme/system-test-config.xml");
+    TransferService transferService = ctx.getBean(TransferService.class);
+    // ...
+}
+```
+
+> 在 `system-test-config.xml` 文件中，`AppConfig` `<bean/>` 没有声明 id 元素。虽然这样做是可以接受的，但这是不必要的，因为没有其他 bean 引用过它，而且它不太可能通过名称从容器中显式获取。类似地，`DataSource` bean 只按类型自动装配，因此不严格要求显式 bean `id`。
+
+**使用 `<context:component-scan/>` 获取 `@Configuration` 类**
+
+因为 `@Configuration` 是用 `@Component` 元注解的，`@Configuration` 注解的类自动成为组件扫描的候选类。使用与前面示例中描述的相同场景，我们可以重新定义 `system-test-config.xml` 以利用组件扫描。注意，在这种情况下，我们不需要显式声明 `<context:annotation-config/>`，因为 `<context:component-scan/>` 支持相同的功能。
+
+以下示例显示了修改后的 `system-test-config.xml` 文件：
+
+```xml
+<beans>
+    <!-- picks up and registers AppConfig as a bean definition -->
+    <context:component-scan base-package="com.acme"/>
+    <context:property-placeholder location="classpath:/com/acme/jdbc.properties"/>
+
+    <bean class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+</beans>
+```
+
+##### 以 @Configuration 类为中心通过 @ImportResource 使用 XML
+
+在 `@Configuration` 类是配置容器的主要机制的应用程序中，仍然可能需要至少使用一些 XML。在这些场景中，您可以使用 `@ImportResource`，只定义所需的 XML。这样做实现了“以 Java 为中心”的容器配置方法，并将 XML 保持在最低限度。以下示例（包括配置类、定义 bean 的 XML 文件、财产文件和 `main` 类）显示了如何使用 `@ImportResource` 注解实现“以 Java 为中心”的配置，该配置根据需要使用 XML：
+
+```java
+@Configuration
+@ImportResource("classpath:/com/acme/properties-config.xml")
+public class AppConfig {
+
+    @Value("${jdbc.url}")
+    private String url;
+
+    @Value("${jdbc.username}")
+    private String username;
+
+    @Value("${jdbc.password}")
+    private String password;
+
+    @Bean
+    public DataSource dataSource() {
+        return new DriverManagerDataSource(url, username, password);
+    }
+}
+```
+
+```xml
+properties-config.xml
+<beans>
+    <context:property-placeholder location="classpath:/com/acme/jdbc.properties"/>
+</beans>
+```
+
+```properties
+jdbc.properties
+jdbc.url=jdbc:hsqldb:hsql://localhost/xdb
+jdbc.username=sa
+jdbc.password=
+```
+
+```java
+public static void main(String[] args) {
+    ApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class);
+    TransferService transferService = ctx.getBean(TransferService.class);
+    // ...
+}
+```
+
+## 1.13 环境抽象
+
+`Environment` 接口是集成在容器中的抽象，它对应用程序环境的两个关键方面进行建模：profiles 和 properties。
+
+Profile 是一个命名的、逻辑的 bean 定义组，只有当给定的 profile 处于活动状态时才能向容器注册。bean 可以分配给一个 profile，无论是用 XML 定义的还是用注解定义的。`Environment` 对象相对于配置文件的作用是确定哪些配置文件（如果有）当前处于活动状态，以及默认情况下哪些配置文件应处于活动状态。
+
+Properties 在几乎所有应用程序中都扮演着重要角色，它可能来自多种来源：属性文件、JVM 系统属性、系统环境变量、JNDI、servlet 上下文参数、点对点（ad-hoc） `Properties` 对象、`Map` 对象等等。与属性相关的 `Environment` 对象的作用是为用户提供一个方便的服务接口，用于配置属性源并从中解析属性。
+
+### 1.13.1 Bean 定义 Profile
+
+Bean 定义 profile 在核心容器中提供了一种机制，允许在不同环境中注册不同的 Bean。“环境”这个词对不同的用户来说可能意味着不同的东西，这个特性可以帮助处理许多用例，包括：
+
+- 在开发中使用内存中的数据源，而不是在 QA 或生产中从 JNDI 中查找相同的数据源。
+- 仅在将应用程序部署到性能环境中时注册监视基础结构。
+- 为客户 A 和客户 B 部署注册 bean 的定制实现。
+
+考虑需要 `DataSource` 的实际应用程序中的第一个用例。在测试环境中，配置可能类似于以下内容：
+
+```java
+@Bean
+public DataSource dataSource() {
+    return new EmbeddedDatabaseBuilder()
+        .setType(EmbeddedDatabaseType.HSQL)
+        .addScript("my-schema.sql")
+        .addScript("my-test-data.sql")
+        .build();
+}
+```
+
+现在考虑如何将此应用程序部署到 QA 或生产环境中，假设应用程序的数据源已注册到生产应用程序服务器的 JNDI 目录中。我们的 `dataSource` bean 现在看起来如下所示：
+
+```java
+@Bean(destroyMethod = "")
+public DataSource dataSource() throws Exception {
+    Context ctx = new InitialContext();
+    return (DataSource) ctx.lookup("java:comp/env/jdbc/datasource");
+}
+```
+
+问题是如何根据当前环境在使用这两种变体之间进行切换。随着时间的推移，Spring 用户设计了许多方法来实现这一点，通常依赖于系统环境变量和包含 `${placeholder}` 标记的XML `<import/>` 语句的组合，这些标记根据环境变量的值解析为正确的配置文件路径。Bean定义概要文件是一个核心容器特性，它为这个问题提供了解决方案。
+
+如果我们概括前面特定于环境的 bean 定义示例中所示的用例，那么我们最终需要在某些上下文中注册某些 bean 定义，而不是在其他上下文中注册。您可以说，您希望在情况 A 中注册 bean 定义的特定 profile，在情况 B 中注册不同的概要文件。我们首先更新配置以反映这一需要。
+
+#### 使用 @Profile
+
+`@Profile` 注解允许您在一个或多个指定的配置文件处于活动状态时指示组件符合注册条件。使用前面的示例，我们可以如下重写 `dataSource` 配置：
+
+```java
+@Configuration
+@Profile("development")
+public class StandaloneDataConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.HSQL)
+            .addScript("classpath:com/bank/config/sql/schema.sql")
+            .addScript("classpath:com/bank/config/sql/test-data.sql")
+            .build();
+    }
+}
+```
+
+```java
+@Configuration
+@Profile("production")
+public class JndiDataConfig {
+
+    @Bean(destroyMethod = "") (1)
+    public DataSource dataSource() throws Exception {
+        Context ctx = new InitialContext();
+        return (DataSource) ctx.lookup("java:comp/env/jdbc/datasource");
+    }
+}
+
+// (1) `@Bean(destroyMethod = "")` 取消了默认销毁方法推断
+```
+
+> 如前所述，对于 `@Bean` 方法，您通常选择使用编程 JNDI 查找，方法是使用 Spring 的 `JndiTemplate`/`JndiLocatorDelegate` 助手或前面显示的直接 JNDI `InitialContext` 用法，而不是 `JndiObjectFactoryBean` 变量，这将迫使您将返回类型声明为 `FactoryBean` 类型。
+
+配置文件字符串可以包含简单的配置文件名称（例如，`production`）或配置文件表达式。配置文件表达式允许表达更复杂的配置文件逻辑（例如 `production & us-east`）。配置文件表达式中支持以下运算符：
+
+- `!`：一个 profile 的逻辑 `NOT`
+- `&`：一个 profile 的逻辑 `AND`
+- `|`：一个 profile 的逻辑 `OR`
+
+> 如果不使用括号，则不能混合使用 `&` 和 `|` 运算符。例如，`production & us-east | eu-central`不是有效的表达式。它必须表示为 `production & (us-east | eu-central)`。
+
+您可以使用 `@Profile` 作为元注解来创建自定义组合注解。以下示例定义了一个自定义的 `@Production` 注解，您可以将其用作 `@Profile("production")` 的插入替换：
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Profile("production")
+public @interface Production {
+}
+```
+
+> 如果 `@Configuration` 类标记为 `@Profile`，则所有与该类关联的 `@Bean` 方法和 `@Import` 注解都将被忽略，除非一个或多个指定的配置文件处于活动状态。如果 `@Component` 或 `@Configuration` 类标记为 `@Profile({"p1", "p2"})`，则除非配置文件“p1”或“p2”已激活，否则不会注册或处理该类。如果给定的配置文件前缀为 NOT 运算符（`!`），则仅当该配置文件处于非活动状态时，才会注册带注解的元素。例如，给定 `@Profile({"p1", "!p2"})`，如果配置文件“p1”处于活动状态或配置文件“p2”未处于活动状态，则会发生注册。
+
+`@Profile` 也可以在方法级别声明为只包含配置类的一个特定 bean（例如，对于特定 bean 的替代变体），如下例所示：
+
+```java
+@Configuration
+public class AppConfig {
+
+    @Bean("dataSource")
+    @Profile("development") (1)
+    public DataSource standaloneDataSource() {
+        return new EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.HSQL)
+            .addScript("classpath:com/bank/config/sql/schema.sql")
+            .addScript("classpath:com/bank/config/sql/test-data.sql")
+            .build();
+    }
+
+    @Bean("dataSource")
+    @Profile("production") (2)
+    public DataSource jndiDataSource() throws Exception {
+        Context ctx = new InitialContext();
+        return (DataSource) ctx.lookup("java:comp/env/jdbc/datasource");
+    }
+}
+
+// (1) `standaloneDataSource` 方法仅在 `development` profile 可用
+// (2) `jndiDataSource` 方法仅在 `production` profile 可用
+```
+
+> 在 `@Bean` 方法上使用 `@Profile` 时，可能会出现一种特殊情况：在重载具有相同 Java 方法名称的 `@Bean` 方法的情况下（类似于构造函数重载），需要在所有重载方法上一致声明 `@Profile` 条件。如果条件不一致，只有重载方法中第一个声明的条件才重要。因此，`@Profile` 不能用于选择具有特定参数签名的重载方法。同一 bean 的所有工厂方法之间的解析在创建时遵循 Spring 的构造函数解析算法。
+>
+> 如果要定义具有不同 profile 条件的替代 bean，请使用 `@Bean` 名称属性，使用指向相同 bean 名称的不同 Java 方法名称，如前一个示例所示。如果参数签名都相同（例如，所有变体都没有 arg 工厂方法），这是首先在有效 Java 类中表示这种排列的唯一方法（因为只能有一个具有特定名称和参数签名的方法）。
+
+#### XML Bean 定义 Profile
+
+XML 对应项是 `<beans>` 元素的 `profile` 属性。我们前面的示例配置可以在两个 XML 文件中重写，如下所示：
+
+```xml
+<beans profile="development"
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+    xsi:schemaLocation="...">
+
+    <jdbc:embedded-database id="dataSource">
+        <jdbc:script location="classpath:com/bank/config/sql/schema.sql"/>
+        <jdbc:script location="classpath:com/bank/config/sql/test-data.sql"/>
+    </jdbc:embedded-database>
+</beans>
+```
+
+```xml
+<beans profile="production"
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xsi:schemaLocation="...">
+
+    <jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/datasource"/>
+</beans>
+```
+
+也可以避免在同一文件中拆分和嵌套 `<beans/>` 元素，如下例所示：
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xsi:schemaLocation="...">
+
+    <!-- other bean definitions -->
+
+    <beans profile="development">
+        <jdbc:embedded-database id="dataSource">
+            <jdbc:script location="classpath:com/bank/config/sql/schema.sql"/>
+            <jdbc:script location="classpath:com/bank/config/sql/test-data.sql"/>
+        </jdbc:embedded-database>
+    </beans>
+
+    <beans profile="production">
+        <jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/datasource"/>
+    </beans>
+</beans>
+```
+
+`spring-ben.xsd` 被限制为只允许文件中最后一个元素。这将有助于提供灵活性，而不会导致 XML 文件混乱。
+
+> XML 对应项不支持前面描述的配置文件表达式。但是，可以使用 `!` 操作人员也可以通过嵌套配置文件来应用逻辑“and”，如下例所示：
+>
+> ```xml
+> <beans xmlns="http://www.springframework.org/schema/beans"
+>     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>     xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+>     xmlns:jee="http://www.springframework.org/schema/jee"
+>     xsi:schemaLocation="...">
+> 
+>     <!-- other bean definitions -->
+> 
+>     <beans profile="production">
+>         <beans profile="us-east">
+>             <jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/datasource"/>
+>         </beans>
+>     </beans>
+> </beans>
+> ```
+>
+> 在前面的例子中，`dataSource` bean 在 `production` 和 `us-east` profile 都启用的情况下被公开。
+
+#### 启用 Profile
+
+现在我们已经更新了配置，我们仍然需要指示 Spring 哪个 profile 是活动的。如果我们现在启动示例应用程序，我们将看到抛出 `NoSuchBeanDefinitionException`，因为容器找不到名为 `dataSource` 的Spring bean。
+
+激活 profile 可以通过多种方式完成，但最直接的方法是通过 `ApplicationContext` 使用 Environment API 以编程方式完成。以下示例显示了如何执行此操作：
+
+```java
+AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+ctx.getEnvironment().setActiveProfiles("development");
+ctx.register(SomeConfig.class, StandaloneDataConfig.class, JndiDataConfig.class);
+ctx.refresh();
+```
+
+此外，您还可以通过 `spring.profiles.active` 属性声明性地激活 profile，该属性可以通过系统环境变量、JVM 系统属性、`web.xml` 中的 servlet 上下文参数指定，甚至可以作为 JNDI 中的条目指定（请参阅 `PropertySource` 抽象）。在集成测试中，可以使用 spring-test 模块中的 `@ActiveProfiles` 注解来声明活动概要文件（请参阅环境 profile 的上下文配置）。
+
+请注意，配置文件不是“非此即彼”的命题。您可以同时激活多个配置文件。通过编程，您可以为 `setActiveProfiles()` 方法提供多个配置文件名称，该方法接受`String…` varargs。以下示例激活多个配置文件：
+
+```java
+ctx.getEnvironment().setActiveProfiles("profile1", "profile2");
+```
+
+声明性地，`spring.profiles.active` 可以接受以逗号分隔的配置文件名称列表，如下例所示：
+
+```
+-Dspring.profiles.active="profile1,profile2"
+```
+
+#### 默认 Profile
+
+默认配置文件表示默认情况下启用的配置文件。考虑以下示例：
+
+```java
+@Configuration
+@Profile("default")
+public class DefaultDataConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.HSQL)
+            .addScript("classpath:com/bank/config/sql/schema.sql")
+            .build();
+    }
+}
+```
+
+如果没有配置文件处于活动状态，则会创建 `dataSource`。您可以将此视为为一个或多个 bean 提供默认定义的方法。如果启用了任何配置文件，则不应用默认配置文件。
+
+您可以通过在 `Environment` 上使用 `setDefaultProfiles()` 或使用 `spring.profiles.default` 属性以声明方式更改默认配置文件的名称。
+
+### 1.13.2 PropertySource 抽象
