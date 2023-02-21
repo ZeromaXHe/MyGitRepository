@@ -5030,3 +5030,743 @@ public class DefaultDataConfig {
 您可以通过在 `Environment` 上使用 `setDefaultProfiles()` 或使用 `spring.profiles.default` 属性以声明方式更改默认配置文件的名称。
 
 ### 1.13.2 PropertySource 抽象
+
+Spring 的 `Environment` 抽象在可配置的属性源层次结构上提供搜索操作。考虑以下列表：
+
+```java
+ApplicationContext ctx = new GenericApplicationContext();
+Environment env = ctx.getEnvironment();
+boolean containsMyProperty = env.containsProperty("my-property");
+System.out.println("Does my environment contain the 'my-property' property? " + containsMyProperty);
+```
+
+在前面的代码段中，我们看到了一种高级方式，询问 Spring 是否为当前环境定义了 `my-property` 属性。为了回答这个问题，`Environment` 对象对一组 `PropertySource` 对象执行搜索。`PropertySource` 是对任何键值对源的简单抽象，Spring 的 `StandardEnvironment` 配置有两个 PropertySource 对象 —— 一个表示 JVM 系统财产集（`System.getProperties()`），另一个表示系统环境变量集（`System.getenv()`）。
+
+> 这些默认属性源适用于 `StandardEnvironment`，用于独立应用程序。`StandardServletEnvironment` 填充了其他默认属性源，包括 servlet 配置、servlet 上下文参数和 `JndiPropertySource`（如果 JNDI 可用）。
+
+具体地说，当您使用 `StandardEnvironment` 时，如果运行时存在 `my-property` 系统属性或 `my-property` 环境变量，则对 `env.contentsProperty("my-property")` 的调用将返回 true。
+
+> 执行的搜索是分层的。默认情况下，系统属性优先于环境变量。因此，如果在调用 `env.getProperty("my-property")` 的过程中，`my-property` 属性恰好在两个位置都被设置，则系统属性值“获胜”并将被返回。请注意，属性值不会被合并，而是被前面的条目完全覆盖。
+> 对于常见的 `StandardServletEnvironment`，完整层次结构如下，最高优先级条目位于顶部：
+>
+> 1. ServletConfig 参数（如果适用 —— 例如，在 `DispatcherServlet` 上下文的情况下）
+> 2. ServletContext 参数（web.xml 上下文参数条目）
+> 3. JNDI 环境变量（`java:comp/env/` 条目）
+> 4. JVM 系统属性（`-D` 命令行参数）
+> 5. JVM 系统环境（操作系统环境变量）
+
+最重要的是，整个机制是可配置的。也许您有一个要集成到该搜索中的自定义财产源。为此，请实现并实例化自己的 `PropertySource`，并将其添加到当前环境的 `PropertySource` 集合中。以下示例显示了如何执行此操作：
+
+```java
+ConfigurableApplicationContext ctx = new GenericApplicationContext();
+MutablePropertySources sources = ctx.getEnvironment().getPropertySources();
+sources.addFirst(new MyPropertySource());
+```
+
+在前面的代码中，`MyPropertySource` 已在搜索中以最高优先级添加。如果它包含 `my-property` 属性，则会检测并返回该属性，这有利于任何其他 `PropertySource` 中的任何 `my-property`。`MutablePropertySources` API 公开了许多方法，这些方法允许对属性源集进行精确操作。
+
+### 1.13.3 使用 @PropertySource
+
+`@PropertySource` 注解为向 Spring 的 `Environment` 添加 `PropertySource` 提供了一种方便的声明性机制。
+
+给定一个名为 `app.properties` 的文件，其中包含键值对 `testbean.name=myTestBean`，以下 `@Configuration` 类使用 `@PropertySource` 的方式是调用 `testbean.getName()` 返回 `myTestBean`:
+
+```java
+@Configuration
+@PropertySource("classpath:/com/myco/app.properties")
+public class AppConfig {
+
+    @Autowired
+    Environment env;
+
+    @Bean
+    public TestBean testBean() {
+        TestBean testBean = new TestBean();
+        testBean.setName(env.getProperty("testbean.name"));
+        return testBean;
+    }
+}
+```
+
+任何 `@PropertySource` 资源位置中存在的 `${…}` 占位符将根据已在环境中注册的一组属性源进行解析，如下例所示：
+
+```java
+@Configuration
+@PropertySource("classpath:/com/${my.placeholder:default/path}/app.properties")
+public class AppConfig {
+
+    @Autowired
+    Environment env;
+
+    @Bean
+    public TestBean testBean() {
+        TestBean testBean = new TestBean();
+        testBean.setName(env.getProperty("testbean.name"));
+        return testBean;
+    }
+}
+```
+
+假设 `my.placeholder` 存在于已注册的属性源之一（例如，系统属性或环境变量）中，则占位符被解析为相应的值。如果没有，则默认使用 `default/path`。如果未指定默认值并且无法解析属性，则会引发 `IllegalArgumentException`。
+
+> 根据 Java 8 约定，`@PropertySource` 注解是可重复的。然而，所有此类`@PropertySource` 注解都需要在同一级别声明，要么直接在配置类上声明，要么作为同一自定义注解中的元注解声明。不建议混合使用直接注解和元注解，因为直接注解有效地覆盖了元注解。
+
+### 1.13.4 语句中的占位符解析
+
+过去，元素中占位符的值只能根据 JVM 系统属性或环境变量进行解析。现在已经不是这样了。因为 `Environment` 抽象是在整个容器中集成的，所以很容易通过它来路由占位符的解析。这意味着您可以以任何方式配置解析过程。您可以更改搜索系统属性和环境变量的优先级，也可以完全删除它们。您还可以根据需要将自己的属性源添加到组合中。
+
+具体而言，无论 `customer` 属性在何处定义，只要它在 `Environment` 中可用，以下语句都有效：
+
+```xml
+<beans>
+    <import resource="com/bank/service/${customer}-config.xml"/>
+</beans>
+```
+
+## 1.14 注册一个 LoadTimeWeaver
+
+Spring 使用 `LoadTimeWeaver` 在类加载到 Java 虚拟机（JVM）时动态转换它们。
+
+要启用加载时编织，可以将 `@EnableLoadTimeWeaving` 添加到 `@Configuration` 类之一，如下例所示：
+
+```java
+@Configuration
+@EnableLoadTimeWeaving
+public class AppConfig {
+}
+```
+
+或者，对于 XML 配置，可以使用 `context:load-timeweaver` 元素：
+
+```xml
+<beans>
+    <context:load-time-weaver/>
+</beans>
+```
+
+一旦为 `ApplicationContext` 配置，该 `ApplicationContext` 中的任何 bean 都可以实现 `LoadTimeWeaverware`，从而接收对加载时 weaver 实例的引用。这与 Spring 的 JPA 支持相结合特别有用，因为 JPA 类转换可能需要加载时编织。有关详细信息，请参阅 `LocalContainerEntityManagerFactoryBean` javadoc。有关 AspectJ 加载时编织的更多信息，请参阅 Spring Framework 中的使用 AspectJ 进行加载时编织。
+
+## 1.15 ApplicationContext 的额外功能
+
+正如在章节介绍中所讨论的，`org.springframework.beans.factory` 包提供了管理和操作 bean 的基本功能，包括以编程方式。`org.springframework.context` 包添加了 `ApplicationContext` 接口，该接口扩展了 `BeanFactory` 接口，此外还扩展了其他接口，以更面向应用程序框架的方式提供附加功能。许多人以完全声明的方式使用 `ApplicationContext`，甚至没有以编程方式创建它，而是依赖于 `ContextLoader` 等支持类来自动实例化 `ApplicationContext`，作为 Jakarta EE web 应用程序正常启动过程的一部分。
+
+为了以更面向框架的方式增强 `BeanFactory` 功能，上下文包还提供以下功能：
+
+- 通过 `MessageSource` 接口访问 i18n 样式的消息。
+- 通过 `ResourceLoader` 接口访问资源，如 URL 和文件。
+- 事件发布，即通过使用 `ApplicationEventPublisher` 接口向实现 `ApplicationListener` 接口的 bean 发布。
+- 加载多个（分层）上下文，通过 `HierarchicalBeanFactory` 接口将每个上下文集中在一个特定的层上，例如应用程序的 web 层。
+
+### 1.15.1 使用 MessageSource 的国际化
+
+`ApplicationContext` 接口扩展了一个名为 `MessageSource` 的接口，因此提供了国际化（“i18n”）功能。Spring 还提供了 `HierarchicalMessageSource` 接口，它可以分层解析消息。这些接口共同提供了 Spring 实现消息解析的基础。这些接口上定义的方法包括：
+
+- `String getMessage(String code, Object[] args, String default, Locale loc)`：用于从 `MessageSource` 检索消息的基本方法。如果未找到指定区域设置的消息，则使用默认消息。使用标准库提供的 `MessageFormat` 功能，传入的任何参数都将成为替换值。
+- `String getMessage(String code, Object[] args, Locale loc)`：基本上与前面的方法相同，但有一个区别：无法指定默认消息。如果找不到消息，将引发 `NoSuchMessageException`。
+- `String getMessage(MessageSourceResolvable resolvable, Locale Locale)`：上述方法中使用的所有属性都封装在名为 `MessageSourceResovable` 的类中，您可以将其与此方法一起使用。
+
+当加载 `ApplicationContext` 时，它会自动搜索上下文中定义的 `MessageSource` bean。bean 必须具有名称 `messageSource`。如果找到这样一个 bean，则对前面方法的所有调用都将委托给消息源。如果找不到消息源，`ApplicationContext` 将尝试查找包含同名 bean 的父级。如果是，则使用该 bean 作为 `MessageSource`。如果 `ApplicationContext` 找不到任何消息源，则实例化空 `DelegatingMessageSource`，以便能够接受对上面定义的方法的调用。
+
+Spring 提供了三种 `MessageSource` 实现，`ResourceBundleMessageSource`、`ReloadableResourceBundleMessageSource` 和 `StaticMessageSource`。它们都实现了 `HierarchicalMessageSource`，以便进行嵌套消息传递。`StaticMessageSource` 很少使用，但提供了向源添加消息的编程方式。以下示例显示 `ResourceBundleMessageSource`：
+
+```xml
+<beans>
+    <bean id="messageSource"
+            class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basenames">
+            <list>
+                <value>format</value>
+                <value>exceptions</value>
+                <value>windows</value>
+            </list>
+        </property>
+    </bean>
+</beans>
+```
+
+该示例假设您在类路径中定义了三个资源包，称为 `format`、`exceptions` 和 `windows`。任何解析消息的请求都是通过 `ResourceBundle` 对象解析消息的 JDK 标准方式处理的。出于示例的目的，假设上述两个资源包文件的内容如下：
+
+```properties
+# in format.properties
+message=Alligators rock!
+```
+
+```properties
+# in exceptions.properties
+argument.required=The {0} argument is required.
+```
+
+下一个示例显示了运行 `MessageSource` 功能的程序。请记住，所有 `ApplicationContext` 实现也是 `MessageSource` 实现，因此可以强制转换为 `MessageSource` 接口。
+
+```java
+public static void main(String[] args) {
+    MessageSource resources = new ClassPathXmlApplicationContext("beans.xml");
+    String message = resources.getMessage("message", null, "Default", Locale.ENGLISH);
+    System.out.println(message);
+}
+```
+
+上述程序的结果如下：
+
+```
+Alligators rock!
+```
+
+总之，`MessageSource` 在一个名为 `beans.xml` 的文件中定义，该文件位于类路径的根目录中。`messageSource` bean 定义通过其 `basenames` 属性引用了许多资源包。列表中传递给 `basenames` 属性的三个文件作为文件存在于类路径的根目录中，分别称为 `format.properties`、`exceptions.properties` 和 `windows.properties`。
+
+下一个示例显示传递给消息查找的参数。这些参数被转换为 `String` 对象，并插入到查找消息中的占位符中。
+
+```xml
+<beans>
+
+    <!-- this MessageSource is being used in a web application -->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename" value="exceptions"/>
+    </bean>
+
+    <!-- lets inject the above MessageSource into this POJO -->
+    <bean id="example" class="com.something.Example">
+        <property name="messages" ref="messageSource"/>
+    </bean>
+
+</beans>
+```
+
+```java
+public class Example {
+
+    private MessageSource messages;
+
+    public void setMessages(MessageSource messages) {
+        this.messages = messages;
+    }
+
+    public void execute() {
+        String message = this.messages.getMessage("argument.required",
+            new Object [] {"userDao"}, "Required", Locale.ENGLISH);
+        System.out.println(message);
+    }
+}
+```
+
+调用 `execute()` 方法的结果输出如下：
+
+```
+The userDao argument is required.
+```
+
+关于国际化（“i18n”），Spring 的各种 `MessageSource` 实现遵循与标准 JDK `ResourceBundle` 相同的区域设置解析和回退规则。简言之，继续前面定义的示例 `messageSource`，如果您想根据英国（`en-GB`）语言环境解析消息，您将分别创建名为 `format_en_GB.properties`、`exceptions_en_GB.properties` 和 `windows_en_GB.properties` 的文件。
+
+通常，区域设置解析由应用程序的周围环境管理。在以下示例中，解析（英国）消息所依据的区域设置是手动指定的：
+
+```properties
+# in exceptions_en_GB.properties
+argument.required=Ebagum lad, the ''{0}'' argument is required, I say, required.
+```
+
+```java
+public static void main(final String[] args) {
+    MessageSource resources = new ClassPathXmlApplicationContext("beans.xml");
+    String message = resources.getMessage("argument.required",
+        new Object [] {"userDao"}, "Required", Locale.UK);
+    System.out.println(message);
+}
+```
+
+运行上述程序的结果如下：
+
+```
+Ebagum lad, the 'userDao' argument is required, I say, required.
+```
+
+您还可以使用 `MessageSourceAware` 接口获取对已定义的任何 `MessageSource` 的引用。在创建和配置 bean 时，在实现 `MessageSourceAware` 接口的 `ApplicationContext` 中定义的任何 bean 都会被注入应用程序上下文的 `MessageSource`。
+
+> 因为 Spring 的 `MessageSource` 基于 Java 的 `ResourceBundle`，所以它不会合并具有相同基本名称的捆绑包，而是只使用找到的第一个捆绑包。具有相同基名称的后续消息束将被忽略。
+
+> 作为 `ResourceBundleMessageSource` 的替代，Spring 提供了 `ReloadableResourceBundleMessage` 类。此变体支持相同的捆绑文件格式，但比基于标准 JDK 的 `ResourceBundleMessageSource` 实现更灵活。特别是，它允许从任何 Spring 资源位置（不仅仅是从类路径）读取文件，并支持热重载捆绑包属性文件（同时有效地缓存它们）。有关详细信息，请参阅`ReloadableResourceBundleMessageSource` javadoc。
+
+### 1.15.2 标准和自定义事件
+
+`ApplicationContext` 中的事件处理是通过 `ApplicationEvent` 类和 `ApplicationListener` 接口提供的。如果将实现 `ApplicationListener` 接口的 bean 部署到上下文中，则每次将 `ApplicationEvent` 发布到 `ApplicationContext` 时，都会通知该 bean。本质上，这是标准的 Observer 设计模式。
+
+> 从 Spring 4.2 开始，事件基础结构得到了显著改进，提供了基于注解的模型，以及发布任意事件（即，不一定从 `ApplicationEvent` 扩展的对象）的能力。当发布这样的对象时，我们会将其包装在事件中。
+
+下表描述了 Spring 提供的标准事件：
+
+| 事件                         | 解释                                                         |
+| :--------------------------- | :----------------------------------------------------------- |
+| `ContextRefreshedEvent`      | 在初始化或刷新 `ApplicationContext` 时发布（例如，通过在 `ConfigurationApplicationContext` 接口上使用 `refresh()` 方法）。这里，“initialized” 意味着加载所有 bean，检测并激活后处理器 bean，预实例化单体，并准备好使用 `ApplicationContext` 对象。只要上下文尚未关闭，就可以多次触发刷新，前提是所选的 `ApplicationContext` 实际上支持此类“热”刷新。例如，`XmlWebApplicationContext` 支持热刷新，但 `GenericApplicationContext` 不支持。 |
+| `ContextStartedEvent`        | 在 `ConfigurationApplicationContext` 接口上使用 `start()` 方法启动 `ApplicationContext` 时发布。这里，“已启动”意味着所有 `lifecycle` bean 都会收到一个明确的启动信号。通常，此信号用于在显式停止后重新启动 bean，但也可以用于启动尚未配置为自动启动的组件（例如，尚未在初始化时启动的组件）。 |
+| `ContextStoppedEvent`        | 在 `ConfigurationApplicationContext` 接口上使用 `stop()` 方法停止 `ApplicationContext` 时发布。这里，“stopped” 表示所有 `Lifecycle` bean都收到一个明确的停止信号。可以通过 `start()` 调用重新启动已停止的上下文。 |
+| `ContextClosedEvent`         | 通过在 `ConfigurationApplicationContext` 接口上使用 `close()` 方法或通过 JVM 关闭挂钩关闭 `ApplicationContext` 时发布。这里，“closed” 表示所有单例 bean 都将被销毁。一旦上下文关闭，它将到达生命的终点，无法刷新或重新启动。 |
+| `RequestHandledEvent`        | 一个特定于 web 的事件，告诉所有 bean HTTP 请求已得到服务。此事件在请求完成后发布。此事件仅适用于使用 Spring 的 `DispatcherServlet` 的 web 应用程序。 |
+| `ServletRequestHandledEvent` | 添加 Servlet 特定上下文信息的 `RequestHandledEvent` 的子类。 |
+
+您还可以创建和发布自己的自定义事件。以下示例显示了一个扩展 Spring 的 `ApplicationEvent` 基类的简单类：
+
+```java
+public class BlockedListEvent extends ApplicationEvent {
+
+    private final String address;
+    private final String content;
+
+    public BlockedListEvent(Object source, String address, String content) {
+        super(source);
+        this.address = address;
+        this.content = content;
+    }
+
+    // accessor and other methods...
+}
+```
+
+要发布自定义 `ApplicationEvent`，请在 `ApplicationEventPublisher` 上调用 `publishEvent()` 方法。通常，这是通过创建一个实现 `ApplicationEventPublisherAware` 的类并将其注册为 Spring bean 来完成的。以下示例显示了这样的类：
+
+```java
+public class EmailService implements ApplicationEventPublisherAware {
+
+    private List<String> blockedList;
+    private ApplicationEventPublisher publisher;
+
+    public void setBlockedList(List<String> blockedList) {
+        this.blockedList = blockedList;
+    }
+
+    public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
+    }
+
+    public void sendEmail(String address, String content) {
+        if (blockedList.contains(address)) {
+            publisher.publishEvent(new BlockedListEvent(this, address, content));
+            return;
+        }
+        // send email...
+    }
+}
+```
+
+在配置时，Spring 容器检测到 `EmailService` 实现了 `ApplicationEventPublisherAware` 并自动调用 `setApplicationEventPublisher()`。实际上，传入的参数是 Spring 容器本身。您正在通过其 `ApplicationEventPublisher` 接口与应用程序上下文交互。
+
+要接收自定义 `ApplicationEvent`，可以创建一个实现 `ApplicationListener` 的类，并将其注册为 Spring bean。以下示例显示了这样的类：
+
+```java
+public class BlockedListNotifier implements ApplicationListener<BlockedListEvent> {
+
+    private String notificationAddress;
+
+    public void setNotificationAddress(String notificationAddress) {
+        this.notificationAddress = notificationAddress;
+    }
+
+    public void onApplicationEvent(BlockedListEvent event) {
+        // notify appropriate parties via notificationAddress...
+    }
+}
+```
+
+请注意，`ApplicationListener` 是用自定义事件的类型（在前面的示例中为 `BlockedListEvent`）进行参数化的。这意味着 `onApplicationEvent()` 方法可以保持类型安全，避免任何向下转换的需要。您可以注册任意数量的事件侦听器，但请注意，默认情况下，事件侦听器同步接收事件。这意味着 `publishEvent()` 方法将阻塞，直到所有侦听器完成对事件的处理。这种同步和单线程方法的一个优点是，当侦听器接收到事件时，如果事务上下文可用，它将在发布器的事务上下文中进行操作。如果需要另一种事件发布策略，请参阅 javadoc for Spring 的 `ApplicationEventMulticaster` 接口和 `SimpleApplicationEventMultiaster` 实现以获取配置选项。
+
+以下示例显示了用于注册和配置上述每个类的 bean 定义：
+
+```xml
+<bean id="emailService" class="example.EmailService">
+    <property name="blockedList">
+        <list>
+            <value>known.spammer@example.org</value>
+            <value>known.hacker@example.org</value>
+            <value>john.doe@example.org</value>
+        </list>
+    </property>
+</bean>
+
+<bean id="blockedListNotifier" class="example.BlockedListNotifier">
+    <property name="notificationAddress" value="blockedlist@example.org"/>
+</bean>
+```
+
+总之，当调用 `emailService` bean 的 `sendEmail()` 方法时，如果有任何电子邮件消息应该被阻止，则会发布 `BlockedListEvent` 类型的自定义事件。`blockedListNotifier` bean 注册为 `ApplicationListener` 并接收 `BlockedListEvent`，此时它可以通知适当的各方。
+
+> Spring 的事件机制设计用于同一应用程序上下文中 Spring bean 之间的简单通信。然而，对于更复杂的企业集成需求，单独维护的 Spring integration 项目为构建基于众所周知的 Spring 编程模型的轻量级、面向模式、事件驱动架构提供了完整的支持。
+
+#### 基于注解的事件监听器
+
+您可以使用 `@EventListener` 注解在托管 bean 的任何方法上注册事件侦听器。`BlockedListNotifier` 可以重写如下：
+
+```java
+public class BlockedListNotifier {
+
+    private String notificationAddress;
+
+    public void setNotificationAddress(String notificationAddress) {
+        this.notificationAddress = notificationAddress;
+    }
+
+    @EventListener
+    public void processBlockedListEvent(BlockedListEvent event) {
+        // notify appropriate parties via notificationAddress...
+    }
+}
+```
+
+方法签名再次声明了它侦听的事件类型，但这次使用了一个灵活的名称，并且没有实现特定的侦听器接口。只要实际事件类型解析其实现层次结构中的泛型参数，也可以通过泛型缩小事件类型。
+
+如果您的方法应该侦听多个事件，或者如果您想在没有参数的情况下定义它，那么也可以在注解本身上指定事件类型。以下示例显示了如何执行此操作：
+
+```java
+@EventListener({ContextStartedEvent.class, ContextRefreshedEvent.class})
+public void handleContextStart() {
+    // ...
+}
+```
+
+还可以通过使用定义 `SpEL` 表达式的注解的 `condition` 属性添加额外的运行时过滤，该表达式应与实际调用特定事件的方法相匹配。
+
+以下示例显示了如何重写通知程序，以便仅在事件的 `content` 属性等于 `my-event` 时调用：
+
+```java
+@EventListener(condition = "#blEvent.content == 'my-event'")
+public void processBlockedListEvent(BlockedListEvent blEvent) {
+    // notify appropriate parties via notificationAddress...
+}
+```
+
+每个 `SpEL` 表达式都根据专用上下文进行计算。下表列出了可用于上下文的项目，以便您可以将它们用于条件事件处理：
+
+| 名字     | 位置       | 描述                                                         | 例子                                                         |
+| :------- | :--------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| 事件     | 根对象     | 真正的 `ApplicationEvent`.                                   | `#root.event` 或 `event`                                     |
+| 参数数组 | 根对象     | 用来调用方法的参数（作为对象数组）                           | `#root.args` 或 `args`; `args[0]` 来访问第一个参数，等等     |
+| 参数名字 | 求值上下文 | 任何方法参数的名称。如果由于某些原因，名称不可用（例如，因为编译的字节代码中没有调试信息），则使用 `#a<#arg>` 语法也可以使用单个参数，其中 `<#arg>` 代表参数索引（从 0 开始）。 | `#blEvent` 或 `#a0` (你也可以使用 `#p0` 或 `#p<#arg>` 参数符号作为别名) |
+
+请注意，`#root.event` 允许您访问基础事件，即使您的方法签名实际上引用了已发布的任意对象。
+
+如果您需要发布一个事件作为处理另一个事件的结果，则可以更改方法签名以返回应该发布的事件，如下例所示：
+
+```java
+@EventListener
+public ListUpdateEvent handleBlockedListEvent(BlockedListEvent event) {
+    // notify appropriate parties via notificationAddress and
+    // then publish a ListUpdateEvent...
+}
+```
+
+> 该特性不支持异步监听器
+
+`handleBlockedListEvent()` 方法为其处理的每个 `BlockedListEvent` 发布一个新的 `ListUpdateEvent`。如果需要发布多个事件，则可以返回集合或事件数组。
+
+#### 异步监听器
+
+如果希望特定侦听器异步处理事件，可以重用常规的 `@Async` 支持。以下示例显示了如何执行此操作：
+
+```java
+@EventListener
+@Async
+public void processBlockedListEvent(BlockedListEvent event) {
+    // BlockedListEvent is processed in a separate thread
+}
+```
+
+使用异步事件时，请注意以下限制：
+
+- 如果异步事件侦听器抛出 `Exception`，则不会将其传播给调用者。有关详细信息，请参阅 `AsyncUnaughtExceptionHandler`。
+- 异步事件侦听器方法无法通过返回值来发布后续事件。如果您需要作为处理结果发布另一个事件，请注入 `ApplicationEventPublisher` 以手动发布事件。
+
+#### 监听器排序
+
+如果需要在调用另一个监听器之前调用一个监听器，可以将 `@Order` 注解添加到方法声明中，如下例所示：
+
+```java
+@EventListener
+@Order(42)
+public void processBlockedListEvent(BlockedListEvent event) {
+    // notify appropriate parties via notificationAddress...
+}
+```
+
+#### 泛型事件
+
+您还可以使用泛型来进一步定义事件的结构。考虑使用 `EntityCreatedEvent<T>`，其中 `T` 是创建的实际实体的类型。例如，可以创建以下侦听器定义以仅接收 `Person` 的 `EntityCreatedEvent`：
+
+```java
+@EventListener
+public void onPersonCreated(EntityCreatedEvent<Person> event) {
+    // ...
+}
+```
+
+由于类型擦除，只有在激发的事件解析了事件侦听器筛选的通用参数（即 `class PersonCreatedEvent extends EntityCreatedEvent<Person>{…}`).
+
+在某些情况下，如果所有事件都遵循相同的结构，这可能会变得非常乏味（上一个示例中的事件就是如此）。在这种情况下，您可以实现 `ResolutibleTypeProvider` 来指导框架超出运行时环境所提供的范围。以下事件显示了如何执行此操作：
+
+```java
+public class EntityCreatedEvent<T> extends ApplicationEvent implements ResolvableTypeProvider {
+
+    public EntityCreatedEvent(T entity) {
+        super(entity);
+    }
+
+    @Override
+    public ResolvableType getResolvableType() {
+        return ResolvableType.forClassWithGenerics(getClass(), ResolvableType.forInstance(getSource()));
+    }
+}
+```
+
+> 这不仅适用于 `ApplicationEvent`，也适用于作为事件发送的任意对象。
+
+### 1.15.3 便捷访问低级资源
+
+为了优化应用程序上下文的使用和理解，您应该熟悉 Spring 的 `Resource` 抽象，如参考资料中所述。
+
+应用程序上下文是 `ResourceLoader`，可用于加载 `Resource` 对象。`Resource` 本质上是 JDK `java.net.URL` 类的一个功能更丰富的版本。事实上，`Resource` 的实现在适当的情况下包装 `java.net.URL` 的实例。`Resource` 可以以透明的方式从几乎任何位置获取低级资源，包括从类路径、文件系统位置、使用标准 URL 可描述的任何位置以及一些其他变体。如果资源位置字符串是一个没有任何特殊前缀的简单路径，那么这些资源的来源是特定的，并且适合于实际的应用程序上下文类型。
+
+您可以将部署到应用程序上下文中的 bean 配置为实现特殊的回调接口 `ResourceLoaderAware`，以便在初始化时自动调用，并将应用程序上下文本身作为 `ResourceLoader` 传入。您还可以公开 `Resource` 类型的财产，用于访问静态资源。它们像其他财产一样被注入其中。您可以将这些 `Resource` 财产指定为简单的 `String` 路径，并依赖于在部署 bean 时从这些文本字符串到实际 `Resource` 对象的自动转换。
+
+提供给 `ApplicationContext` 构造函数的一个或多个位置路径实际上是资源字符串，以简单的形式，根据特定的上下文实现进行适当处理。例如，`ClassPathXmlApplicationContext` 将简单的位置路径视为类路径位置。您还可以使用带有特殊前缀的位置路径（资源字符串）来强制从类路径或 URL 加载定义，而不考虑实际的上下文类型。
+
+### 1.15.4 应用启动跟踪
+
+`ApplicationContext` 管理 Spring 应用程序的生命周期，并围绕组件提供丰富的编程模型。因此，复杂的应用程序可能具有同样复杂的组件图和启动阶段。
+
+使用特定指标跟踪应用程序启动步骤有助于了解启动阶段所花费的时间，但也可以作为更好地了解整个上下文生命周期的一种方式。
+
+`AbstractApplicationContext`（及其子类）装有 `ApplicationStartup`，它收集有关各种启动阶段的 `StartupStep` 数据：
+
+- 应用程序上下文生命周期（基本包扫描、配置类管理）
+- bean 生命周期（实例化、智能初始化、后处理）
+- 应用程序事件处理
+
+以下是 `AnnotationConfigApplicationContext` 中的插入示例：
+
+```java
+// create a startup step and start recording
+StartupStep scanPackages = this.getApplicationStartup().start("spring.context.base-packages.scan");
+// add tagging information to the current step
+scanPackages.tag("packages", () -> Arrays.toString(basePackages));
+// perform the actual phase we're instrumenting
+this.scanner.scan(basePackages);
+// end the current step
+scanPackages.end();
+```
+
+应用程序上下文已检测到多个步骤。一旦记录下来，就可以使用特定的工具收集、显示和分析这些启动步骤。有关现有启动步骤的完整列表，您可以查看专用的附录部分。
+
+默认的 `ApplicationStartup` 实现是一个无操作变量，开销最小。这意味着默认情况下，在应用程序启动期间不会收集任何度量。Spring Framework 附带了一个使用Java FlightRecorder：`FlightRecorderApplicationStartup` 跟踪启动步骤的实现。要使用此变体，必须在创建该变体后立即将其实例配置到 `ApplicationContext`。
+
+如果开发人员提供自己的 `AbstractApplicationContext` 子类，或者希望收集更精确的数据，那么他们也可以使用 `ApplicationStartup` 基础设施。
+
+> `ApplicationStartup` 仅用于应用程序启动期间和核心容器；这绝不是 Java profiler 或 Micrometer 等度量库的替代品。
+
+要开始收集自定义 `StartupStep`，组件可以直接从应用程序上下文中获取 `ApplicationStartup` 实例，使其组件实现 `ApplicationStartupAware`，或在任何注入点上请求 `ApplicationStartup` 类型。
+
+> 开发人员在创建自定义启动步骤时不应使用 `spring.*` 命名空间。此名称空间是为内部 Spring 使用而保留的，并且可能会更改。
+
+### 1.15.5 Web 应用的便利 ApplicationContext 实例化
+
+例如，可以使用 `ContextLoader` 以声明方式创建 `ApplicationContext` 实例。当然，您也可以通过使用 `ApplicationContext` 实现之一以编程方式创建 `ApplicationContext` 实例。
+
+您可以使用 `ContextLoaderListener` 注册 `ApplicationContext`，如下例所示：
+
+```xml
+<context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>/WEB-INF/daoContext.xml /WEB-INF/applicationContext.xml</param-value>
+</context-param>
+
+<listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+```
+
+侦听器检查 `contextConfigLocation` 参数。如果该参数不存在，则侦听器使用 `/WEB-INF/applicationContext.xml` 作为默认值。当参数确实存在时，侦听器使用预定义的分隔符（逗号、分号和空格）分隔字符串，并将这些值用作搜索应用程序上下文的位置。还支持 Ant 样式的路径模式。示例有 `/WEB-INF/*Context.xml`（适用于名称以 `Context.xml` 结尾且位于 `WEB-INF` 目录中的所有文件）和 `/WEB-IINF/**/*Context.xml`（适用于 `WEB-INF` 任何子目录中的此类文件）。
+
+### 1.15.6 作为 Jarkarta EE RAR 文件部署 Spring ApplicationContext
+
+可以将 Spring `ApplicationContext` 部署为 RAR 文件，将上下文及其所有必需的 bean 类和库 JAR 封装在 Jakarta EE RAR 部署单元中。这相当于引导一个独立的 `ApplicationContext`（仅在 Jakarta EE 环境中托管）能够访问 Jakarta 的 EE 服务器设施。RAR 部署是部署无头 WAR 文件场景的更自然的替代方案 —— 实际上，这是一个没有任何 HTTP 入口点的 WAR 文件，仅用于在 Jakarta EE 环境中引导 Spring `ApplicationContext`。
+
+RAR 部署非常适合不需要 HTTP 入口点，而只包含消息端点和调度作业的应用程序上下文。这种上下文中的 bean 可以使用应用程序服务器资源，例如 JTA 事务管理器和 JNDI 绑定的 JDBC `DataSource` 实例和 JMS `ConnectionFactory` 实例，还可以向平台的 JMX 服务器注册 — 所有这些都通过 Spring 的标准事务管理和 JNDI 和 JMX 支持设施实现。应用程序组件还可以通过 Spring 的 `TaskExecutor` 抽象与应用程序服务器的 JCA `WorkManager` 交互。
+
+有关 RAR 部署中涉及的配置详细信息，请参阅 `SpringContextResourceAdapter` 类的 javadoc。
+
+对于 Spring ApplicationContext 作为 Jakarta EE RAR 文件的简单部署：
+
+1. 将所有应用程序类打包到一个 RAR 文件中（这是一个具有不同文件扩展名的标准 JAR 文件）。
+2. 将所有必需的库 JAR 添加到 RAR 归档的根目录中。
+3. 添加 `META-INF/ra.xml` 部署描述符（如 `SpringContextResourceAdapter` 的 javadoc 中所示）和相应的 Spring XML bean 定义文件（通常为 `META-INF/applicationContext.xml`）。
+4. 将生成的 RAR 文件放到应用程序服务器的部署目录中。
+
+> 这种 RAR 部署单元通常是独立的。它们不向外部世界公开组件，甚至不向同一应用程序的其他模块公开组件。与基于 RAR 的 `ApplicationContext` 的交互通常通过与其他模块共享的 JMS 目标发生。例如，基于 RAR 的 `ApplicationContext` 还可以调度一些作业或对文件系统中的新文件做出反应（等等）。如果它需要允许从外部进行同步访问，它可以（例如）导出 RMI 端点，该端点可以由同一机器上的其他应用程序模块使用。
+
+## 1.16 BeanFactory API
+
+`BeanFactory` API 为 Spring 的 IoC 功能提供了基础。它的特定契约主要用于与 Spring 的其他部分和相关的第三方框架集成，其 `DefaultListableBeanFactory` 实现是更高级别 `GenericApplicationContext` 容器中的关键委托。
+
+`BeanFactory` 和相关接口（如 `BeanFactoryAware`、`InitializingBean`、`DisposableBean`）是其他框架组件的重要集成点。通过不需要任何注解甚至反射，它们允许容器及其组件之间进行非常有效的交互。应用程序级 bean 可以使用相同的回调接口，但通常更喜欢通过注解或编程配置进行声明性依赖注入。
+
+请注意，核心 `BeanFactory` API 级别及其 `DefaultListableBeanFactory` 实现没有对要使用的配置格式或任何组件注解进行假设。所有这些风格都是通过扩展（如 `XmlBeanDefinitionReader` 和 `AutowiredAnnotationBeanPostProcessor`）引入的，并作为核心元数据表示在共享 `BeanDefinition` 对象上运行。这就是 Spring 容器如此灵活和可扩展的本质。
+
+### 1.16.1 BeanFactory 或 ApplicationContext
+
+本节解释 `BeanFactory` 和 `ApplicationContext` 容器级别之间的差异以及对引导的影响。
+
+除非有充分的理由不使用 `ApplicationContext`，否则应该使用 `ApplicationContext`。`GenericApplicationContext` 及其子类 `AnnotationConfigApplicationContext` 是自定义引导的常见实现。这些是 Spring 核心容器的主要入口点，用于所有常见目的：加载配置文件、触发类路径扫描、以编程方式注册 bean 定义和注解类，以及（从 5.0 开始）注册函数 bean 定义。
+
+由于 `ApplicationContext` 包含 `BeanFactory` 的所有功能，因此通常建议使用它而不是普通的 `BeanFactory`，除非需要对 bean 处理进行完全控制。在 `ApplicationContext`（例如 `GenericApplicationContext` 实现）中，按约定（即，按 bean 名称或 bean 类型）检测几种 bean —— 特别是后处理器），而普通的 `DefaultListableBeanFactory` 对任何特殊 bean 都是不可知的。
+
+对于许多扩展的容器特性，如注释处理和 AOP 代理，`BeanPostProcessor` 扩展点是必不可少的。如果只使用普通的 `DefaultListableBeanFactory`，则默认情况下不会检测到并激活此类后处理器。这种情况可能令人困惑，因为您的 bean 配置实际上没有任何问题。相反，在这种情况下，需要通过额外的设置来完全引导容器。
+
+下表列出了 `BeanFactory` 和 `ApplicationContext` 接口和实现提供的功能。
+
+| 特性                                 | `BeanFactory` | `ApplicationContext` |
+| :----------------------------------- | :------------ | :------------------- |
+| Bean 初始化/装配                     | 是            | 是                   |
+| 整合的生命周期管理                   | 否            | 是                   |
+| 自动 `BeanPostProcessor` 注册        | 否            | 是                   |
+| 自动 `BeanFactoryPostProcessor` 注册 | 否            | 是                   |
+| 便利的 `MessageSource` 访问（国际化) | 否            | 是                   |
+| 内建的 `ApplicationEvent` 发布机制   | 否            | 是                   |
+
+要向 `DefaultListableBeanFactory` 显式注册 bean 后处理器，需要以编程方式调用 `addBeanPostProcessor`，如下例所示：
+
+```java
+DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+// populate the factory with bean definitions
+
+// now register any needed BeanPostProcessor instances
+factory.addBeanPostProcessor(new AutowiredAnnotationBeanPostProcessor());
+factory.addBeanPostProcessor(new MyBeanPostProcessor());
+
+// now start using the factory
+```
+
+要将 `BeanFactoryPostProcessor` 应用于纯 `DefaultListableBeanFactory`，需要调用其 `postProcessBeanFactory` 方法，如下例所示：
+
+```java
+DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+reader.loadBeanDefinitions(new FileSystemResource("beans.xml"));
+
+// bring in some property values from a Properties file
+PropertySourcesPlaceholderConfigurer cfg = new PropertySourcesPlaceholderConfigurer();
+cfg.setLocation(new FileSystemResource("jdbc.properties"));
+
+// now actually do the replacement
+cfg.postProcessBeanFactory(factory);
+```
+
+在这两种情况下，显式注册步骤都是不方便的，这就是为什么在 Spring 支持的应用程序中，各种 `ApplicationContext` 变体比纯 `DefaultListableBeanFactory` 更受欢迎，尤其是在典型的企业设置中，依赖 `BeanFactoryPostProcessor` 和 `BeanPostProcessor` 实例实现扩展容器功能时。
+
+> `AnnotationConfigApplicationContext` 注册了所有常见的注解后处理器，并可能通过配置注解（如 `@EnableTransactionManagement`）在封面下引入其他处理器。在 Spring 基于注解的配置模型的抽象级别，bean 后处理器的概念仅仅是一个内部容器细节。
+
+# 2. 资源
+
+本章介绍 Spring 如何处理资源以及如何在 Spring 中使用资源。它包括以下主题：
+
+- 介绍
+- `Resource` 接口
+- 内置 `Resource` 实现
+- `ResourceLoader` 接口
+- `ResourcePatternResolver` 接口
+- `ResourceLoaderAware` 接口
+- 作为依赖项的资源
+- 应用程序上下文和资源路径
+
+## 2.1 介绍
+
+不幸的是，Java 的标准 `java.net.URL` 类和各种 URL 前缀的标准处理程序对于所有低级资源的访问都不够。例如，没有标准化的 `URL` 实现可用于访问需要从类路径或相对于 `ServletContext` 获得的资源。虽然可以为专门的 `URL` 前缀注册新的处理程序（类似于现有的前缀处理程序，例如 `http:`），但这通常非常复杂，并且 `URL` 接口仍然缺少一些理想的功能，例如检查所指向资源是否存在的方法。
+
+## 2.2 Resource 接口
+
+Spring 位于 `org.springframework.core.io.package` 中的 `Resource` 接口旨在成为一个更强大的接口，用于抽象对低级资源的访问。下面的列表提供了 `Resource` 接口的概述。有关详细信息，请参阅 `Resource` javadoc。
+
+```java
+public interface Resource extends InputStreamSource {
+
+    boolean exists();
+
+    boolean isReadable();
+
+    boolean isOpen();
+
+    boolean isFile();
+
+    URL getURL() throws IOException;
+
+    URI getURI() throws IOException;
+
+    File getFile() throws IOException;
+
+    ReadableByteChannel readableChannel() throws IOException;
+
+    long contentLength() throws IOException;
+
+    long lastModified() throws IOException;
+
+    Resource createRelative(String relativePath) throws IOException;
+
+    String getFilename();
+
+    String getDescription();
+}
+```
+
+如 `Resource` 接口的定义所示，它扩展了 `InputStreamSource` 接口。以下列表显示 `InputStreamSource` 接口的定义：
+
+```java
+public interface InputStreamSource {
+
+    InputStream getInputStream() throws IOException;
+}
+```
+
+`Resource` 接口中一些最重要的方法是：
+
+- `getInputStream()`：定位并打开资源，返回一个 `InputStream` 以读取资源。预期每次调用都会返回一个新的 `InputStream`。调用者负责关闭流。
+- `exists()`：返回一个 `boolean`，指示该资源是否以物理形式存在。
+- `isOpen()`：返回一个 `boolean`，指示此资源是否表示具有开放流的句柄。如果为 `true`，则不能多次读取 `InputStream`，必须仅读取一次，然后关闭以避免资源泄漏。对于所有常见的资源实现，返回 `false`，`InputStreamResource` 除外。
+- `getDescription()`：返回此资源的描述，用于处理资源时的错误输出。这通常是完全限定的文件名或资源的实际 URL。
+
+其他方法允许您获得表示资源的实际 `URL` 或 `File` 对象（如果底层实现兼容并支持该功能）。
+
+`Resource` 接口的一些实现还为支持写入的资源实现了扩展的 `WritableResource` 接口。
+
+当需要资源时，Spring 本身广泛使用 `Resource` 抽象，作为许多方法签名中的参数类型。某些 Spring API 中的其他方法（例如各种 `ApplicationContext` 实现的构造函数）采用一个 `Spring`，该字符串以未修饰或简单的形式用于创建适合该上下文实现的 `Resource`，或者通过 `String` 路径上的特殊前缀，让调用者指定必须创建和使用特定的 `Resource` 实现。
+虽然 Spring 经常使用 `Resource` 接口，但实际上在您自己的代码中单独用作通用工具类非常方便，即使您的代码不知道或不关心 Spring 的任何其他部分，也可以访问资源。虽然这将您的代码耦合到 Spring，但它实际上只将它耦合到这一小组实用程序类，这是 URL 的一个更强大的替代品，可以被视为等同于用于此目的的任何其他库。
+
+> `Resource` 抽象并不取代功能。它尽可能将其包裹起来。例如，`UrlResource` 包装 URL 并使用包装的 `URL` 来完成其工作。
+
+## 2.3 内建 Resource 实现
+
+Spring包括几个内置的 `Resource` 实现：
+
+- [`UrlResource`](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#resources-implementations-urlresource)
+- [`ClassPathResource`](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#resources-implementations-classpathresource)
+- [`FileSystemResource`](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#resources-implementations-filesystemresource)
+- [`PathResource`](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#resources-implementations-pathresource)
+- [`ServletContextResource`](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#resources-implementations-servletcontextresource)
+- [`InputStreamResource`](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#resources-implementations-inputstreamresource)
+- [`ByteArrayResource`](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#resources-implementations-bytearrayresource)
+
+有关 Spring 中可用的 `Resource` 实现的完整列表，请参阅 `Resource` javadoc 的“所有已知实现类”部分。
+
+### 2.3.1 UrlResource
+
+`UrlResource` 包装 `java.net.URL`，可用于访问通常可通过 URL 访问的任何对象，例如文件、HTTPS 目标、FTP 目标等。所有 URL 都有一个标准化的 `String` 表示，因此使用适当的标准化前缀来指示一种 URL 类型与另一种 URL。这包括 `file:` 用于访问文件系统路径，`https:` 用于通过 https 协议访问资源，`ftp:` 用于通过 ftp 访问资源，以及其他。
+
+`UrlResource` 是由 Java 代码通过显式使用 `UrlResource` 构造函数创建的，但通常在调用使用 `String` 参数表示路径的 API 方法时隐式创建。对于后一种情况，JavaBeans `PropertyEditor` 最终决定要创建哪种类型的 `Resource`。如果路径字符串包含一个众所周知的（到属性编辑器，即）前缀（例如 `classpath:`），它将为该前缀创建一个适当的专用 `Resource`。但是，如果它不识别前缀，则假定该字符串是标准 URL 字符串，并创建 `UrlResource`。
+
+### 2.3.2 ClassPathResource
+
+此类表示应从类路径中获取的资源。它使用线程上下文类加载器、给定类加载器或给定类来加载资源。
+
+如果类路径资源驻留在文件系统中，但对于驻留在 jar 中且尚未（通过 servlet 引擎或其他环境）扩展到文件系统的类路径资源，则此 `Resource` 实现支持将其解析为 `java.io.File`。为了解决这个问题，各种 `Resource` 实现始终支持 `java.net.URL` 的解析。
+
+`ClassPathResource` 是由 Java 代码通过显式使用 `ClassPathResource` 构造函数创建的，但通常在调用使用 `String` 参数表示路径的 API 方法时隐式创建。对于后一种情况，JavaBeans `PropertyEditor` 识别字符串路径上的特殊前缀 `classpath:`，并在这种情况下创建 `ClassPathResource`。
+
+### 2.3.3 FileSystemResource
+
+这是 `java.io.File` 句柄的 `Resource` 实现。它还支持 `java.nio.file.Path` 句柄，应用 Spring 的标准基于字符串的路径转换，但通过 `java.nio.file.Files` API 执行所有操作。对于纯 `java.nio.path.Path` 支持，请改用 `PathResource`。`FileSystemResource` 支持作为 `File` 和 `URL` 进行解析。
+
+### 2.3.4 PathResource
+
