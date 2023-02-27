@@ -6117,3 +6117,109 @@ ApplicationContext ctx =
 
 # 3. 验证，数据绑定，和类型转换
 
+将验证视为业务逻辑有利弊，Spring 提供了一种验证和数据绑定的设计，不排除其中任何一种。具体来说，验证不应与 web 层绑定，并且应易于本地化，并且应可以插入任何可用的验证器。考虑到这些问题，Spring 提供了一个 `Validator` 协议，它在应用程序的每一层中都是基本的且非常有用的。
+
+数据绑定对于将用户输入动态绑定到应用程序的域模型（或用于处理用户输入的任何对象）非常有用。Spring 提供了恰当命名的 `DataBinder` 来实现这一点。`Validator` 和 `DataBinder` 组成验证包，主要用于但不限于 web 层。
+
+`BeanWrapper` 是 Spring 框架中的一个基本概念，在很多地方都有使用。然而，您可能不需要直接使用 `BeanWrapper`。然而，由于这是参考文档，我们觉得可能需要一些解释。我们在本章中解释 `BeanWrapper`，因为如果您打算使用它，那么在尝试将数据绑定到对象时很可能会这样做。
+
+Spring 的 `DataBinder` 和较低级别的 `BeanWrapper` 都使用 `PropertyEditorSupport` 实现来解析和格式化属性值。`PropertyEditor` 和 `PropertyEditorSupport` 类型是 JavaBeans 规范的一部分，本章也将对此进行解释。Spring 的 `core.convert` 包提供了一个泛型转换工具，以及一个用于格式化 UI 字段值的高级 `format` 包。您可以将这些包用作 `PropertyEditorSupport` 实现的更简单的替代方案。本章还将讨论这些问题。
+
+Spring 通过设置基础设施和 Spring 自己的 `Validator` 协议的适配器支持 JavaBean 验证。应用程序可以全局启用一次 Bean Validation，如 Java Bean Validation 中所述，并将其专门用于所有验证需求。在 web 层中，应用程序可以进一步为每个 `DataBinder` 注册控制器本地 Spring `Validator` 实例，如配置 `DataBinder` 中所述，这对于插入自定义验证逻辑非常有用。
+
+## 3.1 通过使用 Spring 的 Validator 接口验证
+
+Spring 有一个 `Validator` 接口，您可以使用它来验证对象。`Validator` 接口通过使用 `Errors` 对象工作，以便在验证时，验证器可以向 `Errors` 对象报告验证失败。
+
+考虑以下小数据对象的示例：
+
+```java
+public class Person {
+
+    private String name;
+    private int age;
+
+    // the usual getters and setters...
+}
+```
+
+下一个示例通过实现 `org.springframework.validation.Validator` 接口的以下两个方法为 `Person` 类提供验证行为：
+
+- `supports(Class)`：此 `Validator` 是否可以验证提供的 `Class` 的实例？
+- `validate(Object, org.springframework.validation.Errors)`：验证给定的对象，如果出现验证错误，则将这些对象注册到给定的 `Errors` 对象。
+
+实现 `Validator` 相当简单，特别是当您知道 Spring Framework 也提供 `ValidationUtils` 帮助类时。以下示例实现了 `Person` 实例的 `Validator`：
+
+```java
+public class PersonValidator implements Validator {
+
+    /**
+     * This Validator validates only Person instances
+     */
+    public boolean supports(Class clazz) {
+        return Person.class.equals(clazz);
+    }
+
+    public void validate(Object obj, Errors e) {
+        ValidationUtils.rejectIfEmpty(e, "name", "name.empty");
+        Person p = (Person) obj;
+        if (p.getAge() < 0) {
+            e.rejectValue("age", "negativevalue");
+        } else if (p.getAge() > 110) {
+            e.rejectValue("age", "too.darn.old");
+        }
+    }
+}
+```
+
+`ValidationUtils` 类上的静态 `rejectIfEmpty(..)` 方法用于拒绝 `name` 属性（如果该属性为 `null` 或空字符串）。看看 `ValidationUtils` javadoc，看看除了前面所示的示例之外，它还提供了哪些功能。
+
+虽然可以实现一个 `Validator` 类来验证富对象中的每个嵌套对象，但最好将每个嵌套对象类的验证逻辑封装在自己的 `Validator` 实现中。“rich”对象的一个简单示例是 `Customer`，它由两个 `String` 属性（第一个和第二个名称）和一个复杂的 `Address` 对象组成。`Address` 对象可以独立于 `Customer` 对象使用，因此实现了一个不同的 `AddressValidator`。如果您希望 `CustomerValidator` 重用 `AddressValidator` 类中包含的逻辑而不使用复制和粘贴，则可以依赖注入或在 `CustomerValidator` 中实例化 `AddressValidator`，如下例所示：
+
+```java
+public class CustomerValidator implements Validator {
+
+    private final Validator addressValidator;
+
+    public CustomerValidator(Validator addressValidator) {
+        if (addressValidator == null) {
+            throw new IllegalArgumentException("The supplied [Validator] is " +
+                "required and must not be null.");
+        }
+        if (!addressValidator.supports(Address.class)) {
+            throw new IllegalArgumentException("The supplied [Validator] must " +
+                "support the validation of [Address] instances.");
+        }
+        this.addressValidator = addressValidator;
+    }
+
+    /**
+     * This Validator validates Customer instances, and any subclasses of Customer too
+     */
+    public boolean supports(Class clazz) {
+        return Customer.class.isAssignableFrom(clazz);
+    }
+
+    public void validate(Object target, Errors errors) {
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "firstName", "field.required");
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "surname", "field.required");
+        Customer customer = (Customer) target;
+        try {
+            errors.pushNestedPath("address");
+            ValidationUtils.invokeValidator(this.addressValidator, customer.getAddress(), errors);
+        } finally {
+            errors.popNestedPath();
+        }
+    }
+}
+```
+
+验证错误报告给传递给验证器的 `Errors` 对象。在 Spring Web MVC 的情况下，您可以使用 `<spring:bind/>` 标记来检查错误消息，但也可以自己检查 `Errors` 对象。有关它提供的方法的更多信息可以在 java doc 中找到。
+
+## 3.2 将代码解析为错误消息
+
+我们讨论了数据绑定和验证。本节介绍输出与验证错误相对应的消息。在上一节所示的示例中，我们拒绝了 `name` 和 `age` 字段。如果我们想使用 `MessageSource` 输出错误消息，可以使用我们在拒绝字段时提供的错误代码（在本例中为“name”和“age”）。当您从 `Errors` 接口调用（直接或间接，例如，通过使用 `ValidationUtils` 类）`rejectValue` 或其他 `reject` 方法之一时，基础实现不仅会注册传入的代码，还会注册许多其他错误代码。`MessageCodesResolver` 确定 `Errors` 接口注册的错误代码。默认情况下，使用 `DefaultMessageCodesResolver`，它（例如）不仅用您给出的代码注册消息，还注册包含传递给拒绝方法的字段名的消息。因此，如果您通过使用 `rejectValue("age", "too.darn.old")` 拒绝字段，除了 `too.darn.old` 代码之外，Spring 还注册 `too.darn.old.age` 和 `too.darn.old.age.int`（第一个包含字段名，第二个包含字段类型）。这样做是为了方便开发人员查找错误消息。
+
+有关 `MessageCodesResolver` 和默认策略的更多信息可以分别在 `MessageCodesResolver` 和 `DefaultMessageCodesResolver` 的 javadoc 中找到。
+
+## 3.3 Bean 操纵和 BeanWrapper
