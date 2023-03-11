@@ -6223,3 +6223,961 @@ public class CustomerValidator implements Validator {
 有关 `MessageCodesResolver` 和默认策略的更多信息可以分别在 `MessageCodesResolver` 和 `DefaultMessageCodesResolver` 的 javadoc 中找到。
 
 ## 3.3 Bean 操纵和 BeanWrapper
+
+# Servlet 技术栈的 Web
+
+本部分文档介绍了对基于 Servlet API 构建并部署到 Servlet 容器的 Servlet 技术栈 web 应用程序的支持。各个章节包括 Spring MVC、View 技术、CORS 支持和 WebSocket 支持。有关反应式技术栈 web 应用程序，请参阅反应式技术栈的 Web。
+
+# 1. Spring Web MVC
+
+Spring Web MVC 是基于 Servlet API 构建的原始 Web 框架，从一开始就包含在 Spring 框架中。正式名称“Spring Web MVC”来自其源模块（`spring-webmvc`）的名称，但更常见的是“Spring MVC”。
+
+与 Spring Web MVC 并行，Spring Framework 5.0 引入了一个反应式技术栈 Web 框架，其名称“Spring WebFlux”也是基于其源模块（`spring-webflux`）。本章介绍 Spring Web MVC。下一章将介绍 Spring WebFlux。
+
+有关基线信息以及与 Servlet 容器和 Jakarta EE 版本范围的兼容性，请参阅 Spring Framework Wiki。
+
+## 1.1 DispatcherServlet
+
+与许多其他 web 框架一样，Spring MVC 是围绕前端控制器模式设计的，其中的中央 `Servlet`，`DispatcherServlet`，为请求处理提供了共享算法，而实际工作则由可配置的委托组件执行。该模型非常灵活，支持多种工作流。
+
+与任何 `Servlet` 一样，`DispatcherServlet` 需要使用 Java 配置或 `web.xml` 根据 Servlet 规范声明和映射。反过来，`DispatcherServlet` 使用 Spring 配置来发现请求映射、视图解析、异常处理等所需的委托组件。
+
+以下 Java 配置示例注册并初始化 `DispatcherServlet`，它由 Servlet 容器自动检测（请参阅 Servlet 配置）：
+
+```java
+public class MyWebApplicationInitializer implements WebApplicationInitializer {
+
+    @Override
+    public void onStartup(ServletContext servletContext) {
+
+        // Load Spring web application configuration
+        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+        context.register(AppConfig.class);
+
+        // Create and register the DispatcherServlet
+        DispatcherServlet servlet = new DispatcherServlet(context);
+        ServletRegistration.Dynamic registration = servletContext.addServlet("app", servlet);
+        registration.setLoadOnStartup(1);
+        registration.addMapping("/app/*");
+    }
+}
+```
+
+> 除了直接使用 ServletContext API 之外，还可以扩展 `AbstractAnnotationConfigDispatcherServletInitializer` 并重写特定方法（请参阅上下文层次结构下的示例）。
+
+> 对于编程用例，可以使用 `GenericWebApplicationContext` 作为 `AnnotationConfigWebApplicationContext` 的替代方案。有关详细信息，请参阅 `GenericWebApplicationContext` Javadoc。
+
+以下 `web.xml` 配置示例注册并初始化 `DispatcherServlet`：
+
+```xml
+<web-app>
+
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/app-context.xml</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>app</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value></param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>app</servlet-name>
+        <url-pattern>/app/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>
+```
+
+> Spring Boot 遵循不同的初始化顺序。Spring Boot 使用 Spring 配置来引导自身和嵌入式 Servlet 容器，而不是与 Servlet 容器的生命周期挂钩。在 Spring 配置中检测到过滤器和 Servlet 声明，并向 Servlet 容器注册。有关更多详细信息，请参阅 Spring Boot 文档。
+
+### 1.1.1 上下文层次结构
+
+`DispatcherServlet` 期望 `WebApplicationContext`（普通 `ApplicationContext` 的扩展）用于其自身的配置。`WebApplicationContext` 链接到 `ServletContext` 及其关联的 `Servlet`。它还绑定到 `ServletContext`，因此如果应用程序需要访问它，它们可以对 `RequestContextUtils` 使用静态方法来查找 `WebApplicationContext`。
+
+对于许多应用程序，拥有单个 `WebApplicationContext` 既简单又足够。还可以具有上下文层次结构，其中根 `WebApplicationContext` 跨多个 `DispatcherServlet`（或其他 `Servlet`）实例共享，每个实例都具有自己的子 `WebApplicationContext` 配置。有关上下文层次结构功能的更多信息，请参阅应用程序上下文的其他功能。
+
+根 `WebApplicationContext` 通常包含基础架构 bean，例如需要跨多个 `Servlet` 实例共享的数据存储库和业务服务。这些 bean 是有效继承的，并且可以在 servlet 特定的子 `WebApplicationContext` 中覆盖（即，重新声明），该上下文通常包含给定 `Servlet` 本地的 bean。
+
+以下示例配置 `WebApplicationContext` 层次结构：
+
+```java
+public class MyWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class<?>[] { RootConfig.class };
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class<?>[] { App1Config.class };
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return new String[] { "/app1/*" };
+    }
+}
+```
+
+> 如果不需要应用程序上下文层次结构，则应用程序可以通过 `getRootConfigClasses()` 返回所有配置，并从 `getServletConfigClasses()` 返回 `null`。
+
+以下示例显示了与 `web.xml` 等效的文件：
+
+```xml
+<web-app>
+
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/root-context.xml</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>app1</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>/WEB-INF/app1-context.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>app1</servlet-name>
+        <url-pattern>/app1/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>
+```
+
+> 如果不需要应用程序上下文层次结构，则应用程序可以仅配置“根”上下文，并将 `contextConfigLocation` Servlet 参数留空。
+
+### 1.1.2 特殊 Bean 类型
+
+`DispatcherServlet` 委托特殊 bean 处理请求并呈现适当的响应。我们所说的“特殊 bean”是指实现框架协议的 Spring 托管 `Object` 实例。这些通常带有内置协议，但您可以自定义它们的属性并扩展或替换它们。
+
+下表列出了 `DispatcherServlet` 检测到的特殊 bean：
+
+| Bean 类型                                                    | 说明                                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| `HandlerMapping`                                             | 将请求与[拦截器](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-handlermapping-interceptor)列表一起映射到处理程序进行预处理和后处理。该映射基于一些标准，其细节因 `HandlerMapping` 实现而异。两个主要的 `HandlerMaping` 实现是 `RequestMappingHandlerMapping`（支持 `@RequestMapping` 注解方法）和 `SimpleUrlHandlerMapping`（维护 URI 路径模式到处理程序的显式注册）。 |
+| `HandlerAdapter`                                             | 帮助 `DispatcherServlet` 调用映射到请求的处理程序，而不管实际如何调用该处理程序。例如，调用带注解的控制器需要解析注解。`HandlerAdapter` 的主要目的是保护 `DispatcherServlet` 不受此类细节的影响。 |
+| [`HandlerExceptionResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-exceptionhandlers) | 解决异常的策略，可能将异常映射到处理程序、HTML 错误视图或其他目标。参见[异常](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-exceptionhandlers)。 |
+| [`ViewResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-viewresolver) | 将处理程序返回的逻辑上基于 `string` 的视图名称解析为实际的 `View`，并用其呈现到响应。参见[视图解析](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-viewresolver)和[视图技术](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-view)。 |
+| [`LocaleResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver), [LocaleContextResolver](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-timezone) | 解析客户端正在使用的 `Locale` 以及可能的时区，以便能够提供国际化视图。参见[区域设置](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver)。 |
+| [`ThemeResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-themeresolver) | 解析 web 应用程序可以使用的主题——例如提供个性化布局。参见[主题](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-themeresolver)。 |
+| [`MultipartResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-multipart) | 借助某些 multi-part 解析库解析 multipart 请求（例如，浏览器表单文件上载）的抽象。参见 [Multipart 解析器](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-multipart)。 |
+| [`FlashMapManager`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-flash-attributes) | 存储和检索可用于将属性从一个请求传递到另一个请求（通常通过重定向）的“输入”和“输出” `FlashMap`。参见 [Flash 属性](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-flash-attributes)。 |
+
+### 1.1.3 Web MVC 配置
+
+应用程序可以声明特殊 Bean 类型中列出的处理请求所需的基础结构 Bean。`DispatcherServlet` 检查每个特殊 bean 的 `WebApplicationContext`。如果没有匹配的 bean 类型，则返回 `DispatcherServlet.properties` 中列出的默认类型。
+
+在大多数情况下，MVC 配置是最好的起点。它用 Java 或 XML 声明所需的 bean，并提供更高级别的配置回调 API 来定制它。
+
+> Spring Boot 依赖于 MVC Java 配置来配置 Spring MVC，并提供了许多额外方便的选项。
+
+### 1.1.4 Servlet 配置
+
+在 Servlet 环境中，您可以选择以编程方式配置 Servlet 容器作为替代方案或与 `web.xml` 文件结合使用。以下示例注册 `DispatcherServlet`：
+
+```java
+import org.springframework.web.WebApplicationInitializer;
+
+public class MyWebApplicationInitializer implements WebApplicationInitializer {
+
+    @Override
+    public void onStartup(ServletContext container) {
+        XmlWebApplicationContext appContext = new XmlWebApplicationContext();
+        appContext.setConfigLocation("/WEB-INF/spring/dispatcher-config.xml");
+
+        ServletRegistration.Dynamic registration = container.addServlet("dispatcher", new DispatcherServlet(appContext));
+        registration.setLoadOnStartup(1);
+        registration.addMapping("/");
+    }
+}
+```
+
+`WebApplicationInitializer` 是 Spring MVC 提供的一个接口，可确保检测到您的实现并自动用于初始化任何 Servlet 3 容器。名为 `AbstractDispatcherServletInitializer` 的 `WebApplicationInitializer` 抽象基类实现通过重写方法来指定 servlet 映射和 `DispatcherServlet` 配置的位置，从而更容易注册 `DispatcherServlet`。
+
+对于使用基于 Java 的 Spring 配置的应用程序，建议这样做，如下例所示：
+
+```java
+public class MyWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return null;
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class<?>[] { MyWebConfig.class };
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return new String[] { "/" };
+    }
+}
+```
+
+如果使用基于 XML 的 Spring 配置，则应直接从 `AbstractDispatcherServletInitializer` 进行扩展，如下例所示：
+
+```java
+public class MyWebAppInitializer extends AbstractDispatcherServletInitializer {
+
+    @Override
+    protected WebApplicationContext createRootApplicationContext() {
+        return null;
+    }
+
+    @Override
+    protected WebApplicationContext createServletApplicationContext() {
+        XmlWebApplicationContext cxt = new XmlWebApplicationContext();
+        cxt.setConfigLocation("/WEB-INF/spring/dispatcher-config.xml");
+        return cxt;
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return new String[] { "/" };
+    }
+}
+```
+
+`AbstractDispatcherServletInitializer` 还提供了一种方便的方法来添加 `Filter` 实例，并将它们自动映射到 `DispatcherServlet`，如下例所示：
+
+```java
+public class MyWebAppInitializer extends AbstractDispatcherServletInitializer {
+
+    // ...
+
+    @Override
+    protected Filter[] getServletFilters() {
+        return new Filter[] {
+            new HiddenHttpMethodFilter(), new CharacterEncodingFilter() };
+    }
+}
+```
+
+每个过滤器都会根据其具体类型添加一个默认名称，并自动映射到 `DispatcherServlet`。
+
+`AbstractDispatcherServletInitializer` 的 `isAsyncSupported` 受保护方法提供了一个地方，可以在 `DispatcherServlet` 和映射到它的所有筛选器上启用异步支持。默认情况下，此标志设置为 `true`。
+
+最后，如果需要进一步自定义 `DispatcherServlet` 本身，可以重写 `createDispatcherServlet` 方法。
+
+### 1.1.5 处理
+
+DispatcherServlet处理请求如下：
+
+- `WebApplicationContext` 在请求中作为控制器和流程中的其他元素可以使用的属性进行搜索和绑定。默认情况下，它绑定在 `DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE` 键下。
+- 区域设置解析器（locale resolver）绑定到请求，以让流程中的元素解析处理请求时使用的区域设置（呈现视图、准备数据等）。如果不需要区域设置解析，则不需要区域配置解析器。
+- 主题解析器绑定到请求，以让视图等元素确定要使用的主题。如果不使用主题，可以忽略它。
+- 如果指定 multipart 文件解析器，将检查请求的 multiparts。如果找到 multiparts，则将请求包装在 `MultipartHttpServletRequest` 中，以供流程中的其他元素进一步处理。有关 multipart 处理的更多信息，请参阅 Multipart 解析器。
+- 搜索适当的处理程序。如果找到了处理程序，则运行与处理程序（预处理器、后处理器和控制器）关联的执行链，以准备渲染模型。或者，对于带注解的控制器，可以（在 `HandlerAdapter` 中）呈现响应，而不是返回视图。
+- 如果返回模型，则会渲染视图。如果没有返回模型（可能是由于预处理器或后处理器拦截了请求，可能是出于安全原因），则不会呈现视图，因为请求可能已经完成。
+
+`WebApplicationContext` 中声明的 `HandlerExceptionResolver` bean 用于解决请求处理过程中引发的异常。这些异常解析器允许定制逻辑以解决异常。有关详细信息，请参阅异常。
+
+对于 HTTP 缓存支持，处理程序可以使用 `WebRequest` 的 `checkNotModified` 方法，以及注解控制器的其他选项，如“控制器的 HTTP 缓存”中所述。
+
+通过将 Servlet 初始化参数（`init-param` 元素）添加到 `web.xml` 文件中的 Servlet 声明中，可以自定义各个 `DispatcherServlet` 实例。下表列出了支持的参数：
+
+| 参数                             | 说明                                                         |
+| :------------------------------- | :----------------------------------------------------------- |
+| `contextClass`                   | 实现 `ConfigurationWebApplicationContext` 的类，该类将由此 Servlet 实例化和本地配置。默认情况下，使用 `XmlWebApplicationContext`。 |
+| `contextConfigLocation`          | 传递给上下文实例（由 `contextClass` 指定）的字符串，以指示可以在何处找到上下文。该字符串可能由多个字符串（使用逗号作为分隔符）组成，以支持多个上下文。如果多个上下文位置包含定义了两次的 bean，则最新位置优先。 |
+| `namespace`                      | `WebApplicationContext` 的命名空间。默认为 `[servlet-name]-servlet`。 |
+| `throwExceptionIfNoHandlerFound` | 当未找到请求的处理程序时，是否引发 `NoHandlerFoundException`。然后，可以使用 `HandlerExceptionResolver`（例如，使用 `@ExceptionHandler` 控制器方法）捕获异常，并将其作为其他任何方法进行处理。默认情况下，此设置为 `false`，在这种情况下，`DispatcherServlet` 将响应状态设置为404（NOT_FOUND），而不会引发异常。注意，如果[默认 servlet 处理](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-default-servlet-handler)被配置，未解决的请求总是被转发到默认 servlet，并且永远不会引发404。 |
+
+### 1.1.6 路径匹配
+
+Servlet API 将完整的请求路径公开为 `requestURI`，并将其进一步细分为 `contextPath`、`servletPath` 和 `pathInfo`，它们的值取决于 Servlet 的映射方式。从这些输入中，Spring MVC 需要确定用于映射处理程序的查找路径，如果适用，应排除 `contextPath` 和任何 `servletMapping` 前缀。
+
+`servletPath` 和 `pathInfo` 被解码，这使得它们不可能直接与完整的 `requestURI` 进行比较，从而导出 lookupPath，这使得有必要对 `requestURI` 进行解码。然而，这会带来自身的问题，因为路径可能包含编码的保留字符，例如 `"/"` 或 `";"`，这些字符在解码后会改变路径的结构，这也会导致安全问题。此外，Servlet 容器可能会在不同程度上规范化 `servletPath`，这使得进一步无法对 `requestURI` 执行 `startsWith` 比较。
+
+这就是为什么最好避免依赖基于前缀的 `servletPath` 映射类型附带的 `servletPath`。如果 `DispatcherServlet` 被映射为带有 `"/"` 的默认 Servlet，或者没有带有 `"/*"` 的前缀，并且 Servlet 容器是 4.0+，那么 Spring MVC 能够检测 Servlet 映射类型，并完全避免使用 `servletPath` 和 `pathInfo`。在 3.1 Servlet 容器上，假设相同的 Servlet 映射类型，可以通过 MVC 配置中的路径匹配提供 `alwaysUseFullPath=true` 的 `UrlPathHelper` 来实现等效。
+
+幸运的是，默认的 Servlet 映射 `"/"` 是一个不错的选择。然而，仍然存在一个问题，即需要对 `requestURI` 进行解码，以便能够与控制器映射进行比较。这也是不希望的，因为可能会解码改变路径结构的保留字符。如果不需要这样的字符，则可以拒绝它们（如 Spring Security HTTP 防火墙），或者可以使用 `urlDecode=false` 配置 `UrlPathHelper`，但控制器映射需要与编码路径匹配，而编码路径可能并不总是正常工作。此外，有时 `DispatcherServlet` 需要与另一个 Servlet 共享 URL 空间，并且可能需要通过前缀进行映射。
+
+当使用 `PathPatternParser` 和已解析模式作为字符串路径匹配与 `AntPathMatcher` 的替代时，可以解决上述问题。`PathPatternParser` 从 5.3 版开始可在 Spring MVC 中使用，默认情况下从 6.0 版开始启用。与需要解码查找路径或编码控制器映射的 `AntPathMatcher` 不同，解析后的 `PathPattern` 与名为 `RequestPath` 的路径解析表示相匹配，一次只能匹配一个路径段。这允许单独解码和净化路径段值，而不存在改变路径结构的风险。解析的 `PathPattern` 还支持使用 `servletPath` 前缀映射，只要使用了 Servlet 路径映射并且前缀保持简单，即没有编码字符。有关模式语法的详细信息和比较，请参阅模式比较。
+
+### 1.1.7 拦截
+
+所有 `HandlerMapping` 实现都支持处理程序拦截器，当您希望将特定功能应用于特定请求时，这些拦截器非常有用——例如，检查委托人。拦截器必须使用三种方法实现 `org.springframework.web.servlet` 包中的 `HandlerInterceptor`，这三种方法应提供足够的灵活性来执行各种预处理和后处理：
+
+- `preHandle(..)`：在实际处理程序运行之前
+- `postHandle(..)`：运行处理程序后
+- `afterCompletion(..)`：完成请求后
+
+`preHandle(..)` 方法返回布尔值。您可以使用此方法中断或继续执行链的处理。当此方法返回 `true` 时，处理程序执行链将继续。当它返回 false 时，`DispatcherServlet` 假定拦截器本身已经处理了请求（例如，呈现了一个适当的视图），并且不会继续执行其他拦截器和执行链中的实际处理程序。
+
+有关如何配置拦截器的示例，请参阅 MVC 配置部分中的拦截器。您还可以通过在各个 `HandlerMapping` 实现上使用 setter 来直接注册它们。
+
+`postHandle` 方法在 `@ResponseBody` 和 `ResponseEntity` 方法中不太有用，这些方法的响应是在 `HandlerAdapter` 中和 `postHandle` 之前编写和提交的。这意味着对响应进行任何更改（如添加额外的标头）都为时已晚。对于这种情况，您可以实现 `ResponseBodyAdvice`，并将其声明为控制器切面 bean，或者直接在 `RequestMappingHandlerAdapter` 上配置它。
+
+### 1.1.8 异常
+
+如果在请求映射过程中发生异常或从请求处理程序（如 `@Controller`）抛出异常，`DispatcherServlet` 将委托给 `HandlerExceptionResolver` bean 链，以解决异常并提供替代处理，这通常是错误响应。
+
+下表列出了可用的 `HandlerExceptionResolver` 实现：
+
+| `HandlerExceptionResolver`                                   | 描述                                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| `SimpleMappingExceptionResolver`                             | 异常类名称和错误视图名称之间的映射。用于在浏览器应用程序中呈现错误页面。 |
+| [`DefaultHandlerExceptionResolver`](https://docs.spring.io/spring-framework/docs/6.0.6/javadoc-api/org/springframework/web/servlet/mvc/support/DefaultHandlerExceptionResolver.html) | 解析 Spring MVC 引发的异常并将其映射到 HTTP 状态代码。另请参阅可选的 `ResponseEntityExceptionHandler` 和[错误响应](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-ann-rest-exceptions)。 |
+| `ResponseStatusExceptionResolver`                            | 使用 `@ResponseStatus` 注解解析异常，并根据注解中的值将其映射到 HTTP 状态代码。 |
+| `ExceptionHandlerExceptionResolver`                          | 通过调用 `@Controller` 或 `@ControllerAdvice` 类中的 `@ExceptionHandler` 方法来解决异常。请参见 [@ExceptionHandler 方法](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-ann-exceptionhandler)。 |
+
+#### 解析器链
+
+通过在 Spring 配置中声明多个 `HandlerExceptionResolver` bean 并根据需要设置其 `order` 属性，可以形成异常解析器链。`order` 属性越高，异常解析程序定位得越晚。
+
+`HandlerExceptionResolver` 的约定指定它可以返回：
+
+- 指向错误视图的 `ModelAndView`。
+- 如果在冲突解决程序中处理了异常，则返回空 `ModelAndView`。
+- 如果异常仍然未解决，则为 `null`，供后续解析器尝试；如果异常仍然在末尾，则允许冒泡到 Servlet 容器。
+
+MVC 配置自动为默认的 Spring MVC 异常、`@ResponseStatus` 注解的异常以及 `@ExceptionHandler` 方法的支持声明内置解析器。您可以自定义或替换该列表。
+
+#### 容器错误页面
+
+如果任何 `HandlerExceptionResolver` 都无法解析异常，因此需要传播，或者如果响应状态设置为错误状态（即 4xx、5xx），Servlet 容器可以以 HTML 格式呈现默认错误页面。要自定义容器的默认错误页，可以在 `web.xml` 中声明错误页映射。以下示例显示了如何做到这一点：
+
+```xml
+<error-page>
+    <location>/error</location>
+</error-page>
+```
+
+给定前面的示例，当出现异常或响应处于错误状态时，Servlet 容器会在容器中向配置的 URL（例如 `/error`）发出 ERROR 调度。然后由 `DispatcherServlet` 处理，可能将其映射到 `@Controller`，该 `@Controller` 可以实现为返回带有模型的错误视图名称或呈现 JSON 响应，如下例所示：
+
+```java
+@RestController
+public class ErrorController {
+
+    @RequestMapping(path = "/error")
+    public Map<String, Object> handle(HttpServletRequest request) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("status", request.getAttribute("jakarta.servlet.error.status_code"));
+        map.put("reason", request.getAttribute("jakarta.servlet.error.message"));
+        return map;
+    }
+}
+```
+
+> Servlet API 不提供在 Java 中创建错误页映射的方法。但是，您可以同时使用`WebApplicationInitializer` 和最小的 `web.xml`。
+
+### 1.1.9 视图解析
+
+Spring MVC 定义了 `ViewResolver` 和 `View` 接口，这些接口允许您在浏览器中渲染模型，而无需将您绑定到特定的视图技术。`ViewResolver` 提供了视图名称和实际视图之间的映射。视图解决了在移交给特定视图技术之前准备数据的问题。
+下表提供了 `ViewResolver` 层次结构的详细信息：
+
+| ViewResolver                     | 描述                                                         |
+| :------------------------------- | :----------------------------------------------------------- |
+| `AbstractCachingViewResolver`    | `AbstractCachingViewResolver` 的子类缓存它们解析的视图实例。缓存提高了某些视图技术的性能。您可以通过将 `cache` 属性设置为 `false` 来关闭缓存。此外，如果必须在运行时刷新某个视图（例如，修改 FreeMarker 模板时），则可以使用 `removeFromCache(String viewName，Locale loc)` 方法。 |
+| `UrlBasedViewResolver`           | `ViewResolver` 接口的简单实现，无需显式映射定义即可将逻辑视图名称直接解析为 URL。如果逻辑名称以直接的方式与视图资源的名称匹配，而不需要任意映射，则这是合适的。 |
+| `InternalResourceViewResolver`   | 方便的 `UrlBasedViewResolver` 子类，支持 `InternalResourceView`（实际上是 Servlet 和 JSP）和 `JstlView` 等子类。您可以使用 `setViewClass(..)` 为该解析器生成的所有视图指定视图类。请参见 [`UrlBasedViewResolver`](https://docs.spring.io/spring-framework/docs/6.0.6/javadoc-api/org/springframework/web/reactive/result/view/UrlBasedViewResolver.html) javadoc 获取详细信息。 |
+| `FreeMarkerViewResolver`         | 方便的 `UrlBasedViewResolver` 子类，支持 `FreeMarkerView` 及其自定义子类。 |
+| `ContentNegotiatingViewResolver` | 实现 `ViewResolver` 接口，该接口根据请求文件名或 `Accept` 标头解析视图。参见[内容协商](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-multiple-representations)。 |
+| `BeanNameViewResolver`           | 实现 `ViewResolver` 接口，该接口将视图名称解释为当前应用程序上下文中的 bean 名称。这是一个非常灵活的变体，允许基于不同的视图名称混合和匹配不同的视图类型。每个这样的 `View` 都可以定义为 bean，例如在 XML 或配置类中。 |
+
+#### 处理
+
+您可以通过声明多个解析器 bean，并在必要时设置 `order` 属性以指定排序，来链接视图解析器。请记住，`order` 属性越高，视图解析器在链中的位置就越晚。
+
+`ViewResolver` 的约定指定它可以返回 null 以指示找不到视图。然而，对于 JSP 和 `InternalResourceViewResolver`，确定 JSP 是否存在的唯一方法是通过 `RequestDispatcher` 执行分派。因此，必须始终将 `InternalResourceViewResolver` 配置为视图解析器整体顺序中的最后一个。
+
+配置视图解析与将 `ViewResolver` bean 添加到 Spring 配置一样简单。MVC 配置为视图解析器和添加无逻辑视图控制器提供了一个专用的配置 API，这对于无控制器逻辑的 HTML 模板渲染非常有用。
+
+#### 重定向
+
+视图名称中的特殊 `redirect:` 前缀允许您执行重定向。`UrlBasedViewResolver`（及其子类）将此识别为需要重定向的指令。视图名称的其余部分是重定向 URL。
+
+净效果与控制器返回 `RedirectView` 相同，但现在控制器本身可以根据逻辑视图名称进行操作。逻辑视图名称（如 `redirect://myapp/some/resources`）相对于当前 Servlet 上下文进行重定向，而名称如 `redirect:https://myhost.com/some/arbitrary/path` 重定向到绝对 URL。
+
+注意，如果使用 `@ResponseStatus` 注解控制器方法，则注解值优先于 `RedirectView` 设置的响应状态。
+
+#### 转发
+
+还可以为最终由 `UrlBasedViewResolver` 和子类解析的视图名称使用特殊的 `forward:` 前缀。这将创建一个 `InternalResourceView`，该视图执行 `RequestDispatcher.forward()`。因此，此前缀对于 `InternalResourceViewResolver` 和 `InternalResourceView`（对于 JSP）不太有用，但如果您使用另一种视图技术，但仍希望强制由 Servlet/JSP 引擎处理资源的转发，则会有所帮助。请注意，您也可以链接多个视图解析器。
+
+#### 内容协商
+
+`ContentNegotiatingViewResolver` 不解析视图本身，而是委托给其他视图解析器，并选择与客户端请求的表示类似的视图。可以从 `Accept` 标头或查询参数（例如，`"/path?format=pdf"`）确定表示形式。
+
+`ContentNegotiatingViewResolver` 通过将请求媒体类型与其每个 `ViewResolver` 关联的视图支持的媒体类型（也称为内容类型）进行比较，选择适当的 `View` 来处理请求。列表中第一个具有兼容内容类型的视图将表示形式返回给客户端。如果 `ViewResolver` 链无法提供兼容的视图，则会查阅通过 `DefaultViews` 属性指定的视图列表。后一个选项适用于可以呈现当前资源的适当表示的单例 `View`，而不管逻辑视图名称如何。`Accept` 标头可以包含通配符（例如 `text/*`），在这种情况下，内容类型为 `text/xml` 的视图是兼容的匹配项。
+
+有关配置详细信息，请参阅 MVC 配置下的视图解析器。
+
+### 1.1.10 区域
+
+Spring 架构的大多数部分都支持国际化，就像 Spring web MVC 框架一样。`DispatcherServlet` 允许您使用客户端的区域（locale）设置自动解析消息。这是通过 `LocaleResolver` 对象完成的。
+
+当请求传入时，`DispatcherServlet` 会查找区域设置解析器，如果找到了，它会尝试使用它来设置区域设置。通过使用 `RequestContext.getLocale()` 方法，您可以始终检索由区域设置解析器解析的区域设置。
+
+除了自动区域设置解析之外，还可以将拦截器附加到处理程序映射（有关处理程序映射拦截器的更多信息，请参阅拦截器），以在特定情况下（例如，基于请求中的参数）更改区域设置。
+
+区域设置解析器和拦截器在 `org.springframework.web.servlet.i18n` 包中定义，并以正常方式在应用程序上下文中配置。Spring 中包含以下语言环境解析器选择。
+
+- [时区](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-timezone)
+- [头解析器](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver-acceptheader)
+- [Cookie 解析器](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver-cookie)
+- [会话解析器](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver-session)
+- [区域拦截器](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver-interceptor)
+
+#### 时区
+
+除了获取客户端的区域设置外，了解其时区通常也是有用的。`LocaleContextResolver` 接口提供了 `LocaleResolver` 的扩展，使解析器能够提供更丰富的 `LocaleContext`，其中可能包含时区信息。
+
+如果可用，可以使用 `RequestContext.getTimeZone()` 方法获取用户的 `TimeZone`。在 Spring 的 `ConversionService` 中注册的任何 Date/Time `Converter` 和 `Formatter` 对象都会自动使用时区信息。
+
+#### 头解析器
+
+此区域设置解析器检查客户端（例如，web 浏览器）发送的请求中的 `accept-language` 标头。通常，此标头字段包含客户端操作系统的区域设置。请注意，此解析器不支持时区信息。
+
+#### Cookie 解析器
+
+此区域设置解析器检查客户端上可能存在的 `Cookie`，以查看是否指定了 `Locale` 或 `TimeZone`。如果是，则使用指定的详细信息。通过使用此区域设置解析器的财产，您可以指定 cookie 的名称以及最长期限。以下示例定义了 `CookieLocaleResolver`：
+
+```xml
+<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver">
+
+    <property name="cookieName" value="clientlanguage"/>
+
+    <!-- in seconds. If set to -1, the cookie is not persisted (deleted when browser shuts down) -->
+    <property name="cookieMaxAge" value="100000"/>
+
+</bean>
+```
+
+下表介绍了 CookieLocaleResolver 的属性：
+
+| 属性           | 默认值               | 描述                                                         |
+| :------------- | :------------------- | :----------------------------------------------------------- |
+| `cookieName`   | 类名 + LOCALE        | cookie 的名字                                                |
+| `cookieMaxAge` | Servlet 容器的默认值 | cookie 在客户端上保留的最长时间。如果指定了 `-1`，则不会持久化 cookie。只有在客户端关闭浏览器之前，它才可用。 |
+| `cookiePath`   | /                    | 将 cookie 的可见性限制在网站的特定部分。当指定 `cookiePath` 时，cookie 仅对该路径及其下的路径可见。 |
+
+#### 会话解析器
+
+`SessionLocaleResolver` 允许您从可能与用户请求关联的会话中检索 `Locale` 和 `TimeZone`。与 `CookieLocaleResolver` 不同，此策略将本地选择的区域设置存储在 Servlet 容器的 `HttpSession` 中。因此，这些设置对于每个会话都是临时的，因此在每个会话结束时都会丢失。
+
+注意，与外部会话管理机制（如 Spring Session 项目）没有直接关系。此 `SessionLocaleResolver` 根据当前 `HttpServletRequest` 评估并修改相应的 `HttpSession` 属性。
+
+#### 区域拦截器
+
+您可以通过将 `LocaleChangeInterceptor` 添加到 `HandlerMapping` 定义之一来启用区域设置的更改。它检测请求中的一个参数，并相应地更改区域设置，在调度程序的应用程序上下文中调用 `LocaleResolver` 上的 `setLocale` 方法。下一个示例显示，对包含名为 `siteLanguage` 的参数的所有 `*.view` 资源的调用现在会更改区域设置。例如，对 URL 的请求，`https://www.sf.net/home.view?siteLanguage=nl`，将站点语言更改为荷兰语。以下示例显示了如何截取区域设置：
+
+```xml
+<bean id="localeChangeInterceptor"
+        class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+    <property name="paramName" value="siteLanguage"/>
+</bean>
+
+<bean id="localeResolver"
+        class="org.springframework.web.servlet.i18n.CookieLocaleResolver"/>
+
+<bean id="urlMapping"
+        class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    <property name="interceptors">
+        <list>
+            <ref bean="localeChangeInterceptor"/>
+        </list>
+    </property>
+    <property name="mappings">
+        <value>/**/*.view=someController</value>
+    </property>
+</bean>
+```
+
+### 1.1.11 主题
+
+您可以应用 Spring Web MVC 框架主题来设置应用程序的整体外观，从而增强用户体验。主题是影响应用程序视觉样式的静态资源的集合，通常是样式表和图像。
+
+> 从 6.0 开始，主题的支持已经被弃用，转而使用 CSS，并且在服务器端没有任何特殊支持。
+
+#### 定义主题
+
+要在 web 应用程序中使用主题，必须设置 `org.springframework.ui.context.ThemeSource` 接口的实现。`WebApplicationContext` 接口扩展了 `ThemeSource`，但将其职责委托给专用实现。默认情况下，委托是 `org.springframework.ui.context.support.ResourceBundleThemeSource` 实现，它从类路径的根目录加载属性文件。要使用自定义 `ThemeSource` 实现或配置 `ResourceBundleThemeSource` 的基本名称前缀，可以使用保留名称 `ThemeSource` 在应用程序上下文中注册 bean。web 应用程序上下文自动检测具有该名称的 bean 并使用它。
+
+使用 `ResourceBundleThemeSource` 时，主题是在简单的属性文件中定义的。属性文件列出了构成主题的资源，如下例所示：
+
+```properties
+styleSheet=/themes/cool/style.css
+background=/themes/cool/img/coolBg.jpg
+```
+
+属性的键是引用视图代码中主题元素的名称。对于 JSP，通常使用 `spring:theme` 自定义标记来完成此操作，该标记与 `spring:message` 标记非常相似。以下 JSP 片段使用上一个示例中定义的主题自定义外观：
+
+```jsp
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<html>
+    <head>
+        <link rel="stylesheet" href="<spring:theme code='styleSheet'/>" type="text/css"/>
+    </head>
+    <body style="background=<spring:theme code='background'/>">
+        ...
+    </body>
+</html>
+```
+
+默认情况下，`ResourceBundleThemeSource` 使用空的基名称前缀。因此，属性文件从类路径的根目录加载。因此，您可以将 `cool.properties` 主题定义放在类路径根目录中（例如，在 `/WEB-INF/classes` 中）。`ResourceBundleThemeSource` 使用标准的 Java 资源包加载机制，允许主题的完全国际化。例如，我们可以有一个 `/WEB-INF/classes/cool_nl.properties`，它引用一个特殊的背景图像，上面有荷兰语文本。
+
+#### 解析主题
+
+定义主题后，如前一节所述，您可以决定使用哪个主题。`DispatcherServlet` 查找名为 `themeResolver` 的 bean，以找出要使用的 `themeResolver` 实现。主题解析器的工作方式与 `LocaleResolver` 大致相同。它检测用于特定请求的主题，也可以更改请求的主题。下表描述了 Spring 提供的主题解析器：
+
+| 类                     | 描述                                                         |
+| :--------------------- | :----------------------------------------------------------- |
+| `FixedThemeResolver`   | 选择使用 `defaultThemeName` 属性设置的固定主题。             |
+| `SessionThemeResolver` | 主题在用户的 HTTP 会话中维护。它只需要为每个会话设置一次，但不会在会话之间持久化。 |
+| `CookieThemeResolver`  | 所选主题存储在客户端的 cookie 中。                           |
+
+Spring 还提供了一个 `ThemeChangeInterceptor`，它允许使用一个简单的请求参数对每个请求进行主题更改。
+
+### 1.1.12 Multipart 解析器
+
+来自 `org.springframework.web.multipart` 包的 `MultipartResolver` 是一种用于解析包括文件上载在内的多部分请求的策略。有一个基于容器的 `StandardServletMultipartResolver` 实现用于 Servlet 多部分请求解析。请注意，基于 Apache Commons FileUpload 的过时 `CommonsMultipartResolver` 在 Spring Framework 6.0 及其新的 Servlet 5.0+ 基线中不再可用。
+
+要启用 multipart 处理，您需要在 `DispatcherServlet` Spring 配置中声明一个名为 `multipartResolver` 的 `MultipartResolver` bean。`DispatcherServlet` 检测到它并将其应用于传入请求。当接收到内容类型为 `multipart/form-data` 的 POST 时，解析器解析内容，将当前 `HttpServletRequest` 包装为 `MultipartHttpServletRequest`，以提供对解析文件的访问，并将部分作为请求参数公开。
+
+#### Servlet Multipart 解析
+
+需要通过 Servlet 容器配置启用 Servlet multipart 解析。为此：
+
+- 在 Java 中，在 Servlet 注册上设置 `MultipartConfigElement`。
+- 在 `web.xml` 中，在 servlet 声明中添加 `<multipart-config>` 部分。
+
+以下示例显示如何在 Servlet 注册上设置 `MultipartConfigElement`：
+
+```java
+public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+    // ...
+
+    @Override
+    protected void customizeRegistration(ServletRegistration.Dynamic registration) {
+
+        // Optionally also set maxFileSize, maxRequestSize, fileSizeThreshold
+        registration.setMultipartConfig(new MultipartConfigElement("/tmp"));
+    }
+
+}
+```
+
+一旦 Servlet multipart 配置到位，就可以添加名称为 `multipartResolver` 的 `StandardServletMultipartResolver` 类型的 bean。
+
+> 此解析器变体按原样使用 Servlet 容器的 multipart 解析器，可能会使应用程序暴露于容器实现的差异。默认情况下，它将尝试使用任何 HTTP 方法解析任何 `multipart/` 内容类型，但这可能不是所有 Servlet 容器都支持的。有关详细信息和配置选项，请参阅 `StandardServletMultipartResolver` javadoc。
+
+### 1.1.13 日志
+
+Spring MVC 中的 DEBUG 级日志被设计为紧凑、最小和人性化。它关注的是一次又一次有用的高价值信息，而不是只有在调试特定问题时才有用的其他信息。
+
+TRACE 级日志通常遵循与 DEBUG 相同的原则（例如，也不应该是消防水带），但可以用于调试任何问题。此外，一些日志消息可能在 TRACE 和 DEBUG 中显示不同级别的详细信息。
+
+良好的日志记录来自使用日志的经验。如果您发现任何不符合规定目标的情况，请告知我们。
+
+#### 敏感数据
+
+DEBUG 和 TRACE 日志记录可能记录敏感信息。这就是为什么默认情况下会屏蔽请求参数和标头，并且必须通过 `DispatcherServlet` 上的 `enableLoggingRequestDetails` 属性显式启用它们的完整日志记录。
+
+下面的示例显示了如何使用 Java 配置来执行此操作：
+
+```java
+public class MyInitializer
+        extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return ... ;
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return ... ;
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return ... ;
+    }
+
+    @Override
+    protected void customizeRegistration(ServletRegistration.Dynamic registration) {
+        registration.setInitParameter("enableLoggingRequestDetails", "true");
+    }
+
+}
+```
+
+## 1.2 过滤器
+
+`spring-web` 模块提供了一些有用的过滤器：
+
+- [表格数据](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#filters-http-put)
+- [转发头](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#filters-forwarded-headers)
+- [浅 ETag](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#filters-shallow-etag)
+- [CORS](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#filters-cors)
+
+### 1.2.1 表格数据
+
+浏览器只能通过HTTP GET或HTTP POST提交表单数据，但非浏览器客户端也可以使用HTTP PUT、PATCH和DELETE。Servlet API 要求 `ServletRequest.getParameter*()` 方法仅支持 HTTP POST 的表单字段访问。
+
+`spring-web` 模块提供 `FormContentFilter`，以拦截内容类型为 `application/x-www-form-urlencoded` 的 HTTP PUT、PATCH 和 DELETE 请求，从请求主体读取表单数据，并包装 `ServletRequest`，使表单数据通过 `ServletRequest.getParameter*()` 系列方法可用。
+
+### 1.2.2 转发头
+
+当请求通过代理（如负载平衡器）时，主机、端口和方案可能会发生变化，这使得从客户端角度创建指向正确主机、端口或方案的链接成为一项挑战。
+
+RFC 7239 定义了 `Forwarded` HTTP 头，代理可以使用它来提供有关原始请求的信息。还有其他非标准标头，包括 `X-Forwarded-Host`、`X-Forwardd-Port`、`X-Forward-Proto`、`X-Forced-Ssl` 和 `X-Forwarded-Prefix`。
+
+`ForwardedHeaderFilter` 是一个 Servlet 筛选器，用于修改请求，以便 a）根据`Forwarded` 标头更改主机、端口和方案，b）删除这些标头以消除进一步的影响。过滤器依赖于包装请求，因此必须在其他过滤器（如 `RequestContextFilter`）之前对其进行排序，这些过滤器应处理修改后的请求，而不是原始请求。
+
+由于应用程序无法知道标头是由代理按预期添加的，还是由恶意客户端添加的，因此转发的标头存在安全问题。这就是为什么应该将信任边界处的代理配置为删除来自外部的不受信任的 `Forwarded` 标头。您还可以将 `ForwardedHeaderFilter` 配置为 `removeOnly=true`，在这种情况下，它会删除但不使用标头。
+
+为了支持异步请求和错误分派，此筛选器应与 `DispatcherType.ASYNC` 以及 `DispatcherType.ERROR` 进行映射。如果使用 Spring Framework 的 `AbstractAnnotationConfigDispatcherServletInitializer`（请参阅Servlet Config），则会自动为所有分派类型注册所有筛选器。但是，如果通过 `web.xml` 或通过 `FilterRegistrationBean` 在 Spring Boot 中注册过滤器，请确保除了 `DispatcherType.REQUEST` 之外，还包括 `DispatcherType.ASYNC` 和 `Dispatcherype.ERROR`。
+
+### 1.2.3 浅 ETag
+
+`ShallowEtagHeaderFilter` 过滤器通过缓存写入响应的内容并从中计算 MD5 哈希值来创建一个“浅” ETag。下次客户端发送时，它会执行同样的操作，但它还会将计算值与 `If-None-Match` 请求头进行比较，如果两者相等，则返回 304（NOT_MODIFIED）。
+
+此策略节省网络带宽，但不节省 CPU，因为必须为每个请求计算完整响应。前面描述的控制器级别的其他策略可以避免计算。请参阅 HTTP 缓存。
+
+此筛选器具有 `writeWeakETag` 参数，该参数将筛选器配置为写入弱 ETag，如下所示：`W/"02a2d595e6ed9a0b24f027f2b63b134d6"`（如 RFC 7232 第 2.3 节所定义）。
+
+为了支持异步请求，此筛选器必须与 `DispatcherType.ASYNC` 映射，以便筛选器可以延迟并成功生成 ETag，直到最后一次异步分派结束。如果使用 Spring Framework 的 `AbstractAnnotationConfigDispatcherServletInitializer`（请参阅 Servlet 配置），则会自动为所有分派类型注册所有筛选器。但是，如果通过 `web.xml` 或通过 `FilterRegistrationBean` 在 Spring Boot 中注册过滤器，请确保包含 `DispatcherType.ASYNC`。
+
+### 1.2.4 CORS
+
+Spring MVC 通过控制器上的注释为 CORS 配置提供细粒度支持。然而，当与 Spring Security 一起使用时，我们建议依赖内置的 `CorsFilter`，该过滤器必须在 Spring Security 的过滤器链之前订购。
+
+有关更多详细信息，请参阅 CORS 和 CORS 过滤器部分。
+
+## 1.3 被注解的控制器
+
+Spring MVC 提供了一个基于注解的编程模型，其中 `@Controller` 和 `@RestController` 组件使用注解来表示请求映射、请求输入、异常处理等。带注解的控制器具有灵活的方法签名，不必扩展基类或实现特定接口。以下示例显示了由注释定义的控制器：
+
+```java
+@Controller
+public class HelloController {
+
+    @GetMapping("/hello")
+    public String handle(Model model) {
+        model.addAttribute("message", "Hello World!");
+        return "index";
+    }
+}
+```
+
+在前面的示例中，该方法接受一个 `Model` 并返回一个作为 `String` 的视图名称，但还有许多其他选项，将在本章稍后解释。
+
+> [spring.io](https://spring.io/guides) 上的指南和教程使用本节中描述的基于注解的编程模型。
+
+### 1.3.1 声明
+
+您可以通过在 Servlet 的 `WebApplicationContext` 中使用标准的 Spring bean 定义来定义控制器 bean。`@Controller` 原型允许自动检测，与 Spring 在类路径中检测 `@Component` 类并自动注册 bean 定义的一般支持保持一致。它还充当注解类的原型，指示其作为 web 组件的角色。
+
+要启用此类 `@Controller` bean 的自动检测，可以将组件扫描添加到 Java 配置中，如下例所示：
+
+```java
+@Configuration
+@ComponentScan("org.example.web")
+public class WebConfig {
+
+    // ...
+}
+```
+
+以下示例显示了与前面示例等效的 XML 配置：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="org.example.web"/>
+
+    <!-- ... -->
+
+</beans>
+```
+
+`@RestController` 是一个复合注解，它本身用 `@Controller` 和 `@ResponseBody` 进行元注解，以指示其每个方法都继承类型级别 `@ResponsBody` 注解的控制器，因此，与视图解析和 HTML 模板渲染相比，它直接写入响应体。
+
+#### AOP 代理
+
+在某些情况下，您可能需要在运行时用 AOP 代理来修饰控制器。例如，如果您选择在控制器上直接使用 `@Transactional` 注解。在这种情况下，特别是对于控制器，我们建议使用基于类的代理。这是直接在控制器上进行此类注解的自动情况。
+
+如果控制器实现了一个接口，并且需要 AOP 代理，那么您可能需要显式地配置基于类的代理。例如，使用 `@EnableTransactionManagement` 可以更改为 `@EnableTransactionManagement(proxyTargetClass=true)`，使用 `<tx:annotation-driven/>` 可以更改为 `<tx:annotation-driven-proxy-target-class="true"/>`。
+
+> 请记住，从 6.0 开始，通过接口代理，Spring MVC 不再仅基于接口上的类型级别 `@RequestMapping` 注解来检测控制器。请启用基于类的代理，否则接口还必须具有 `@Controller` 注解。
+
+### 1.3.2 请求映射
+
+您可以使用 `@RequestMapping` 注解将请求映射到控制器方法。它具有各种属性，可通过 URL、HTTP 方法、请求参数、标头和媒体类型进行匹配。您可以在类级别使用它来表示共享映射，或者在方法级别使用它缩小到特定的端点映射。
+
+`@RequestMapping` 还有特定于 HTTP 方法的快捷方式变体：
+
+- `@GetMapping`
+- `@PostMapping`
+- `@PutMapping`
+- `@DeleteMapping`
+- `@PatchMapping`
+
+提供快捷方式是自定义注解，因为可以说，大多数控制器方法应该映射到特定的 HTTP 方法，而不是使用 `@RequestMapping`，默认情况下，`@RequestMapping` 与所有 HTTP 方法匹配。在类级别仍然需要 `@RequestMapping` 来表示共享映射。
+
+以下示例具有类型和方法级别映射：
+
+```java
+@RestController
+@RequestMapping("/persons")
+class PersonController {
+
+    @GetMapping("/{id}")
+    public Person getPerson(@PathVariable Long id) {
+        // ...
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public void add(@RequestBody Person person) {
+        // ...
+    }
+}
+```
+
+#### URI 模式
+
+`@RequestMapping` 方法可以使用 URL 模式映射。有两种选择：
+
+- `PathPattern` —— 与 URL 路径匹配的预解析模式也预解析为 `PathContainer`。此解决方案专为 web 使用而设计，可有效处理编码和路径参数，并有效匹配。
+- `AntPathMatcher` —— 根据字符串路径匹配字符串模式。这是 Spring 配置中用于选择类路径、文件系统和其他位置上的资源的原始解决方案。它的效率较低，字符串路径输入对于有效处理 URL 的编码和其他问题是一个挑战。
+
+`PathPattern` 是 web 应用程序的推荐解决方案，也是 Spring WebFlux 中的唯一选择。它从 5.3 版开始在 Spring MVC 中启用，从 6.0 版开始默认情况下启用。有关路径匹配选项的自定义，请参阅 MVC 配置。
+
+`PathPattern` 支持与 `AntPathMatcher` 相同的模式语法。此外，它还支持捕获模式，例如 `{*spring}`，用于匹配路径末端的 0 个或多个路径段。`PathPattern` 还限制使用 `**` 来匹配多个路径段，以便只允许在模式末尾使用。这消除了为给定请求选择最佳匹配模式时的许多不确定性。有关完整模式语法，请参阅 PathPattern 和 AntPathMatcher。
+
+一些示例模式：
+
+- `"/resources/ima?e.png"` - 匹配路径段中的一个字符
+- `"/resources/*.png"` - 匹配路径段中的零个或多个字符
+- `"/resources/**"` - 匹配多个路径段
+- `"/projects/{project}/versions"` - 匹配路径段并将其捕获为变量
+- `"/projects/{project:[a-z]+}/versions"` - 使用正则表达式匹配并捕获变量
+
+可以使用 `@PathVariable` 访问捕获的 URI 变量。例如：
+
+```java
+@GetMapping("/owners/{ownerId}/pets/{petId}")
+public Pet findPet(@PathVariable Long ownerId, @PathVariable Long petId) {
+    // ...
+}
+```
+
+您可以在类和方法级别声明 URI 变量，如下例所示：
+
+```java
+@Controller
+@RequestMapping("/owners/{ownerId}")
+public class OwnerController {
+
+    @GetMapping("/pets/{petId}")
+    public Pet findPet(@PathVariable Long ownerId, @PathVariable Long petId) {
+        // ...
+    }
+}
+```
+
+URI 变量会自动转换为适当的类型，或引发 `TypeMismatchException`。默认情况下支持简单类型（`int`、`long`、`Date` 等），您可以注册对任何其他数据类型的支持。请参阅类型转换和 `DataBinder`。
+
+您可以显式地命名 URI 变量（例如，`@PathVariable("customId")`），但如果名称相同且代码使用 `-parameters` 编译器标志编译，则可以省略该细节。
+
+语法 `{varName:regex}` 使用语法为 `{varName:regex}` 的正则表达式声明 URI 变量。例如，给定 URL `"/spring-web-3.0.5.jar"`，以下方法提取名称、版本和文件扩展名：
+
+```java
+@GetMapping("/{name:[a-z-]+}-{version:\\d\\.\\d\\.\\d}{ext:\\.[a-z]+}")
+public void handle(@PathVariable String name, @PathVariable String version, @PathVariable String ext) {
+    // ...
+}
+```
+
+URI 路径模式还可以嵌入 `${…}` 通过对本地、系统、环境和其他属性源使用 `PropertySourcesPlaceholderConfigurator` 在启动时解析的占位符。例如，您可以使用它根据某些外部配置参数化基本 URL。
+
+#### 模式对比
+
+当多个模式与 URL 匹配时，必须选择最佳匹配。这取决于是否启用了解析的 `PathPattern` 的使用，可以使用以下方法之一完成：
+
+- `PathPattern.SPECIFICITY_COMPARATOR`
+- `AntPathMatcher.getPatternComparator(String path)`
+
+这两种方法都有助于对模式进行排序，并将更具体的模式放在顶部。如果模式的 URI 变量数较少（计为 1）、单通配符（计为 1）和双通配符（计为 2），则模式就不那么具体。如果得分相等，则选择较长的模式。给定相同的分数和长度，将选择 URI 变量多于通配符的模式。
+
+默认映射模式（`/**`）从评分中排除，并始终排序在最后。此外，前缀模式（如 `/public/**`）被认为比其他没有双通配符的模式更不特定。
+
+有关详细信息，请按照上面的链接访问模式比较器。
+
+#### 后缀匹配
+
+从 5.3 开始，默认情况下 Spring MVC 不再执行 `.*` 后缀模式匹配，其中映射到 `/person` 的控制器也隐式映射到 `/person.*`。因此，不再使用路径扩展来解释请求的响应内容类型 —— 例如，`/person.pdf`、`/person.xml` 等。
+
+当浏览器用来发送难以一致解释的 `Accept` 标头时，以这种方式使用文件扩展名是必要的。目前，这不再是必要的，使用 `Accept` 标头应该是首选。
+
+随着时间的推移，文件扩展名的使用在许多方面都被证明是有问题的。当与 URI 变量、路径参数和 URI 编码的使用重叠时，可能会导致歧义。关于基于 URL 的授权和安全性的推理（有关更多详细信息，请参阅下一节）也变得更加困难。
+
+要在 5.3 之前的版本中完全禁用路径扩展，请设置以下内容：
+
+- `useSuffixPatternMatch(false)`，请参见 PathMatchConfigurer
+- `favorPathExtension(false)`，请参阅 ContentNegotiationConfigurer
+
+通过 `"Accept"` 标头以外的方式请求内容类型仍然很有用，例如在浏览器中键入 URL 时。路径扩展的安全替代方案是使用查询参数策略。如果必须使用文件扩展名，请考虑通过 ContentNegotiationConfigurer 的 `mediaTypes` 属性将其限制为显式注册的扩展名列表。
+
+#### 后缀匹配和 RFD
+
+反射文件下载（RFD）攻击与 XSS 相似，因为它依赖于响应中反映的请求输入（例如，查询参数和 URI 变量）。然而，RFD 攻击不是将 JavaScript 插入 HTML，而是依靠浏览器切换来执行下载，并在稍后双击时将响应视为可执行脚本。
+
+在 Spring MVC 中，`@ResponseBody` 和 `ResponseEntity` 方法存在风险，因为它们可以呈现不同的内容类型，客户端可以通过 URL 路径扩展请求这些内容类型。禁用后缀模式匹配和使用路径扩展进行内容协商可以降低风险，但不足以防止 RFD 攻击。
+
+为了防止 RFD 攻击，在呈现响应体之前，Spring MVC 添加了 `Content-Disposition:inline;filename=f.txt` 标头，以建议一个固定且安全的下载文件。只有当 URL 路径包含既不允许安全也不明确注册内容协商的文件扩展名时，才能执行此操作。然而，当 URL 直接输入到浏览器中时，它可能会产生副作用。
+
+默认情况下，许多公共路径扩展都是安全的。具有自定义 `HttpMessageConverter` 实现的应用程序可以显式注册用于内容协商的文件扩展名，以避免为这些扩展名添加 `Content-Disposition` 头。请参见内容类型。
+
+有关 RFD 的其他建议，请参见 CVE-2015-5211。
+
+#### 可消费的媒介类型
+
+您可以根据请求的内容类型缩小请求映射，如下例所示：
+
+```java
+@PostMapping(path = "/pets", consumes = "application/json") (1)
+public void addPet(@RequestBody Pet pet) {
+    // ...
+}
+
+// (1) 使用 `consumes` 属性按内容类型缩小映射。
+```
+
+`consumers` 属性还支持否定表达式 —— 例如 `!text/plain` 是指除 `text/plain` 之外的任何内容类型。
+
+您可以在类级别声明共享 `consumes` 属性。然而，与大多数其他请求映射属性不同，当在类级别使用时，方法级别使用 `consumes` 属性重写而不是扩展类级别声明。
+
+> `MediaType` 为常用的媒体类型提供常量，如 `APPLICATION_JSON_VALUE` 和 `APPLICATIION_XML_VALUE`。
+
+#### 可生成的媒介类型
+
+您可以根据 `Accept` 请求标头和控制器方法生成的内容类型列表缩小请求映射，如下例所示：
+
+```java
+@GetMapping(path = "/pets/{petId}", produces = "application/json") (1)
+@ResponseBody
+public Pet getPet(@PathVariable String petId) {
+    // ...
+}
+
+// (1) 使用 products 属性按内容类型缩小映射。
+```
+
+媒体类型可以指定字符集。支持否定表达式 —— 例如 `!text/plain` 是指除 “text/plain” 以外的任何内容类型。
+
+您可以在类级别声明共享的 `produces` 属性。然而，与大多数其他请求映射属性不同，当在类级别使用时，方法级别 `produces` 属性重写而不是扩展类级别声明。
+
+> `MediaType` 为常用的媒体类型提供常量，如 `APPLICATION_JSON_VALUE` 和 `APPLICATIION_XML_VALUE`。
+
+#### 参数，标头
+
+您可以根据请求参数条件缩小请求映射。您可以测试是否存在请求参数（`myParam`）、是否缺少请求参数（`!myParam`）或是否存在特定值（`myParam=myValue`）。以下示例显示了如何测试特定值：
+
+```java
+@GetMapping(path = "/pets/{petId}", params = "myParam=myValue") (1)
+public void findPet(@PathVariable String petId) {
+    // ...
+}
+
+// (1) 测试 `myParam` 是否等于 `myValue`。
+```
+
+也可以对请求头条件使用相同的方法，如下例所示：
+
+```java
+@GetMapping(path = "/pets", headers = "myHeader=myValue") (1)
+public void findPet(@PathVariable String petId) {
+    // ...
+}
+
+// (1) 测试 `myHeader` 是否等于 `myValue`。
+```
+
+> 您可以将 `Content-Type` 和 `Accept` 与 headers 条件匹配，但最好使用 consumes 和 products。
+
+#### HTTP HEAD, OPTIONS
+
+`@GetMapping`（和 `@RequestMapping(method=HttpMethod.GET)`）对请求映射透明地支持 HTTP HEAD。控制器方法无需更改。`jakarta.servlet.http.HttpServlet` 中应用的响应包装器确保 `Content-Length` 标头设置为写入的字节数（而不实际写入响应）。
+
+`@GetMapping`（和 `@RequestMapping(method=HttpMethod.GET)`）隐式映射到并支持 HTTP HEAD。处理 HTTP HEAD 请求时，就像处理 HTTP GET 一样，只是不写入正文，而是计算字节数并设置 `Content-Length` 标头。
+
+默认情况下，HTTP OPTIONS 是通过将 `Allow` 响应头设置为所有 `@RequestMapping` 方法中列出的具有匹配 URL 模式的 HTTP 方法列表来处理的。
+
+对于没有 HTTP 方法声明的 `@RequestMapping`，`Allow` 标头设置为 `GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS`。控制器方法应始终声明支持的 HTTP 方法（例如，通过使用 HTTP 方法特定的变量：`@GetMapping`、`@PostMapping` 和其他）。
+
+您可以显式地将 `@RequestMapping` 方法映射到 HTTP HEAD 和 HTTP OPTIONS，但在常见情况下这不是必需的。
+
+#### 自定义注解
+
+Spring MVC 支持使用组合注解进行请求映射。这些注释本身是用 `@RequestMapping` 进行元注解的，组成这些注解的目的是重新声明 `@RequestMapping` 属性的子集（或全部），以实现更窄、更具体的用途。
+
+`@GetMapping`、`@PostMapping`、`@PutMapping`、`@DeleteMapping` 和 `@PatchMapping` 是组合注解的示例。提供它们是因为，可以说，大多数控制器方法应该映射到特定的 HTTP 方法，而不是使用 `@RequestMapping`，默认情况下，`@RequestMapping` 与所有 HTTP 方法匹配。如果需要组合注解的示例，请查看这些注解是如何声明的。
+
+Spring MVC 还支持带有自定义请求匹配逻辑的自定义请求映射属性。这是一个更高级的选项，需要子类化 `RequestMappingHandlerMapping` 并重写 `getCustomMethodCondition` 方法，在这里您可以检查自定义属性并返回自己的 `RequestCondition`。
+
+#### 显式注册
+
+您可以以编程方式注册处理程序方法，这些方法可以用于动态注册或高级情况，例如不同 URL 下的同一处理程序的不同实例。以下示例注册处理程序方法：
+
+```java
+@Configuration
+public class MyConfig {
+
+    @Autowired
+    public void setHandlerMapping(RequestMappingHandlerMapping mapping, UserHandler handler) (1)
+            throws NoSuchMethodException {
+
+        RequestMappingInfo info = RequestMappingInfo
+                .paths("/user/{id}").methods(RequestMethod.GET).build(); (2)
+
+        Method method = UserHandler.class.getMethod("getUser", Long.class); (3)
+
+        mapping.registerMapping(info, handler, method); (4)
+    }
+}
+
+// (1) 为控制器注入目标处理程序和处理程序映射。
+// (2) 准备请求映射元数据。
+// (3) 获取处理程序方法。
+// (4) 添加注册。
+```
+
+### 1.3.3 处理器方法
