@@ -8102,3 +8102,687 @@ Spring MVC 中对 `@ExceptionHandler` 方法的支持基于 `DispatcherServlet` 
 | Any other return value                          | 如果返回值与上述任何值都不匹配，并且不是简单类型（由 [BeanTils#isSimpleProperty](https://docs.spring.io/spring-framework/docs/6.0.6/javadoc-api/org/springframework/beans/BeanUtils.html#isSimpleProperty-java.lang.Class-) 确定），默认情况下，它被视为要添加到模型中的模型属性。如果它是一个简单类型，它将保持未解析状态。 |
 
 ### 1.3.7 控制器切面
+
+`@ExceptionHandler`、`@InitBinder` 和 `@ModelAttribute` 方法仅适用于声明它们的 `@Controller` 类或类层次结构。相反，如果它们在 `@ControllerAdvice` 或 `@RestControllerAdvise` 类中声明，那么它们将应用于任何控制器。此外，从 5.3 开始，`@ControllerAdvice` 中的 `@ExceptionHandler` 方法可用于处理来自任何 `@Controller` 或任何其他处理程序的异常。
+
+`@ControllerAdvice` 使用 `@Component` 进行元注解，因此可以通过组件扫描注册为 Spring bean。`@RestControllerAdvice` 是用 `@ControllerAdvise` 和 `@ResponseBody` 进行元注解的，这意味着 `@ExceptionHandler` 方法将通过响应体消息转换而不是通过 HTML 视图呈现其返回值。
+
+启动时，`RequestMappingHandlerMapping` 和 `ExceptionHandlerExceptionResolver` 检测控制器切面 bean 并在运行时应用它们。`@ControllerAdvice` 中的全局 `@ExceptionHandler` 方法应用于 `@Controller` 中的本地方法之后。相比之下，全局 `@ModelAttribute` 和 `@InitBinder` 方法应用于本地方法之前。
+
+`@ControllerAdvice` 注解具有一些属性，可用于缩小它们所应用的控制器和处理程序集。例如：
+
+```java
+// Target all Controllers annotated with @RestController
+@ControllerAdvice(annotations = RestController.class)
+public class ExampleAdvice1 {}
+
+// Target all Controllers within specific packages
+@ControllerAdvice("org.example.controllers")
+public class ExampleAdvice2 {}
+
+// Target all Controllers assignable to specific classes
+@ControllerAdvice(assignableTypes = {ControllerInterface.class, AbstractController.class})
+public class ExampleAdvice3 {}
+```
+
+前面示例中的选择器是在运行时评估的，如果广泛使用，可能会对性能产生负面影响。有关详细信息，请参阅 `@ControllerAdvice` javadoc。
+
+## 1.4 函数式端点
+
+Spring Web MVC 包括 WebMvc.fn，这是一个轻量级的函数式编程模型，其中函数用于路由和处理请求，而协约是为不变性而设计的。它是替代基于注解的编程模型的方案，但在其他情况下运行在同一 DispatcherServlet 上。
+
+### 1.4.1 总览
+
+在 WebMvc.fn 中，HTTP 请求由 `HandlerFunction` 处理：一个接受 `ServerRequest` 并返回 `ServerResponse` 的函数。请求和响应对象都有不可变的协约，提供对 HTTP 请求和响应的 JDK 8 友好访问。`HandlerFunction` 相当于基于注解的编程模型中 `@RequestMapping` 方法的主体。
+
+传入请求被路由到具有 `RouterFunction` 的处理程序函数：该函数接受 `ServerRequest` 并返回可选的 `HandlerFunction`（即 `Optional<HandlerFunction>`）。当路由器函数匹配时，返回处理程序函数；否则为空可选。`RouterFunction` 相当于 `@RequestMapping` 注解，但主要区别在于路由器函数不仅提供数据，还提供行为。
+
+`RouterFunctions.route()` 提供了一个路由器生成器，可帮助创建路由器，如下例所示：
+
+```java
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.web.servlet.function.RequestPredicates.*;
+import static org.springframework.web.servlet.function.RouterFunctions.route;
+
+PersonRepository repository = ...
+PersonHandler handler = new PersonHandler(repository);
+
+RouterFunction<ServerResponse> route = route() (1)
+    .GET("/person/{id}", accept(APPLICATION_JSON), handler::getPerson)
+    .GET("/person", accept(APPLICATION_JSON), handler::listPeople)
+    .POST("/person", handler::createPerson)
+    .build();
+
+
+public class PersonHandler {
+
+    // ...
+
+    public ServerResponse listPeople(ServerRequest request) {
+        // ...
+    }
+
+    public ServerResponse createPerson(ServerRequest request) {
+        // ...
+    }
+
+    public ServerResponse getPerson(ServerRequest request) {
+        // ...
+    }
+}
+
+// (1) 通过 `route()` 创建路由
+```
+
+如果您将 `RouterFunction` 注册为 bean，例如通过在 `@Configuration` 类中公开它，servlet 将自动检测到它，如“运行服务器”中所述。
+
+### 1.4.2 HandlerFunction
+
+`ServerRequest` 和 `ServerResponse` 是不可变的接口，提供对 HTTP 请求和响应的 JDK 8 友好的访问，包括头、体、方法和状态代码。
+
+#### ServerRequest
+
+`ServerRequest` 提供对 HTTP 方法、URI、请求头和查询参数的访问，而对请求体的访问是通过 `body` 方法提供的。
+
+以下示例将请求体提取为字符串：
+
+```java
+String string = request.body(String.class);
+```
+
+以下示例将请求体提取到 `List<Person>`，其中 `Person` 对象从序列化形式（如 JSON 或 XML）解码：
+
+```java
+List<Person> people = request.body(new ParameterizedTypeReference<List<Person>>() {});
+```
+
+以下示例显示了如何访问参数：
+
+```java
+MultiValueMap<String, String> params = request.params();
+```
+
+#### ServerResponse
+
+`ServerResponse` 提供对 HTTP 响应的访问，因为它是不可变的，所以可以使用构建方法来创建它。您可以使用构建器来设置响应状态、添加响应头或提供响应体。以下示例使用 JSON 内容创建 200（OK）响应：
+
+```java
+Person person = ...
+ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(person);
+```
+
+下面的示例显示了如何构建一个 201（CREATED）响应，该响应带有 `Location` 标头而没有正文：
+
+```java
+URI location = ...
+ServerResponse.created(location).build();
+```
+
+您还可以使用异步结果作为正文，形式为 `CompletableFuture`、`Publisher` 或 `ReactiveAdapterRegistry` 支持的任何其他类型。例如：
+
+```java
+Mono<Person> person = webClient.get().retrieve().bodyToMono(Person.class);
+ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(person);
+```
+
+如果不仅正文，而且状态或标头都基于异步类型，则可以在 `ServerResponse` 上使用静态 `async` 方法，该方法接受 `CompletableFuture<ServerResponse>`、`Publisher<ServerResponse>` 或 `ReactiveAdapterRegistry` 支持的任何其他异步类型。例如：
+
+```java
+Mono<ServerResponse> asyncResponse = webClient.get().retrieve().bodyToMono(Person.class)
+  .map(p -> ServerResponse.ok().header("Name", p.name()).body(p));
+ServerResponse.async(asyncResponse);
+```
+
+服务器发送事件可以通过 `ServerResponse` 上的静态 `sse` 方法提供。该方法提供的生成器允许您将字符串或其他对象作为 JSON 发送。例如：
+
+```java
+public RouterFunction<ServerResponse> sse() {
+    return route(GET("/sse"), request -> ServerResponse.sse(sseBuilder -> {
+                // Save the sseBuilder object somewhere..
+            }));
+}
+
+// In some other thread, sending a String
+sseBuilder.send("Hello world");
+
+// Or an object, which will be transformed into JSON
+Person person = ...
+sseBuilder.send(person);
+
+// Customize the event by using the other methods
+sseBuilder.id("42")
+        .event("sse event")
+        .data(person);
+
+// and done at some point
+sseBuilder.complete();
+```
+
+#### Handler 类
+
+我们可以将处理函数写成 lambda，如下例所示：
+
+```java
+HandlerFunction<ServerResponse> helloWorld =
+  request -> ServerResponse.ok().body("Hello World");
+```
+
+这很方便，但在一个应用程序中，我们需要多个函数，多个内联 lambda 可能会变得混乱。因此，将相关的处理程序函数分组到一个处理程序类中是很有用的，该类的作用与基于注解的应用程序中的 `@Controller` 类似。例如，下面的类公开了一个被动的 `Person` 存储库：
+
+```java
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.web.reactive.function.server.ServerResponse.ok;
+
+public class PersonHandler {
+
+    private final PersonRepository repository;
+
+    public PersonHandler(PersonRepository repository) {
+        this.repository = repository;
+    }
+
+    public ServerResponse listPeople(ServerRequest request) { (1)
+        List<Person> people = repository.allPeople();
+        return ok().contentType(APPLICATION_JSON).body(people);
+    }
+
+    public ServerResponse createPerson(ServerRequest request) throws Exception { (2)
+        Person person = request.body(Person.class);
+        repository.savePerson(person);
+        return ok().build();
+    }
+
+    public ServerResponse getPerson(ServerRequest request) { (3)
+        int personId = Integer.parseInt(request.pathVariable("id"));
+        Person person = repository.getPerson(personId);
+        if (person != null) {
+            return ok().contentType(APPLICATION_JSON).body(person);
+        }
+        else {
+            return ServerResponse.notFound().build();
+        }
+    }
+
+}
+
+// (1) `listPeople` 是一个处理程序函数，它将存储库中找到的所有 `Person` 对象作为JSON返回。
+// (2) `createPerson` 是一个处理程序函数，用于存储请求主体中包含的新 `Person`。
+// (3) `getPerson` 是一个处理程序函数，它返回由 `id` 路径变量标识的单个人员。我们从存储库中检索该 `Person` 并创建 JSON 响应（如果找到）。如果找不到，则返回 404 not found 响应。
+```
+
+#### 验证
+
+函数式端点可以使用 Spring 的验证工具对请求主体应用验证。例如，给定 Person 的自定义 Spring Validator 实现：
+
+```java
+public class PersonHandler {
+
+    private final Validator validator = new PersonValidator(); (1)
+
+    // ...
+
+    public ServerResponse createPerson(ServerRequest request) {
+        Person person = request.body(Person.class);
+        validate(person); (2)
+        repository.savePerson(person);
+        return ok().build();
+    }
+
+    private void validate(Person person) {
+        Errors errors = new BeanPropertyBindingResult(person, "person");
+        validator.validate(person, errors);
+        if (errors.hasErrors()) {
+            throw new ServerWebInputException(errors.toString()); (3)
+        }
+    }
+}
+
+// (1) 创建 `Validator` 实例
+// (2) 应用验证
+// (3) 为 400 响应扔出一个异常
+```
+
+处理程序还可以通过创建和注入基于 `LocalValidatorFactoryBean` 的全局 `Validator` 实例来使用标准 bean 验证 API（JSR-303）。参见 Spring 验证。
+
+### 1.4.3 RouterFunction
+
+路由器函数用于将请求路由到相应的 `HandlerFunction`。通常，您不自己编写路由器函数，而是使用 `RouterFunctions` 实用程序类上的方法来创建路由器函数。`RouterFunctions.route()`（无参数）为创建路由器函数提供了一个流畅的生成器，而 `RouterFunctions.route(RequestPredicate，HandlerFunction)` 提供了创建路由器的直接方法。
+
+通常，建议使用 `route()` 生成器，因为它为典型的映射场景提供了方便的快捷方式，而不需要很难发现静态导入。例如，路由器函数生成器提供了 `GET(String, HandlerFunction)` 方法来创建 GET 请求的映射；以及给 POST 的 `POST(String, HandlerFunction)`。
+
+除了基于 HTTP 方法的映射之外，路由生成器还提供了一种在映射到请求时引入附加谓词的方法。对于每个 HTTP 方法，都有一个重载变量，它将 `RequestPredicate` 作为参数，通过它可以表达额外的约束。
+
+#### 谓词
+
+您可以编写自己的 `RequestPredicate`，但 `RequestPredicates` 实用程序类提供了基于请求路径、HTTP 方法、内容类型等的常用实现。以下示例使用请求谓词基于 `Accept` 标头创建约束：
+
+```java
+RouterFunction<ServerResponse> route = RouterFunctions.route()
+    .GET("/hello-world", accept(MediaType.TEXT_PLAIN),
+        request -> ServerResponse.ok().body("Hello World")).build();
+```
+
+您可以使用以下方法组合多个请求谓词：
+
+- `RequestPredicate.and(RequestPredicate)` — 必须匹配两者.
+- `RequestPredicate.or(RequestPredicate)` — 任意一个可以匹配.
+
+`RequestPredicates` 中的许多谓词都是组合的。例如，`RequestPredicates.GET(String)` 由 `RequestPredicites.method(HttpMethod) ` 和 `RequestPredicates.path(String)` 组成。上面显示的示例还使用了两个请求谓词，因为构建器在内部使用 `RequestPredictes.GET`，并将其与 `accept` 谓词组合。
+
+#### 路由
+
+路由器函数按顺序求值：如果第一条路由不匹配，则考虑第二条路由，依此类推。因此，在一般路由之前声明更具体的路由是有意义的。这在将路由器功能注册为 Spring bean 时也很重要，稍后将对此进行描述。请注意，这种行为与基于注解的编程模型不同，其中“最特定”的控制器方法是自动选择的。
+
+当使用 router 函数生成器时，所有定义的路由都被组成一个 `RouterFunction`，该 `RouterFunction` 从 `build()` 返回。还有其他方法可以将多个路由器功能组合在一起：
+
+- `add(RouterFunction)` 在 `RouterFunctions.route()` builder 上
+- `RouterFunction.and(RouterFunction)`
+- `RouterFunction.andRoute(RequestPredicate, HandlerFunction)` —— 创建具有嵌套的 `RouterFunctions.route()` 的 `RouterFunction.and()` 的快捷方式。
+
+以下示例显示了四条路由的组建：
+
+```java
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.web.servlet.function.RequestPredicates.*;
+
+PersonRepository repository = ...
+PersonHandler handler = new PersonHandler(repository);
+
+RouterFunction<ServerResponse> otherRoute = ...
+
+RouterFunction<ServerResponse> route = route()
+    .GET("/person/{id}", accept(APPLICATION_JSON), handler::getPerson) (1)
+    .GET("/person", accept(APPLICATION_JSON), handler::listPeople) (2)
+    .POST("/person", handler::createPerson) (3)
+    .add(otherRoute) (4)
+    .build();
+
+// (1) 具有与 JSON 匹配的 `Accept` 标头的 `GET /person/{id}` 被路由到 `PersonHandler.getPerson`
+// (2) 具有与 JSON 匹配的 `Accept` 标头的 `GET /person` 被路由到 `PersonHandler.listPeople`
+// (3) 没有附加谓词的 `POST /person` 映射到 `PersonHandler.createPerson`，并且
+// (4) `otherRoute` 是在其他地方创建的路由器函数，并添加到构建的路由中。
+```
+
+#### 嵌套路由
+
+一组路由器函数通常具有共享谓词，例如共享路径。在上面的示例中，共享谓词将是一个匹配 `/person` 的路径谓词，由三个路由使用。使用注解时，可以使用映射到 `/person` 的类型级别 `@RequestMapping` 注解来删除此重复。在 WebMvc.fn 中，路径谓词可以通过路由器函数生成器上的路径方法共享。例如，上面示例的最后几行可以通过使用嵌套路由以以下方式进行改进：
+
+```java
+RouterFunction<ServerResponse> route = route()
+    .path("/person", builder -> builder (1)
+        .GET("/{id}", accept(APPLICATION_JSON), handler::getPerson)
+        .GET(accept(APPLICATION_JSON), handler::listPeople)
+        .POST(handler::createPerson))
+    .build();
+
+// (1) 注意，路径的第二个参数是采用路由器生成器的使用者。
+```
+
+虽然基于路径的嵌套是最常见的，但您可以通过在生成器上使用 `nest` 方法来嵌套任何类型的谓词。上面仍然以共享 `Accept` 头谓词的形式包含一些重复。我们可以通过使用 `nest` 方法和 `accept` 来进一步改进：
+
+```java
+RouterFunction<ServerResponse> route = route()
+    .path("/person", b1 -> b1
+        .nest(accept(APPLICATION_JSON), b2 -> b2
+            .GET("/{id}", handler::getPerson)
+            .GET(handler::listPeople))
+        .POST(handler::createPerson))
+    .build();
+```
+
+### 1.4.4 运行服务器
+
+您通常通过 MVC 配置在基于 `DispatcherHandler` 的设置中运行路由器函数，MVC 配置使用 Spring 配置来声明处理请求所需的组件。MVC Java 配置声明了以下基础架构组件以支持函数式端点：
+
+- `RouterFunctionMapping`：检测一个或多个 `RouterFunction<?>` Spring 配置中的 bean，对它们进行排序，通过 `RouterFunction.andOther` 组合它们，并将请求路由到合成的 `RouterFunction`。
+- `HandlerFunctionAdapter`：允许 `DispatcherHandler` 调用映射到请求的 `HandlerFunction` 的简单适配器。
+
+前面的组件使函数式端点适合 `DispatcherServlet` 请求处理生命周期，并且（可能）与带注释的控制器（如果声明了任何控制器）并行运行。这也是 Spring Boot Web 启动器如何启用函数式端点。
+
+以下示例显示 WebFlux Java 配置：
+
+```java
+@Configuration
+@EnableMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Bean
+    public RouterFunction<?> routerFunctionA() {
+        // ...
+    }
+
+    @Bean
+    public RouterFunction<?> routerFunctionB() {
+        // ...
+    }
+
+    // ...
+
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        // configure message conversion...
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        // configure CORS...
+    }
+
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        // configure view resolution for HTML rendering...
+    }
+}
+```
+
+### 1.4.5 过滤处理器函数
+
+您可以使用路由函数生成器上的 `before`、`after` 或 `filter` 方法来筛选处理程序函数。通过注解，您可以通过使用 `@ControllerAdvice`、`ServletFilter` 或两者实现类似的功能。过滤器将应用于由生成器生成的所有管线。这意味着嵌套路由中定义的筛选器不适用于“顶级”路由。例如，考虑以下示例：
+
+```java
+RouterFunction<ServerResponse> route = route()
+    .path("/person", b1 -> b1
+        .nest(accept(APPLICATION_JSON), b2 -> b2
+            .GET("/{id}", handler::getPerson)
+            .GET(handler::listPeople)
+            .before(request -> ServerRequest.from(request) (1)
+                .header("X-RequestHeader", "Value")
+                .build()))
+        .POST(handler::createPerson))
+    .after((request, response) -> logResponse(response)) (2)
+    .build();
+
+// (1) 添加自定义请求头的 `before` 筛选器仅应用于两个 GET 路由。
+// (2) 记录响应的 `after` 筛选器应用于所有路由，包括嵌套路由。
+```
+
+路由器生成器上的 `filter` 方法采用 `HandlerFilterFunction`：一个采用 `ServerRequest` 和 `HandlerFunction` 并返回 `ServerResponse` 的函数。处理程序函数参数表示链中的下一个元素。这通常是路由到的处理程序，但如果应用了多个，它也可以是另一个过滤器。
+
+现在，我们可以向路由添加一个简单的安全筛选器，假设我们有一个 `SecurityManager`，它可以确定是否允许特定路径。以下示例显示了如何执行此操作：
+
+```java
+SecurityManager securityManager = ...
+
+RouterFunction<ServerResponse> route = route()
+    .path("/person", b1 -> b1
+        .nest(accept(APPLICATION_JSON), b2 -> b2
+            .GET("/{id}", handler::getPerson)
+            .GET(handler::listPeople))
+        .POST(handler::createPerson))
+    .filter((request, next) -> {
+        if (securityManager.allowAccessTo(request.path())) {
+            return next.handle(request);
+        }
+        else {
+            return ServerResponse.status(UNAUTHORIZED).build();
+        }
+    })
+    .build();
+```
+
+前面的示例演示了调用 `next.handle(ServerRequest)` 是可选的。我们只允许在允许访问时运行处理程序函数。
+
+除了在路由器函数生成器上使用筛选器方法之外，还可以通过 `RouterFunction.filter(HandlerFilterFunction)` 将筛选器应用于现有的路由器函数。
+
+> CORS 对函数式端点的支持是通过专用的 `CorsFilter` 提供的。
+
+## 1.5 URI 链接
+
+本节描述了 Spring 框架中使用 URI 的各种选项。
+
+### 1.5.1 UriComponents
+
+Spring MVC 和Spring WebFlux
+
+`UriComponentsBuilder` 帮助使用变量从 URI 模板构建 URI，如下例所示：
+
+```java
+UriComponents uriComponents = UriComponentsBuilder
+        .fromUriString("https://example.com/hotels/{hotel}") (1)
+        .queryParam("q", "{q}") (2)
+        .encode() (3)
+        .build(); (4)
+
+URI uri = uriComponents.expand("Westin", "123").toUri(); (5)
+
+// (1) 具有 URI 模板的静态工厂方法。
+// (2) 添加或替换 URI 组件。
+// (3) 请求对 URI 模板和 URI 变量进行编码。
+// (4) 构建 UriComponents。
+// (5) 展开变量并获取 URI。
+```
+
+前面的示例可以合并为一个链，并使用 `buildAndExpand` 缩短，如下例所示：
+
+```java
+URI uri = UriComponentsBuilder
+        .fromUriString("https://example.com/hotels/{hotel}")
+        .queryParam("q", "{q}")
+        .encode()
+        .buildAndExpand("Westin", "123")
+        .toUri();
+```
+
+您可以通过直接使用 URI（这意味着编码）来进一步缩短它，如下例所示：
+
+```java
+URI uri = UriComponentsBuilder
+        .fromUriString("https://example.com/hotels/{hotel}")
+        .queryParam("q", "{q}")
+        .build("Westin", "123");
+```
+
+您可以使用完整的 URI 模板进一步缩短它，如下例所示：
+
+```java
+URI uri = UriComponentsBuilder
+        .fromUriString("https://example.com/hotels/{hotel}?q={q}")
+        .build("Westin", "123");
+```
+
+### 1.5.2 UriBuilder
+
+Spring MVC 和Spring WebFlux
+
+`UriComponentsBuilder` 实现 `UriBuilder`。您可以依次使用 `UriBuilderFactory` 创建 `UriBuilder`。`UriBuilderFactory` 和 `UriBuilder` 一起提供了一种可插入的机制，可以根据共享配置（如基本 URL、编码首选项和其他详细信息）从 URI 模板构建 URI。
+
+您可以使用 `UriBuilderFactory` 配置 `RestTemplate` 和 `WebClient`，以自定义 URI 的准备。`DefaultUriBuilderFactory` 是 `UriBuilderFactory` 的默认实现，它在内部使用 `UriComponentsBuilder` 并公开共享配置选项。
+
+以下示例显示如何配置 `RestTemplate`：
+
+```java
+// import org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode;
+
+String baseUrl = "https://example.org";
+DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory(baseUrl);
+factory.setEncodingMode(EncodingMode.TEMPLATE_AND_VALUES);
+
+RestTemplate restTemplate = new RestTemplate();
+restTemplate.setUriTemplateHandler(factory);
+```
+
+下面例子配置了一个 `WebClient`：
+
+```java
+// import org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode;
+
+String baseUrl = "https://example.org";
+DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory(baseUrl);
+factory.setEncodingMode(EncodingMode.TEMPLATE_AND_VALUES);
+
+WebClient client = WebClient.builder().uriBuilderFactory(factory).build();
+```
+
+此外，还可以直接使用 `DefaultUriBuilderFactory`。它类似于使用 `UriComponentsBuilder`，但它不是静态工厂方法，而是保存配置和首选项的实际实例，如下例所示：
+
+```java
+String baseUrl = "https://example.com";
+DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory(baseUrl);
+
+URI uri = uriBuilderFactory.uriString("/hotels/{hotel}")
+        .queryParam("q", "{q}")
+        .build("Westin", "123");
+```
+
+### 1.5.3 URI 编码
+
+Spring MVC 和Spring WebFlux
+
+`UriComponentsBuilder` 在两个级别公开编码选项：
+
+- UriComponentsBuilder#encodes()：首先对 URI 模板进行预编码，然后在展开（expand）时对 URI 变量进行严格编码。
+- UriComponents#encode()：在 URI 变量展开后对 URI 组件进行编码。
+
+这两个选项都用转义的八位字节替换非 ASCII 和非法字符。但是，第一个选项还将替换 URI 变量中出现的具有保留含义的字符。
+
+> 考虑一下“;”，它在路径上是合法的，但有保留的含义。第一个选项将URI变量中的“;”替换为“%3B”，但不在 URI 模板中。相比之下，第二个选项从不替换“;”，因为它是路径中的合法字符。
+
+在大多数情况下，第一个选项可能会给出预期的结果，因为它将 URI 变量视为要完全编码的不透明数据，而如果 URI 变量故意包含保留字符，则第二个选项很有用。当根本不扩展 URI 变量时，第二个选项也很有用，因为这也会对任何偶然看起来像 URI 变量的内容进行编码。
+
+以下示例使用第一个选项：
+
+```java
+URI uri = UriComponentsBuilder.fromPath("/hotel list/{city}")
+        .queryParam("q", "{q}")
+        .encode()
+        .buildAndExpand("New York", "foo+bar")
+        .toUri();
+
+// Result is "/hotel%20list/New%20York?q=foo%2Bbar"
+```
+
+您可以通过直接转到 URI（这意味着编码）来缩短前面的示例，如下例所示：
+
+```java
+URI uri = UriComponentsBuilder.fromPath("/hotel list/{city}")
+        .queryParam("q", "{q}")
+        .build("New York", "foo+bar");
+```
+
+您可以使用完整的 URI 模板进一步缩短它，如下例所示：
+
+```java
+URI uri = UriComponentsBuilder.fromUriString("/hotel list/{city}?q={q}")
+        .build("New York", "foo+bar");
+```
+
+`WebClient` 和 `RestTemplate` 通过 `UriBuilderFactory` 策略在内部扩展和编码 URI 模板。两者都可以使用自定义策略进行配置，如下例所示：
+
+```java
+String baseUrl = "https://example.com";
+DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory(baseUrl)
+factory.setEncodingMode(EncodingMode.TEMPLATE_AND_VALUES);
+
+// Customize the RestTemplate..
+RestTemplate restTemplate = new RestTemplate();
+restTemplate.setUriTemplateHandler(factory);
+
+// Customize the WebClient..
+WebClient client = WebClient.builder().uriBuilderFactory(factory).build();
+```
+
+`DefaultUriBuilderFactory` 实现在内部使用 `UriComponentsBuilder` 来扩展和编码 URI 模板。作为一个工厂，它提供了一个单独的地方来根据以下编码模式之一配置编码方法：
+
+- `TEMPLATE_AND_VALUES`：使用 `UriComponentsBuilder#encodes()`（对应于前面列表中的第一个选项）对 URI 模板进行预编码，并在展开时对 URI 变量进行严格编码。
+- `VALUES_ONLY`：不编码 URI 模板，而是在将 URI 变量扩展到模板之前，通过 `UriUtils#encodeUriVariables` 对其应用严格编码。
+- `URI_COMPONENT`：在 URI 变量展开后，使用 `UriComponents#encode()`（对应于前面列表中的第二个选项）对 URI 组件值进行编码。
+- `NONE`：未应用编码。
+
+出于历史原因和向后兼容性，`RestTemplate` 设置为 `EncodingMode.URI_COMPONENT`。 `WebClient` 依赖于 `DefaultUriBuilderFactory` 中的默认值，该值从 5.0.x 中的 `EncodingMode.URI_COMPONENT` 更改为 5.1 中的 `EncodengMode.TEMPLATE_AND_VALUES`。
+
+### 1.5.4 相关的 Servlet 请求
+
+您可以使用 `ServletUriComponentsBuilder` 创建与当前请求相关的 URI，如下例所示：
+
+```java
+HttpServletRequest request = ...
+
+// Re-uses scheme, host, port, path, and query string...
+
+URI uri = ServletUriComponentsBuilder.fromRequest(request)
+        .replaceQueryParam("accountId", "{id}")
+        .build("123");
+```
+
+您可以创建与上下文路径相关的 URI，如下例所示：
+
+```java
+HttpServletRequest request = ...
+
+// Re-uses scheme, host, port, and context path...
+
+URI uri = ServletUriComponentsBuilder.fromContextPath(request)
+        .path("/accounts")
+        .build()
+        .toUri();
+```
+
+您可以创建与 Servlet 相关的 URI（例如 `/main/*`），如下例所示：
+
+```java
+HttpServletRequest request = ...
+
+// Re-uses scheme, host, port, context path, and Servlet mapping prefix...
+
+URI uri = ServletUriComponentsBuilder.fromServletMapping(request)
+        .path("/accounts")
+        .build()
+        .toUri();
+```
+
+> 从 5.1 开始，`ServletUriComponentsBuilder` 忽略 `Forwarded` 和 `X-Forwarded-*` 标头中的信息，这些标头指定了客户端发起的地址。考虑使用 `ForwardedHeaderFilter` 来提取和使用或丢弃此类标头。
+
+### 1.5.5 连接到控制器
+
+Spring MVC 提供了一种机制来准备到控制器方法的链接。例如，以下 MVC 控制器允许创建链接：
+
+```java
+@Controller
+@RequestMapping("/hotels/{hotel}")
+public class BookingController {
+
+    @GetMapping("/bookings/{booking}")
+    public ModelAndView getBooking(@PathVariable Long booking) {
+        // ...
+    }
+}
+```
+
+您可以通过按名称引用方法来准备链接，如下例所示：
+
+```java
+UriComponents uriComponents = MvcUriComponentsBuilder
+    .fromMethodName(BookingController.class, "getBooking", 21).buildAndExpand(42);
+
+URI uri = uriComponents.encode().toUri();
+```
+
+在前面的示例中，我们提供了实际的方法参数值（在本例中为 long 值：`21`），用作路径变量并插入到 URL 中。此外，我们提供值 `42` 来填充任何剩余的 URI 变量，例如从类型级请求映射继承的酒店变量。如果该方法有更多的参数，我们可以为 URL 不需要的参数提供 null。通常，只有 `@PathVariable` 和 `@RequestParam` 参数与构造 URL 相关。
+
+还有其他方法可以使用 `MvcUriComponentsBuilder`。例如，您可以使用类似于通过代理进行模拟测试的技术，以避免按名称引用控制器方法，如下例所示（该示例假定 `MvcUriComponentsBuilder.on` 的静态导入）：
+
+```java
+UriComponents uriComponents = MvcUriComponentsBuilder
+    .fromMethodCall(on(BookingController.class).getBooking(21)).buildAndExpand(42);
+
+URI uri = uriComponents.encode().toUri();
+```
+
+> 当控制器方法签名被认为可用于使用 `fromMethodCall` 创建链接时，它们的设计受到限制。除了需要正确的参数签名之外，返回类型（即为链接生成器调用生成运行时代理）也有技术限制，因此返回类型不能是 `final` 的。特别是，视图名称的常见 `String` 返回类型在这里不起作用。您应该使用 `ModelAndView` 或甚至纯 `Object`（带有 `String` 返回值）。
+
+前面的示例在 `MvcUriComponentsBuilder` 中使用静态方法。在内部，它们依赖 `ServletUriComponentsBuilder` 从当前请求的方案、主机、端口、上下文路径和 servlet 路径准备一个基本 URL。这在大多数情况下都很有效。然而，有时，这可能是不够的。例如，您可能在请求的上下文之外（例如准备链接的批处理过程），或者可能需要插入路径前缀（例如从请求路径中删除并需要重新插入到链接中的区域设置前缀）。
+
+对于这种情况，可以使用静态 `fromXxx` 重载方法，这些方法接受 `UriComponentsBuilder` 以使用基 URL。或者，您可以使用基 URL 创建 `MvcUriComponentsBuilder` 的实例，然后使用基于实例的 `withXxx` 方法。例如，以下列表使用 `withMethodCall`：
+
+```java
+UriComponentsBuilder base = ServletUriComponentsBuilder.fromCurrentContextPath().path("/en");
+MvcUriComponentsBuilder builder = MvcUriComponentsBuilder.relativeTo(base);
+builder.withMethodCall(on(BookingController.class).getBooking(21)).buildAndExpand(42);
+
+URI uri = uriComponents.encode().toUri();
+```
+
+> 从 5.1 开始，`MvcUriComponentsBuilder` 忽略 `Forwarded` 和 `X-Forwarded-*` 标头中的信息，这些标头指定了客户端发起的地址。考虑使用 ForwardedHeaderFilter 来提取和使用或丢弃此类标头。
+
+### 1.5.6 视图中的连接
+
