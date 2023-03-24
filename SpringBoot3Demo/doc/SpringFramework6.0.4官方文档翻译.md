@@ -8786,3 +8786,293 @@ URI uri = uriComponents.encode().toUri();
 
 ### 1.5.6 视图中的连接
 
+在 Thymelaf、FreeMarker 或 JSP 等视图中，可以通过引用每个请求映射的隐式或显式分配的名称来构建到带注解控制器的链接。
+
+考虑以下示例：
+
+```java
+@RequestMapping("/people/{id}/addresses")
+public class PersonAddressController {
+
+    @RequestMapping("/{country}")
+    public HttpEntity<PersonAddress> getAddress(@PathVariable String country) { ... }
+}
+```
+
+给定前面的控制器，您可以从 JSP 准备一个链接，如下所示：
+
+```jsp
+<%@ taglib uri="http://www.springframework.org/tags" prefix="s" %>
+...
+<a href="${s:mvcUrl('PAC#getAddress').arg(0,'US').buildAndExpand('123')}">Get Address</a>
+```
+
+前面的示例依赖于 Spring 标记库（即 META-INF/Spring.tld）中声明的 `mvcUrl` 函数，但很容易定义自己的函数或为其他模板技术准备一个类似的函数。
+
+这是如何工作的。启动时，通过 `HandlerMethodMappingNamingStrategy` 为每个 `@RequestMapping` 分配一个默认名称，其默认实现使用类的大写字母和方法名称（例如，`ThingController` 中的 `getThing` 方法变为“TC#getThing”）。如果存在名称冲突，可以使用 `@RequestMapping(name="..")` 来指定显式名称或实现自己的 `HandlerMethodMappingNamingStrategy`。
+
+## 1.6 异步请求
+
+Spring MVC 与 Servlet 异步请求处理有着广泛的集成：
+
+- 控制器方法中的 `DeferredResult` 和 `Callable` 返回值为单个异步返回值提供了基本支持。
+- 控制器可以流式传输多个值，包括 SSE 和原始数据。
+- 控制器可以使用反应式客户端并返回反应式类型进行响应处理。
+
+要了解这与 Spring WebFlux 的区别，请参阅下面的“异步Spring MVC 与 WebFlux” 部分。
+
+### 1.6.1 DeferredResult
+
+在 Servlet 容器中启用异步请求处理功能后，控制器方法可以使用 `DeferredResult` 包装任何受支持的控制器方法返回值，如下例所示：
+
+```java
+@GetMapping("/quotes")
+@ResponseBody
+public DeferredResult<String> quotes() {
+    DeferredResult<String> deferredResult = new DeferredResult<String>();
+    // Save the deferredResult somewhere..
+    return deferredResult;
+}
+
+// From some other thread...
+deferredResult.setResult(result);
+```
+
+控制器可以从不同的线程异步生成返回值 —— 例如，响应于外部事件（JMS消息）、调度任务或其他事件。
+
+### 1.6.2 Callable
+
+控制器可以使用 `java.util.concurrent.Callable` 包装任何支持的返回值，如下例所示：
+
+```java
+@PostMapping
+public Callable<String> processUpload(final MultipartFile file) {
+    return () -> "someView";
+}
+```
+
+然后，可以通过配置的 `TaskExecutor` 运行给定的任务来获得返回值。
+
+### 1.6.3 处理（Processing）
+
+以下是 Servlet 异步请求处理的简要概述：
+
+- 通过调用 `request.startAsync()`，可以将 `ServletRequest` 置于异步模式。这样做的主要效果是 Servlet（以及任何筛选器）可以退出，但响应保持打开状态，以便稍后完成处理。
+- 对 `request.startAsync()` 的调用返回 `AsyncContext`，您可以使用它来进一步控制异步处理。例如，它提供了 `dispatch` 方法，该方法类似于 Servlet API 的转发，只是它允许应用程序在 Servlet 容器线程上恢复请求处理。
+- `ServletRequest` 提供对当前 `DispatcherType` 的访问，您可以使用它来区分处理初始请求、异步调度、转发和其他调度程序类型。
+
+`DeferredResult` 处理的工作原理如下：
+
+- 控制器返回一个 `DeferredResult`，并将其保存在内存中的某个队列或列表中，以便访问。
+- Spring MVC 调用 `request.startAsync()`。
+- 同时，`DispatcherServlet` 和所有配置的筛选器退出请求处理线程，但响应保持打开状态。
+- 应用程序从某个线程设置 `DeferredResult`，Spring MVC 将请求分派回 Servlet 容器。
+- `DispatcherServlet` 将被再次调用，处理将使用异步生成的返回值继续进行。
+
+`Callable` 处理工作如下：
+
+- 控制器返回一个 `Callable`。
+- Spring MVC 调用 `request.startAsync()` 并将 `Callable` 提交给`TaskExecutor`，以便在单独的线程中进行处理。
+- 同时，`DispatcherServlet` 和所有过滤器退出 Servlet 容器线程，但响应保持打开状态。
+- 最终，`Callable` 生成一个结果，Spring MVC 将请求分派回 Servlet 容器以完成处理。
+- `DispatcherServlet` 将被再次调用，处理将通过 `Callable` 异步生成的返回值继续进行。
+
+有关进一步的背景和上下文，您还可以阅读在 Spring MVC 3.2 中引入异步请求处理支持的博客文章。
+
+#### 异常处理
+
+当您使用 `DeferredResult` 时，您可以选择是调用 `setResult` 还是调用带有异常的 `setErrorResult`。在这两种情况下，Spring MVC 都会将请求分派回 Servlet 容器以完成处理。然后，它被视为控制器方法返回了给定的值，或者被视为产生了给定的异常。然后，异常通过常规异常处理机制（例如，调用 `@ExceptionHandler` 方法）。
+当您使用 `Callable` 时，会出现类似的处理逻辑，主要区别在于结果是从 `Callable` 返回的，或者由它引发异常。
+
+#### 拦截
+
+`HandlerInterceptor` 实例可以是 `AsyncHandlerInterreceptor` 类型，以接收启动异步处理的初始请求上的 `afterCurrentHandlingStarted` 回调（而不是 `postHandle` 和 `afterCompletion`）。
+
+`HandlerInterceptor` 实现还可以注册 `CallableProcessingInterceptor` 或 `DeferredResultProcessingIntersector`，以便与异步请求的生命周期进行更深入的集成（例如，处理超时事件）。有关更多详细信息，请参阅 `AsyncHandlerInterceptor`。
+
+`DeferredResult` 提供 `onTimeout(Runnable)` 和 `onCompletion(Runnable)` 回调。有关更多详细信息，请参阅 `DeferredResult` 的 javadoc。`Callable` 可以替代 `WebAsyncTask`，后者公开了用于超时和完成回调的其他方法。
+
+#### 异步 Spring MVC 和 WebFlux 对比
+
+Servlet API 最初是为通过 Filter-Servlet 链进行单次传递而构建的。异步请求处理允许应用程序退出 Filter-Servlet 链，但保留响应以供进一步处理。Spring MVC 异步支持就是围绕这个机制构建的。当控制器返回 `DeferredResult` 时，Filter-Servlet 链将退出，Servlet 容器线程将释放。稍后，当设置 `DeferredResult` 时，将进行 `ASYNC` 分发（到同一 URL），在此期间，控制器将再次映射，但不是调用它，而是使用 `DeferredResult` 值（就好像控制器返回了它一样）来恢复处理。
+
+相比之下，Spring WebFlux 既不是基于 Servlet API 构建的，也不需要这样的异步请求处理功能，因为它在设计上是异步的。异步处理内置于所有框架合同中，并且在请求处理的所有阶段都得到了本质上的支持。
+
+从编程模型的角度来看，Spring MVC 和 Spring WebFlux 都支持异步类型和反应类型作为控制器方法中的返回值。Spring MVC 甚至支持流式传输，包括反应式背压（reactive back pressure）。然而，对响应的单独写入仍然是阻塞的（并且在单独的线程上执行），这与 WebFlux 不同，WebFlux 依赖于非阻塞 I/O，并且每次写入不需要额外的线程。
+
+另一个根本区别是，Spring MVC 不支持控制器方法参数中的异步或反应类型（例如，`@RequestBody`、`@RequestPart` 和其他），也不明确支持异步和反应类型作为模型属性。Spring WebFlux 确实支持所有这些。
+
+最后，从配置的角度来看，异步请求处理功能必须在 Servlet 容器级别启用。
+
+### 1.6.4 HTTP 流
+
+您可以对单个异步返回值使用 `DeferredResult` 和 `Callable`。如果您想生成多个异步值并将这些值写入响应，该怎么办？本节介绍如何做到这一点。
+
+#### 对象
+
+您可以使用 `ResponseBodyEmitter` 返回值来生成一个对象流，其中每个对象都使用 `HttpMessageConverter` 进行序列化并写入响应，如下例所示：
+
+```java
+@GetMapping("/events")
+public ResponseBodyEmitter handle() {
+    ResponseBodyEmitter emitter = new ResponseBodyEmitter();
+    // Save the emitter somewhere..
+    return emitter;
+}
+
+// In some other thread
+emitter.send("Hello once");
+
+// and again later on
+emitter.send("Hello again");
+
+// and done at some point
+emitter.complete();
+```
+
+您也可以使用 `ResponseBodyEmitter` 作为 `ResponseEntity` 中的主体，从而可以自定义响应的状态和标头。
+
+当 `emitter` 抛出 `IOException` 时（例如，如果远程客户端离开），应用程序不负责清理连接，不应调用 `emitter.complete` 或 `emitter.commpleteWithError`。相反，servlet 容器会自动启动 `AsyncListener` 错误通知，其中 Spring MVC 会调用 `completeWithError`。这个调用反过来执行对应用程序的最后一次 `ASYNC` 分发，在此期间，Spring MVC 调用配置的异常解析器并完成请求。
+
+#### SSE
+
+`SseEmitter`（`ResponseBodyEmitter` 的一个子类）提供了对服务器发送事件的支持，其中从服务器发送的事件根据 W3C SSE 规范进行格式化。要从控制器生成 SSE 流，请返回 `SseEmitter`，如下例所示：
+
+```java
+@GetMapping(path="/events", produces=MediaType.TEXT_EVENT_STREAM_VALUE)
+public SseEmitter handle() {
+    SseEmitter emitter = new SseEmitter();
+    // Save the emitter somewhere..
+    return emitter;
+}
+
+// In some other thread
+emitter.send("Hello once");
+
+// and again later on
+emitter.send("Hello again");
+
+// and done at some point
+emitter.complete();
+```
+
+虽然 SSE 是流式传输到浏览器的主要选项，但请注意，Internet Explorer 不支持服务器发送的事件。考虑将 Spring 的 WebSocket 消息与针对各种浏览器的 SockJS 回退传输（包括 SSE）一起使用。
+
+有关异常处理的注意事项，请参阅上一节。
+
+#### 原始数据
+
+有时，绕过消息转换并直接流式传输到响应 `OutputStream` 是很有用的（例如，对于文件下载）。您可以使用 `StreamingResponseBody` 返回值类型来执行此操作，如下例所示：
+
+```java
+@GetMapping("/download")
+public StreamingResponseBody handle() {
+    return new StreamingResponseBody() {
+        @Override
+        public void writeTo(OutputStream outputStream) throws IOException {
+            // write...
+        }
+    };
+}
+```
+
+您可以使用 `StreamingResponseBody` 作为 `ResponseEntity` 中的主体来自定义响应的状态和标头。
+
+### 1.6.5 反应式类型
+
+Spring MVC 支持在控制器中使用反应式客户端库（也可以阅读 WebFlux 部分中的反应式库）。这包括 `spring-webflux` 中的 `WebClient` 和其他一些，如 Spring Data 反应式数据存储库。在这种情况下，能够从控制器方法返回反应式类型是很方便的。
+
+反应式返回值处理如下：
+
+- 类似于使用 `DeferredResult`，对单值 promise 进行了调整。示例包括 `Mono`（Reactor）或 `Single`（RxJava）。
+- 类似于使用 `ResponseBodyEmitter` 或 `SseEmitter`，具有流媒体类型的多值流（如 `application/x-ndjson` 或 `text/event-stream`）适用于。示例包括 `Flux`（Reactor）或 `Observable`（RxJava）。应用程序还可以返回 `Flux<ServerSentEvent>` 或 `Observable<ServerSentEvent>`。
+- 具有任何其他媒体类型（如 `application/json`）的多值流都适用于，类似于使用 `DeferredResult<List<?>>`。
+
+> Spring MVC 通过 `spring-core` 的 `ReactiveAdapterRegistry` 支持 Reactor 和 RxJava，这使它能够从多个反应式库中进行调整。
+
+对于流式传输到响应，支持反应式背压，但对响应的写入仍处于阻塞状态，并通过配置的 `TaskExecutor` 在单独的线程上运行，以避免阻塞上游源（如 `WebClient` 返回的 `Flux`）。默认情况下，`SimpleAsyncTaskExecutor` 用于阻塞写入，但在负载下不适用。如果您计划使用反应式类型进行流式传输，那么应该使用 MVC 配置来配置任务执行器。
+
+### 1.6.6 上下文传播
+
+通过 `java.lang.ThreadLocal` 传播上下文是很常见的。这对于同一线程上的处理是透明的，但对于跨多个线程的异步处理需要额外的工作。Micrometer 上下文传播库简化了线程之间以及 `ThreadLocal` 值、Reactor上下文、GraphQL Java 上下文等上下文机制之间的上下文传播。
+
+如果类路径上存在 Micrometer 上下文传播，则当控制器方法返回响应式类型（如 `Flux` 或 `Mono`）时，所有有注册 `io.micrometer.ThreadLocalAccessor` 的 `ThreadLocal` 值都将作为键值对写入 Reactor `Context`，使用 `ThreadLocalAccessor` 分配的键。
+
+对于其他异步处理场景，可以直接使用上下文传播库。例如：
+
+```java
+// Capture ThreadLocal values from the main thread ...
+ContextSnapshot snapshot = ContextSnapshot.captureAll();
+
+// On a different thread: restore ThreadLocal values
+try (ContextSnapshot.Scope scope = snapshot.setThreadLocals()) {
+    // ...
+}
+```
+
+有关更多详细信息，请参阅 Micrometer 上下文传播库的文档。
+
+### 1.6.7 断开连接
+
+当远程客户端离开时，Servlet API 不提供任何通知。因此，在流式传输到响应时，无论是通过 SseEmitter 还是反应式类型，定期发送数据都很重要，因为如果客户端断开连接，写入就会失败。发送可以采取空（仅有注释）SSE 事件或任何其他数据的形式，对方必须将其解释为心跳并忽略这些数据。
+
+或者，考虑使用具有内置心跳机制的 web 消息传递解决方案（如基于 WebSocket 的 STOMP 或带有 SockJS 的 WebSocket）。
+
+### 1.6.8 配置
+
+异步请求处理功能必须在 Servlet 容器级别启用。MVC 配置还公开了用于异步请求的几个选项。
+
+#### Servlet 容器
+
+Filter 和 Servlet 声明有一个 `asyncSupported` 标志，需要将其设置为 `true` 才能启用异步请求处理。此外，应该声明 Filter 映射来处理 `ASYNC` `jakarta.servlet.DispatchType`。
+
+在 Java 配置中，当您使用 `AbstractAnnotationConfigDispatcherServlet` 初始化器初始化 Servlet 容器时，这是自动完成的。
+
+在 `web.xml` 配置中，您可以将 `<async-supported>true</async-supported>` 添加到 `DispatcherServlet` 和 `Filter` 声明中，并将 `<dispatcher>ASYNC</dispatcher>` 添加到筛选器映射中。
+
+#### Spring MVC
+
+MVC 配置公开了以下与异步请求处理相关的选项：
+
+- Java 配置：在 `WebMvcConfigurer` 上使用 `configureAsyncSupport` 回调。
+- XML 命名空间：使用 `<mvc:annotation-driven>` 下的 `<async-support>` 元素。
+
+您可以配置以下内容：
+
+- 异步请求的默认超时值，如果没有设置，则取决于底层 Servlet 容器。
+- `AsyncTaskExecutor`，用于在使用反应式类型进行流式传输时阻止写入，并用于执行从控制器方法返回的 `Callable` 实例。如果您使用反应式类型进行流式传输或具有返回 `Callable` 的控制器方法，我们强烈建议您配置此属性，因为默认情况下，它是 `SimpleAsyncTaskExecutor`。
+- `DeferredResultProcessingInterceptor` 实现和 `CallableProcessingIntersector` 实现。
+
+请注意，您还可以设置 `DeferredResult`、`ResponseBodyEmitter` 和 `SseEmitter` 的默认超时值。对于 `Callable`，您可以使用 `WebAsyncTask` 来提供超时值。
+
+## 1.7 CORS
+
+Spring MVC 允许您处理 CORS（跨源资源共享）。本节介绍如何做到这一点。
+
+### 1.7.1 介绍
+
+出于安全原因，浏览器禁止 AJAX 调用当前来源之外的资源。例如，您可以在一个选项卡中显示您的银行帐户，在另一个选项卡上显示 evil.com。来自 evil.com 的脚本应该无法使用您的凭据向您的银行 API 发出 AJAX 请求 —— 例如，从您的帐户中取款！
+
+跨域资源共享（CORS）是由大多数浏览器实现的 W3C 规范，它允许您指定授权哪种类型的跨域请求，而不是使用基于 IFRAME 或 JSONP 的不太安全、功能不太强大的解决方案。
+
+### 1.7.2 处理
+
+CORS 规范区分飞行前请求（preflight）、简单请求和实际请求。要了解 CORS 是如何工作的，您可以阅读本文以及其他许多文章，或者查看规范以了解更多详细信息。
+
+Spring MVC `HandlerMapping` 实现提供了对 CORS 的内置支持。在成功地将请求映射到处理程序之后，`HandlerMapping` 实现会检查给定请求和处理程序的 CORS 配置，并采取进一步的操作。直接处理前缀请求，而拦截、验证简单和实际的 CORS 请求，并设置所需的 CORS 响应标头。
+
+为了启用跨源请求（也就是说，`Origin` 标头存在并且与请求的主机不同），您需要有一些明确声明的 CORS 配置。如果没有找到匹配的 CORS 配置，飞行前请求将被拒绝。简单和实际的 CORS 请求的响应中没有添加 CORS 头，因此浏览器会拒绝它们。
+
+每个 `HandlerMapping` 都可以使用基于 URL 模式的 `CorsConfiguration` 映射进行单独配置。在大多数情况下，应用程序使用 MVC Java 配置或 XML 命名空间来声明此类映射，这会导致将单个全局映射传递给所有 `HandlerMapping` 实例。
+
+您可以将 `HandlerMapping` 级别的全局 CORS 配置与更细粒度的、处理程序级别的 CORS 配置相结合。例如，带注解的控制器可以使用类或方法级别的 `@CrossOrigin` 注解（其他处理程序可以实现 `CorsConfigurationSource`）。
+
+组合全局配置和局部配置的规则通常是相加的 —— 例如，所有全局和所有本地起源。对于那些只能接受单值的属性，例如 `allowCredentials` 和 `maxAge`，本地值会覆盖全局值。有关更多详细信息，请参阅 `CorsConfiguration#combine(CorsConfigoration)`。
+
+> 要从源代码中了解更多信息或进行高级自定义，请检查后面的代码：
+>
+> - `CorsConfiguration`
+> - `CorsProcessor`，`DefaultCorsProcessor`
+> - `AbstractHandlerMapping`
+
+### 1.7.3 @CrossOrigin
