@@ -9076,3 +9076,273 @@ Spring MVC `HandlerMapping` 实现提供了对 CORS 的内置支持。在成功�
 > - `AbstractHandlerMapping`
 
 ### 1.7.3 @CrossOrigin
+
+`@CrossOrigin` 注解在带注解的控制器方法上启用跨源请求，如下例所示：
+
+```java
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+
+    @CrossOrigin
+    @GetMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @DeleteMapping("/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+}
+```
+
+默认情况下，`@CrossOrigin` 允许：
+
+- 所有的源。
+- 所有标头。
+- 控制器方法映射到的所有 HTTP 方法。
+
+`allowCredentials` 默认情况下不启用，因为它建立了一个信任级别，暴露敏感的用户特定信息（如 cookie 和 CSRF 令牌），并且只应在适当的情况下使用。启用时，必须将 `allowOrigins` 设置为一个或多个特定域（但不是特殊值 `"*"`），或者可以使用 `allowOriginalPatterns` 属性来匹配一组动态的源。
+
+`maxAge` 设置为 30 分钟。
+
+`@CrossOrigin` 在类级别也受支持，并且由所有方法继承，如下例所示：
+
+```java
+@CrossOrigin(origins = "https://domain2.com", maxAge = 3600)
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+
+    @GetMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @DeleteMapping("/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+}
+```
+
+您可以在类级别和方法级别使用 `@CrossOrigin`，如下例所示：
+
+```java
+@CrossOrigin(maxAge = 3600)
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+
+    @CrossOrigin("https://domain2.com")
+    @GetMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @DeleteMapping("/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+}
+```
+
+### 1.7.4 全局配置
+
+除了细粒度的控制器方法级配置之外，您可能还想定义一些全局 CORS 配置。您可以在任何 `HandlerMapping` 上单独设置基于 URL 的 `CorsConfiguration` 映射。然而，大多数应用程序都使用 MVC Java 配置或 MVC XML 命名空间来实现这一点。
+
+默认情况下，全局配置启用以下功能：
+
+- 所有的源。
+- 所有标头。
+- GET、HEAD 和 POST 方法。
+
+`allowCredentials` 默认情况下不启用，因为它建立了一个信任级别，暴露敏感的用户特定信息（如 cookie 和 CSRF 令牌），并且只应在适当的情况下使用。启用时，必须将 `allowOrigins` 设置为一个或多个特定域（但不是特殊值 `"*"`），或者可以使用 `allowOriginalPatterns` 属性来匹配一组动态的原点。
+
+`maxAge` 设置为 30 分钟。
+
+#### Java 配置
+
+要在 MVC Java 配置中启用 CORS，可以使用 `CorsRegistry` 回调，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+
+        registry.addMapping("/api/**")
+            .allowedOrigins("https://domain2.com")
+            .allowedMethods("PUT", "DELETE")
+            .allowedHeaders("header1", "header2", "header3")
+            .exposedHeaders("header1", "header2")
+            .allowCredentials(true).maxAge(3600);
+
+        // Add more mappings...
+    }
+}
+```
+
+#### XML 配置
+
+要在XML命名空间中启用CORS，可以使用 `<mvc:cors>` 元素，如下例所示：
+
+```xml
+<mvc:cors>
+
+    <mvc:mapping path="/api/**"
+        allowed-origins="https://domain1.com, https://domain2.com"
+        allowed-methods="GET, PUT"
+        allowed-headers="header1, header2, header3"
+        exposed-headers="header1, header2" allow-credentials="true"
+        max-age="123" />
+
+    <mvc:mapping path="/resources/**"
+        allowed-origins="https://domain1.com" />
+
+</mvc:cors>
+```
+
+### 1.7.5 CORS 过滤器
+
+您可以通过内置的 `CorsFilter` 应用 CORS 支持。
+
+> 如果您尝试将 `CorsFilter` 与 Spring Security 一起使用，请记住 Spring Security 内置了对 CORS 的支持。
+
+要配置筛选器，请将 `CorsConfigurationSource` 传递给其构造函数，如下例所示：
+
+```java
+CorsConfiguration config = new CorsConfiguration();
+
+// Possibly...
+// config.applyPermitDefaultValues()
+
+config.setAllowCredentials(true);
+config.addAllowedOrigin("https://domain1.com");
+config.addAllowedHeader("*");
+config.addAllowedMethod("*");
+
+UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+source.registerCorsConfiguration("/**", config);
+
+CorsFilter filter = new CorsFilter(source);
+```
+
+## 1.8 错误响应
+
+REST 服务的一个常见要求是在错误响应的主体中包含详细信息。Spring 框架支持“HTTP API 的问题详细信息”规范 RFC 7807。
+
+以下是此支持的主要抽象：
+
+- `ProblemDetail` — RFC 7807 问题细节的表示；一个简单的容器，用于规范中定义的标准字段和非标准字段。
+- `ErrorResponse` — 公开 HTTP 错误响应详细信息的合同，包括 HTTP 状态、响应头和RFC 7807 格式的主体；这允许异常封装并公开它们如何映射到 HTTP 响应的详细信息。所有 Spring MVC 异常都实现了这一点。
+- `ErrorResponseException` — 基本的 `ErrorResponse` 实现，其他人可以将其用作方便的基类。
+- `ResponseEntityExceptionHandler` — 用于 @ControllerAdvice 的方便基类，该基类处理所有 Spring MVC 异常和任何 `ErrorResponseException`，并用返回体呈现错误响应。
+
+### 1.8.1 渲染器
+
+您可以从任何 `@ExceptionHandler` 或任何 `@RequestMapping` 方法返回 `ProblemDetail` 或 `ErrorResponse` 以呈现 RFC 7807 响应。处理方式如下：
+
+- `ProblemDetail` 的 `status` 属性决定 HTTP 状态。
+- `ProbemDetail` 的 `instance` 属性是根据当前 URL 路径设置的（如果尚未设置的话）。
+- 对于内容协商，Jackson `HttpMessageConverter` 在呈现 `ProblemDetail` 时更喜欢 “application/problem+json” 而不是 “application/json”，如果找不到兼容的媒体类型，也会使用它。
+
+要为 Spring WebFlux 异常和任何 `ErrorResponseException` 启用RFC 7807响应，请扩展 `ResponseEntityExceptionHandler` 并在 Spring 配置中将其声明为 @ControllerAdvice。该处理程序有一个 `@ExceptionHandler` 方法，用于处理任何 `ErrorResponse` 异常，其中包括所有内置的 web 异常。您可以添加更多的异常处理方法，并使用受保护的方法将任何异常映射到 `ProbemDetail`。
+
+### 1.8.2 非标准字段
+
+您可以通过以下两种方式之一使用非标准字段扩展 RFC 7807 响应。
+
+第一，插入 `ProblemDetail` 的“属性” `Map`。使用 Jackson 库时，Spring Framework 会注册 `ProblemDetailJacksonMixin`，以确保此“属性” `Map` 在响应中展开并呈现为顶级 JSON 属性，同样，反序列化期间的任何未知属性都会插入此映射。
+
+您还可以扩展 `ProblemDetail` 以添加专用的非标准属性。`ProblemDetail` 中的复制构造函数允许一个子类，使其可以很容易地从现有的 `ProblemDetail` 中创建。这可以集中完成，例如通过 `@ControllerAdvice`（如 `ResponseEntityExceptionHandler`）将异常的 `ProblemDetail` 重新创建到具有额外非标准字段的子类中。
+
+### 1.8.3 国际化
+
+国际化错误响应详细信息是一种常见的要求，为 Spring MVC 异常定制问题详细信息也是一种良好的实践。支持的方式如下：
+
+- 每个 `ErrorResponse` 公开一个消息代码和参数，以通过 MessageSource 解析 “detail” 字段。实际的消息代码值是用占位符参数化的，例如要从参数中展开的 `"HTTP method {0} not supported"`。
+- 每个 `ErrorResponse` 还公开一个消息代码来解析 “title” 字段。
+- `ResponseEntityExceptionHandler` 使用消息代码和参数来解析 “detail” 和 “title” 字段。
+
+默认情况下，“detail” 字段的消息代码为 “problemDetail” + 完全限定的异常类名。某些异常可能会暴露额外的消息代码，在这种情况下，会在默认消息代码中添加后缀。下表列出了 Spring MVC 异常的消息参数和代码：
+
+| 异常                                          | 消息码                 | 消息码参数                                                   |
+| :-------------------------------------------- | :--------------------- | :----------------------------------------------------------- |
+| `AsyncRequestTimeoutException`                | (默认)                 |                                                              |
+| `ConversionNotSupportedException`             | (默认)                 | `{0}` 属性名, `{1}` 属性值                                   |
+| `HttpMediaTypeNotAcceptableException`         | (默认)                 | `{0}` 支持的媒体类型的队列                                   |
+| `HttpMediaTypeNotAcceptableException`         | (默认) + ".parseError" |                                                              |
+| `HttpMediaTypeNotSupportedException`          | (默认)                 | `{0}` 不支持的媒体类型, `{1}` 支持的媒体类型                 |
+| `HttpMediaTypeNotSupportedException`          | (默认) + ".parseError" |                                                              |
+| `HttpMessageNotReadableException`             | (默认)                 |                                                              |
+| `HttpMessageNotWritableException`             | (默认)                 |                                                              |
+| `HttpRequestMethodNotSupportedException`      | (默认)                 | `{0}` 当前 HTTP 方法, `{1}` 支持的 HTTP 方法的队列           |
+| `MethodArgumentNotValidException`             | (默认)                 | `{0}` 全局错误的队列, `{1}` 字段错误的队列。`BindingResult` 中每个错误的消息代码和参数也通过 `MessageSource` 解析。 |
+| `MissingRequestHeaderException`               | (默认)                 | `{0}` 请求头名                                               |
+| `MissingServletRequestParameterException`     | (默认)                 | `{0}` 请求参数名                                             |
+| `MissingMatrixVariableException`              | (默认)                 | `{0}` 矩阵变量名                                             |
+| `MissingPathVariableException`                | (默认)                 | `{0}` 路径变量名                                             |
+| `MissingRequestCookieException`               | (默认)                 | `{0}` cookie 名                                              |
+| `MissingServletRequestPartException`          | (默认)                 | `{0}` part 名                                                |
+| `NoHandlerFoundException`                     | (默认)                 |                                                              |
+| `TypeMismatchException`                       | (默认)                 | `{0}` 属性名, `{1}` 属性值                                   |
+| `UnsatisfiedServletRequestParameterException` | (默认)                 | `{0}` 参数条件队列                                           |
+
+默认情况下，“title” 字段的消息代码为 “problemDetail.title.” + 完全限定的异常类名。
+
+### 1.8.4 客户端处理
+
+客户端应用程序可以在使用 `WebClient` 时捕获 `WebClientResponseException`，或在使用 `RestTemplate` 时捕获 `RestClientResponceException`，并使用它们的 `getResponseBodyAs` 方法将错误响应主体解码为任何目标类型，如 `ProblemDetail` 或 `ProblemDetail` 的子类。
+
+## 1.9 Web 安全
+
+Spring Security 项目为保护 web 应用程序免受恶意攻击提供了支持。请参阅 Spring Security 参考文档，包括：
+
+- Spring MVC 安全性
+- Spring MVC 测试支持
+- CSRF 保护
+- 安全响应标头
+
+HDIV 是另一个与 Spring MVC 集成的 web 安全框架。
+
+## 1.10 HTTP 缓存
+
+HTTP 缓存可以显著提高 web 应用程序的性能。HTTP 缓存围绕着 `Cache-Control` 响应标头，然后是条件请求标头（如 `Last-Modified` 和 `ETag`）。`Cache-Control` 建议私有（例如浏览器）和公共（例如代理）缓存如何缓存和重用响应。`ETag` 报头用于进行条件请求，如果内容没有改变，则可能导致 304（NOT_MODIFIED）而没有正文。`ETag` 可以被视为 `Last-Modified` 标头的更复杂的继承者。
+
+本节描述了 Spring Web MVC 中可用的 HTTP 缓存相关选项。
+
+### 1.10.1 CacheControl
+
+`CacheControl` 支持配置与 `Cache-Control` 标头相关的设置，并在许多地方被接受为参数：
+
+- [`WebContentInterceptor`](https://docs.spring.io/spring-framework/docs/6.0.7/javadoc-api/org/springframework/web/servlet/mvc/WebContentInterceptor.html)
+- [`WebContentGenerator`](https://docs.spring.io/spring-framework/docs/6.0.7/javadoc-api/org/springframework/web/servlet/support/WebContentGenerator.html)
+- 控制器
+- 静态资源
+
+虽然 RFC 7234 描述了 `Cache-Control` 响应标头的所有可能指令，但 `CacheControl` 类型采用了面向用例的方法，重点关注常见场景：
+
+```java
+// Cache for an hour - "Cache-Control: max-age=3600"
+CacheControl ccCacheOneHour = CacheControl.maxAge(1, TimeUnit.HOURS);
+
+// Prevent caching - "Cache-Control: no-store"
+CacheControl ccNoStore = CacheControl.noStore();
+
+// Cache for ten days in public and private caches,
+// public caches should not transform the response
+// "Cache-Control: max-age=864000, public, no-transform"
+CacheControl ccCustom = CacheControl.maxAge(10, TimeUnit.DAYS).noTransform().cachePublic();
+```
+
+`WebContentGenerator` 还接受一个更简单的 `cachePeriod` 属性（以秒为单位定义），其工作原理如下：
+
+- `-1` 值不会生成 `Cache-Control` 响应标头。
+- `0` 值通过使用 `'Cache-Control: no-store'` 指令来阻止缓存。
+- `n>0` 的值通过使用 `'Cache-Control: max-age=n'` 指令将给定响应缓存 `n` 秒。
+
+### 1.10.2 控制器
