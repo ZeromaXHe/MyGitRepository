@@ -9346,3 +9346,316 @@ CacheControl ccCustom = CacheControl.maxAge(10, TimeUnit.DAYS).noTransform().cac
 - `n>0` 的值通过使用 `'Cache-Control: max-age=n'` 指令将给定响应缓存 `n` 秒。
 
 ### 1.10.2 控制器
+
+控制器可以添加对 HTTP 缓存的明确支持。我们建议这样做，因为在将资源的`lastModified` 或 `ETag` 值与条件请求头进行比较之前，需要计算该值。控制器可以将 `ETag` 标头和 `Cache-Control` 设置添加到 `ResponseEntity`，如下例所示：
+
+```java
+@GetMapping("/book/{id}")
+public ResponseEntity<Book> showBook(@PathVariable Long id) {
+
+    Book book = findBook(id);
+    String version = book.getVersion();
+
+    return ResponseEntity
+            .ok()
+            .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+            .eTag(version) // lastModified is also available
+            .body(book);
+}
+```
+
+如果与条件请求报头的比较表明内容没有改变，则前面的示例发送具有空正文的 304（NOT_MODIFIED）响应。否则，`ETag` 和 `Cache-Control` 标头将添加到响应中。
+
+您也可以对照控制器中的条件请求标头进行检查，如下例所示：
+
+```java
+@RequestMapping
+public String myHandleMethod(WebRequest request, Model model) {
+
+    long eTag = ... (1)
+
+    if (request.checkNotModified(eTag)) {
+        return null; (2)
+    }
+
+    model.addAttribute(...); (3)
+    return "myViewName";
+}
+
+// (1) 特定于应用程序的计算。
+// (2) 响应已设置为304（NOT_MODIFIED）—— 无需进一步处理。
+// (3) 继续处理请求。
+```
+
+有三种变体用于根据 `eTag` 值、`lastModified` 值或两者来检查条件请求。对于条件 `GET` 和 `HEAD` 请求，可以将响应设置为 304（NOT_MODIFIED）。对于条件 `POST`、`PUT` 和 `DELETE`，您可以将响应设置为 412（PRECONDITION_FAILED），以防止并发修改。
+
+### 1.10.3 静态资源
+
+您应该为静态资源提供 `Cache-Control` 和条件响应标头，以获得最佳性能。请参阅关于配置静态资源的部分。
+
+### 1.10.4 ETag 过滤器
+
+您可以使用 `ShallowEtagHeaderFilter` 添加根据响应内容计算的“浅” `eTag` 值，从而节省带宽，但不节省 CPU 时间。参见浅 ETag。
+
+## 1.11 视图技术
+
+Spring MVC 中视图技术的使用是可插入的。您是否决定使用 Thymelaf、Groovy Markup 模板、JSP 或其他技术主要取决于配置更改。本章介绍了与 Spring MVC 集成的视图技术。我们假设您已经熟悉“视图解析”。
+
+> Spring MVC 应用程序的视图位于该应用程序的内部信任边界内。视图可以访问应用程序上下文的所有 bean。因此，不建议在模板可由外部源编辑的应用程序中使用 Spring MVC 的模板支持，因为这可能会带来安全隐患。
+
+### 1.11.1 Thymeleaf
+
+Thymeleaf 是一个现代的服务器端 Java 模板引擎，它强调可以通过双击在浏览器中预览的自然 HTML 模板，这对于在不需要运行服务器的情况下独立处理 UI 模板（例如，由设计师）非常有帮助。如果您想取代 JSP，Thymeleaf 提供了一组最广泛的功能，使这种转换更容易。Thymeleaf 被积极开发和维护。有关更完整的介绍，请参阅 Thymeleaf 项目主页。
+
+Thymeleaf 与 Spring MVC 的集成由 Thymeleaf 项目管理。该配置涉及一些 bean 声明，如 `ServletContextTemplateResolver`、`SpringTemplateEngine` 和 `ThymelafViewResolver`。有关更多详细信息，请参阅 “Thymeleaf + Spring”。
+
+### 1.11.2 FreeMarker
+
+Apache FreeMarker 是一个模板引擎，用于生成从 HTML 到电子邮件等任何类型的文本输出。Spring 框架具有内置集成，用于将 Spring MVC 与 FreeMarker 模板结合使用。
+
+#### 视图配置
+
+以下示例显示了如何将 FreeMarker 配置为视图技术：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        registry.freeMarker();
+    }
+
+    // Configure FreeMarker...
+
+    @Bean
+    public FreeMarkerConfigurer freeMarkerConfigurer() {
+        FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
+        configurer.setTemplateLoaderPath("/WEB-INF/freemarker");
+        return configurer;
+    }
+}
+```
+
+以下示例显示了如何在 XML 中配置相同的内容：
+
+```xml
+<mvc:annotation-driven/>
+
+<mvc:view-resolvers>
+    <mvc:freemarker/>
+</mvc:view-resolvers>
+
+<!-- Configure FreeMarker... -->
+<mvc:freemarker-configurer>
+    <mvc:template-loader-path location="/WEB-INF/freemarker"/>
+</mvc:freemarker-configurer>
+```
+
+或者，您也可以声明 `FreeMarkerConfigurer` bean 以完全控制所有属性，如下例所示：
+
+```xml
+<bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+    <property name="templateLoaderPath" value="/WEB-INF/freemarker/"/>
+</bean>
+```
+
+您的模板需要存储在前面示例中显示的 `FreeMarkerConfigurer` 指定的目录中。给定前面的配置，如果您的控制器返回一个 `welcome` 的视图名称，那么解析器会查找 `/WEB-INF/freemarker/welcome.ftl` 模板。
+
+#### FreeMarker 配置
+
+您可以通过在 `FreeMarkerConfigurer` bean 上设置适当的 bean 属性，将FreeMarker “Settings” 和 “SharedVariables” 直接传递给 FreeMarkers `Configuration` 对象（由 Spring 管理）。`freemarkerSettings` 属性需要 `java.util.Properties` 对象，而 `freemarkerVariables` 属性需要 `java.util.Map`。以下示例显示了如何使用 `FreeMarkerConfiguration`：
+
+```xml
+<bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+    <property name="templateLoaderPath" value="/WEB-INF/freemarker/"/>
+    <property name="freemarkerVariables">
+        <map>
+            <entry key="xml_escape" value-ref="fmXmlEscape"/>
+        </map>
+    </property>
+</bean>
+
+<bean id="fmXmlEscape" class="freemarker.template.utility.XmlEscape"/>
+```
+
+有关应用于 `Configuration` 对象的设置和变量的详细信息，请参阅 FreeMarker 文档。
+
+#### 表格处理
+
+Spring 提供了一个在 JSP 中使用的标记库，其中包含一个 `<spring:bind/>` 元素。此元素主要允许表单显示表单支持对象的值，并显示 web 或业务层 `Validator` 验证失败的结果。Spring 还支持 FreeMarker 中的相同功能，并提供了额外的方便宏来生成表单输入元素。
+
+##### 绑定宏
+
+FreeMarker 的 `spring-webmvc.jar` 文件中维护了一组标准的宏，因此它们始终可用于适当配置的应用程序。
+Spring 模板库中定义的一些宏被认为是内部的（私有的），但宏定义中不存在这样的作用域，这使得调用代码和用户模板可以看到所有宏。以下部分仅集中介绍需要从模板中直接调用的宏。如果您想直接查看宏代码，该文件名为 `spring.ftl`，位于 `org.springframework.web.servlet.view.freemarker` 包中。
+
+##### 简单绑定
+
+在基于 FreeMarker 模板的 HTML 表单中，作为 Spring MVC 控制器的表单视图，您可以使用类似于下一个示例的代码绑定到字段值，并以类似于 JSP 的方式显示每个输入字段的错误消息。以下示例显示了一个 `personForm` 视图：
+
+```xml
+<!-- FreeMarker macros have to be imported into a namespace.
+    We strongly recommend sticking to 'spring'. -->
+<#import "/spring.ftl" as spring/>
+<html>
+    ...
+    <form action="" method="POST">
+        Name:
+        <@spring.bind "personForm.name"/>
+        <input type="text"
+            name="${spring.status.expression}"
+            value="${spring.status.value?html}"/><br />
+        <#list spring.status.errorMessages as error> <b>${error}</b> <br /> </#list>
+        <br />
+        ...
+        <input type="submit" value="submit"/>
+    </form>
+    ...
+</html>
+```
+
+`<@spring.bind>` 需要一个 “path” 参数，该参数由命令对象的名称（除非您在控制器配置中更改了它，否则它是 “command”）、句点和要绑定的命令对象上的字段名称组成。您也可以使用嵌套字段，如 `command.address.street`。`bind` 宏采用 `web.xml` 中 `ServletContext` 参数 `defaultHtmlEscape` 指定的默认 HTML 转义行为。
+
+名为 `<@spring.bindEscaped>` 的宏的另一种形式采用第二个参数，该参数明确指定是否应在状态错误消息或值中使用 HTML 转义。您可以根据需要将其设置为 `true` 或 `false`。附加的表单处理宏简化了 HTML 转义的使用，您应该尽可能使用这些宏。它们将在下一节中进行解释。
+
+##### 输入宏
+
+FreeMarker 的附加便利宏简化了绑定和表单生成（包括验证错误显示）。从来没有必要使用这些宏来生成表单输入字段，您可以将它们与简单的 HTML 或直接调用我们之前强调的 Spring 绑定宏进行混合和匹配。
+
+可用宏的下表显示了 FreeMarker 模板（FTL）定义和每个定义的参数列表：
+
+| 宏                                                           | FTL 定义                                                     |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| `message` (基于代码参数从资源捆绑包输出字符串)               | <@spring.message code/>                                      |
+| `messageText` (根据代码参数从资源束中输出一个字符串，返回到默认参数的值) | <@spring.messageText code, text/>                            |
+| `url` (在相对 URL 前面加上应用程序的上下文根)                | <@spring.url relativeUrl/>                                   |
+| `formInput` (用于收集用户输入的标准输入字段)                 | <@spring.formInput path, attributes, fieldType/>             |
+| `formHiddenInput` (用于提交非用户输入的隐藏输入字段)         | <@spring.formHiddenInput path, attributes/>                  |
+| `formPasswordInput` (用于收集密码的标准输入字段。请注意，在这种类型的字段中永远不会填充任何值。) | <@spring.formPasswordInput path, attributes/>                |
+| `formTextarea` (用于收集长的自由形式文本输入的大文本字段)    | <@spring.formTextarea path, attributes/>                     |
+| `formSingleSelect` (用于选择单个必需值的选项下拉框)          | <@spring.formSingleSelect path, options, attributes/>        |
+| `formMultiSelect` (选项列表框，允许用户选择 0 个或多个值)    | <@spring.formMultiSelect path, options, attributes/>         |
+| `formRadioButtons` (一组单选按钮，用于从可用选项中进行单个选择) | <@spring.formRadioButtons path, options separator, attributes/> |
+| `formCheckboxes` (允许选择 0 个或多个值的一组复选框)         | <@spring.formCheckboxes path, options, separator, attributes/> |
+| `formCheckbox` (单个复选框)                                  | <@spring.formCheckbox path, attributes/>                     |
+| `showErrors` (简化绑定字段的验证错误显示)                    | <@spring.showErrors separator, classOrStyle/>                |
+
+> 在 FreeMarker 模板中，实际上不需要 `formHiddenInput` 和 `formPasswordInput`，因为您可以使用普通的 `formInput` 宏，指定隐藏或密码作为 `fieldType` 参数的值。
+
+上述任何宏的参数具有一致的含义：
+
+- `path`：要绑定到的字段的名称（例如，“command.name”）
+- `options`：可以在输入字段中选择的所有可用值的 `Map`。映射的键表示从表单 已 POST 返回并绑定到命令对象的值。根据键存储的地图对象是显示在表单上给用户的标签，可能与表单返回的相应值不同。通常，控制器会提供这样的地图作为参考数据。您可以使用任何 `Map` 实现，具体取决于所需的行为。对于严格排序的映射，您可以使用带有合适 `Comparator` 的 `SortedMap`（如 `TreeMap`），对于应按插入顺序返回值的任意映射，可以使用 `commons-colections` 中的 `LinkedHashMap` 或 `LinkedMap`。
+- `seperator`：当多个选项作为离散元素（单选按钮或复选框）可用时，用于分隔列表中每个选项的字符序列（如 `<br>`）。
+- `attributes`: 要包含在 HTML 标记本身中的任意标记或文本的附加字符串。这个字符串是由宏直接回显的。例如，在 `textarea` 字段中，您可以提供属性（如 'rows="5" cols="60"'），也可以传递样式信息，如 'style="border:1px solid silver"'。
+- `classOrStyle`：对于 `showErrors` 宏，包装每个错误的 `span` 元素使用的 CSS 类的名称。如果未提供任何信息（或值为空），则错误将封装在 `<b></b>` 标记中。
+
+以下部分概述了宏的示例。
+
+**输入字段**
+
+`formInput` 宏采用 `path` 参数（`command.name`）和一个附加的 `attributes` 参数（在接下来的示例中为空）。该宏与所有其他表单生成宏一起，对路径参数执行隐式 Spring 绑定。绑定在发生新的绑定之前一直有效，因此 `showErrors` 宏不需要再次传递路径参数 — 它对上次为其创建绑定的字段进行操作。
+
+`showErrors` 宏接受一个分隔符参数（用于分隔给定字段上的多个错误的字符），还接受第二个参数 — 这次是类名或样式属性。请注意，FreeMarker 可以为属性参数指定默认值。以下示例显示了如何使用 `formInput` 和 `showErrors` 宏：
+
+```xml
+<@spring.formInput "command.name"/>
+<@spring.showErrors "<br>"/>
+```
+
+下一个示例显示表单片段的输出，生成名称字段，并在表单提交后显示验证错误，但字段中没有值。验证通过 Spring 的验证框架进行。
+
+生成的 HTML 类似于以下示例：
+
+```jsp
+Name:
+<input type="text" name="name" value="">
+<br>
+    <b>required</b>
+<br>
+<br>
+```
+
+`formTextarea` 宏的工作方式与 `formInput` 宏相同，并且接受相同的参数列表。通常，第二个参数（`attributes`）用于传递 `textarea` 的样式信息或 `rows` 和 `cols` 属性。
+
+**选择字段**
+
+您可以使用四个选择字段宏在 HTML 表单中生成常见的 UI 值选择输入：
+
+- `formSingleSelect`
+- `formMultiSelect`
+- `formRadioButtons`
+- `formCheckboxes`
+
+四个宏中的每一个都接受一个选项 `Map`，该映射包含表单字段的值和与该值对应的标签。值和标签可以相同。
+
+下一个例子是 FTL 中的单选按钮。表单支持对象为此字段指定了默认值 “London”，因此不需要验证。当呈现表单时，可供选择的整个城市列表将作为模型中的参考数据以 “cityMap” 的名称提供。以下列表显示了示例：
+
+```jsp
+...
+Town:
+<@spring.formRadioButtons "command.address.town", cityMap, ""/><br><br>
+```
+
+上面的列表呈现了一行单选按钮，`cityMap` 中的每个值对应一个单选按钮，并使用分隔符 `""`。没有提供其他属性（宏的最后一个参数丢失）。`cityMap` 对映射中的每个键值对使用相同的 `String`。映射的键是表单实际提交的 `POST` 请求参数。贴图值是用户看到的标签。在前面的示例中，给定三个著名城市的列表和表单支持对象中的默认值，HTML 类似于以下内容：
+
+```jsp
+Town:
+<input type="radio" name="address.town" value="London">London</input>
+<input type="radio" name="address.town" value="Paris" checked="checked">Paris</input>
+<input type="radio" name="address.town" value="New York">New York</input>
+```
+
+如果您的应用程序希望通过内部代码处理城市（例如），您可以使用合适的键创建代码地图，如下例所示：
+
+```java
+protected Map<String, ?> referenceData(HttpServletRequest request) throws Exception {
+    Map<String, String> cityMap = new LinkedHashMap<>();
+    cityMap.put("LDN", "London");
+    cityMap.put("PRS", "Paris");
+    cityMap.put("NYC", "New York");
+
+    Map<String, Object> model = new HashMap<>();
+    model.put("cityMap", cityMap);
+    return model;
+}
+```
+
+代码现在生成输出，其中无线电值为相关代码，但用户仍然可以看到更用户友好的城市名称，如下所示：
+
+```jsp
+Town:
+<input type="radio" name="address.town" value="LDN">London</input>
+<input type="radio" name="address.town" value="PRS" checked="checked">Paris</input>
+<input type="radio" name="address.town" value="NYC">New York</input>
+```
+
+##### HTML 转义
+
+前面描述的表单宏的默认使用导致 HTML 元素符合 HTML 4.01，并且使用在 `web.xml` 文件中定义的 HTML 转义的默认值，正如 Spring 的绑定支持所使用的那样。为了使元素符合 XHTML 或覆盖默认的 HTML 转义值，您可以在模板中指定两个变量（或在模型中，它们对模板可见）。在模板中指定它们的优点是，可以在稍后的模板处理中将它们更改为不同的值，从而为表单中的不同字段提供不同的行为。
+
+要为标记切换到 XHTML 兼容，请为名为 `xhtmlCompliant` 的模型或上下文变量指定 `true` 值，如下例所示：
+
+```jsp
+<#-- for FreeMarker -->
+<#assign xhtmlCompliant = true>
+```
+
+处理完这个指令后，Spring 宏生成的任何元素现在都是 XHTML 兼容的。
+
+以类似的方式，您可以为每个字段指定 HTML 转义，如下例所示：
+
+```jsp
+<#-- until this point, default HTML escaping is used -->
+
+<#assign htmlEscape = true>
+<#-- next field will use HTML escaping -->
+<@spring.formInput "command.name"/>
+
+<#assign htmlEscape = false in spring>
+<#-- all future fields will be bound with HTML escaping off -->
+```
+
+### 1.11.3 Groovy Markup
