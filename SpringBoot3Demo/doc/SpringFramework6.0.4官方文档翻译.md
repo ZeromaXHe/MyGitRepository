@@ -9399,7 +9399,7 @@ public String myHandleMethod(WebRequest request, Model model) {
 
 ## 1.11 视图技术
 
-Spring MVC 中视图技术的使用是可插入的。您是否决定使用 Thymelaf、Groovy Markup 模板、JSP 或其他技术主要取决于配置更改。本章介绍了与 Spring MVC 集成的视图技术。我们假设您已经熟悉“视图解析”。
+Spring MVC 中视图技术的使用是可插入的。您是否决定使用 Thymelaf、Groovy 标记模板、JSP 或其他技术主要取决于配置更改。本章介绍了与 Spring MVC 集成的视图技术。我们假设您已经熟悉“视图解析”。
 
 > Spring MVC 应用程序的视图位于该应用程序的内部信任边界内。视图可以访问应用程序上下文的所有 bean。因此，不建议在模板可由外部源编辑的应用程序中使用 Spring MVC 的模板支持，因为这可能会带来安全隐患。
 
@@ -9658,4 +9658,1436 @@ Town:
 <#-- all future fields will be bound with HTML escaping off -->
 ```
 
-### 1.11.3 Groovy Markup
+### 1.11.3 Groovy 标记
+
+Groovy 标记模板引擎主要用于生成类似 XML 的标记（XML、XHTML、HTML5 和其他），但您可以使用它来生成任何基于文本的内容。Spring 框架有一个内置的集成，用于将 Spring MVC 与 Groovy 标记结合使用。
+
+> Groovy 标记模板引擎需要 Groovy 2.3.1+。
+
+#### 配置
+
+以下示例显示了如何配置 Groovy 标记模板引擎：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        registry.groovy();
+    }
+
+    // Configure the Groovy Markup Template Engine...
+
+    @Bean
+    public GroovyMarkupConfigurer groovyMarkupConfigurer() {
+        GroovyMarkupConfigurer configurer = new GroovyMarkupConfigurer();
+        configurer.setResourceLoaderPath("/WEB-INF/");
+        return configurer;
+    }
+}
+```
+
+以下示例显示了如何在 XML 中配置相同的内容：
+
+```xml
+<mvc:annotation-driven/>
+
+<mvc:view-resolvers>
+    <mvc:groovy/>
+</mvc:view-resolvers>
+
+<!-- Configure the Groovy Markup Template Engine... -->
+<mvc:groovy-configurer resource-loader-path="/WEB-INF/"/>
+```
+
+#### 例子
+
+与传统的模板引擎不同，Groovy Markup 依赖于使用生成器语法的 DSL。以下示例显示了 HTML 页面的示例模板：
+
+```groovy
+yieldUnescaped '<!DOCTYPE html>'
+html(lang:'en') {
+    head {
+        meta('http-equiv':'"Content-Type" content="text/html; charset=utf-8"')
+        title('My page')
+    }
+    body {
+        p('This is an example of HTML contents')
+    }
+}
+```
+
+### 1.11.4 脚本视图
+
+Spring Framework 有一个内置的集成，可以将 Spring MVC 与任何可以在 JSR-223 Java 脚本引擎上运行的模板库一起使用。我们在不同的脚本引擎上测试了以下模板库：
+
+| 脚本库                                                       | 脚本引擎                                              |
+| :----------------------------------------------------------- | :---------------------------------------------------- |
+| [Handlebars](https://handlebarsjs.com/)                      | [Nashorn](https://openjdk.java.net/projects/nashorn/) |
+| [Mustache](https://mustache.github.io/)                      | [Nashorn](https://openjdk.java.net/projects/nashorn/) |
+| [React](https://facebook.github.io/react/)                   | [Nashorn](https://openjdk.java.net/projects/nashorn/) |
+| [EJS](https://www.embeddedjs.com/)                           | [Nashorn](https://openjdk.java.net/projects/nashorn/) |
+| [ERB](https://www.stuartellis.name/articles/erb/)            | [JRuby](https://www.jruby.org/)                       |
+| [String templates](https://docs.python.org/2/library/string.html#template-strings) | [Jython](https://www.jython.org/)                     |
+| [Kotlin Script templating](https://github.com/sdeleuze/kotlin-script-templating) | [Kotlin](https://kotlinlang.org/)                     |
+
+> 集成任何其他脚本引擎的基本规则是，它必须实现 `ScriptEngine` 和 `Invocable` 接口。
+
+#### 必需要求
+
+您需要在类路径上有脚本引擎，其细节因脚本引擎而异：
+
+- Nashorn JavaScript 引擎是由 Java 8+ 提供的。强烈建议使用可用的最新更新版本。
+- 应该添加 JRuby 作为 Ruby 支持的依赖项。
+- Jython 应该作为 Python 支持的依赖项添加。
+- `org.jetbrains.kotlin:kotlin-script-util` 依赖项和一个 `META-INF/services/javax.script.ScriptEngineFactory` 文件，该文件包含一个 `org.jetbrans.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngineFactory` 行，以支持 Kotlin 脚本。有关更多详细信息，请参见此示例。
+
+您需要有脚本模板库。JavaScript 实现这一点的一种方法是通过 WebJars。
+
+#### 脚本模板
+
+您可以声明 `ScriptTemplateConfigurer` bean 来指定要使用的脚本引擎、要加载的脚本文件、调用什么函数来渲染模板等等。以下示例使用 Mustache 模板和 Nashorn JavaScript 引擎：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        registry.scriptTemplate();
+    }
+
+    @Bean
+    public ScriptTemplateConfigurer configurer() {
+        ScriptTemplateConfigurer configurer = new ScriptTemplateConfigurer();
+        configurer.setEngineName("nashorn");
+        configurer.setScripts("mustache.js");
+        configurer.setRenderObject("Mustache");
+        configurer.setRenderFunction("render");
+        return configurer;
+    }
+}
+```
+
+以下示例在 XML 中显示了相同的排列方式：
+
+```xml
+<mvc:annotation-driven/>
+
+<mvc:view-resolvers>
+    <mvc:script-template/>
+</mvc:view-resolvers>
+
+<mvc:script-template-configurer engine-name="nashorn" render-object="Mustache" render-function="render">
+    <mvc:script location="mustache.js"/>
+</mvc:script-template-configurer>
+```
+
+对于 Java 和 XML 配置，控制器看起来没有什么不同，如下例所示：
+
+```java
+@Controller
+public class SampleController {
+
+    @GetMapping("/sample")
+    public String test(Model model) {
+        model.addAttribute("title", "Sample title");
+        model.addAttribute("body", "Sample body");
+        return "template";
+    }
+}
+```
+
+以下示例显示 Mustache 模板：
+
+```html
+<html>
+    <head>
+        <title>{{title}}</title>
+    </head>
+    <body>
+        <p>{{body}}</p>
+    </body>
+</html>
+```
+
+使用以下参数调用渲染函数：
+
+- `String template`：模板内容
+- `Map model`：视图模型
+- `RenderingContext renderingContext`：提供对应用程序上下文、区域设置、模板加载程序和 URL 的访问的 `RenderingContext`（自 5.0 起）
+
+`Mustache.render()` 与此签名在本机上是兼容的，因此您可以直接调用它。
+
+如果模板技术需要一些自定义，则可以提供一个实现自定义渲染函数的脚本。例如，Handlerbars 在使用模板之前需要编译模板，并且需要 polyfill 来模拟服务器端脚本引擎中不可用的一些浏览器功能。
+
+以下示例显示了如何执行此操作：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        registry.scriptTemplate();
+    }
+
+    @Bean
+    public ScriptTemplateConfigurer configurer() {
+        ScriptTemplateConfigurer configurer = new ScriptTemplateConfigurer();
+        configurer.setEngineName("nashorn");
+        configurer.setScripts("polyfill.js", "handlebars.js", "render.js");
+        configurer.setRenderFunction("render");
+        configurer.setSharedEngine(false);
+        return configurer;
+    }
+}
+```
+
+> 当使用非线程安全脚本引擎和非为并发设计的模板库时，需要将 `sharedEngine` 属性设置为 `false`，例如在 Nashorn 上运行的 Handlebars 或 React。在这种情况下，由于这个错误，需要 Java SE 8 更新 60，但通常建议在任何情况下使用最新的 Java SE 补丁版本。
+
+`polyfill.js` 只定义 Handlebars 正确运行所需的 `windows` 对象，如下所示：
+
+```javascript
+var window = {};
+```
+
+这个基本的 `render.js` 实现在使用模板之前对其进行编译。生产就绪的实现还应该存储任何重用的缓存模板或预编译模板。您可以在脚本端执行此操作（并处理您需要的任何自定义 —— 管理模板引擎配置）。以下示例显示了如何执行此操作：
+
+```javascript
+function render(template, model) {
+    var compiledTemplate = Handlebars.compile(template);
+    return compiledTemplate(model);
+}
+```
+
+查看 Spring Framework 单元测试、Java 和参考资料，了解更多配置示例。
+
+### 1.11.5 JSP 和 JSTL
+
+Spring 框架有一个内置的集成，用于将 Spring MVC 与 JSP 和 JSTL 结合使用。
+
+#### 视图解析器
+
+使用 JSP 进行开发时，通常会声明一个 `InternalResourceViewResolver` bean。
+
+`InternalResourceViewResolver` 可以用于调度到任何 Servlet 资源，但特别是 JSP。作为最佳实践，我们强烈建议将 JSP 文件放在 `'WEB-INF'` 目录下的目录中，这样客户端就不能直接访问。
+
+```xml
+<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+    <property name="prefix" value="/WEB-INF/jsp/"/>
+    <property name="suffix" value=".jsp"/>
+</bean>
+```
+
+####  JSPs 对阵 JSTL
+
+当使用 JSP 标准标记库（JSTL）时，您必须使用一个特殊的视图类 `JstlView`，因为 JSTL 在 I18N 特性等功能工作之前需要做一些准备。
+
+#### Spring 的 JSP 标签库
+
+Spring 提供了请求参数到命令对象的数据绑定，如前几章所述。为了方便结合这些数据绑定功能开发 JSP 页面，Spring 提供了一些标记，使事情变得更加容易。所有Spring 标记都具有 HTML 转义功能，可以启用或禁用字符转义。
+
+`spring.tld` 标记库描述符（tld）包含在 `spring-webmvc.jar` 中。有关单个标记的全面参考，请浏览 API 参考或查看标记库描述。
+
+#### Spring 的表格标签库
+
+从 2.0 版开始，Spring 提供了一组全面的数据绑定感知标记，用于在使用 JSP 和 Spring Web MVC 时处理表单元素。每个标记都提供了对其对应 HTML 标记的一组属性的支持，使标记变得熟悉和直观。标记生成的 HTML 与 HTML 4.01/XHTML 1.0 兼容。
+
+与其他表单/输入标记库不同，Spring 的表单标记库与 Spring Web MVC 集成，使标记可以访问控制器处理的命令对象和引用数据。正如我们在以下示例中所展示的，表单标记使 JSP 更易于开发、读取和维护。
+
+我们浏览表单标签，并查看如何使用每个标签的示例。我们已经包含了生成的 HTML 片段，其中某些标记需要进一步的注释。
+
+##### 配置
+
+表单标记库捆绑在 `spring-webmvc.jar` 中。库描述符称为 `spring-form.tld`。
+
+要使用此库中的标记，请将以下指令添加到 JSP 页面的顶部：
+
+```xml
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+```
+
+其中，`form` 是要用于此库中标记的标记名前缀。
+
+##### 表格标签
+
+此标记呈现 HTML “form” 元素，并向内部标记公开绑定路径以进行绑定。它将命令对象放在 `PageContext` 中，以便内部标记可以访问命令对象。此库中的所有其他标记都是表单标记的嵌套标记。
+
+假设我们有一个名为 `User` 的域对象。它是一个具有 `firstName` 和 `lastName` 等属性的 JavaBean。我们可以将其用作表单控制器的表单支持对象，该对象返回 `form.jsp`。以下示例显示了 `form.jsp` 的样子：
+
+```xml
+<form:form>
+    <table>
+        <tr>
+            <td>First Name:</td>
+            <td><form:input path="firstName"/></td>
+        </tr>
+        <tr>
+            <td>Last Name:</td>
+            <td><form:input path="lastName"/></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" value="Save Changes"/>
+            </td>
+        </tr>
+    </table>
+</form:form>
+```
+
+`firstName` 和 `lastName` 值由页面控制器从放置在 `PageContext` 中的命令对象中检索。继续阅读，了解如何将内部标记与 `form` 标记一起使用的更复杂的示例。
+
+下面的列表显示了生成的 HTML，它看起来像一个标准表单：
+
+```xml
+<form method="POST">
+    <table>
+        <tr>
+            <td>First Name:</td>
+            <td><input name="firstName" type="text" value="Harry"/></td>
+        </tr>
+        <tr>
+            <td>Last Name:</td>
+            <td><input name="lastName" type="text" value="Potter"/></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" value="Save Changes"/>
+            </td>
+        </tr>
+    </table>
+</form>
+```
+
+前面的 JSP 假设表单支持对象的变量名是 `command`。如果您已经将表单支持对象以另一个名称放入模型中（这绝对是一种最佳实践），则可以将表单绑定到命名变量，如下例所示：
+
+```xml
+<form:form modelAttribute="user">
+    <table>
+        <tr>
+            <td>First Name:</td>
+            <td><form:input path="firstName"/></td>
+        </tr>
+        <tr>
+            <td>Last Name:</td>
+            <td><form:input path="lastName"/></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" value="Save Changes"/>
+            </td>
+        </tr>
+    </table>
+</form:form>
+```
+
+##### input 标签
+
+默认情况下，此标记呈现具有绑定值和 `type='text'` 的 HTML `input` 元素。有关此标记的示例，请参见表单标记。您还可以使用HTML5特定的类型，如 `email`、`tel`、`date` 和其他类型。
+
+##### checkbox 标签
+
+此标记呈现 `type` 设置为 `checkbox` 的 HTML `input` 标记。
+
+假设我们的 `User` 有偏好，例如订阅时事通讯和兴趣爱好列表。以下示例显示了 `Preferences` 类：
+
+```java
+public class Preferences {
+
+    private boolean receiveNewsletter;
+    private String[] interests;
+    private String favouriteWord;
+
+    public boolean isReceiveNewsletter() {
+        return receiveNewsletter;
+    }
+
+    public void setReceiveNewsletter(boolean receiveNewsletter) {
+        this.receiveNewsletter = receiveNewsletter;
+    }
+
+    public String[] getInterests() {
+        return interests;
+    }
+
+    public void setInterests(String[] interests) {
+        this.interests = interests;
+    }
+
+    public String getFavouriteWord() {
+        return favouriteWord;
+    }
+
+    public void setFavouriteWord(String favouriteWord) {
+        this.favouriteWord = favouriteWord;
+    }
+}
+```
+
+相应的 `form.jsp` 可以类似于以下内容：
+
+```xml
+<form:form>
+    <table>
+        <tr>
+            <td>Subscribe to newsletter?:</td>
+            <%-- Approach 1: Property is of type java.lang.Boolean --%>
+            <td><form:checkbox path="preferences.receiveNewsletter"/></td>
+        </tr>
+
+        <tr>
+            <td>Interests:</td>
+            <%-- Approach 2: Property is of an array or of type java.util.Collection --%>
+            <td>
+                Quidditch: <form:checkbox path="preferences.interests" value="Quidditch"/>
+                Herbology: <form:checkbox path="preferences.interests" value="Herbology"/>
+                Defence Against the Dark Arts: <form:checkbox path="preferences.interests" value="Defence Against the Dark Arts"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Favourite Word:</td>
+            <%-- Approach 3: Property is of type java.lang.Object --%>
+            <td>
+                Magic: <form:checkbox path="preferences.favouriteWord" value="Magic"/>
+            </td>
+        </tr>
+    </table>
+</form:form>
+```
+
+`checkbox` 标记有三种方法，应该可以满足您的所有复选框需求。
+
+- 方法一：当绑定值为 `java.lang.Boolean` 类型时，如果绑定值为 `true`，则输入（复选框）标记为已选中。`value` 属性对应于 `setValue(Object)` value 属性的解析值。
+- 方法二：当绑定值的类型为 `array` 或 `java.util.Collection` 时，如果绑定 `Collection` 中存在配置的 `setValue(Object)` 值，则 `input(checkbox)` 标记为 `checked`。
+- 方法三：对于任何其他绑定值类型，如果配置的 `setValue(Object)` 等于绑定值，则 `input(checkbox)` 标记为 `checked`。
+
+请注意，无论采用何种方法，都会生成相同的 HTML 结构。以下 HTML 代码段定义了一些复选框：
+
+```xml
+<tr>
+    <td>Interests:</td>
+    <td>
+        Quidditch: <input name="preferences.interests" type="checkbox" value="Quidditch"/>
+        <input type="hidden" value="1" name="_preferences.interests"/>
+        Herbology: <input name="preferences.interests" type="checkbox" value="Herbology"/>
+        <input type="hidden" value="1" name="_preferences.interests"/>
+        Defence Against the Dark Arts: <input name="preferences.interests" type="checkbox" value="Defence Against the Dark Arts"/>
+        <input type="hidden" value="1" name="_preferences.interests"/>
+    </td>
+</tr>
+```
+
+您可能不希望在每个复选框之后看到额外的隐藏字段。当 HTML 页面中的复选框未被选中时，表单提交后，其值不会作为 HTTP 请求参数的一部分发送到服务器，因此我们需要一个解决 HTML 中这种怪癖的方法，以便 Spring 表单数据绑定能够工作。`checkbox` 标记遵循现有的 Spring 约定，即为每个复选框包含一个以下划线（`_`）为前缀的隐藏参数。通过这样做，您实际上是在告诉 Spring “复选框在表单中是可见的，我希望表单数据绑定到的对象反映复选框的状态，无论发生什么。”
+
+##### checkboxes 标签
+
+此标记呈现类型设置为复选框的多个 HTML 输入标记。
+
+本节以上一个 `checkbox` 标记部分的示例为基础。有时，您不希望在 JSP 页面中列出所有可能的爱好。您更愿意在运行时提供可用选项的列表，并将其传递给标记。这就是 `checkboxes` 标记的用途。您可以传入包含 `items` 属性中可用选项的 `Array`、`List` 或 `Map`。通常，绑定属性是一个集合，因此它可以包含用户选择的多个值。以下示例显示了一个使用此标记的 JSP：
+
+```xml
+<form:form>
+    <table>
+        <tr>
+            <td>Interests:</td>
+            <td>
+                <%-- Property is of an array or of type java.util.Collection --%>
+                <form:checkboxes path="preferences.interests" items="${interestList}"/>
+            </td>
+        </tr>
+    </table>
+</form:form>
+```
+
+本例假设 `interestList` 是一个可用作模型属性的列表，其中包含要从中选择的值的字符串。如果使用 `Map`，则映射条目键将用作值，映射条目的值将用作要显示的标签。也可以使用自定义对象，在该对象中可以使用 `itemValue` 提供值的特性名称，使用 `itemLabel` 提供标签。
+
+##### radiobutton 标签
+
+此标记呈现 `type` 设置为 `radio` 的 HTML `input` 元素。
+
+典型的使用模式涉及绑定到同一属性但具有不同值的多个标记实例，如以下示例所示：
+
+```xml
+<tr>
+    <td>Sex:</td>
+    <td>
+        Male: <form:radiobutton path="sex" value="M"/> <br/>
+        Female: <form:radiobutton path="sex" value="F"/>
+    </td>
+</tr>
+```
+
+##### radiobuttons 标签
+
+此标记呈现 `type` 设置为 `radio` 的多个 HTML `input` 元素。
+与 `checkboxes` 标记一样，您可能希望将可用选项作为运行时变量传入。对于此用法，您可以使用 `radiobuttons` 标记。传入一个 `Array`、`List` 或 `Map`，其中包含 `items` 属性中的可用选项。如果使用 `Map`，则映射条目键将用作值，映射条目的值将用作要显示的标签。您也可以使用自定义对象，在该对象中，您可以通过使用 `itemValue` 提供值的特性名称，并通过使用 `itemLabel` 提供标签，如以下示例所示：
+
+```xml
+<tr>
+    <td>Sex:</td>
+    <td><form:radiobuttons path="sex" items="${sexOptions}"/></td>
+</tr>
+```
+
+##### password 标签
+
+此标记呈现一个 HTML `input` 标记，该标记的 `type` 设置为具有绑定值的 `password`。
+
+```xml
+<tr>
+    <td>Password:</td>
+    <td>
+        <form:password path="password"/>
+    </td>
+</tr>
+```
+
+请注意，默认情况下，不会显示密码值。如果确实希望显示密码值，可以将 `showPassword` 属性的值设置为 `true`，如下例所示：
+
+```xml
+<tr>
+    <td>Password:</td>
+    <td>
+        <form:password path="password" value="^76525bvHGq" showPassword="true"/>
+    </td>
+</tr>
+```
+
+##### select 标签
+
+此标记呈现 HTML “select” 元素。它支持将数据绑定到所选选项，以及使用嵌套的 `option` 和 `options` 标记。
+
+假设 `User` 有一个技能列表。相应的 HTML 可以如下所示：
+
+```xml
+<tr>
+    <td>Skills:</td>
+    <td><form:select path="skills" items="${skills}"/></td>
+</tr>
+```
+
+如果 `User` 的技能是草药，“技能”行的 HTML 源代码可能如下：
+
+```xml
+<tr>
+    <td>Skills:</td>
+    <td>
+        <select name="skills" multiple="true">
+            <option value="Potions">Potions</option>
+            <option value="Herbology" selected="selected">Herbology</option>
+            <option value="Quidditch">Quidditch</option>
+        </select>
+    </td>
+</tr>
+```
+
+##### option 标签
+
+此标记呈现 HTML `option` 元素。它根据绑定值设置 `selected`。以下 HTML 显示了它的典型输出：
+
+```xml
+<tr>
+    <td>House:</td>
+    <td>
+        <form:select path="house">
+            <form:option value="Gryffindor"/>
+            <form:option value="Hufflepuff"/>
+            <form:option value="Ravenclaw"/>
+            <form:option value="Slytherin"/>
+        </form:select>
+    </td>
+</tr>
+```
+
+如果 `User` 的房子在格兰芬多，“房子”行的 HTML 源代码如下：
+
+```xml
+<tr>
+    <td>House:</td>
+    <td>
+        <select name="house">
+            <option value="Gryffindor" selected="selected">Gryffindor</option> (1)
+            <option value="Hufflepuff">Hufflepuff</option>
+            <option value="Ravenclaw">Ravenclaw</option>
+            <option value="Slytherin">Slytherin</option>
+        </select>
+    </td>
+</tr>
+```
+
+(1) 注意额外的 `selected` 属性
+
+##### options 标签
+
+此标记呈现 HTML `option` 元素的列表。它根据绑定值设置 `selected` 的属性。以下 HTML 显示了它的典型输出：
+
+```xml
+<tr>
+    <td>Country:</td>
+    <td>
+        <form:select path="country">
+            <form:option value="-" label="--Please Select"/>
+            <form:options items="${countryList}" itemValue="code" itemLabel="name"/>
+        </form:select>
+    </td>
+</tr>
+```
+
+如果 `User` 居住在英国，“国家”行的 HTML 源代码如下：
+
+```xml
+<tr>
+    <td>Country:</td>
+    <td>
+        <select name="country">
+            <option value="-">--Please Select</option>
+            <option value="AT">Austria</option>
+            <option value="UK" selected="selected">United Kingdom</option> (1)
+            <option value="US">United States</option>
+        </select>
+    </td>
+</tr>
+```
+
+(1) 注意额外的一个 `selected` 属性
+
+如前一个示例所示，`option` 标记和 `options` 标记的组合使用会生成相同的标准 HTML，但允许您在 JSP 中明确指定一个仅用于显示的值（它所属的位置），例如示例中的默认字符串：“--Please Select”。
+
+`items` 属性通常由项对象（item objects）的集合或数组填充。`itemValue` 和 `itemLabel` 引用这些项对象的 bean 属性（如果指定）。否则，项对象本身将变成字符串。或者，可以指定项目 `Map`，在这种情况下，映射键被解释为选项值，映射值对应于选项标签。如果碰巧也指定了 `itemValue` 或 `itemLabel`（或两者都指定），则项值属性将应用于映射键，项标签属性则应用于映射值。
+
+##### textarea 标签
+
+此标记呈现 HTML `textarea` 元素。以下 HTML 显示了它的典型输出：
+
+```xml
+<tr>
+    <td>Notes:</td>
+    <td><form:textarea path="notes" rows="3" cols="20"/></td>
+    <td><form:errors path="notes"/></td>
+</tr>
+```
+
+##### hidden 标签
+
+此标记呈现一个 HTML 输入标记，该标记的类型设置为使用绑定值隐藏。若要提交未绑定的隐藏值，请使用类型设置为隐藏的 HTML 输入标记。以下 HTML 显示了它的典型输出：
+
+```xml
+<form:hidden path="house"/>
+```
+
+如果我们选择将房屋价值作为隐藏价值提交，HTML 将如下所示：
+
+```xml
+<input name="house" type="hidden" value="Gryffindor"/>
+```
+
+##### errors 标签
+
+此标记在 HTML `span` 元素中呈现字段错误。它提供对控制器中创建的错误或与控制器关联的任何验证器创建的错误的访问。
+
+假设我们希望在提交表单后显示 `firstName` 和 `lastName` 字段的所有错误消息。我们有一个名为 `UserValidator` 的 `User` 类实例的验证器，如下例所示：
+
+```java
+public class UserValidator implements Validator {
+
+    public boolean supports(Class candidate) {
+        return User.class.isAssignableFrom(candidate);
+    }
+
+    public void validate(Object obj, Errors errors) {
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "firstName", "required", "Field is required.");
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "lastName", "required", "Field is required.");
+    }
+}
+```
+
+`form.jsp` 可以如下所示：
+
+```xml
+<form:form>
+    <table>
+        <tr>
+            <td>First Name:</td>
+            <td><form:input path="firstName"/></td>
+            <%-- Show errors for firstName field --%>
+            <td><form:errors path="firstName"/></td>
+        </tr>
+
+        <tr>
+            <td>Last Name:</td>
+            <td><form:input path="lastName"/></td>
+            <%-- Show errors for lastName field --%>
+            <td><form:errors path="lastName"/></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="submit" value="Save Changes"/>
+            </td>
+        </tr>
+    </table>
+</form:form>
+```
+
+如果我们提交的表单的 `firstName` 和 `lastName` 字段中有空值，HTML 将如下所示：
+
+```xml
+<form method="POST">
+    <table>
+        <tr>
+            <td>First Name:</td>
+            <td><input name="firstName" type="text" value=""/></td>
+            <%-- Associated errors to firstName field displayed --%>
+            <td><span name="firstName.errors">Field is required.</span></td>
+        </tr>
+
+        <tr>
+            <td>Last Name:</td>
+            <td><input name="lastName" type="text" value=""/></td>
+            <%-- Associated errors to lastName field displayed --%>
+            <td><span name="lastName.errors">Field is required.</span></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="submit" value="Save Changes"/>
+            </td>
+        </tr>
+    </table>
+</form>
+```
+
+如果我们想显示给定页面的整个错误列表，该怎么办？下一个示例显示 `errors` 标记还支持一些基本的通配符功能。
+
+- `path="*"`：显示所有错误。
+- `path="lastName"`：显示与 `lastName` 字段相关的所有错误。
+- 如果 `path` 被忽略，则只显示对象错误。
+
+以下示例在页面顶部显示错误列表，然后在字段旁边显示特定于字段的错误：
+
+```xml
+<form:form>
+    <form:errors path="*" cssClass="errorBox"/>
+    <table>
+        <tr>
+            <td>First Name:</td>
+            <td><form:input path="firstName"/></td>
+            <td><form:errors path="firstName"/></td>
+        </tr>
+        <tr>
+            <td>Last Name:</td>
+            <td><form:input path="lastName"/></td>
+            <td><form:errors path="lastName"/></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="submit" value="Save Changes"/>
+            </td>
+        </tr>
+    </table>
+</form:form>
+```
+
+HTML 将如下所示：
+
+```xml
+<form method="POST">
+    <span name="*.errors" class="errorBox">Field is required.<br/>Field is required.</span>
+    <table>
+        <tr>
+            <td>First Name:</td>
+            <td><input name="firstName" type="text" value=""/></td>
+            <td><span name="firstName.errors">Field is required.</span></td>
+        </tr>
+
+        <tr>
+            <td>Last Name:</td>
+            <td><input name="lastName" type="text" value=""/></td>
+            <td><span name="lastName.errors">Field is required.</span></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <input type="submit" value="Save Changes"/>
+            </td>
+        </tr>
+    </table>
+</form>
+```
+
+`spring-form.tld` 标记库描述符（TLD）包含在 `spring-webmvc.jar` 中。有关单个标记的全面参考，请浏览 API 参考或查看标记库描述。
+
+##### HTTP 方法转换
+
+REST 的一个关键原则是使用“统一接口”。这意味着所有资源（URL）都可以通过使用相同的四种 HTTP 方法进行操作：GET、PUT、POST 和 DELETE。对于每种方法，HTTP 规范都定义了确切的语义。例如，GET 应该始终是一个安全的操作，这意味着它没有副作用，PUT 或 DELETE 应该是幂等的，这意味着您可以一次又一次地重复这些操作，但最终结果应该是相同的。虽然 HTTP 定义了这四种方法，但 HTML 只支持两种：GET 和 POST。幸运的是，有两种可能的解决方案：您可以使用 JavaScript 来执行 PUT 或 DELETE，也可以使用 “real” 方法作为附加参数（建模为 HTML 表单中的隐藏输入字段）来执行 POST。Spring 的 HiddenHttpMethodFilter 使用了后一种技巧。这个过滤器是一个普通的 Servlet 过滤器，因此，它可以与任何 web 框架（不仅仅是 SpringMVC）结合使用。将此筛选器添加到 web.xml 中，带有隐藏方法参数的 POST 将转换为相应的 HTTP 方法请求。
+
+为了支持 HTTP 方法转换，Spring MVC 表单标记被更新为支持设置 HTTP 方法。例如，以下片段来自宠物诊所示例：
+
+```xml
+<form:form method="delete">
+    <p class="submit"><input type="submit" value="Delete Pet"/></p>
+</form:form>
+```
+
+前面的示例执行 HTTP POST，在请求参数后面隐藏 “real” 的 DELETE 方法。它由 web.xml 中定义的 `HiddenHttpMethodFilter` 获取，如下例所示：
+
+```xml
+<filter>
+    <filter-name>httpMethodFilter</filter-name>
+    <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+</filter>
+
+<filter-mapping>
+    <filter-name>httpMethodFilter</filter-name>
+    <servlet-name>petclinic</servlet-name>
+</filter-mapping>
+```
+
+以下示例显示了相应的 `@Controller` 方法：
+
+```java
+@RequestMapping(method = RequestMethod.DELETE)
+public String deletePet(@PathVariable int ownerId, @PathVariable int petId) {
+    this.clinic.deletePet(petId);
+    return "redirect:/owners/" + ownerId;
+}
+```
+
+##### HTML 5 标签
+
+Spring 表单标记库允许输入动态属性，这意味着您可以输入任何 HTML5 特定的属性。
+
+表单 `input` 标记支持输入 `text` 以外的类型属性。这旨在允许呈现新的 HTML5 特定输入类型，如 `email`、`date`、`range` 和其他类型。请注意，由于 `text` 是默认类型，因此不需要输入 `type='text'`。
+
+### 1.11.6 RSS 和 Atom
+
+`AbstractAtomFeedView` 和 `AbstractRssFeedView` 都继承了 `AbstractFeedView` 基类，分别用于提供 Atom 和 RSSFeed 视图。它们基于 ROME 项目，位于 `org.springframework.web.servlet.view.feed` 包中。
+
+`AbstractAtomFeedView` 要求您实现 `buildFeedEntry()` 方法，并可选地重写 `buildFeedMetadata()` 方法（默认实现为空）。以下示例显示了如何执行此操作：
+
+```java
+public class SampleContentAtomView extends AbstractAtomFeedView {
+
+    @Override
+    protected void buildFeedMetadata(Map<String, Object> model,
+            Feed feed, HttpServletRequest request) {
+        // implementation omitted
+    }
+
+    @Override
+    protected List<Entry> buildFeedEntries(Map<String, Object> model,
+            HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // implementation omitted
+    }
+}
+```
+
+类似的要求适用于实现 `AbstractRssFeedView`，如下例所示：
+
+```java
+public class SampleContentRssView extends AbstractRssFeedView {
+
+    @Override
+    protected void buildFeedMetadata(Map<String, Object> model,
+            Channel feed, HttpServletRequest request) {
+        // implementation omitted
+    }
+
+    @Override
+    protected List<Item> buildFeedItems(Map<String, Object> model,
+            HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // implementation omitted
+    }
+}
+```
+
+`buildFeedItems()` 和 `buildFeedEntries()` 方法传入 HTTP 请求，以防您需要访问 Locale。HTTP 响应仅用于 Cookie 或其他 HTTP 标头的设置。在方法返回后，提要会自动写入响应对象。
+
+有关创建 Atom 视图的示例，请参阅 Alef Arendsen 的 Spring Team 博客条目。
+
+### 1.11.7 PDF 和 Excel
+
+Spring 提供了返回 HTML 以外的输出的方法，包括 PDF 和 Excel 电子表格。本节介绍如何使用这些功能。
+
+#### 文件视图的介绍
+
+HTML 页面并不总是用户查看模型输出的最佳方式，Spring 使从模型数据动态生成 PDF 文档或 Excel 电子表格变得简单。文档是视图，并以正确的内容类型从服务器流式传输，以（希望）使客户端 PC 能够运行其电子表格或 PDF 查看器应用程序作为响应。
+
+为了使用 Excel 视图，您需要将 Apache POI 库添加到类路径中。对于 PDF 生成，您需要（最好）添加 OpenPDF 库。
+
+> 如果可能的话，您应该使用最新版本的底层文档生成库。特别是，我们强烈建议使用 OpenPDF（例如，OpenPDF 1.2.12），而不是过时的原始 iText 2.1.7，因为 OpenPDF 是积极维护的，并修复了不受信任的 PDF 内容的一个重要漏洞。
+
+#### PDF 视图
+
+单词列表的简单 PDF 视图可以扩展 `org.springframework.web.servlet.view.document.AbstractPdfView` 并实现 `buildPdfDocument()` 方法，如下例所示：
+
+```java
+public class PdfWordList extends AbstractPdfView {
+
+    protected void buildPdfDocument(Map<String, Object> model, Document doc, PdfWriter writer,
+            HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        List<String> words = (List<String>) model.get("wordList");
+        for (String word : words) {
+            doc.add(new Paragraph(word));
+        }
+    }
+}
+```
+
+控制器可以从外部视图定义（按名称引用它）或作为处理程序方法的 `View` 实例返回这样的视图。
+
+#### Excel 视图
+
+自 Spring Framework 4.2 以来，提供了 `org.springframework.web.servlet.view.dococument.AbstractXlsView` 作为 Excel 视图的基类。它基于 Apache POI，具有专门的子类（`AbstractXlsxView` 和 `AbstractXtlsxStreamingView`），取代了过时的 `AbstractExcelView` 类。
+
+编程模型类似于 `AbstractPdfView`，使用 `buildExcelDocument()` 作为中心模板方法，控制器能够从外部定义（按名称）或作为处理程序方法的 `View` 实例返回这样的视图。
+
+### 1.11.8 Jackson
+
+Spring 提供了对 Jackson JSON 库的支持。
+
+#### 基于 Jackson 的 JSON MVC 视图
+
+`MappingJackson2JsonView` 使用 Jackson 库的 `ObjectMapper` 将响应内容呈现为 JSON。默认情况下，模型映射的整个内容（框架特定类除外）都编码为 JSON。对于需要过滤映射内容的情况，可以使用 `modelKeys` 属性指定一组特定的模型属性进行编码。也可以使用 `extractValueFromSingleKeyModel` 属性直接提取和序列化单键模型中的值，而不是将其作为模型属性的映射。
+
+您可以根据需要使用 Jackson 提供的注解自定义 JSON 映射。当您需要进一步控制时，可以通过 `ObjectMapper` 属性注入自定义 `ObjectMapper`，用于需要为特定类型提供自定义 JSON 序列化程序和反序列化程序的情况。
+
+#### 基于 Jackson 的 XML 视图
+
+`MappingJackson2XmlView` 使用 Jackson XML 扩展的 `XmlMapper` 将响应内容呈现为 XML。如果模型包含多个条目，则应使用 `modelKey` bean 属性显式设置要序列化的对象。如果模型包含单个条目，则会自动对其进行序列化。
+
+您可以根据需要使用 JAXB 或 Jackson 提供的注解来定制 XML 映射。当需要进一步控制时，可以通过 `ObjectMapper` 属性注入自定义 `XmlMapper`，对于需要为特定类型提供序列化程序和反序列化程序的自定义 XML 的情况。
+
+### 1.11.9 XML 封送（Marshalling）
+
+`MarshallingView` 使用 XML `Marshaller`（在 `org.springframework.oxm` 包中定义）将响应内容呈现为 XML。您可以使用 `MarshallingView` 实例的 `modelKey` bean 属性显式设置要编组的对象。或者，视图迭代所有模型属性并封送 `Marshaller` 支持的第一个类型。有关 `org.springframework.oxm` 包中功能的更多信息，请参阅使用 O/X 映射器封送 XML。
+
+### 1.11.10 XSLT 视图
+
+XSLT 是 XML 的一种转换语言，作为一种视图技术在 web 应用程序中很受欢迎。如果您的应用程序自然地处理 XML，或者您的模型可以很容易地转换为 XML，那么 XSLT 作为视图技术是一个不错的选择。以下部分展示了如何生成 XML 文档作为模型数据，并在 Spring Web MVC 应用程序中使用 XSLT 进行转换。
+
+这个例子是一个简单的 Spring 应用程序，它在 `Controller` 中创建一个单词列表，并将它们添加到模型映射中。将返回映射以及 XSLT 视图的视图名称。有关 Spring Web MVC 的 `Controller` 接口的详细信息，请参阅带注解的控制器。XSLT 控制器将单词列表转换为一个简单的 XML 文档，以便进行转换。
+
+#### Beans
+
+配置是简单 Spring web 应用程序的标准配置：MVC 配置必须定义 `XsltViewResolver` bean 和常规 MVC 注解配置。以下示例显示了如何执行此操作：
+
+```java
+@EnableWebMvc
+@ComponentScan
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Bean
+    public XsltViewResolver xsltViewResolver() {
+        XsltViewResolver viewResolver = new XsltViewResolver();
+        viewResolver.setPrefix("/WEB-INF/xsl/");
+        viewResolver.setSuffix(".xslt");
+        return viewResolver;
+    }
+}
+```
+
+#### Controller
+
+我们还需要一个控制器来封装我们的单词生成逻辑。
+
+控制器逻辑封装在 `@Controller` 类中，处理程序方法定义如下：
+
+```java
+@Controller
+public class XsltController {
+
+    @RequestMapping("/")
+    public String home(Model model) throws Exception {
+        Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+        Element root = document.createElement("wordList");
+
+        List<String> words = Arrays.asList("Hello", "Spring", "Framework");
+        for (String word : words) {
+            Element wordNode = document.createElement("word");
+            Text textNode = document.createTextNode(word);
+            wordNode.appendChild(textNode);
+            root.appendChild(wordNode);
+        }
+
+        model.addAttribute("wordList", root);
+        return "home";
+    }
+}
+```
+
+到目前为止，我们只创建了一个 DOM 文档并将其添加到模型映射中。请注意，您还可以将 XML 文件加载为 `Resource`，并使用它来代替自定义 DOM 文档。
+
+有一些软件包可以自动“初始化”对象图，但在 Spring 中，您可以完全灵活地以任何选择的方式从模型中创建 DOM。这可以防止 XML 的转换在模型数据的结构中扮演太大的角色，而在使用工具管理 DOMiification 过程时，这是一种危险。
+
+#### Transformation
+
+最后，`XsltViewResolver` 解析“主” XSLT 模板文件，并将 DOM 文档合并到其中以生成我们的视图。如 `XsltViewResolver` 配置中所示，XSLT 模板位于 `WEB-INF/xsl` 目录中的 `war` 文件中，并以 `xslt` 文件扩展名结束。
+
+以下示例显示了一个 XSLT 转换：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+    <xsl:output method="html" omit-xml-declaration="yes"/>
+
+    <xsl:template match="/">
+        <html>
+            <head><title>Hello!</title></head>
+            <body>
+                <h1>My First Words</h1>
+                <ul>
+                    <xsl:apply-templates/>
+                </ul>
+            </body>
+        </html>
+    </xsl:template>
+
+    <xsl:template match="word">
+        <li><xsl:value-of select="."/></li>
+    </xsl:template>
+
+</xsl:stylesheet>
+```
+
+前面的转换呈现为以下 HTML：
+
+```html
+<html>
+    <head>
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Hello!</title>
+    </head>
+    <body>
+        <h1>My First Words</h1>
+        <ul>
+            <li>Hello</li>
+            <li>Spring</li>
+            <li>Framework</li>
+        </ul>
+    </body>
+</html>
+```
+
+## 1.12 MVC 设置
+
+MVC Java 配置和 MVC XML 命名空间提供了适用于大多数应用程序的默认配置，并提供了一个用于自定义它的配置 API。
+
+有关配置 API 中不可用的更高级自定义，请参阅高级 Java 配置和高级 XML 配置。
+
+您不需要理解 MVC Java 配置和 MVC 命名空间创建的底层 bean。如果您想了解更多信息，请参阅特殊 Bean 类型和 Web MVC 配置。
+
+### 1.12.1 启用 MVC 配置
+
+在 Java 配置中，您可以使用 `@EnableWebMvc` 注解来启用 MVC 配置，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig {
+}
+```
+
+在 XML 配置中，您可以使用 `<mvc:annotation-driven>` 元素来启用 mvc 配置，如下例所示：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <mvc:annotation-driven/>
+
+</beans>
+```
+
+前面的示例注册了许多 Spring MVC 基础结构 bean，并适应类路径上可用的依赖项（例如，JSON、XML 和其他的有效负载转换器）。
+
+### 1.12.2 MVC 配置 API
+
+在 Java 配置中，您可以实现 `WebMvcConfigurer` 接口，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    // Implement configuration methods...
+}
+```
+
+在 XML 中，您可以检查 `<mvc:annotation-driven/>` 的属性和子元素。您可以查看 Spring MVC XML 模式，或者使用 IDE 的代码完成功能来发现哪些属性和子元素可用。
+
+### 1.12.3 类型转换
+
+默认情况下，安装了各种数字和日期类型的格式化程序，并支持通过 `@NumberFormat` 和 `@DateTimeFormat` 对字段进行自定义。
+
+要在 Java 配置中注册自定义格式化程序和转换器，请使用以下命令：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        // ...
+    }
+}
+```
+
+要在 XML 配置中执行相同操作，请使用以下操作：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <mvc:annotation-driven conversion-service="conversionService"/>
+
+    <bean id="conversionService"
+            class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="org.example.MyConverter"/>
+            </set>
+        </property>
+        <property name="formatters">
+            <set>
+                <bean class="org.example.MyFormatter"/>
+                <bean class="org.example.MyAnnotationFormatterFactory"/>
+            </set>
+        </property>
+        <property name="formatterRegistrars">
+            <set>
+                <bean class="org.example.MyFormatterRegistrar"/>
+            </set>
+        </property>
+    </bean>
+
+</beans>
+```
+
+默认情况下，Spring MVC 在解析和格式化日期值时会考虑请求 Locale。这适用于日期表示为带有 “input” 表单字段的字符串的表单。然而，对于 “date” 和 “time” 表单字段，浏览器使用 HTML 规范中定义的固定格式。对于这种情况，日期和时间格式可以自定义如下：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
+        registrar.setUseIsoFormat(true);
+        registrar.registerFormatters(registry);
+    }
+}
+```
+
+> 有关何时使用 FormatterRegistrar 实现的更多信息，请参阅 `FormatterRegistrar` SPI 和 `FormattingConversionServiceFactoryBean`。
+
+### 1.12.4 校验
+
+默认情况下，如果类路径上存在 Bean Validation（例如，Hibernate Validator），则 `LocalValidatorFactoryBean` 将注册为全局 Validator，用于控制器方法参数上的 `@Valid` 和 `Validated`。
+
+在 Java 配置中，您可以自定义全局 `Validator` 实例，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public Validator getValidator() {
+        // ...
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <mvc:annotation-driven validator="globalValidator"/>
+
+</beans>
+```
+
+请注意，您也可以在本地注册 `Validator` 实现，如下例所示：
+
+```java
+@Controller
+public class MyController {
+
+    @InitBinder
+    protected void initBinder(WebDataBinder binder) {
+        binder.addValidators(new FooValidator());
+    }
+}
+```
+
+> 如果您需要在某个地方注入 `LocalValidatorFactoryBean`，请创建一个 bean 并用 `@Primary` 标记它，以避免与 MVC 配置中声明的 bean 发生冲突。
+
+### 1.12.5 拦截器
+
+在 Java 配置中，您可以注册拦截器以应用于传入请求，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LocaleChangeInterceptor());
+        registry.addInterceptor(new ThemeChangeInterceptor()).addPathPatterns("/**").excludePathPatterns("/admin/**");
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:interceptors>
+    <bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor"/>
+    <mvc:interceptor>
+        <mvc:mapping path="/**"/>
+        <mvc:exclude-mapping path="/admin/**"/>
+        <bean class="org.springframework.web.servlet.theme.ThemeChangeInterceptor"/>
+    </mvc:interceptor>
+</mvc:interceptors>
+```
+
+> 映射拦截器不适合作为安全层，因为它可能与带注解的控制器路径匹配不匹配，后者也可以透明地匹配尾部斜线和路径扩展，以及其他路径匹配选项。其中许多选项已被弃用，但不匹配的可能性仍然存在。通常，我们建议使用 Spring Security，它包括一个专用的 MvcRequestMatcher 来与 Spring MVC 路径匹配对齐，并且还具有一个安全防火墙，可以阻止 URL 路径中的许多不需要的字符。
+
+### 1.12.6 内容类型
+
+您可以配置 Spring MVC 如何根据请求确定请求的媒体类型（例如，`Accept` 标头、URL 路径扩展、查询参数等）。
+
+默认情况下，仅检查 `Accept` 标头。
+
+如果必须使用基于 URL 的内容类型解析，请考虑在路径扩展上使用查询参数策略。有关更多详细信息，请参见后缀匹配和后缀匹配以及 RFD。
+
+在 Java 配置中，您可以自定义请求的内容类型解析，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        configurer.mediaType("json", MediaType.APPLICATION_JSON);
+        configurer.mediaType("xml", MediaType.APPLICATION_XML);
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:annotation-driven content-negotiation-manager="contentNegotiationManager"/>
+
+<bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+    <property name="mediaTypes">
+        <value>
+            json=application/json
+            xml=application/xml
+        </value>
+    </property>
+</bean>
+```
+
+### 1.12.7 消息转换器
+
+您可以在 Java 配置中通过重写 `configureMessageConverters()`（替换 Spring MVC 创建的默认转换器）或重写 `extendMessageConverter()`（自定义默认转换器或在默认转换器上添加其他转换器）来自定义 `HttpMessageConverter`。
+
+以下示例使用自定义的 `ObjectMapper`（而不是默认的）添加 XML 和 Jackson JSON 转换器：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfiguration implements WebMvcConfigurer {
+
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder()
+                .indentOutput(true)
+                .dateFormat(new SimpleDateFormat("yyyy-MM-dd"))
+                .modulesToInstall(new ParameterNamesModule());
+        converters.add(new MappingJackson2HttpMessageConverter(builder.build()));
+        converters.add(new MappingJackson2XmlHttpMessageConverter(builder.createXmlMapper(true).build()));
+    }
+}
+```
+
+在前面的示例中，`Jackson2ObjectMapperBuilder` 用于为 `MappingJackson2HttpMessageConverter` 和 `MappingJackson2XmlHttpMessageConverter` 创建一个通用配置，启用缩进、自定义日期格式和注册 `jackson-module-parameter-names`，这增加了对访问参数名称的支持（Java 8 中添加的一项功能）。
+
+此生成器自定义 Jackson 的默认财产，如下所示：
+
+- [`DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES`](https://fasterxml.github.io/jackson-databind/javadoc/2.6/com/fasterxml/jackson/databind/DeserializationFeature.html#FAIL_ON_UNKNOWN_PROPERTIES) 已禁用。
+- [`MapperFeature.DEFAULT_VIEW_INCLUSION`](https://fasterxml.github.io/jackson-databind/javadoc/2.6/com/fasterxml/jackson/databind/MapperFeature.html#DEFAULT_VIEW_INCLUSION) 已禁用。
+
+如果在类路径上检测到以下众所周知的模块，它还会自动注册这些模块：
+
+- jackson-datetype-joda：支持 joda-Time 类型。
+- jackson-datatype-jsr310：支持 Java 8 日期和时间 API 类型。
+- jackson-datatype-jdk8：支持其他 Java 8类型，例如 `Optional`。
+- `jackson-module-kotlin`：支持 Kotlin 类和数据类。
+
+> 使用 Jackson XML 支持启用缩进需要 `woodstox-core-asl` 依赖项，此外还需要 `jackson-dataformat-xml` 依赖项。
+
+还有其他有趣的 Jackson 模块：
+
+- jackson-datatype-money：支持 `javax.money` 类型（非官方模块）。
+- jackson-datatype-hibernate：支持特定于 Hibernate 的类型和财产（包括延迟加载方面）。
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:annotation-driven>
+    <mvc:message-converters>
+        <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+            <property name="objectMapper" ref="objectMapper"/>
+        </bean>
+        <bean class="org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter">
+            <property name="objectMapper" ref="xmlMapper"/>
+        </bean>
+    </mvc:message-converters>
+</mvc:annotation-driven>
+
+<bean id="objectMapper" class="org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean"
+      p:indentOutput="true"
+      p:simpleDateFormat="yyyy-MM-dd"
+      p:modulesToInstall="com.fasterxml.jackson.module.paramnames.ParameterNamesModule"/>
+
+<bean id="xmlMapper" parent="objectMapper" p:createXmlMapper="true"/>
+```
+
+### 1.12.8 视图控制器
+
+这是定义 `ParameterizableViewController` 的快捷方式，该控制器在调用时立即转发到视图。当视图生成响应之前没有 Java 控制器逻辑要运行时，您可以在静态情况下使用它。
+
+以下 Java 配置示例将 `/` 请求转发到一个名为 `home` 的视图：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/").setViewName("home");
+    }
+}
+```
+
+以下示例通过使用 `<mvc:view-controller>` 元素，实现了与前面示例相同的功能，但使用了 XML：
+
+```xml
+<mvc:view-controller path="/" view-name="home"/>
+```
+
+如果 `@RequestMapping` 方法映射到任何 HTTP 方法的 URL，则视图控制器不能用于处理同一 URL。这是因为 URL 与带注解的控制器的匹配被认为是端点所有权的足够强的指示，因此 405（METHOD_NOT_ALLOWED）、415（UNSUPPORTED_MEDIA_TYPE）或类似的响应可以被发送到客户端以帮助调试。因此，建议避免在带注释的控制器和视图控制器之间拆分 URL 处理。
+
+### 1.12.9 视图解析器
+
+MVC 配置简化了视图解析器的注册。
+
+以下 Java 配置示例通过使用 JSP 和 Jackson 作为 JSON 呈现的默认视图来配置内容协商 `View` 解析：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        registry.enableContentNegotiation(new MappingJackson2JsonView());
+        registry.jsp();
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:view-resolvers>
+    <mvc:content-negotiation>
+        <mvc:default-views>
+            <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+        </mvc:default-views>
+    </mvc:content-negotiation>
+    <mvc:jsp/>
+</mvc:view-resolvers>
+```
+
+然而，请注意，FreeMarker、Groovy Markup 和脚本模板也需要配置底层视图技术。
+
+MVC 命名空间提供了专用的元素。以下示例适用于 FreeMarker：
+
+```xml
+<mvc:view-resolvers>
+    <mvc:content-negotiation>
+        <mvc:default-views>
+            <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+        </mvc:default-views>
+    </mvc:content-negotiation>
+    <mvc:freemarker cache="false"/>
+</mvc:view-resolvers>
+
+<mvc:freemarker-configurer>
+    <mvc:template-loader-path location="/freemarker"/>
+</mvc:freemarker-configurer>
+```
+
+在 Java 配置中，您可以添加相应的 `Configurer` bean，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        registry.enableContentNegotiation(new MappingJackson2JsonView());
+        registry.freeMarker().cache(false);
+    }
+
+    @Bean
+    public FreeMarkerConfigurer freeMarkerConfigurer() {
+        FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
+        configurer.setTemplateLoaderPath("/freemarker");
+        return configurer;
+    }
+}
+```
+
+### 1.12.10 静态资源
