@@ -11091,3 +11091,249 @@ public class WebConfig implements WebMvcConfigurer {
 ```
 
 ### 1.12.10 静态资源
+
+此选项提供了一种方便的方式，可以从基于 `Resource` 的位置列表中提供静态资源。
+
+在下一个示例中，给定一个以 `/resources` 开头的请求，相对路径用于在 web 应用程序根目录下或在 `/static` 下的类路径上查找和服务相对于 `/public` 的静态资源。这些资源的使用期限为一年，以确保最大限度地使用浏览器缓存，并减少浏览器发出的 HTTP 请求。`Last-Modified` 信息是从 `Resource#lastModified` 推导出来的，因此 HTTP 条件请求支持 `"Last-Modified"` 标头。
+
+以下列表显示了如何使用 Java 配置执行此操作：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/resources/**")
+                .addResourceLocations("/public", "classpath:/static/")
+                .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)));
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:resources mapping="/resources/**"
+    location="/public, classpath:/static/"
+    cache-period="31556926" />
+```
+
+另请参阅对静态资源的 HTTP 缓存支持。
+
+资源处理程序还支持一系列 `ResourceResolver` 实现和 `ResourceTransformer` 实现，您可以使用它们来创建用于处理优化资源的工具链。
+
+您可以基于从内容、固定应用程序版本或其他版本计算的 MD5 哈希，对版本化的资源 URL 使用 `VersionResourceResolver`。`ContentVersionStrategy`（MD5 散列）是一个不错的选择 — 除了一些显著的例外，例如与模块加载程序一起使用的 JavaScript 资源。
+
+以下示例显示了如何在 Java 配置中使用 `VersionResourceResolver`：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/resources/**")
+                .addResourceLocations("/public/")
+                .resourceChain(true)
+                .addResolver(new VersionResourceResolver().addContentVersionStrategy("/**"));
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:resources mapping="/resources/**" location="/public/">
+    <mvc:resource-chain resource-cache="true">
+        <mvc:resolvers>
+            <mvc:version-resolver>
+                <mvc:content-version-strategy patterns="/**"/>
+            </mvc:version-resolver>
+        </mvc:resolvers>
+    </mvc:resource-chain>
+</mvc:resources>
+```
+
+然后，您可以使用 `ResourceUrlProvider` 重写 URL，并应用完整的解析器和转换器链 — 例如插入版本。MVC 配置提供了一个 `ResourceUrlProvider` bean，这样它就可以被注入到其他 bean 中。您还可以使用 `ResourceUrlEncodingFilter` 为Thymelaf、JSP、FreeMarker 和其他具有依赖 `HttpServletResponse#encodeURL` 的 URL 标记的应用程序进行透明重写。
+
+请注意，当同时使用 `EncodedResourceResolver`（例如，用于提供 gzip 了的或 brotli 编码的资源）和 `VersionResourceResolver` 时，必须按此顺序注册它们。这确保了基于内容的版本总是基于未编码的文件进行可靠的计算。
+
+对于 WebJars，像 `/webJars/jquery/1.2.0/jquery.min.js` 这样的版本化 URL 是推荐的也是最有效的使用方式。相关的资源位置是通过 Spring Boot 开箱即用配置的（或者可以通过 `ResourceHandlerRegistry` 手动配置），不需要添加 `org.webjars:webjars-locator-core` 依赖项。
+
+`WebJarsResourceResolver` 支持像 `/webjars/jquery/jquery.min.js` 这样的无版本 URL，当 `org.webjars:webjars-locator-core` 库出现在类路径上时，`WebJarsResourceResolver` 会自动注册，代价是类路径扫描可能会减慢应用程序的启动。解析器可以重写 URL 以包含 jar 的版本，也可以与没有版本的传入 URL 进行匹配 — 例如，从 `/webjars/jquery/jquery.min.js` 到 `/webjars/jquery/1.2.0/jquery.min.js`。
+
+> 基于 `ResourceHandlerRegistry` 的 Java 配置为细粒度控制提供了进一步的选项，例如上次修改的行为和优化的资源解析。
+
+### 1.12.11 默认 Servlet
+
+Spring MVC 允许将 `DispatcherServlet` 映射到 `/`（从而覆盖容器默认 Servlet 的映射），同时仍然允许容器的默认 Servlet 处理静态资源请求。它配置了一个 `DefaultServletHttpRequestHandler`，其 URL 映射为 `/**`，并且相对于其他 URL 映射具有最低优先级。
+
+此处理程序将所有请求转发到默认 Servlet。因此，它必须保持在所有其他 URL 句柄映射顺序的最后一个。如果您使用 `<mvc:annotation-driven>`，就会出现这种情况。或者，如果您设置了自己的自定义 `HandlerMapping` 实例，请确保将其 `order` 属性设置为低于 `DefaultServletHttpRequestHandler` 的值，即 `Integer.MAX_VALUE`。
+
+以下示例显示了如何使用默认设置启用该功能：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        configurer.enable();
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:default-servlet-handler/>
+```
+
+重写 `/` Servlet 映射的注意事项是，必须按名称而不是按路径检索默认 Servlet 的 `RequestDispatcher`。`DefaultServletHttpRequestHandler` 试图在启动时自动检测容器的默认 Servlet，使用大多数主要 Servlet 容器（包括 Tomcat、Jetty、GlassFish、JBoss、Resin、WebLogic 和 WebSphere）的已知名称列表。如果使用不同的名称自定义配置了默认 Servlet，或者在默认 Servlet 名称未知的情况下使用了不同的 Servlet 容器，则必须显式提供默认 Servlet 的名称，如下例所示：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        configurer.enable("myCustomDefaultServlet");
+    }
+}
+```
+
+以下示例显示了如何在 XML 中实现相同的配置：
+
+```xml
+<mvc:default-servlet-handler default-servlet-name="myCustomDefaultServlet"/>
+```
+
+### 1.12.12 路径匹配
+
+您可以自定义与路径匹配和 URL 处理相关的选项。有关各个选项的详细信息，请参阅 `PathMatchConfigurer` javadoc。
+
+以下示例显示了如何在 Java 配置中自定义路径匹配：
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.addPathPrefix("/api", HandlerTypePredicate.forAnnotation(RestController.class));
+    }
+
+    private PathPatternParser patternParser() {
+        // ...
+    }
+}
+```
+
+以下示例显示了如何在 XML 配置中自定义路径匹配：
+
+```xml
+<mvc:annotation-driven>
+    <mvc:path-matching
+        path-helper="pathHelper"
+        path-matcher="pathMatcher"/>
+</mvc:annotation-driven>
+
+<bean id="pathHelper" class="org.example.app.MyPathHelper"/>
+<bean id="pathMatcher" class="org.example.app.MyPathMatcher"/>
+```
+
+### 1.12.13 高级 Java 配置
+
+`@EnableWebMvc` 导入 `DelegatingWebMvcConfiguration`，该配置：
+
+为Spring MVC应用程序提供默认的Spring配置
+检测并委托WebMvcConfigurer实现以自定义该配置。
+
+对于高级模式，您可以删除 `@EnableWebMvc` 并直接从 `DelegatingWebMvcConfiguration` 进行扩展，而不是实现 `WebMvcConfigurer`，如下例所示：
+
+```java
+@Configuration
+public class WebConfig extends DelegatingWebMvcConfiguration {
+
+    // ...
+}
+```
+
+您可以将现有方法保留在 `WebConfig` 中，但现在也可以覆盖基类中的 bean 声明，并且类路径上仍然可以有任意数量的其他 `WebMvcConfigurer` 实现。
+
+### 1.12.14 高级 XML 配置
+
+MVC 命名空间没有高级模式。如果您需要在 bean 上自定义一个无法更改的属性，则可以使用 Spring `ApplicationContext` 的 `BeanPostProcessor` 生命周期挂钩，如下例所示：
+
+```java
+@Component
+public class MyPostProcessor implements BeanPostProcessor {
+
+    public Object postProcessBeforeInitialization(Object bean, String name) throws BeansException {
+        // ...
+    }
+}
+```
+
+请注意，您需要将 `MyPostProcessor` 声明为 bean，可以用 XML 显式声明，也可以通过 `<component-scan/>` 声明来检测它。
+
+## 1.13 HTTP/2
+
+Servlet 4 容器需要支持 HTTP/2，Spring Framework 5 与 Servlet API 4 兼容。从编程模型的角度来看，应用程序不需要做任何特定的事情。但是，有一些与服务器配置有关的注意事项。有关更多详细信息，请参阅 HTTP/2 wiki 页面。
+
+Servlet API 确实公开了一个与 HTTP/2 相关的构造。您可以使用 `jakarta.servlet.http.PushBuilder` 主动向客户端推送资源，并且它被支持作为 `@RequestMapping` 方法的方法参数。
+
+# 2 REST 客户端
+
+本节介绍客户端访问 REST 端点的选项。
+
+## 2.1 RestTemplate
+
+`RestTemplate` 是一个用于执行 HTTP 请求的同步客户端。它是最初的 Spring REST 客户端，并通过底层 HTTP 客户端库公开了一个简单的模板方法 API。
+
+> 从 5.0 开始，`RestTemplate` 处于维护模式，只接受微小更改和错误的请求。请考虑使用 WebClient，它提供了更现代的 API，并支持同步、异步和流式传输场景。
+
+有关详细信息，请参阅 REST 端点。
+
+## 2.2 WebClient
+
+WebClient 是一个非阻塞、响应式客户端，用于执行 HTTP 请求。它在 5.0 中引入，提供了 `RestTemplate` 的现代替代方案，有效支持同步和异步以及流媒体场景。
+
+与 `RestTemplate` 相比，`WebClient` 支持以下功能：
+
+- 非阻塞I/O。
+- 反应式流背压。
+- 硬件资源较少的高并发性。
+- 函数式、流畅的 API，充分利用了 Java 8 lambdas。
+- 同步和异步交互。
+- 流式传输到服务器或从服务器流式传输。
+
+有关详细信息，请参阅 WebClient。
+
+## 2.3 HTTP 接口
+
+Spring Frameworks 允许您将 HTTP 服务定义为具有 HTTP 交换方法的 Java 接口。然后，您可以生成一个实现该接口并执行交换的代理。这有助于简化 HTTP 远程访问，并为选择 API 样式（如同步或响应式）提供了额外的灵活性。
+
+有关详细信息，请参阅 REST 端点。
+
+# 3 测试
+
+本节总结了 Spring MVC 应用程序 `spring-test` 中可用的选项。
+
+- Servlet API 模拟：用于单元测试控制器、过滤器和其他 web 组件的 Servlet API 合同的模拟实现。有关更多详细信息，请参阅 Servlet API mock 对象。
+- TestContext Framework：支持在 JUnit 和 TestNG 测试中加载 Spring 配置，包括跨测试方法高效缓存加载的配置，并支持使用 `MockServletContext` 加载 `WebApplicationContext`。有关更多详细信息，请参阅 TestContext Framework。
+- Spring MVC 测试：一个框架，也称为 `MockMvc`，用于通过 `DispatcherServlet` 测试带注解的控制器（即支持注解），配有 Spring MVC 基础设施，但没有 HTTP 服务器。有关更多详细信息，请参阅 Spring MVC 测试。
+- 客户端 REST: `spring-test` 提供了一个 `MockRestServiceServer`，您可以将其用作模拟服务器，用于测试内部使用 `RestTemplate` 的客户端代码。有关更多详细信息，请参阅客户端 REST 测试。
+- `WebTestClient`：专为测试 WebFlux 应用程序而构建，但它也可以用于通过 HTTP 连接对任何服务器进行端到端集成测试。它是一个无阻塞、响应式的客户端，非常适合测试异步和流式场景。有关更多详细信息，请参阅 `WebTestClient`。
+
+# 4 WebSockets
+
+这部分参考文档涵盖了对 Servlet 栈的支持、包括原始 WebSocket 交互的 WebSocket 消息传递、通过 SockJS 的 WebSocket 仿真，以及通过 STOMP 作为 WebSocket 上的子协议发布订阅消息传递。
+
+## 4.1 介绍 WebSocket
