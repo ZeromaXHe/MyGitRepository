@@ -12017,3 +12017,109 @@ destination:/topic/price.stock.MMM
 - 您可以使用 Spring Security 来保护基于 STOMP 目的地和消息类型的消息。
 
 ### 4.4.3 启用 STOMP
+
+`spring-messaging` 和 `spring-websocket` 模块中提供了基于 WebSocket 的 STOMP 支持。一旦有了这些依赖项，就可以通过 SockJS Fallback 在 WebSocket 上公开 STOMP 端点，如下例所示：
+
+```java
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/portfolio").withSockJS(); (1)
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.setApplicationDestinationPrefixes("/app"); (2)
+        config.enableSimpleBroker("/topic", "/queue"); (3)
+    }
+}
+// (1) `/portfolio` 是 WebSocket（或 SockJS）客户端需要连接到的端点的 HTTP URL，以便进行 WebSocket 握手。
+// (2) 目标标头以 `/app` 开头的 STOMP 消息被路由到 `@Controller` 类中的 `@MessageMapping` 方法。
+// (3) 使用内置消息代理进行订阅和广播，并将目标标头以 `/topic` 或 `/queue` 开头的消息路由到代理。
+```
+
+以下示例显示了与前面示例等效的 XML 配置：
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:websocket="http://www.springframework.org/schema/websocket"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/websocket
+        https://www.springframework.org/schema/websocket/spring-websocket.xsd">
+
+    <websocket:message-broker application-destination-prefix="/app">
+        <websocket:stomp-endpoint path="/portfolio">
+            <websocket:sockjs/>
+        </websocket:stomp-endpoint>
+        <websocket:simple-broker prefix="/topic, /queue"/>
+    </websocket:message-broker>
+
+</beans>
+```
+
+> 对于内置的简单代理，`/topic` 和 `/queue` 前缀没有任何特殊含义。它们只是区分 pub-sub 和点对点消息传递（即，多个订户和一个消费者）的一种惯例。当您使用外部 broker 时，请查看 broker 的 STOMP 页面，以了解它支持什么类型的 STOMP 目的地和前缀。
+
+要从浏览器进行连接，对于 SockJS，您可以使用 SockJS 客户端。对于 STOMP，许多应用程序都使用了 jmesnil/stomp-websocket 库（也称为 stomp.js），该库功能齐全，已在生产中使用多年，但不再维护。目前，JSteunou/webstomp-client 是该库维护最积极、发展最快的继任者。以下示例代码基于此：
+
+```javascript
+var socket = new SockJS("/spring-websocket-portfolio/portfolio");
+var stompClient = webstomp.over(socket);
+
+stompClient.connect({}, function(frame) {
+}
+```
+
+或者，如果您通过 WebSocket（不带 SockJS）进行连接，则可以使用以下代码：
+
+```javascript
+var socket = new WebSocket("/spring-websocket-portfolio/portfolio");
+var stompClient = Stomp.over(socket);
+
+stompClient.connect({}, function(frame) {
+}
+```
+
+请注意，前面示例中的 `stompClient` 不需要指定 `login` 和 `passcode` 头。即使是这样，它们也会在服务器端被忽略（或者更确切地说，被覆盖）。有关身份验证的更多信息，请参阅连接到 Broker 和身份验证。
+
+有关更多示例代码，请参阅：
+
+- 使用 WebSocket 构建交互式 web 应用程序 — 入门指南。
+- 股票投资组合 — 示例应用程序。
+
+### 4.4.4 WebSocket 服务器
+
+要配置底层 WebSocket 服务器，请应用“服务器配置”中的信息。然而，对于 Jetty，您需要通过 `StompEndpointRegistry` 设置 `HandshakeHandler` 和 `WebSocketPolicy`：
+
+```java
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/portfolio").setHandshakeHandler(handshakeHandler());
+    }
+
+    @Bean
+    public DefaultHandshakeHandler handshakeHandler() {
+
+        WebSocketPolicy policy = new WebSocketPolicy(WebSocketBehavior.SERVER);
+        policy.setInputBufferSize(8192);
+        policy.setIdleTimeout(600000);
+
+        return new DefaultHandshakeHandler(
+                new JettyRequestUpgradeStrategy(new WebSocketServerFactory(policy)));
+    }
+}
+```
+
+### 4.4.5 信息流
