@@ -596,3 +596,174 @@ Congratulations on getting this far! Now give yourself a pat on the back. Good j
 
 # 5 Metrics Monitoring and Alerting System
 
+In this chapter, we explore the design of a scalable metrics monitoring and alerting system. A well-designed monitoring and alerting system plays a key role in providing clear visibility into the health of the infrastructure to ensure high availability and reliability.
+
+Figure 5.1 shows some of the most popular metrics monitoring and alerting services in the marketplace. In this chapter, we design a similar service that can be used internally by a large company.
+
+## Step 1 - Understand the Problem and Establish Design Scope
+
+A metrics monitoring and alerting system can mean many different things to different companies, so it is essential to nail down the exact requirements first with interviewer. For example, you do not want to design a system that focus on logs such as web server error or access logs if the interviewer has only infrastructure metrics in mind.
+
+Let's first fully understand the problem and establish the scope of the design before diving into the details.
+
+**Candidate**: Who are we building the system for? Are we building an in-house system for a large corporation like Facebook or Google, or are we designing a SaaS service like Datadog [1], Splunk [2], etc?
+
+**Interviewer**: That's a great question. We are building it for internal use only.
+
+**Candidate**: Which metrics do we want to collect?
+
+**Interviewer**: We want to collect operational system metrics. These can be low-level usage data of the operating system, such as CPU load, memory usage, and disk space consumption. They can also be high-level concepts such as requests per second of a service or the running server count of a web pool. Business metrics are not in the scope of this design.
+
+**Candidate**: What is the scale of the infrastructure we are monitoring with this system?
+
+**Interviewer**: 100 million daily active users, 1,000 server pools, and 100 machines per pool.
+
+**Candidate**: How long should we keep the data?
+
+**Interviewer**: Let's assume we want 1 year retention.
+
+**Candidate**: May we reduce the resolution of the metrics data for long-term storage?
+
+**Interviewer**: That's a great question. We would like to be able to keep newly received data for 7 days. After 7 days, you may roll them up to a 1 minute resolution for 30 days. After 30 days, you may further roll them up at 1 hour resolution.
+
+**Candidate**: What are the supported alert channels?
+
+**Interviewer**: Email, phone, PagerDuty [3], or webhooks (HTTP endpoints).
+
+**Candidate**: Do we need to collect logs, such as error log or access log?
+
+**Interviewer**: No.
+
+**Candidate**: Do we need to support distributed system tracing?
+
+**Interviewer**: No.
+
+### High-level requirements and assumptions
+
+Now you have finished gathering requirements from the interviewer and have a clear scope of the design. The requirements are:
+
+- The infrastructure being monitored is large-scale.
+  - 100 million daily active users.
+  - Assume we have 1,000 server pools, 100 machines per pool, 100 metrics per machine => ~ 10 million metrics.
+  - 1 year data retention.
+  - Data retention policy: raw form for 7 days, 1 minute resolution for 30 days, 1 hour resolution for 1 year.
+- A variety of metrics can be monitored, for example:
+  - CPU usage
+  - Request count
+  - Memory usage
+  - Message count in message queues
+
+### Non-functional requirements
+
+- Scalability: The system should be scalable to accommodate growing metrics and alert volume.
+- Low latency: The system needs to have low latency for dashboards and alerts.
+- Reliability: The system should be highly reliable to avoid missing critical alerts.
+- Flexibility: Technology keeps changing, so the pipeline should be flexible enough to easily integrate new technologies in the future.
+
+Which requirements are out of scope?
+
+- Log monitoring. The Elasticsearch, Logstash, Kibana (ELK) stack is very popular for collecting and monitoring logs [4].
+- Distributed system tracing [5] [6]. Distributed tracing refers to a tracing solution that tracks service requests as they flow through distributed systems. It collects data as requests go from one service to another.
+
+## Step 2 - Propose High-level Design and Get Buy-in
+
+In this section, we discuss some fundamentals of building the system, the data model, and the high-level design.
+
+### Fundamentals
+
+A metrics monitoring and alerting system generally contains five components, as illustrated in Figure 5.2.
+
+- Data collection: collect metric data from different sources.
+- Data transmission: transfer data from sources to the metrics monitoring system.
+- Data storage: organize and store incoming data.
+- Alerting: analyze incoming data, detect anomalies, and generate alerts. The system must be able to send alerts to different communication channels.
+- Visualization: present data in graphs, charts, etc. Engineers are better at identifying patterns, trends, or problem when data is presented visually, so we need visualization functionality.
+
+### Data model
+
+Metrics data is usually recorded as a time series that contains a set of values with their associated timestamps. The series itself can be uniquely identified by its name, and optionally by a set of labels.
+
+Let's take a look at two examples.
+
+#### Example 1:
+
+What is the CPU load on production server instance i631 at 20:00?
+
+The data point highlighted in Figure 5.3 can be represented by Table 5.1.
+
+| metric_name | cpu_load            |
+| ----------- | ------------------- |
+| labels      | host:i631, env:prod |
+| timestamp   | 1613707265          |
+| value       | 0.29                |
+
+In this example, the time series is represented by the metric name, the labels (host:i631, env:prod), and a single point value at a specific time.
+
+#### Example 2:
+
+What is the average CPU load across all web servers in the us-west region for the last 10 minutes? conceptually, we would pull up something like this from storage where the metrics name is `CPU.load` and the region label is us-west.
+
+```
+CPU.load host=webserver01,region=us-west 1613707265 50
+CPU.load host=webserver01,region=us-west 1613707265 62
+CPU.load host=webserver02,region=us-west 1613707265 43
+CPU.load host=webserver02,region=us-west 1613707265 53
+...
+CPU.load host=webserver01,region=us-west 1613707265 76
+CPU.load host=webserver01,region=us-west 1613707265 83
+```
+
+The average CPU load could be computed by averaging the values at the end of each line. The format of the lines in the above example is called the line protocol. It is a common input format for many monitoring software in the market. Prometheus [7] and OpenTSDB [8] are two examples.
+
+Every time series consists of the following [9]:
+
+| Name                                    | Type                                   |
+| --------------------------------------- | -------------------------------------- |
+| A metric name                           | String                                 |
+| A set of tags/labels                    | List of `<key:value>` pairs            |
+| An array of values and their timestamps | An array of `<value, timestamp>` pairs |
+
+### Data access pattern
+
+In Figure 5.4, each label on the y-axis represents a time series (uniquely identified by the names and labels) while the x-axis represents time.
+
+The write load is heavy. As you can see, there can be many time-series data points written at any moment. As we mentioned in the "High-level requirements" section on page 132, about 10 million operational metrics are written per day, and many metrics are collected at high frequency, so the traffic is undoubtedly write-heavy.
+
+At the same time, the read load is spiky. Both visualization and alerting services send queries to the database, and depending on the access patterns of the graphs and alerts, the read volume could be bursty.
+
+In other words, the system is under constant heavy write load, while the read load is spiky.
+
+### Data storage system
+
+The data storage system is the heart of the design. It's not recommended to build your own storage system or use a general-purpose storage system (for example, MySQL [10]) for this job.
+
+A general-purpose database, in theory, could support time-series data, but it would require expert-level tuning to make it work at our scale. Specially, a relational database is not optimized for operations you would commonly perform against time-series data. For example, computing the moving average in a rolling time window requires complicated SQL that is difficult to read (there is an example of this in the deep dive section). Besides, to support tagging/labeling data, we need to add an index for each tag. Moreover, a general-purpose relational database does not perform well under constant heavy write load. At our scale, we would need to expend significant effort in tuning the database, and even then, it might not perform well.
+
+How about NoSQL? In theory, a few NoSQL databases on the market could handle time-series data effectively. For example, Cassandra and Bigtable [11] can both be used for time series data. However, this would require deep knowledge of the internal workings of each NoSQL to devise a scalable schema for effectively storing and querying time-series data. With industrial-scale time-series databases readily available, using a general-purpose NoSQL database is not appealing.
+
+There are many storage systems available that are optimized for time-series data. The optimization lets us use far fewer servers to handle the same volume of data. Many of these databases also have custom query interfaces specially designed for the analysis of time-series data that are much easier to use than SQL. Some even provide features to manage data retention and data aggregation. Here are a few examples of time-series databases.
+
+OpenTSDB is a distributed time-series database, but since it is based on Hadoop and HBase, running a Hadoop/HBase cluster adds complexity. Twitter uses MetricsDB [12], and Amazon offers Timestream as a time-series database [13]. According to DB-engines [14], the two most popular time-series databases are InfluxDB [15] and Prometheus, which are designed to store large volumes of time-series data and quickly perform real-time analysis on that data. Both of them primarily rely on an in-memory cache and on-disk storage. And they both handle durability and performance quite well. As shown in Figure 5.5, an InfluxDB with 8 cores and 32GB RAM can handle over 250,000 writes per second.
+
+| vCPU or CPU | RAM       | IOPS       | Writes per second | Queries per second | Unique series |
+| ----------- | --------- | ---------- | ----------------- | ------------------ | ------------- |
+| 2 ~ 4 cores | 2 ~ 4 GB  | 500        | < 5,000           | < 5                | < 100,000     |
+| 4 ~ 6 cores | 8 ~ 32 GB | 500 ~ 1000 | < 250,000         | < 25               | < 1,000,000   |
+| 8+ cores    | 32+ GB    | 1000+      | > 250,000         | > 25               | > 1,000,000   |
+
+Since a time-series database is a specialized database, you are not expected to understand the internals in an interview unless you explicitly mentioned it in your resume. For the purpose of an interview, it's important to understand the metrics data are time-series in nature and we can select time-series databases such as InfluxDB for storage to store them.
+
+Another feature of a strong time-series database is efficient aggregation and analysis of a large amount of time-series data by labels, also known as tags in some databases. For example, InfluxDB builds indexes on labels to facilitate the fast lookup of time-series by labels [15]. It provides clear best-practice guidelines on how to use labels, without overloading the database. The key is to make sure each label is of low cardinality (having a small set of possible values). This feature is critical for visualization, and it would take a lot of effort to build this with a general-purpose database.
+
+### High-level design
+
+The high-level design diagram is shown in Figure 5.6.
+
+- **Metrics source**. This can be application servers, SQL databases, message queues, etc.
+- **Metrics collector**. It gathers metrics data and writes data into the time-series database.
+- **Time-series database**. This stores metrics data as time series. It usually provides a custom query interface for analyzing and summarizing a large amount of time-series data. It maintains indexes on labels to facilitate the fast lookup of time-series data by labels.
+- **Query service**. The query service makes it easy to query and retrieve data from the time-series database. This should be a very thin wrapper if we choose a good time-series database. It could also be entirely replaced by the time-series database's own query interface.
+- **Alerting system**. This sends alert notifications to various alerting destinations.
+- **Visualization system**. This shows metrics in the form of various graphs/charts.
+
+## Step 3 - Design Deep Dive
