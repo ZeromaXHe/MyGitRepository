@@ -767,3 +767,263 @@ The high-level design diagram is shown in Figure 5.6.
 - **Visualization system**. This shows metrics in the form of various graphs/charts.
 
 ## Step 3 - Design Deep Dive
+
+In a system design interview, candidates are expected to dive deep into a few key components or flows. In this section, we investigate the following topics in detail:
+
+- Metrics collection
+- Scaling the metrics transmission pipeline
+- Query service
+- Storage layer
+- Alerting system
+- Visualization system
+
+### Metrics collection
+
+For metrics collection like counters or CPU usage, occasional data loss is not the end of the world. It's acceptable for clients to fire and forget. Now let's take a look at the metrics collection flow. This part of the system is inside the dashed box (Figure 5.7).
+
+#### Pull vs push models
+
+There are two ways metrics data can be collected, pull or push. It is a routine debate as to which one is better and there is no clear answer. Let's take a close look.
+
+##### Pull model
+
+Figure 5.8 shows data collection with a pull model over HTTP. We have dedicated metric collectors which pull metrics values from the running applications periodically.
+
+In this approach, the metrics collector needs to know the complete list of service end-points to pull data from. One naive approach is to use a file to hold DNS/IP information for every service endpoint on the "metric collector" servers. While the idea is simple, this approach is hard to maintain in a large-scale environment where servers are added or removed frequently, and we want to ensure that metric collectors don't miss out on collecting metrics from any new servers. The good news is that we have a reliable, scalable, and maintainable solution available through Service Discovery, provided by etcd [16], ZooKeeper [17], etc., wherein services register their availability and the metrics collector can be notified by the Service Discovery component whenever the list of service endpoints changes.
+
+Service discovery contains configuration rules about when and where to collect metrics as shown in Figure 5.9.
+
+Figure 5.10 explains the pull model in detail.
+
+1. The metrics collector fetches configuration metadata of service endpoints from Service Discovery. Metadata include pulling interval, IP addresses, timeout and retry parameters, etc.
+2. The metrics collector pulls metrics data via a pre-defined HTTP endpoint (for example, `/metrics`). To expose the endpoint, a client library usually needs to be added to the service. In Figure 5.10, the service is Web Servers.
+3. Optionally, the metrics collector registers a change event notification with Service Discovery to receive an update whenever the service endpoints change. Alternatively, the metrics collector can poll for endpoint changes periodically.
+
+At our scale, a single metrics collector will not be able to handle thousands of servers. We must use a pool of metrics collectors to handle the demand. One common problem when there are multiple collectors is that multiple instances might try to pull data from the same resource and produce duplicate data. There must exist some coordination scheme among the instances to avoid this.
+
+One potential approach is to designate each collector to a range in a consistent hash ring, and then map every single server being monitored by its unique name in the hash ring. This ensures one metrics source server is handled by one collector only. Let's take a look at an example.
+
+As shown in Figure 5.11, there are four collectors and six metrics source servers. Each collector is responsible for collecting metrics from a distinct set of servers. Collector 2 is responsible for collecting metrics from Server 1 and Server 5.
+
+##### Push model
+
+As shown in Figure 5.12, in a push model various metrics sources, such as web servers, database servers, etc., directly send metrics to the metrics collector.
+
+In a push model, a collection agent is commonly installed on every being monitored. A collection agent is a piece of long-running software that collects metrics from the services running on the server and pushes those metrics periodically to the metrics collectors. The collection agent may also aggregate metrics (especially a simple counter) locally, before sending them to metric collectors.
+
+Aggregation is an effective way to reduce the volume of data sent to the metrics collector. If the push traffic is high and the metrics collector rejects the push with an error, the agent could keep a small buffer of data locally (possibly by storing them locally on disk), and resend them later. However, if the servers are in an auto-scaling group where they are rotated out frequently, then holding data locally (even temporarily) might result in data loss when the metrics collector falls behind.
+
+To prevent the metrics collector from failing behind in a push model, the metrics collector should be in an auto-scaling cluster with a load balancer in front of it (Figure 5.13). The cluster should scale up and down based on the CPU load of the metric collector servers.
+
+##### Pull or push?
+
+So, which one is the better choice for us? Just like many things in life, there is no clear answer. Both sides have widely adopted real-world use cases.
+
+- Examples of pull architectures include Prometheus.
+- Examples of push architectures include Amazon CloudWatch [18] and Graphite [19].
+
+Knowing the advantages and disadvantages of each approach is more important than picking a winner during an interview. Table 5.3 compares the pros and cons of push and pull architectures [20] [21] [22] [23].
+
+|                                        | Pull                                                         | Push                                                         |
+| -------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Easy debugging                         | The /metrics endpoint on application servers used for pulling metrics can be used to view metrics at any time. You can even do this on your laptop. **Pull wins**. |                                                              |
+| Health check                           | If an application server doesn't respond to the pull, you can quickly figure out if an application server is down. **Pull wins**. | If the metrics collector doesn't receive metrics, the problem might be caused by network issues. |
+| Short-lived jobs                       |                                                              | Some of the batch jobs might be short-lived and don't last long enough to be pulled. **Push wins**. This can be fixed by introducing push gateways for the pull model [24]. |
+| Firewall or complicated network setups | Having servers pulling metrics requires all metric endpoints to be reachable. This is potentially problematic in multiple data center setups. It might require a more elaborate network infrastructure. | If the metrics collector is set up with a load balancer and an auto-scaling group, it is possible to receive data from anywhere. **Push wins**. |
+| Performance                            | Pull methods typically use TCP.                              | Push methods typically use UDP. This means the push method provides lower-latency transports of metrics. The counterargument here is that the effort of establishing a TCP connection is small compared to sending the metrics payload. |
+| Data authenticity                      | Application servers to collect metrics from are defined in config files in advance. Metrics gathered from those servers are guaranteed to be authentic. | Any kind of client can push metrics to the metrics collector. This can be fixed by whitelisting servers from which to accept metrics, or by requiring authentication. |
+
+As mentioned above, pull vs push is a routine debate topic and there is no clear answer. A large organization probably needs to support both, especially with the popularity of serverless [25] these days. There might not be a way to install an agent from which to push data in the first place.
+
+### Scale the metrics transmission pipeline
+
+Let's zoom in on the metrics collector and time-series databases. Whether you use the push or pull model, the metrics collector is a cluster of servers, and the cluster receives enormous amounts of data. For either push or pull, the metrics collector cluster is set up for auto-scaling, to ensure that there are an adequate number of collector instances to handle the demand.
+
+However, there is a risk of data loss if the time-series database is unavailable. To mitigate this problem, we introduce a queueing component as shown in Figure 5.15.
+
+In this design, the metrics collector sends metrics data to queuing systems like Kafka. Then consumers or streaming processing services such as Apache Storm, Flink, and Spark, process and push data to the time-series database. This approach has several advantages:
+
+- Kafka is used as a highly reliable and scalable distributed messaging platform.
+- If decouples the data collection and data processing services from each other.
+- It can easily prevent data loss when the database is unavailable, by retaining the data in Kafka.
+
+#### Scale through Kafka
+
+There are a couple of ways that we can leverage Kafka's built-in partition mechanism to scale our system.
+
+- Configure the number of partitions based on throughput requirements.
+- Partition metrics data by metric names, so consumers can aggregate data by metrics names.
+- Further partition metrics data with tags/labels.
+- Categorize and prioritize metrics so that important metrics can be processed first.
+
+#### Alternative to Kafka
+
+Maintaining a production-scale Kafka system is no small undertaking. You might get pushback from the interviewer about this. There are large-scale monitoring ingestion systems in use without using an intermediate queue. Facebook's Gorilla [26] in-memory time-series database is a prime example; it is designed to remain highly available for writes, even when there is a partial network failure. It could be argued that such a design is as reliable as having an intermediate queue like Kafka.
+
+#### Where aggregations can happen
+
+Metrics can be aggregated in different places; in the collection agent (on the client-side), the ingestion pipeline (before writing to storage), and the query side (after writing to storage). Let's take a closer look at each of them.
+
+**Collection agent**. The collection agent installed on the client-side only supports simple aggregation logic. For example, aggregate a counter every minute before it is sent to the metrics collector.
+
+**Ingestion pipeline**. To aggregate data before writing to the storage, we usually need stream processing engines such as Flink. The write volume will be significantly reduced since only the calculated result is written to the database. However, handling late-arriving events could be a challenge and another downside is that we lose data precision and some flexibility because we no longer store the raw data.
+
+**Query side**. Raw data can be aggregated over a given time period at query time. There is no data loss with this approach, but the query speed might be slower because the query result is computed at query time and is run against the whole dataset.
+
+### Query service
+
+The query service comprises a cluster of query servers, which access the time-series databases and handle requests from the visualization or alerting systems. Having a dedicated set of query servers decouples time-series databases from the clients (visualization and alerting systems). And this gives us the flexibility to change the time-series database or the visualization and alerting systems, whenever needed.
+
+#### Cache layer
+
+To reduce the load of the time-series database and make query service more performant, cache servers are added to store query results, as shown in Figure 5.17.
+
+#### The case against query service
+
+There might not be a processing need to introduce our own abstraction (a query service) because most industrial-scale visual and alerting systems have powerful plugins to interface with well-known time-series databases on the market. And with a well-chosen time-series database, there is no need to add our own caching, either.
+
+#### Time-series database query language
+
+Most popular metrics monitoring systems like Prometheus and InfluxDB don't use SQL and have their own query languages. One major reason for this is that it is hard to build SQL queries to query time-series data. For example, as mentioned here [27], computing an exponential moving average might look like this in SQL:
+
+```sql
+select id,
+	temp,
+    avg(temp) over (partition by group_nr order by time_read) as rolling_avg
+from (
+	select id,
+    	temp,
+    	time_read,
+    	interval_group,
+    	id - row_number() over (partition by interval_group order by time_read) as group_nr
+    from (
+        select id,
+        	time_read,
+        	"epoch"::timestamp * "900 seconds"::interval * (extract(epoch from time_read)::int4 / 900) as interval_group,
+        	temp
+        from readings
+    ) t1
+) t2
+order by time_read
+```
+
+While in Flux, a language that's optimized for time-series analysis (used in InfluxDB), it looks like this. As you can see, it's much easier to understand.
+
+```sql
+from(db:"telegraf")
+	|> range(start:-1h)
+	|> filter(fn: (r)=>r.measurement=="foo")
+	|> exponentialMovingAverage(size:-10s)
+```
+
+### Storage layer
+
+Now let's dive into the storage layer.
+
+#### Choose a time-series database carefully
+
+According to a research paper published by Facebook [26], at least 85% of all queries to the operational data store were for data collected in the past 26 hours. If we use a time-series database that harnesses this property, it could have a significant impact on overall system performance. If you are interested in the design of the storage engine, please refer to the design document of the InfluxDB storage engine [28].
+
+#### Space optimization
+
+As explained in high-level requirements, the amount of metric data to store is enormous. Here are a few strategies for tackling this.
+
+#### Data encoding and compression
+
+Data encoding and compression can significantly reduce the size of data. Those features are usually built into a good time-series database. Here is a simple example.
+
+As you can see in the image above, 1610087371 and 1610087381 differ by only 10 seconds, which takes only 4 bits to represent, instead of the full timestamp of 32 bits. So, rather than storing absolute values, the delta of the values can be stored along with one base value like: 1610087371, 10, 10, 9, 11.
+
+#### Downsampling
+
+Downsampling is the process of converting high-resolution data to low-resolution to reduce overall risk usage. Since our data retention is 1 year, we can downsample old data. For example, we can let engineers and data scientists define rules for different metrics. Here is an example:
+
+- Retention: 7 days, no sampling
+- Retention: 30 days, downsampling to 1 minute resolution
+- Retention: 1 year, downsample to 1 hour resolution
+
+Let's take a look at another concrete example. It aggregates 10-second resolution data to 30-second resolution data.
+
+| metric | timestamp            | hostname | metric_value |
+| ------ | -------------------- | -------- | ------------ |
+| cpu    | 2021-10-24T19:00:00Z | host-a   | 10           |
+| cpu    | 2021-10-24T19:00:10Z | host-a   | 16           |
+| cpu    | 2021-10-24T19:00:20Z | host-a   | 20           |
+| cpu    | 2021-10-24T19:00:30Z | host-a   | 30           |
+| cpu    | 2021-10-24T19:00:40Z | host-a   | 20           |
+| cpu    | 2021-10-24T19:00:50Z | host-a   | 30           |
+
+Rollup from 10 second resolution data to 30 second resolution data.
+
+| metric | timestamp            | hostname | Metric_value(avg) |
+| ------ | -------------------- | -------- | ----------------- |
+| cpu    | 2021-10-24T19:00:00Z | host-a   | 19                |
+| cpu    | 2021-10-24T19:00:30Z | host-a   | 25                |
+
+#### Cold storage
+
+Cold storage is the storage of inactive data that is rarely used. The financial cost for cold storage is much lower.
+
+In a nutshell, we should probably use third-party visualization and alerting systems, instead of building our own.
+
+### Alerting system
+
+For the purpose of the interview, let's look at the alerting system, shown in Figure 5.19 below.
+
+The alert flow works as follows:
+
+1. Load config files to cache servers. Rules are defined as config files on the disk. YAML [29] is a commonly used format to define rules. Here is an example of alert rules:
+   ```yaml
+   - name: instance_down
+   rules:
+   
+   # Alert for any instance that is unreachable for >5 minutes
+   - alert: instance_down
+   	expr: up == 0
+   	for: 5m
+   	labels:
+   	severity: page
+   ```
+
+2. The alert manager fetches alert configs from the cache.
+
+3. Based on config rules, the alert manager calls the query service at a predefined interval. If the value violates the threshold, an alert event is created. The alert manager is responsible for the following:
+
+   - Filter, merge, and dedupe alerts. Here is an example of merging alerts that are triggered within one instance within a short amount of time (instance 1) (Figure 5.20).
+   - Access control. To avoid human error and keep the system secure, it is essential to restrict access to certain alert management operations to authorized individuals only.
+   - Retry. The alert manager checks alert states and ensures a notification is sent at least once.
+
+4. The alert store is a key-value database, such as Cassandra, that keeps the state (inactive, pending, firing, resolved) of all alerts. It ensures a notification is sent at least once.
+
+5. Eligible alerts are inserted into Kafka.
+
+6. Alert consumers pull alert events from Kafka.
+
+7. Alert consumers process alert events from Kafka and send notifications over to different channels such as email, text message, PagerDuty, or HTTP endpoints.
+
+#### Alerting system - build vs buy
+
+There are many industrial-scale alerting systems available off-the-shelf, and most provide tight integration with the popular time-series databases. Many of these alerting systems integrate well with existing notification channels, such as email and PagerDuty. In the real world, it is a tough call to justify building your own alerting system. In interview settings, especially for a senior position, be ready to justify you decision.
+
+#### Visualization system
+
+Visualization is built on top of the data layer. Metrics can be shown on the metrics dashboard over various time scales and alerts can be shown on the alerts dashboard. Figure 5.21 shows a dashboard that displays some of the metrics like the current server requests, memory/CPU utilization, page load time, traffic, and login information [30].
+
+A high-quality visualization system is hard to build. The argument for using an off-the-shelf system is very strong. For example, Grafana can be a very good system for this purpose. It integrates well with many popular time-series databases which you can buy.
+
+## Step 4 - Wrap Up
+
+In this chapter, we presented the design for a metrics monitoring and alerting system. At a high level, we talked about data collection, time-series database, alerts, and visualization. Then we went in-depth into some of the most important techniques/components:
+
+- Push vs pull model for collecting metrics data.
+- Utilize Kafka to scale the system.
+- Choose the right time-series database.
+- Use downsampling to reduce data size.
+- Build vs buy options for alerting and visualization systems.
+
+We went through a few iterations to refine the design, and our final design looks like this:
+
+Congratulations on getting this far! Now give yourself a pat on the back. Good job!
+
+# 6 Ad Click Event Aggregation
+
