@@ -3747,6 +3747,673 @@ ffmpeg -i input.avi -vf "tmix=frames=4, fps=60" -crf 15 output.mp4
 
 这也使得在多个帧上收敛的效果（如时间抗锯齿、SDFGI 和体积雾）收敛得更快，因此看起来更好，因为它们能够在给定的时间处理更多的数据。如果希望在不添加运动模糊的情况下获得此好处，请参见降低帧速率。
 
+## 文件和数据 I/O
+
+### 背景加载
+
+通常，游戏需要异步加载资源。当切换游戏的主场景（例如，进入新级别）时，您可能希望显示一个加载屏幕，其中有一些进展的指示，或者您可能希望在游戏过程中加载额外的资源。
+
+标准加载方法（ResourceLoader.load 或 GDScript 的简单加载）会阻塞线程，使您的游戏在加载资源时看起来没有响应。
+
+解决这一问题的一种方法是使用 `ResourceLoader` 在后台线程中异步加载资源。
+
+#### 使用 ResourceLoader
+
+通常，您使用 ResourceLoader.load_thread_request 对加载路径资源的请求进行排队，然后将其加载到后台的线程中。
+
+您可以使用 ResourceLoader.load_threadd_get_status 检查状态。进度可以通过进度传递一个数组变量来获得，该变量将返回一个包含百分比的单元素数组。
+
+最后，您通过调用 ResourceLoader.load_threadd_get 来检索已加载的资源。
+
+一旦调用 `load_thread_get()`，要么资源在后台完成加载并立即返回，要么加载会像 `load()` 那样在此时阻塞。如果您想保证这不会被阻止，您需要确保在请求加载和检索资源之间有足够的时间，或者您需要手动检查状态。
+
+#### 示例
+
+此示例演示如何在背景中加载场景。我们将有一个按钮按下时生成敌人。敌人将是`Enemy.tscn`，我们将在 `_ready` 上加载它，并在按下时实例化它。路径将是 `"Enemy.tscn"`，位于 `res://Enemy.tscn`.
+
+首先，我们将启动一个请求来加载资源并连接按钮：
+
+```python
+const ENEMY_SCENE_PATH : String = "Enemy.tscn"
+
+func _ready():
+    ResourceLoader.load_threaded_request(ENEMY_SCENE_PATH)
+    self.pressed.connect(_on_button_pressed)
+```
+
+现在，按下按钮时将调用 `_on_button_pressed`。这种方法将被用来制造敌人。
+
+```python
+func _on_button_pressed(): # Button was pressed
+    # Obtain the resource now that we need it
+    var enemy_scene = ResourceLoader.load_threaded_get(ENEMY_SCENE_PATH)
+    # Instantiate the enemy scene and add it to the current scene
+    var enemy = enemy_scene.instantiate()
+    add_child(enemy)
+```
+
+### Godot 项目中的文件路径
+
+本页介绍文件路径如何在 Godot 项目中工作。您将学习如何使用 `res://` 和 `user://` 符号访问项目中的路径，以及 Godot 在您和用户的系统中存储项目和编辑器文件的位置。
+
+#### 路径分隔符
+
+为了更容易地支持多个平台，Godot 使用了 **UNIX 风格的路径分隔符**（正斜杠 `/`）。这些功能适用于所有平台，**包括 Windows**。
+
+不要在 Godot 中编写 `C:\Projects\Game` 这样的路径，而应该编写 `C:/Projects/Game`。
+
+一些与路径相关的方法也支持 Windows 风格的路径分隔符（后斜杠 `\`），但它们需要加倍（`\\`），因为 `\` 通常用作具有特殊含义的字符的转义符。
+
+这使得使用其他 Windows 应用程序返回的路径成为可能。我们仍然建议在您自己的代码中只使用正向斜杠，以确保一切都能按预期工作。
+
+#### 访问项目文件夹中的文件（`res://`）
+
+Godot 认为任何包含 `project.godot` 文本文件的文件夹中都存在项目，即使该文件为空。包含此文件的文件夹是项目的根文件夹。
+
+您可以通过写入以 `res://` 开头的路径来访问与其相关的任何文件，`res://` 代表资源。例如，您可以使用以下路径访问位于项目根文件夹中代码中的图像文件 `character.png`：`res://character.png`.
+
+#### 访问持久用户数据（`user://`）
+
+要存储持久数据文件，如播放器的保存或设置，您需要使用 `user://` 而不是 `res://` 作为路径的前缀。这是因为当游戏运行时，项目的文件系统可能是只读的。
+
+`user://` 前缀指向用户设备上的另一个目录。与 `res://` 不同，`user://` 指向的目录是自动创建的，并保证可写入，即使在导出的项目中也是如此。
+
+`user://` 文件夹的位置取决于在“项目设置”中配置的内容：
+
+- 默认情况下，`user://` 文件夹是在 Godot 的编辑器数据路径中的 `app_userdata/[project_name]` 文件夹中创建的。这是默认设置，以便原型和测试项目在 Godot 的数据文件夹中保持独立。
+- 如果在项目设置中启用了 application/config/use_custom_user_dir，则会在 Godot 的编辑器数据路径旁边创建 `user://` 文件夹，即在应用程序数据的标准位置。
+  - 默认情况下，文件夹名称将根据项目名称推断，但可以使用 application/config/custom_user_dir_name 进一步自定义。此路径可以包含路径分隔符，因此您可以使用它，例如，使用 `Studio Name/Game Name` 结构对给定工作室的项目进行分组。
+
+在桌面平台上，`user://` 的实际目录路径为：
+
+| 类型               | 位置                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| 默认               | Windows: `%APPDATA%\Godot\app_userdata\[project_name]`<br/>macOS: `~/Library/Application Support/Godot/app_userdata/[project_name]`<br/>Linux: `~/.local/share/godot/app_userdata/[project_name]` |
+| 自定义文件夹       | Windows: `%APPDATA%\[project_name]`<br/>macOS: `~/Library/Application Support/[project_name]`<br/>Linux: `~/.local/share/[project_name]` |
+| 自定义文件夹和名字 | Windows: `%APPDATA%\[custom_user_dir_name]`<br/>macOS: `~/Library/Application Support/[custom_user_dir_name]`<br/>Linux: `~/.local/share/[custom_user_dir_name]` |
+
+`[project_name]` 基于在项目设置中定义的应用程序名称，但您可以使用功能标记在每个平台的基础上覆盖它。
+
+在移动平台上，此路径是项目独有的，出于安全原因，其他应用程序无法访问。
+
+在 HTML5 导出中，`user://` 将通过 IndexedDB 引用存储在设备上的虚拟文件系统。（与主文件系统的交互仍然可以通过 JavaScriptBridge 单例执行。）
+
+#### 将路径转换为绝对路径或“局部”路径
+
+您可以使用 ProjectSettings.globize_path() 转换“本地”路径，如 `res://path/to/file.txt` 到绝对 OS 路径。例如，ProjectSettings.globize_path() 可用于使用 OS.shell_open() 在操作系统文件管理器中打开“本地”路径，因为它只接受本机操作系统路径。
+
+要将绝对操作系统路径转换为以 `res://` 或 `user://` 开头的“本地”路径，请使用 ProjectSettings.localite_path()。这仅适用于指向项目根目录或 `user://` 文件夹中的文件或文件夹的绝对路径。
+
+#### 编辑器数据路径
+
+编辑器对编辑器数据、编辑器设置和缓存使用不同的路径，具体取决于平台。默认情况下，这些路径为：
+
+| 类型       | 位置                                                         |
+| ---------- | ------------------------------------------------------------ |
+| 编辑器数据 | Windows: `%APPDATA%\Godot\`<br/>macOS: `~/Library/Application Support/Godot/`<br/>Linux: `~/.local/share/godot/` |
+| 编辑器设置 | Windows: `%APPDATA%\Godot\`<br/>macOS: `~/Library/Application Support/Godot/`<br/>Linux: `~/.config/godot/` |
+| 缓存       | Windows: `%TEMP%\Godot\`<br/>macOS: `~/Library/Caches/Godot/`<br/>Linux: `~/.cache/godot/` |
+
+- **编辑器数据**包含导出模板和项目特定数据。
+- **编辑器设置**包含主编辑器设置配置文件以及各种其他特定于用户的自定义设置（编辑器布局、功能配置文件、脚本模板等）。
+- **缓存**包含编辑器生成或临时存储的数据。当 Godot 关闭时，可以安全地将其移除。
+
+Godot 在所有平台上都符合 XDG 基本目录规范。可以按照规范覆盖环境变量，以更改编辑器和项目数据路径。
+
+> **注意：**
+>
+> 如果您使用打包为 Flatpak 的 Godot，编辑器数据路径将位于 `~/.var/app/org.godotengine.Godot/` 中的子文件夹中。
+
+##### 独立模式
+
+如果您创建了一个名为的文件 `._sc_` 或 `_sc_` 在与编辑器二进制文件相同的目录中（或者在 *MacOS/Contents/* 中，对于 MacOS 编辑器 .app 捆绑包），Godot 将启用*自包含模式*。此模式使 Godot 将所有编辑器数据、设置和缓存写入编辑器二进制文件所在目录中名为 `editor_data/` 的目录。您可以使用它来创建编辑器的可移植安装。
+
+Godot 的 Steam 版本默认使用独立模式。
+
+> **注意：**
+>
+> 导出的项目中还不支持自包含模式。要读取和写入相对于可执行文件路径的文件，请使用 OS.get_executable_path()。请注意，只有当可执行文件位于可写位置（即，**不是** Program files 或其他对普通用户只读的目录）时，在可执行文件路径中写入文件才有效。
+
+### 保存游戏
+
+#### 简介
+
+保存游戏可能很复杂。例如，可能希望跨多个级别存储来自多个对象的信息。高级保存游戏系统应允许提供有关任意数量对象的附加信息。这将允许保存功能随着游戏变得越来越复杂而扩展。
+
+> **注意：**
+>
+> 如果您希望保存用户配置，可以使用 ConfigFile 类来实现此目的。
+
+> **参考：**
+>
+> 您可以使用 Saving and Loading（Serialization）演示项目了解保存和加载在实际操作中的工作方式。
+
+#### 识别持久对象
+
+首先，我们应该确定我们想在游戏会话之间保留哪些对象，以及我们想从这些对象中保留哪些信息。在本教程中，我们将使用组来标记和处理要保存的对象，但其他方法当然也是可能的。
+
+我们将首先将要保存的对象添加到“Persist”组中。我们可以通过 GUI 或脚本来实现这一点。让我们使用 GUI 添加相关节点：
+
+一旦完成，当我们需要保存游戏时，我们可以让所有对象保存它们，然后告诉它们使用此脚本保存：
+
+```python
+var save_nodes = get_tree().get_nodes_in_group("Persist")
+for i in save_nodes:
+    # Now, we can call our save function on each node.
+```
+
+#### 序列化
+
+下一步是序列化数据。这使得从磁盘读取和存储变得更加容易。在这种情况下，我们假设组 Persist 的每个成员都是一个实例化节点，因此都有一个路径。GDScript 有一个帮助类 JSON 来在字典和字符串之间转换，我们的节点需要包含一个返回这些数据的保存函数。保存功能如下所示：
+
+```python
+func save():
+    var save_dict = {
+        "filename" : get_scene_file_path(),
+        "parent" : get_parent().get_path(),
+        "pos_x" : position.x, # Vector2 is not supported by JSON
+        "pos_y" : position.y,
+        "attack" : attack,
+        "defense" : defense,
+        "current_health" : current_health,
+        "max_health" : max_health,
+        "damage" : damage,
+        "regen" : regen,
+        "experience" : experience,
+        "tnl" : tnl,
+        "level" : level,
+        "attack_growth" : attack_growth,
+        "defense_growth" : defense_growth,
+        "health_growth" : health_growth,
+        "is_alive" : is_alive,
+        "last_attack" : last_attack
+    }
+    return save_dict
+```
+
+这为我们提供了一个样式为 `{"variable_name": value_of_variable}` 的字典，在加载时会很有用。
+
+#### 保存和读取数据
+
+正如文件系统教程中所述，我们需要打开一个文件，以便对其进行写入或读取。现在我们有了调用组并获取其相关数据的方法，让我们使用类 JSON 将其转换为易于存储的字符串，并将其存储在文件中。这样做可以确保每一行都是自己的对象，因此我们也有一种简单的方法从文件中提取数据。
+
+```python
+# Note: This can be called from anywhere inside the tree. This function is
+# path independent.
+# Go through everything in the persist category and ask them to return a
+# dict of relevant variables.
+func save_game():
+    var save_game = FileAccess.open("user://savegame.save", FileAccess.WRITE)
+    var save_nodes = get_tree().get_nodes_in_group("Persist")
+    for node in save_nodes:
+        # Check the node is an instanced scene so it can be instanced again during load.
+        if node.scene_file_path.is_empty():
+            print("persistent node '%s' is not an instanced scene, skipped" % node.name)
+            continue
+
+        # Check the node has a save function.
+        if !node.has_method("save"):
+            print("persistent node '%s' is missing a save() function, skipped" % node.name)
+            continue
+
+        # Call the node's save function.
+        var node_data = node.call("save")
+
+        # JSON provides a static method to serialized JSON string.
+        var json_string = JSON.stringify(node_data)
+
+        # Store the save dictionary as a new line in the save file.
+        save_game.store_line(json_string)
+```
+
+游戏已保存！现在，为了加载，我们将读取每一行。使用 parse 方法将 JSON 字符串读回字典，然后对 dict 进行迭代以读取我们的值。但我们需要首先创建对象，然后使用文件名和父值来实现这一点。以下是我们的加载函数：
+
+```python
+# Note: This can be called from anywhere inside the tree. This function
+# is path independent.
+func load_game():
+    if not FileAccess.file_exists("user://savegame.save"):
+        return # Error! We don't have a save to load.
+
+    # We need to revert the game state so we're not cloning objects
+    # during loading. This will vary wildly depending on the needs of a
+    # project, so take care with this step.
+    # For our example, we will accomplish this by deleting saveable objects.
+    var save_nodes = get_tree().get_nodes_in_group("Persist")
+    for i in save_nodes:
+        i.queue_free()
+
+    # Load the file line by line and process that dictionary to restore
+    # the object it represents.
+    var save_game = FileAccess.open("user://savegame.save", FileAccess.READ)
+    while save_game.get_position() < save_game.get_length():
+        var json_string = save_game.get_line()
+
+        # Creates the helper class to interact with JSON
+        var json = JSON.new()
+
+        # Check if there is any error while parsing the JSON string, skip in case of failure
+        var parse_result = json.parse(json_string)
+        if not parse_result == OK:
+            print("JSON Parse Error: ", json.get_error_message(), " in ", json_string, " at line ", json.get_error_line())
+            continue
+
+        # Get the data from the JSON object
+        var node_data = json.get_data()
+
+        # Firstly, we need to create the object and add it to the tree and set its position.
+        var new_object = load(node_data["filename"]).instantiate()
+        get_node(node_data["parent"]).add_child(new_object)
+        new_object.position = Vector2(node_data["pos_x"], node_data["pos_y"])
+
+        # Now we set the remaining variables.
+        for i in node_data.keys():
+            if i == "filename" or i == "parent" or i == "pos_x" or i == "pos_y":
+                continue
+            new_object.set(i, node_data[i])
+```
+
+现在，我们可以保存和加载任意数量的对象，这些对象几乎分布在场景树的任何位置！每个对象可以根据需要保存的内容存储不同的数据。
+
+#### 一些注释
+
+我们掩盖了为加载设置游戏状态的问题。这最终取决于项目创建者的逻辑。这通常很复杂，需要根据单个项目的需求进行大量定制。
+
+此外，我们的实现假设没有任何 Persist 对象是其他 Persist 对象的子对象。否则，将创建无效路径。若要容纳嵌套的 Persist 对象，请考虑分阶段保存对象。首先加载父对象，以便在加载子对象时它们可用于 add_child() 调用。您还需要一种将子节点链接到父节点的方法，因为 NodePath 可能无效。
+
+#### JSON 与二进制序列化
+
+对于简单的游戏状态，JSON 可能会起作用，它会生成易于调试的可读文件。
+但是 JSON 有很多局限性。如果您需要存储更复杂的游戏状态或大量的游戏状态，二进制序列化可能是更好的方法。
+
+##### JSON 限制
+
+以下是使用 JSON 时需要了解的一些重要问题。
+
+- **文件大小**：JSON 以文本格式存储数据，这比二进制格式大得多。
+- **数据类型**：JSON 只提供一组有限的数据类型。如果您有 JSON 没有的数据类型，则需要将数据转换为 JSON 可以处理的类型或从 JSON 可以处理类型转换数据。例如，JSON 无法解析的一些重要类型有：Vector2、Vector3、Color、Rect2 和 Quaternion。
+- **编码/解码所需的自定义逻辑**：如果有任何自定义类要用 JSON 存储，则需要编写自己的逻辑来编码和解码这些类。
+
+##### 二进制序列化
+
+二进制序列化是存储游戏状态的另一种方法，您可以将其与 FileAccess 的函数 `get_var` 和 `store_var` 一起使用。
+
+- 二进制序列化应该产生比 JSON 更小的文件。
+- 二进制序列化可以处理大多数常见的数据类型。
+- 二进制序列化需要较少的自定义逻辑来编码和解码自定义类。
+
+请注意，并非所有属性都包含在内。只有使用 PROPERTY_USAGE_STORAGE 标志集配置的属性才会被序列化。通过重写类中的 _get_property_list 方法，可以向特性添加新的用法标志。您还可以通过调用 `Object._get_property_list` 来检查如何配置属性。有关可能的用法标志，请参阅 PropertyUsageFlags。
+
+### 二进制序列化 API
+
+#### 简介
+
+Godot 有一个基于 Variant 的序列化 API。它用于有效地将数据类型转换为字节数组。此 API 通过全局 bytes_to_var() 和 var_to_bytes() 函数公开，但它也用于 FileAccess 的 `get_var` 和 `store_var` 方法以及 PacketPeer 的数据包 API。此格式*不*用于二进制场景和资源。
+
+#### 完整对象与对象实例 ID
+
+如果一个变量被序列化为 `full_objects=true`，那么该变量中包含的任何对象都将被序列化并包含在结果中。这是递归的。
+
+如果 `full_objects=false`，则仅序列化变量中包含的任何对象的实例 ID。
+
+#### 数据包规范
+
+数据包被设计为总是被填充到 4 个字节。所有值都是小端编码的。所有数据包都有一个 4 字节的标头，表示一个整数，用于指定数据类型。
+
+最低值的两个字节用于确定类型，而最高值的两字节包含标志：
+
+```c++
+base_type = val & 0xFFFF;
+flags = val >> 16;
+```
+
+| 类型 | 值            |
+| ---- | ------------- |
+| 0    | null          |
+| 1    | bool          |
+| 2    | integer       |
+| 3    | float         |
+| 4    | string        |
+| 5    | vector2       |
+| 6    | rect2         |
+| 7    | vector3       |
+| 8    | transform2d   |
+| 9    | plane         |
+| 10   | quaternion    |
+| 11   | aabb          |
+| 12   | basis         |
+| 13   | transform3d   |
+| 14   | color         |
+| 15   | node path     |
+| 16   | rid           |
+| 17   | object        |
+| 18   | dictionary    |
+| 19   | array         |
+| 20   | raw array     |
+| 21   | int32 array   |
+| 22   | int64 array   |
+| 23   | float32 array |
+| 24   | float64 array |
+| 25   | string array  |
+| 26   | vector2 array |
+| 27   | vector3 array |
+| 28   | color array   |
+| 29   | max           |
+
+下面是实际的数据包内容，每种数据包的内容都有所不同。请注意，这假设 Godot 是使用单精度浮点编译的，这是默认值。如果 Godot 是用双精度浮点编译的，那么数据结构中“浮点”字段的长度应该是 8，偏移量应该是 `(offset - 4) * 2 + 4`。“float”类型本身总是使用双精度。
+
+##### 0：null
+
+##### 1：bool
+
+| 偏移量 | 长度 | 类型    | 描述                  |
+| ------ | ---- | ------- | --------------------- |
+| 4      | 4    | Integer | 0 为 False, 1 为 True |
+
+##### 2：int
+
+如果未设置标志（flags == 0），则整数将作为 32 位整数发送：
+
+| 偏移量 | 长度 | 类型    | 描述            |
+| ------ | ---- | ------- | --------------- |
+| 4      | 4    | Integer | 32 位有符号整数 |
+
+如果设置了标志 `ENCODE_FLAG_64`（`flags & 1 == 1`），则整数将作为 64 位整数发送：
+
+| 偏移量 | 长度 | 类型    | 描述            |
+| ------ | ---- | ------- | --------------- |
+| 4      | 8    | Integer | 64 位有符号整数 |
+
+##### 3：float
+
+如果未设置任何标志（flags == 0），则浮点值将作为 32 位单精度发送：
+
+| 偏移量 | 长度 | 类型  | 描述                  |
+| ------ | ---- | ----- | --------------------- |
+| 4      | 4    | Float | IEEE 754 单精度浮点数 |
+
+如果设置了标志 `ENCODE_FLAG_64`（`flags & 1 == 1`），则浮点值将作为 64 位双精度数字发送：
+
+| 偏移量 | 长度 | 类型  | 描述                  |
+| ------ | ---- | ----- | --------------------- |
+| 4      | 8    | Float | IEEE 754 双精度浮点数 |
+
+##### 4：String
+
+| 偏移量 | 长度 | 类型    | 描述                      |
+| ------ | ---- | ------- | ------------------------- |
+| 4      | 4    | Integer | 字符串长度 (按字节为单位) |
+| 8      | X    | Bytes   | UTF-8 编码的字符串        |
+
+此字段填充为 4 个字节。
+
+##### 5：Vector2
+
+| 偏移量 | 长度 | 类型  | 描述   |
+| ------ | ---- | ----- | ------ |
+| 4      | 4    | Float | X 坐标 |
+| 8      | 4    | Float | Y 坐标 |
+
+##### 6：Rect2
+
+| 偏移量 | 长度 | 类型  | 描述   |
+| ------ | ---- | ----- | ------ |
+| 4      | 4    | Float | X 坐标 |
+| 8      | 4    | Float | Y 坐标 |
+| 12     | 4    | Float | X 大小 |
+| 16     | 4    | Float | Y 大小 |
+
+##### 7：Vector3
+
+| 偏移量 | 长度 | 类型  | 描述   |
+| ------ | ---- | ----- | ------ |
+| 4      | 4    | Float | X 坐标 |
+| 8      | 4    | Float | Y 坐标 |
+| 12     | 4    | Float | Z 坐标 |
+
+##### 8：Transform2D
+
+| 偏移量 | 长度 | 类型  | 描述                                  |
+| ------ | ---- | ----- | ------------------------------------- |
+| 4      | 4    | Float | X 列向量的 X 分量，通过 `[0][0]` 访问 |
+| 8      | 4    | Float | X 列向量的 Y 分量，通过 `[0][1]` 访问 |
+| 12     | 4    | Float | Y 列向量的 X 分量，通过 `[1][0]` 访问 |
+| 16     | 4    | Float | Y 列向量的 Y 分量，通过 `[1][1]` 访问 |
+| 20     | 4    | Float | 原始向量的 X 分量，通过 `[2][0]` 访问 |
+| 24     | 4    | Float | 原始向量的 Y 分量，通过 `[2][1]` 访问 |
+
+##### 9：Plane
+
+| 偏移量 | 长度 | 类型  | 描述   |
+| ------ | ---- | ----- | ------ |
+| 4      | 4    | Float | 法线 X |
+| 8      | 4    | Float | 法线 Y |
+| 12     | 4    | Float | 法线 Z |
+| 16     | 4    | Float | 距离   |
+
+##### 10：Quaternion
+
+| 偏移量 | 长度 | 类型  | 描述   |
+| ------ | ---- | ----- | ------ |
+| 4      | 4    | Float | 虚部 X |
+| 8      | 4    | Float | 虚部 Y |
+| 12     | 4    | Float | 虚部 Z |
+| 16     | 4    | Float | 实部 W |
+
+##### 11：AABB
+
+| 偏移量 | 长度 | 类型  | 描述   |
+| ------ | ---- | ----- | ------ |
+| 4      | 4    | Float | X 坐标 |
+| 8      | 4    | Float | Y 坐标 |
+| 12     | 4    | Float | Z 坐标 |
+| 16     | 4    | Float | X 大小 |
+| 20     | 4    | Float | Y 大小 |
+| 24     | 4    | Float | Z 大小 |
+
+##### 12：Basis
+
+| 偏移量 | 长度 | 类型  | 描述                                  |
+| ------ | ---- | ----- | ------------------------------------- |
+| 4      | 4    | Float | X 列向量的 X 分量，通过 `[0][0]` 访问 |
+| 8      | 4    | Float | X 列向量的 Y 分量，通过 `[0][1]` 访问 |
+| 12     | 4    | Float | X 列向量的 Z 分量，通过 `[0][2]` 访问 |
+| 16     | 4    | Float | Y 列向量的 X 分量，通过 `[1][0]` 访问 |
+| 20     | 4    | Float | Y 列向量的 Y 分量，通过 `[1][1]` 访问 |
+| 24     | 4    | Float | Y 列向量的 Z 分量，通过 `[1][2]` 访问 |
+| 28     | 4    | Float | Z 列向量的 X 分量，通过 `[2][0]` 访问 |
+| 32     | 4    | Float | Z 列向量的 Y 分量，通过 `[2][1]` 访问 |
+| 36     | 4    | Float | Z 列向量的 Z 分量，通过 `[2][2]` 访问 |
+
+##### 13：Transform3D
+
+| 偏移量 | 长度 | 类型  | 描述                                  |
+| ------ | ---- | ----- | ------------------------------------- |
+| 4      | 4    | Float | X 列向量的 X 分量，通过 `[0][0]` 访问 |
+| 8      | 4    | Float | X 列向量的 Y 分量，通过 `[0][1]` 访问 |
+| 12     | 4    | Float | X 列向量的 Z 分量，通过 `[0][2]` 访问 |
+| 16     | 4    | Float | Y 列向量的 X 分量，通过 `[1][0]` 访问 |
+| 20     | 4    | Float | Y 列向量的 Y 分量，通过 `[1][1]` 访问 |
+| 24     | 4    | Float | Y 列向量的 Z 分量，通过 `[1][2]` 访问 |
+| 28     | 4    | Float | Z 列向量的 X 分量，通过 `[2][0]` 访问 |
+| 32     | 4    | Float | Z 列向量的 Y 分量，通过 `[2][1]` 访问 |
+| 36     | 4    | Float | Z 列向量的 Z 分量，通过 `[2][2]` 访问 |
+| 40     | 4    | Float | 原始向量的 X 分量，通过 `[3][0]` 访问 |
+| 44     | 4    | Float | 原始向量的 Y 分量，通过 `[3][1]` 访问 |
+| 48     | 4    | Float | 原始向量的 Z 分量，通过 `[3][2]` 访问 |
+
+##### 14：Color
+
+| 偏移量 | 长度 | 类型  | 描述                                       |
+| ------ | ---- | ----- | ------------------------------------------ |
+| 4      | 4    | Float | 红（通常为0..1，对于过亮的颜色可以高于 1） |
+| 8      | 4    | Float | 绿（通常为0..1，对于过亮的颜色可以高于 1） |
+| 12     | 4    | Float | 蓝（通常为0..1，对于过亮的颜色可以高于 1） |
+| 16     | 4    | Float | Alpha (0..1)                               |
+
+##### 15：NodePath
+
+| 偏移量 | 长度 | 类型    | 描述                                                         |
+| ------ | ---- | ------- | ------------------------------------------------------------ |
+| 4      | 4    | Integer | 字符串长度, 或者新格式 (val&0x80000000 != 0 and NameCount=val&0x7FFFFFFF) |
+
+###### 对旧格式：
+
+| 偏移量 | 长度 | 类型  | 描述             |
+| ------ | ---- | ----- | ---------------- |
+| 8      | X    | Bytes | UTF-8 编码字符串 |
+
+填充至 4 字节。
+
+###### 对新格式：
+
+| 偏移量 | 长度 | 类型    | 描述                         |
+| ------ | ---- | ------- | ---------------------------- |
+| 4      | 4    | Integer | Sub-name 计数                |
+| 8      | 4    | Integer | 标记 (absolute: val&1 != 0 ) |
+
+对于每一个 Name 和 Sub-Name
+
+| 偏移量 | 长度 | 类型    | 描述             |
+| ------ | ---- | ------- | ---------------- |
+| X+0    | 4    | Integer | 字符串长度       |
+| X+4    | X    | Bytes   | UTF-8 编码字符串 |
+
+每个名字字符串填充到 4 字节。
+
+##### 16：RID（不支持）
+
+##### 17：Object
+
+对象可以用三种不同的方式序列化：null 值、`full_objects = false` 或 `full_objects = true`。
+
+###### 空值
+
+| 偏移量 | 长度 | 类型    | 描述                 |
+| ------ | ---- | ------- | -------------------- |
+| 4      | 4    | Integer | 零 (32 位有符号整数) |
+
+###### 禁用 `full_objects`
+
+| 偏移量 | 长度 | 类型    | 描述                             |
+| ------ | ---- | ------- | -------------------------------- |
+| 4      | 8    | Integer | Object 实例 ID (64 位有符号整数) |
+
+###### 启用 `full_objects`
+
+| 偏移量 | 长度 | 类型    | 描述                    |
+| ------ | ---- | ------- | ----------------------- |
+| 4      | 4    | Integer | 类名 (字符串长度)       |
+| 8      | X    | Bytes   | 类名 (UTF-8 编码字符串) |
+| X+8    | 4    | Integer | 序列化的属性数量        |
+
+对于每个属性：
+
+| 偏移量 | 长度 | 类型         | 描述                      |
+| ------ | ---- | ------------ | ------------------------- |
+| Y      | 4    | Integer      | 属性名 (字符串长度)       |
+| Y+4    | Z    | Bytes        | 属性名 (UTF-8 编码字符串) |
+| Y+4+Z  | W    | `<variable>` | 属性值, 使用这种相同格式  |
+
+> **注意：**
+>
+> 并非所有属性都包含在内。只有使用 PROPERTY_USAGE_STORAGE 标志集配置的属性才会被序列化。通过重写类中的 _get_property_list 方法，可以向特性添加新的用法标志。您还可以通过调用 `Object._get_property_list` 来检查如何配置属性使用。有关可能的用法标志，请参见 PropertyUsageFlags。
+
+##### 18：Dictionary
+
+| 偏移量 | 长度 | 类型    | 描述                                                 |
+| ------ | ---- | ------- | ---------------------------------------------------- |
+| 4      | 4    | Integer | val&0x7FFFFFFF = 元素, val&0x80000000 = 共享(布尔值) |
+
+接下来，对于“元素”的数量，键和值的对，一个接一个，使用相同的格式。
+
+##### 19：Array
+
+| 偏移量 | 长度 | 类型    | 描述                                                  |
+| ------ | ---- | ------- | ----------------------------------------------------- |
+| 4      | 4    | Integer | val&0x7FFFFFFF = 元素, val&0x80000000 = 共享 (布尔值) |
+
+接下来，对于“元素”的数量，使用相同的格式，一个接一个地取值。
+
+##### 20：PackedByteArray
+
+| 偏移量      | 长度 | 类型    | 描述            |
+| ----------- | ---- | ------- | --------------- |
+| 4           | 4    | Integer | 数组长度 (字节) |
+| 8..8+length | 1    | Byte    | 字节 (0..255)   |
+
+The array data is padded to 4 bytes.
+
+##### 21: [PackedInt32Array](https://docs.godotengine.org/en/stable/classes/class_packedint32array.html#class-packedint32array)
+
+| 偏移量        | 长度 | 类型    | 描述            |
+| ------------- | ---- | ------- | --------------- |
+| 4             | 4    | Integer | 数组长度 (整数) |
+| 8..8+length*4 | 4    | Integer | 32 位有符号整数 |
+
+##### 22: [PackedInt64Array](https://docs.godotengine.org/en/stable/classes/class_packedint64array.html#class-packedint64array)
+
+| 偏移量        | 长度 | 类型    | 描述            |
+| ------------- | ---- | ------- | --------------- |
+| 4             | 8    | Integer | 数组长度 (整数) |
+| 8..8+length*8 | 8    | Integer | 64 位有符号整数 |
+
+##### 23: [PackedFloat32Array](https://docs.godotengine.org/en/stable/classes/class_packedfloat32array.html#class-packedfloat32array)
+
+| 偏移量        | 长度 | 类型    | 描述                        |
+| ------------- | ---- | ------- | --------------------------- |
+| 4             | 4    | Integer | 数组长度 (浮点数)           |
+| 8..8+length*4 | 4    | Integer | 32 位 IEEE 754 单精度浮点数 |
+
+##### 24: [PackedFloat64Array](https://docs.godotengine.org/en/stable/classes/class_packedfloat64array.html#class-packedfloat64array)
+
+| 偏移量        | 长度 | 类型    | 描述                        |
+| ------------- | ---- | ------- | --------------------------- |
+| 4             | 4    | Integer | 数组长度 (浮点数)           |
+| 8..8+length*8 | 8    | Integer | 64 位 IEEE 754 双精度浮点数 |
+
+##### 25: [PackedStringArray](https://docs.godotengine.org/en/stable/classes/class_packedstringarray.html#class-packedstringarray)
+
+| 偏移量 | 长度 | 类型    | 描述              |
+| ------ | ---- | ------- | ----------------- |
+| 4      | 4    | Integer | 数组长度 (字符串) |
+
+对每个字符串:
+
+| 偏移量 | 长度 | 类型    | 描述             |
+| ------ | ---- | ------- | ---------------- |
+| X+0    | 4    | Integer | 字符串长度       |
+| X+4    | X    | Bytes   | UTF-8 编码字符串 |
+
+每个字符串被填充到 4 字节.
+
+##### 26: [PackedVector2Array](https://docs.godotengine.org/en/stable/classes/class_packedvector2array.html#class-packedvector2array)
+
+| 偏移量         | 长度 | 类型    | 描述     |
+| -------------- | ---- | ------- | -------- |
+| 4              | 4    | Integer | 数组长度 |
+| 8..8+length*8  | 4    | Float   | X 坐标   |
+| 8..12+length*8 | 4    | Float   | Y 坐标   |
+
+##### 27: [PackedVector3Array](https://docs.godotengine.org/en/stable/classes/class_packedvector3array.html#class-packedvector3array)
+
+| 偏移量          | 长度 | 类型    | 描述     |
+| --------------- | ---- | ------- | -------- |
+| 4               | 4    | Integer | 数组长度 |
+| 8..8+length*12  | 4    | Float   | X 坐标   |
+| 8..12+length*12 | 4    | Float   | Y 坐标   |
+| 8..16+length*12 | 4    | Float   | Z 坐标   |
+
+##### 28: [PackedColorArray](https://docs.godotengine.org/en/stable/classes/class_packedcolorarray.html#class-packedcolorarray)
+
+| 偏移量          | 长度 | 类型    | 描述                                       |
+| --------------- | ---- | ------- | ------------------------------------------ |
+| 4               | 4    | Integer | 数组长度                                   |
+| 8..8+length*16  | 4    | Float   | 红（通常为0..1，对于过亮的颜色可以高于 1） |
+| 8..12+length*16 | 4    | Float   | 绿（通常为0..1，对于过亮的颜色可以高于 1） |
+| 8..16+length*16 | 4    | Float   | 蓝（通常为0..1，对于过亮的颜色可以高于 1） |
+| 8..20+length*16 | 4    | Float   | Alpha (0..1)                               |
+
 ## 性能
 
 ### 简介
