@@ -4414,6 +4414,628 @@ The array data is padded to 4 bytes.
 | 8..16+length*16 | 4    | Float   | 蓝（通常为0..1，对于过亮的颜色可以高于 1） |
 | 8..20+length*16 | 4    | Float   | Alpha (0..1)                               |
 
+## 处理输入
+
+### 使用 InputEvent
+
+#### 它是什么?
+
+管理输入通常很复杂，无论是操作系统还是平台。为了稍微简化这一点，提供了一种特殊的内置类型 InputEvent。此数据类型可以配置为包含多种类型的输入事件。输入事件在引擎中传播，可以在多个位置接收，具体取决于目的。
+
+下面是一个快速示例，如果按下了逃生键，则关闭游戏：
+
+```python
+func _unhandled_input(event):
+    if event is InputEventKey:
+        if event.pressed and event.keycode == KEY_ESCAPE:
+            get_tree().quit()
+```
+
+但是，使用提供的 InputMap 功能更干净、更灵活，它允许您定义输入操作并为它们分配不同的键。通过这种方式，您可以为同一动作定义多个键（例如，键盘的退出键和游戏板上的开始按钮）。然后，您可以更容易地在项目设置中更改此映射，而无需更新代码，甚至可以在此基础上构建键映射功能，允许您的游戏在运行时更改键映射！
+
+您可以在**“项目” > “项目设置” > “输入映射”**下设置 InputMap，然后使用以下操作：
+
+```python
+func _process(delta):
+    if Input.is_action_pressed("ui_right"):
+        # Move right.
+```
+
+#### 它怎么工作？
+
+每个输入事件都源于用户/播放器（尽管可以生成 InputEvent 并将其反馈给引擎，这对手势很有用）。每个平台的操作系统对象将从设备中读取事件，然后将其提供给窗口。
+
+窗口的 Viewport 对接收到的输入执行了大量操作，顺序如下：
+
+1. 如果 Viewport 正在嵌入 Windows，则 Viewport 会尝试将其功能中的事件解释为窗口管理器（例如，用于调整窗口大小或移动窗口）。
+2. 接下来，如果某个嵌入的窗口被聚焦，则该事件将被发送到该窗口，并在 Windows 视口中进行处理。如果没有聚焦嵌入的窗口，则“事件”将按以下顺序发送到当前视口的节点。
+3. 首先，标准 [Node._input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-input) 函数将在任何覆盖它的节点中被调用（并且没有禁用 [Node.set_process_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-set-process-input) 的输入处理）。如果任何函数消耗了该事件，它可以调用 [Viewport.set_input_as_handled()](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-set-input-as-handled)，该事件将不再传播。这确保您可以过滤所有感兴趣的事件，甚至在 GUI 之前。对于游戏输入，[Node._unhandled_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-unhandled-input) 通常更适合，因为它允许 GUI 拦截事件。
+4. 其次，它将尝试将输入馈送到 GUI，并查看是否有任何控件可以接收它。如果可以，则将通过虚拟函数 [Control._gui_input()](https://docs.godotengine.org/en/stable/classes/class_control.html#class-control-method-gui-input) 调用 Control 和信号“gui_put”将被发出（该函数可以通过脚本从中继承来重新实现）。如果控件想“消费”该事件，它将调用 [Control.accept_event()](https://docs.godotengine.org/en/stable/classes/class_control.html#class-control-method-accept-event)，该事件将不再传播。使用 [Control.mouse_filter](https://docs.godotengine.org/en/stable/classes/class_control.html#class-control-property-mouse-filter) 属性可以控制 Control 是否被通知鼠标事件 [Control._gui_input()](https://docs.godotengine.org/en/stable/classes/class_control.html#class-control-method-gui-input) 回调，以及是否进一步传播这些事件。
+5. 如果到目前为止没有人消费该事件，则如果被重写（并且未使用[Node.set_process_shortcut_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-set-process-shortcut-input) 禁用），则将调用 [Node._shortcut_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-shortcut-input) 回调。这种情况仅发生在 InputEventKey、InputEventShortcut 和 InputEventJoypadButton 上。如果任何函数使用该事件，它可以调用 [Viewport.set_input_as_handled()](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-set-input-as-handled)，并且该事件将不再传播。快捷方式输入回调非常适合将要作为快捷方式处理的事件。
+6. 如果到目前为止没有人消费该事件，则如果重写（并且未使用 [Node.set_process_unhandled_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-set-process-unhandled-input) 禁用），则将调用 [Node._unhandled_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-unhandled-input) 回调。如果任何函数使用该事件，它可以调用 [Viewport.set_input_as_handled()](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-set-input-as-handled)，并且该事件将不再传播。未处理的输入回调非常适合全屏游戏事件，因此当 GUI 处于活动状态时不会接收到这些事件。
+7. 如果到目前为止没有人消费该事件，则如果重写（并且未使用 [Node.set_process_unhandled_key_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-set-process-unhandled-key-input) 禁用），则将调用 [Node._unhandled_key_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-unhandled-key-input) 回调。只有当事件是 InputEventKey 时才会发生这种情况。如果任何函数使用该事件，它可以调用 [Viewport.set_input_as_handled()](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-set-input-as-handled)，并且该事件将不再传播。未处理的键输入回调非常适合键事件。
+8. 如果到目前为止没有人想要该事件，并且“对象拾取”处于启用状态，则该事件将用于对象拾取。对于根视口，这也可以在“项目设置”中启用。在3D场景的情况下，如果将 Camera3D 指定给 Viewport，则将投射到物理世界的光线（沿单击后的光线方向）。如果此光线击中对象，它将调用 [CollisionObject3D._input_event()](https://docs.godotengine.org/en/stable/classes/class_collisionobject3d.html#class-collisionobject3d-method-input-event) 函数（默认情况下，实体会接收此回调，但区域不会。这可以通过 Area3D 属性进行配置）。在 2D 场景的情况下，概念上与 [CollisionObject2D._input_event()](https://docs.godotengine.org/en/stable/classes/class_collisionobject2d.html#class-collisionobject2d-method-input-event) 相同。
+
+当将事件发送到其子节点和子节点时，视口将以相反的深度优先顺序执行此操作，如下图所示，从场景树底部的节点开始，到根节点结束。嵌入的 Windows 和 SubViewports 不在此过程中。
+
+此顺序不适用于 [Control._gui_input()](https://docs.godotengine.org/en/stable/classes/class_control.html#class-control-method-gui-input)，它根据事件位置或焦点控件使用不同的方法。
+
+由于视口不会将事件发送到其他子视口，因此必须使用以下方法之一：
+
+1. 使用 [SubViewportContainer](https://docs.godotengine.org/en/stable/classes/class_subviewportcontainer.html#class-subviewportcontainer)，该容器会在 [Node._input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-input) 和 [Node._unhandled_input()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-unhandled-input) 期间自动将事件发送到其子 [SubViewports](https://docs.godotengine.org/en/stable/classes/class_subviewport.html#class-subviewport)。
+2. 根据个人需求实施事件传播。
+
+GUI 事件也在场景树中向上传播，但由于这些事件以特定控件为目标，因此只有目标控件节点的直接祖先才会接收该事件。
+
+根据 Godot 基于节点的设计，这使得专门的子节点能够处理和消费特定事件，而它们的祖先，以及最终的场景根，可以在需要时提供更通用的行为。
+
+#### InputEvent 的剖析
+
+InputEvent 只是一个基本的内置类型，它不表示任何内容，只包含一些基本信息，如事件 ID（每个事件都会增加）、设备索引等。
+
+InputEvent 有几种特殊类型，如下表所述：
+
+| 事件                                                         | 类型索引        | 描述                                                         |
+| ------------------------------------------------------------ | --------------- | ------------------------------------------------------------ |
+| [InputEvent](https://docs.godotengine.org/en/stable/classes/class_inputevent.html#class-inputevent) | NONE            | 空输入事件                                                   |
+| [InputEventKey](https://docs.godotengine.org/en/stable/classes/class_inputeventkey.html#class-inputeventkey) | KEY             | 包含一个键代码和Unicode值，以及修饰符。                      |
+| [InputEventMouseButton](https://docs.godotengine.org/en/stable/classes/class_inputeventmousebutton.html#class-inputeventmousebutton) | MOUSE_BUTTON    | 包含单击信息，如按钮、修饰符等。                             |
+| [InputEventMouseMotion](https://docs.godotengine.org/en/stable/classes/class_inputeventmousemotion.html#class-inputeventmousemotion) | MOUSE_MOTION    | 包含运动信息，例如相对位置、绝对位置和速度。                 |
+| [InputEventJoypadMotion](https://docs.godotengine.org/en/stable/classes/class_inputeventjoypadmotion.html#class-inputeventjoypadmotion) | JOYSTICK_MOTION | 包含操纵手柄/操纵板模拟轴信息。                              |
+| [InputEventJoypadButton](https://docs.godotengine.org/en/stable/classes/class_inputeventjoypadbutton.html#class-inputeventjoypadbutton) | JOYSTICK_BUTTON | 包含操纵手柄/操纵板按钮信息。                                |
+| [InputEventScreenTouch](https://docs.godotengine.org/en/stable/classes/class_inputeventscreentouch.html#class-inputeventscreentouch) | SCREEN_TOUCH    | 包含多点触摸按压/释放信息。（仅适用于移动设备）              |
+| [InputEventScreenDrag](https://docs.godotengine.org/en/stable/classes/class_inputeventscreendrag.html#class-inputeventscreendrag) | SCREEN_DRAG     | 包含多点触摸拖动信息。（仅适用于移动设备）                   |
+| [InputEventAction](https://docs.godotengine.org/en/stable/classes/class_inputeventaction.html#class-inputeventaction) | SCREEN_ACTION   | 包含常规操作。这些事件通常由程序员作为反馈生成。（下面将详细介绍） |
+
+#### 行动
+
+动作是将零个或多个 InputEvents 分组为一个常见的标题（例如，默认的“ui_left”动作将操纵手柄的左输入和键盘的左箭头键分组）。它们不需要表示 InputEvent，但很有用，因为它们在编程游戏逻辑时抽象了各种输入。
+
+这允许：
+
+- 相同的代码可以在具有不同输入的不同设备上工作（例如，PC 上的键盘、控制台上的游戏板）。
+- 要在运行时重新配置的输入。
+- 在运行时以编程方式触发的操作。
+
+可以从“**输入映射**”选项卡中的“项目设置”菜单创建操作，并指定输入事件。
+
+任何事件都有 InputEvent.is_action()、InputEvent.is_pressed() 和 InputEvent 方法。
+
+或者，可能希望向游戏提供来自游戏代码的动作（这方面的一个很好的例子是检测手势）。Input singleton 有一个方法：Input.parse_Input_event（）。您通常会这样使用它：
+
+```python
+var ev = InputEventAction.new()
+# Set as ui_left, pressed.
+ev.action = "ui_left"
+ev.pressed = true
+# Feedback.
+Input.parse_input_event(ev)
+```
+
+#### 输入映射
+
+通常需要自定义和重新映射来自代码的输入。如果整个工作流依赖于操作，那么 InputMap 单例非常适合在运行时重新分配或创建不同的操作。这个单例不保存（必须手动修改），它的状态是从项目设置（project.godot）运行的。因此，任何这种类型的动态系统都需要以程序员认为最合适的方式存储设置。
+
+### 输入示例
+
+#### 简介
+
+在本教程中，您将学习如何使用 Godot 的 InputEvent 系统来捕获玩家输入。你的游戏可以使用许多不同类型的输入——键盘、游戏板、鼠标等——以及许多不同的方式将这些输入转化为游戏中的动作。本文档将向您展示一些最常见的场景，这些场景可以作为您自己项目的起点。
+
+> **注意：**
+>
+> 有关 Godot 的输入事件系统如何工作的详细概述，请参阅使用 InputEvent。
+
+#### 事件与轮询
+
+有时你想让你的游戏对某个输入事件做出反应，比如按下“跳跃”按钮。对于其他情况，您可能希望只要按下某个键，就会发生一些事情，例如移动。在第一种情况下，可以使用 `_input()` 函数，每当发生输入事件时都会调用该函数。在第二种情况下，Godot 提供了 Input singleton，您可以使用它来查询输入的状态。
+
+示例：
+
+```python
+func _input(event):
+    if event.is_action_pressed("jump"):
+        jump()
+
+
+func _physics_process(delta):
+    if Input.is_action_pressed("move_right"):
+        # Move as long as the key/button is pressed.
+        position.x += speed * delta
+```
+
+这使您可以灵活地混合和匹配所做的输入处理类型。
+
+在本教程的剩余部分中，我们将重点关注在 `_input()` 中捕获单个事件。
+
+#### 输入事件
+
+输入事件是从 InputEvent 继承的对象。根据事件类型的不同，对象将包含与该事件相关的特定属性。要查看事件的实际外观，请添加一个节点并附加以下脚本：
+
+```python
+extends Node
+
+
+func _input(event):
+    print(event.as_text())
+```
+
+当您按键、移动鼠标和执行其他输入时，您将在输出窗口中看到每个事件滚动经过。以下是输出示例：
+
+```
+A
+Mouse motion at position ((971, 5)) with velocity ((0, 0))
+Right Mouse Button
+Mouse motion at position ((870, 243)) with velocity ((0.454937, -0.454937))
+Left Mouse Button
+Mouse Wheel Up
+A
+B
+Shift
+Alt+Shift
+Alt
+Shift+T
+Mouse motion at position ((868, 242)) with velocity ((-2.134768, 2.134768))
+```
+
+正如您所看到的，对于不同类型的输入，结果是非常不同的。关键事件甚至被打印为其关键符号。例如，让我们考虑 InputEventMouseButton。它继承自以下类：
+
+- InputEvent - 所有输入事件的基类
+- InputEventWithModifiers - 添加了检查是否按下了修改器（如 `Shift` 或 `Alt`.）的功能。
+- InputEventMouse - 添加鼠标事件属性，例如 `position`
+- InputEventMouseButton - 包含被按下按钮的索引，无论是双击，等等。
+
+> **提示：**
+>
+> 在处理事件时，最好保持类引用处于打开状态，以便检查事件类型的可用属性和方法。
+
+如果您试图访问不包含属性的输入类型上的属性，则可能会遇到错误，例如在 `InputEventKey` 上调用 `position`。要避免这种情况，请确保首先测试事件类型：
+
+```python
+func _input(event):
+    if event is InputEventMouseButton:
+        print("mouse button event at ", event.position)
+```
+
+#### InputMap
+
+InputMap 是处理各种输入的最灵活的方法。您可以通过创建命名的输入动作来使用它，您可以将任意数量的输入事件（如按键或鼠标单击）分配给这些动作。要查看它们并添加自己的设置，请打开“项目”->“项目设置”，然后选择“输入映射”选项卡：
+
+> **提示：**
+>
+> 一个新的 Godot 项目包括许多已经定义的默认操作。若要查看它们，请在“输入映射”对话框中启用 `Show Built-in Actions`。
+
+##### 捕捉动作
+
+一旦定义了操作，就可以使用 `is_action_pressed()` 和 `is_action_released()` 在脚本中处理它们，方法是传递要查找的操作的名称：
+
+```python
+func _input(event):
+    if event.is_action_pressed("my_action"):
+        print("my_action occurred!")
+```
+
+#### 键盘事件
+
+键盘事件在 InputEventKey 中捕获。虽然建议使用输入操作，但在某些情况下，您可能需要专门查看关键事件。对于本例，让我们检查 `T`：
+
+```python
+func _input(event):
+    if event is InputEventKey and event.pressed:
+        if event.keycode == KEY_T:
+            print("T was pressed")
+```
+
+> **提示：**
+> 有关键代码常量的列表，请参见 @GlobalScope_Key。
+
+> **警告：**
+>
+> 由于*键盘重影*，如果一次按太多键，可能不会在给定时间注册所有键输入。由于它们在键盘上的位置，某些键比其他键更容易出现重影。一些键盘在硬件级别上具有防重影功能，但这种功能通常不存在于低端键盘和笔记本电脑键盘上。
+>
+> 因此，建议使用默认的键盘布局，该布局设计为在没有防重影的情况下在键盘上工作良好。有关更多信息，请参阅此 Gamedev Stack Exchange 问题。
+
+##### 键盘修饰符
+
+修饰符属性继承自 InputEventWithModifiers。这允许您使用布尔属性检查修改器组合。让我们想象一下，当按下 `T` 时，你希望发生一件事，但当按下 `Shift + T` 时，会发生不同的事情：
+
+```python
+func _input(event):
+    if event is InputEventKey and event.pressed:
+        if event.keycode == KEY_T:
+            if event.shift_pressed:
+                print("Shift+T was pressed")
+            else:
+                print("T was pressed")
+```
+
+> **提示：**
+> 有关键代码常量的列表，请参见 @GlobalScope_Key。
+
+#### 鼠标事件
+
+鼠标事件源于 InputEventMouse 类，分为两种类型：InputEventMouseButton 和 InputEventMouseMotion。请注意，这意味着所有鼠标事件都将包含一个位置属性。
+
+##### 鼠标按钮
+
+捕捉鼠标按钮与处理关键事件非常相似 @GlobalScope_MouseButton 包含每个可能按钮的 `MOUSE_BUTTON_*` 常量列表，这些常量将在事件的 `button_index` 属性中报告。请注意，滚动轮也算作一个按钮——确切地说，是两个按钮，其中 `MOUSE_BUTTON_WHEEL_UP` 和 `MOUSE_BUTTON_WHEEL_DOWN` 都是单独的事件。
+
+```python
+func _input(event):
+    if event is InputEventMouseButton:
+        if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+            print("Left button was clicked at ", event.position)
+        if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+            print("Wheel up")
+```
+
+##### 鼠标运动
+
+每当鼠标移动时，就会发生 InputEventMouseMotion 事件。您可以使用 `relative` 特性查找移动的距离。
+
+下面是一个使用鼠标事件拖放 Sprite2D 节点的示例：
+
+```python
+extends Node
+
+
+var dragging = false
+var click_radius = 32 # Size of the sprite.
+
+
+func _input(event):
+    if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+        if (event.position - $Sprite2D.position).length() < click_radius:
+            # Start dragging if the click is on the sprite.
+            if not dragging and event.pressed:
+                dragging = true
+        # Stop dragging if the button is released.
+        if dragging and not event.pressed:
+            dragging = false
+
+    if event is InputEventMouseMotion and dragging:
+        # While dragging, move the sprite with the mouse.
+        $Sprite2D.position = event.position
+```
+
+#### 触摸事件
+
+如果您使用的是触摸屏设备，则可以生成触摸事件。InputEventScreenTouch 相当于鼠标单击事件，InputEventScrenDrag 的工作原理与鼠标运动基本相同。
+
+> **提示：**
+>
+> 要在非触摸屏设备上测试触摸事件，请打开“项目设置”，然后转到“输入设备/指向”部分。启用“模拟鼠标触摸”，您的项目将鼠标点击和运动解释为触摸事件。
+
+### 鼠标和输入坐标
+
+#### 关于
+
+这个小教程的目的是为了清除输入坐标、获取鼠标位置和屏幕分辨率等方面的许多常见错误。
+
+#### 硬件显示坐标
+
+在编写要在 PC 上运行的复杂 UI（如编辑器、MMO、工具等）的情况下，使用硬件坐标是有意义的。然而，在这个范围之外，它就没有那么大意义了。
+
+#### 视口显示坐标
+
+Godot 使用视口来显示内容，并且可以通过几个选项缩放视口（请参见多分辨率教程）。然后，使用节点中的函数来获取鼠标坐标和视口大小，例如：
+
+```python
+func _input(event):
+   # Mouse in viewport coordinates.
+   if event is InputEventMouseButton:
+       print("Mouse Click/Unclick at: ", event.position)
+   elif event is InputEventMouseMotion:
+       print("Mouse Motion at: ", event.position)
+
+   # Print the size of the viewport.
+   print("Viewport Resolution is: ", get_viewport_rect().size)
+```
+
+或者，也可以向视口询问鼠标位置：
+
+```python
+get_viewport().get_mouse_position()
+```
+
+> **注意：**
+>
+> 当鼠标模式设置为 `Input.MOUSE_MODE_CAPTURED` 时，`InputEventMouseMotion` 中的 `event.position` 值是屏幕的中心。使用 `event.relative` 而不是 `event.position` 和 `event.speed` 来处理鼠标移动和位置更改。
+
+### 自定义鼠标光标
+
+为了适应整体设计，您可能需要更改游戏中鼠标光标的外观。有两种方法可以自定义鼠标光标：
+
+1. 使用项目设置
+2. 使用脚本
+
+使用项目设置是自定义鼠标光标的一种更简单（但更有限）的方法。第二种方式更具可定制性，但涉及到脚本编写：
+
+> **注意：**
+>
+> 您可以通过在 `_process()` 方法中隐藏鼠标光标并将 Sprite2D 移动到光标位置来显示“软件”鼠标光标，但与“硬件”鼠标光标相比，这将增加至少一帧延迟。因此，建议尽可能使用此处描述的方法。
+>
+> 如果必须使用“软件”方法，请考虑添加外推步骤，以更好地显示实际鼠标输入。
+
+#### 使用项目设置
+
+打开项目设置，转到“显示”>“鼠标光标”。您将看到自定义图像、自定义图像热点和工具提示位置偏移。
+
+“自定义图像”是要设置为鼠标光标的所需图像。自定义热点是图像中要用作光标检测点的点。
+
+> **警告：**
+>
+> 自定义图像最多必须为 256×256 像素。为避免渲染问题，建议使用小于或等于 128×128 的大小。
+>
+> 在 web 平台上，允许的最大光标图像大小为 128×128。
+
+#### 使用脚本
+
+创建一个节点并附加以下脚本。
+
+```python
+extends Node
+
+
+# Load the custom images for the mouse cursor.
+var arrow = load("res://arrow.png")
+var beam = load("res://beam.png")
+
+
+func _ready():
+    # Changes only the arrow shape of the cursor.
+    # This is similar to changing it in the project settings.
+    Input.set_custom_mouse_cursor(arrow)
+
+    # Changes a specific shape of the cursor (here, the I-beam shape).
+    Input.set_custom_mouse_cursor(beam, Input.CURSOR_IBEAM)
+```
+
+> **参考：**
+>
+> 查看 Input.set_custom_mouse_cursor() 的文档，了解有关用法和平台特定注意事项的更多信息。
+
+#### 演示项目
+
+通过研究此演示项目了解更多信息：https://github.com/guilhermefelipecgs/custom_hardware_cursor
+
+#### 光标列表
+
+如 Input 类中所述（请参见 CursorShape 枚举），您可以定义多个鼠标光标。您要使用哪一个取决于您的用例。
+
+### 控制器、游戏手柄和操纵杆
+
+Godot 支持数百种控制器模型，这得益于社区来源的 SDL 游戏控制器数据库。
+
+控制器在 Windows、macOS、Linux、Android、iOS 和 HTML5 上都受支持。
+
+请注意，方向盘、方向舵踏板和 HOTAS 等更专业的设备测试较少，可能并不总是如预期那样工作。还没有实现对这些装置的超越力反馈。如果您可以访问其中一个设备，请毫不犹豫地在 GitHub 上报告错误。
+
+在本指南中，您将学习：
+
+- **如何编写既支持键盘输入又支持控制器输入的输入逻辑。**
+- **控制器的行为如何与键盘/鼠标输入不同。**
+- **Godot 中控制器的故障排除。**
+
+#### 支持通用输入
+
+得益于 Godot 的输入操作系统，Godot 可以同时支持键盘和控制器输入，而无需编写单独的代码路径。您不应该在脚本中硬编码键或控制器按钮，而应该在项目设置中创建输入操作，然后这些操作将引用指定的键和控制器输入。
+
+输入操作在使用 InputEvent 页面上有详细说明。
+
+> **注意：**
+>
+> 与键盘输入不同，支持鼠标和控制器输入的动作（例如在第一人称游戏中环顾四周）将需要不同的代码路径，因为它们必须单独处理。
+
+##### 我应该使用哪种输入单例方法？
+
+有三种方法可以以模拟感知的方式获得输入：
+
+- 如果您有两个轴（如操纵杆或 WASD 移动），并且希望两个轴都作为一个输入，请使用 `Input.get_vector()`：
+
+  ```python
+  # `velocity` will be a Vector2 between `Vector2(-1.0, -1.0)` and `Vector2(1.0, 1.0)`.
+  # This handles deadzone in a correct way for most use cases.
+  # The resulting deadzone will have a circular shape as it generally should.
+  var velocity = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+  
+  # The line below is similar to `get_vector()`, except that it handles
+  # the deadzone in a less optimal way. The resulting deadzone will have
+  # a square-ish shape when it should ideally have a circular shape.
+  var velocity = Vector2(
+          Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
+          Input.get_action_strength("move_back") - Input.get_action_strength("move_forward")
+  ).limit_length(1.0)
+  ```
+
+- 当您有一个可以双向移动的轴时（例如飞行操纵杆上的油门），或者当您想单独处理单独的轴时，请使用 `Input.get_axis()`：
+
+  ```python
+  # `walk` will be a floating-point number between `-1.0` and `1.0`.
+  var walk = Input.get_axis("move_left", "move_right")
+  
+  # The line above is a shorter form of:
+  var walk = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
+  ```
+
+- 对于其他类型的模拟输入，例如处理触发器或一次处理一个方向，请使用 `Input.get_action_strenth()`：
+
+  ```python
+  # `strength` will be a floating-point number between `0.0` and `1.0`.
+  var strength = Input.get_action_strength("accelerate")
+  ```
+
+  对于非模拟数字/布尔输入（仅“按下”或“未按下”值），如控制器按钮、鼠标按钮或键盘键，请使用 `Input.is_action_pressed()`：
+
+
+  ```python
+  # `jumping` will be a boolean with a value of `true` or `false`.
+  var jumping = Input.is_action_pressed("jump")
+  ```
+
+> **注意：**
+>
+> 如果您需要知道上一帧中是否*刚刚*按下了输入，请使用 `Input.is_action_just_pressed()` 而不是 `Input.is_action_pressed()`。与只要保持输入就返回 `true` 的 `Input.is_action_pressed()` 不同，`Input.is_action_just_pressed()` 只会在按下按钮后的一帧内返回 `true`。
+
+在 Godot 3.4 之前的版本（如 3.3）中，`Input.get_vector()` 和 `Input.get_axis()` 不可用。Godot 3.3 中只有 `Input.get_action_strenth()` 和 `Input.is_action_pressed()` 可用。
+
+#### 振动
+
+振动（也称为*触觉反馈*）可以用来增强游戏的感觉。例如，在赛车游戏中，你可以通过振动来传达汽车当前行驶的表面，或者在碰撞时产生突然的振动。
+
+使用 Input singleton 的 start_joy_vibration 方法开始振动游戏板。使用 stop_joy_vibration 提前停止振动（如果启动时未指定持续时间，则非常有用）。
+
+在移动设备上，您也可以使用 vibrate_handheld 振动设备本身（独立于游戏板）。在 Android 上，这需要在导出项目之前在 Android 导出预设中启用 `VIBRATE` 权限。
+
+> **注意：**
+>
+> 振动可能会让某些玩家感到不舒服。确保提供游戏中的滑块来禁用振动或降低其强度。
+
+#### 键盘/鼠标与控制器输入之间的差异
+
+如果您习惯于处理键盘和鼠标输入，您可能会对控制器处理特定情况的方式感到惊讶。
+
+##### 死区
+
+与键盘和鼠标不同，控制器提供带有模拟输入的轴。模拟输入的好处在于，它们为操作提供了额外的灵活性。与只能提供 `0.0` 和 `1.0` 强度的数字输入不同，模拟输入可以提供 `0.0` 到 `1.0` 之间的任何强度。缺点是，如果没有死区系统，由于控制器的物理构建方式，模拟轴的强度永远不会等于 `0.0`。相反，它将停留在诸如 `0.062` 之类的低值。这种现象被称为漂移，在旧的或有故障的控制器上可能更明显。
+
+让我们以一款赛车游戏为例。由于有了模拟输入，我们可以缓慢地将汽车转向一个或另一个方向。然而，如果没有死区系统，即使玩家没有触摸操纵杆，汽车也会自动缓慢转向。这是因为方向轴强度在我们期望的情况下不会等于 `0.0`。由于我们不希望我们的汽车在这种情况下自行转向，我们定义了一个“死区”值 `0.2`，它将忽略强度低于 `0.2` 的所有输入。理想的死区值高到足以忽略操纵杆漂移引起的输入，但低到足以不忽略玩家的实际输入。
+
+Godot 采用了一个内置的死区系统来解决这个问题。默认值为 `0.5`，但您可以在“项目设置”的“输入映射”选项卡中根据每个操作对其进行调整。对于 `Input.get_vector()`，死区可以指定为可选的第五个参数。如果未指定，它将计算矢量中所有动作的平均死区值。
+
+##### “回声”事件
+
+与键盘输入不同，按住控制器按钮（如D-pad方向）**不会**以固定的间隔生成重复的输入事件（也称为“回声”事件）。这是因为操作系统从一开始就不会为控制器输入发送“回波”事件。
+
+如果希望控制器按钮发送回显事件，则必须通过代码生成 InputEvent 对象，并定期使用 Input.parse_Input_event() 对其进行解析。这可以在 Timer 节点的帮助下完成。
+
+##### 窗口焦点
+
+与键盘输入不同，操作系统上的**所有**窗口都可以看到控制器输入，包括未聚焦的窗口。
+
+虽然这对第三方分屏功能很有用，但也可能产生不利影响。玩家在与另一个窗口交互时，可能会意外地将控制器输入发送到正在运行的项目。
+
+如果您希望在项目窗口未聚焦时忽略事件，则需要使用以下脚本创建一个名为 `Focus` 的自动加载，并使用它检查所有输入：
+
+```python
+# Focus.gd
+extends Node
+
+var focused := true
+
+func _notification(what: int) -> void:
+    match what:
+        NOTIFICATION_APPLICATION_FOCUS_OUT:
+            focused = false
+        NOTIFICATION_APPLICATION_FOCUS_IN:
+            focused = true
+
+
+func input_is_action_pressed(action: StringName) -> bool:
+    if focused:
+        return Input.is_action_pressed(action)
+
+    return false
+
+
+func event_is_action_pressed(event: InputEvent, action: StringName) -> bool:
+    if focused:
+        return Input.is_action_pressed(action)
+
+    return false
+```
+
+然后，不要使用 `Input.is_action_pressed(action)`，而是使用 `Focus.Input_is_action_press(action)`。其中 `action` 是输入操作的名称。此外，不要使用 `event.is_action_pressed(action)`，而是使用 `Focus.event_is_action_ppressed(event，action)`，其中 `event` 是 `InputEvent` 引用，`action` 是输入操作的名称。
+
+##### 节电预防
+
+与键盘和鼠标输入不同，控制器输入**不会**抑制睡眠和节能措施（例如在经过一定时间后关闭屏幕）。
+
+为了解决这个问题，Godot 在项目运行时默认启用节能保护。如果您在玩游戏板时注意到系统正在关闭显示器，请检查项目设置中的“**显示 > 窗口 > 节能 > 保持屏幕打开**”的值。
+
+在 Linux 上，防止省电需要引擎能够使用 D-Bus。如果在 Flatpak 中运行项目，请检查 D-Bus 是否已安装并可访问，因为沙盒限制可能会使这在默认情况下无法实现。
+
+#### 疑难解答
+
+> **参考：**
+>
+> 您可以在 GitHub 上查看控制器支持的已知问题列表。
+
+##### Godot 无法识别我的控制器。
+
+首先，检查您的控制器是否被其他应用程序识别。您可以使用 Gamepad 测试仪网站来确认您的控制器已被识别。
+
+##### 我的控制器映射的按钮或轴不正确。
+
+首先，如果您的控制器提供某种固件更新实用程序，请确保运行它以从制造商那里获得最新的修复程序。例如，Xbox One 和 Xbox Series 控制器可以使用 Xbox Accessories 应用程序更新固件。（此应用程序仅在 Windows 上运行，因此您必须使用 Windows 计算机或支持 USB 的 Windows 虚拟机来更新控制器的固件。）更新控制器固件后，如果您在无线模式下使用控制器，请将控制器拆开，然后将其与您的电脑重新配对。
+
+如果按钮映射不正确，这可能是由于SDL游戏控制器数据库的错误映射造成的。您可以通过在链接的存储库上打开一个pull请求来提供一个更新的映射，以包含在下一个 Godot 版本中。
+
+有许多方法可以创建映射。一种选择是在官方的 Joypads 演示中使用映射向导。一旦您有了控制器的工作映射，您就可以在运行 Godot 之前通过定义 `SDL_GAMECONTROLLERCONFIG` 环境变量来测试它：
+
+```shell
+export SDL_GAMECONTROLLERCONFIG="your:mapping:here"
+./path/to/godot.x86_64
+```
+
+要在非桌面平台上测试映射，或者用额外的控制器映射分发项目，可以通过在脚本的 _ready() 函数中尽早调用 Input.add_joy_mapping() 来添加它们。
+
+##### 我的控制器在给定的平台上工作，但不能在另一个平台上工作。
+
+###### Linux
+
+如果您使用的是自编译引擎二进制文件，请确保它是在 udev 支持下编译的。这在默认情况下是启用的，但可以通过在 SCons 命令行上指定 `udev=no` 来禁用 udev 支持。如果您使用的是 Linux 发行版提供的引擎二进制文件，请仔细检查它是否是使用 udev 支持编译的。
+
+控制器在没有 udev 支持的情况下仍然可以工作，但它的可靠性较低，因为在游戏过程中必须使用定期轮询来检查控制器是否已连接或断开连接（热插拔）。
+
+###### HTML5
+
+与“原生”平台相比，HTML5 控制器支持通常不太可靠。控制器支持的质量往往因浏览器而异。因此，如果玩家无法让控制器正常工作，你可能不得不指示他们使用不同的浏览器。
+
+### 处理退出请求
+
+#### 退出
+
+大多数平台都可以选择请求应用程序退出。在台式机上，这通常是通过窗口标题栏上的“x”图标来完成的。在 Android 上，后退按钮用于在主屏幕上退出（否则返回）。
+
+#### 处理通知
+
+在桌面和 web 平台上，当窗口管理器请求退出时，Node 会收到一个特殊的 `NOTIFICATION_WM_CLOSE_REQUEST` 通知。
+
+在 Android 上，将改为发送 `NOTIFICATION_WM_GO_BACK_REQUEST`。如果在“项目设置”中选中了“**应用程序 > 配置 > 返回时退出**”（默认设置），则按下“返回”按钮将退出应用程序。
+
+> **注意：**
+>
+> `NOTIFICATION_WM_GO_BACK_REQUEST` 在 iOS 上不受支持，因为 iOS 设备没有物理“后退”按钮。
+
+处理通知如下（在任何节点上）：
+
+```python
+func _notification(what):
+    if what == NOTIFICATION_WM_CLOSE_REQUEST:
+        get_tree().quit() # default behavior
+```
+
+在开发移动应用程序时，除非用户在主屏幕上，否则不希望退出，因此可以改变行为。
+
+需要注意的是，默认情况下，当从窗口管理器请求退出时，Godot应用程序具有退出的内置行为。这一点可以更改，以便用户能够完成整个退出过程：
+
+```python
+get_tree().set_auto_accept_quit(false)
+```
+
+#### 发送您自己的退出通知
+
+虽然强制关闭应用程序可以通过调用 SceneTree.quit 来完成，但这样做不会将 `NOTIFICATION_WM_CLOSE_REQUEST` 发送到场景树中的节点。通过调用 SceneTree.quit 退出将不允许完成自定义操作（如保存、确认退出或调试），即使您试图延迟强制退出的行。
+
+相反，如果您想通知场景树中的节点即将终止的程序，您应该自己发送通知：
+
+```python
+get_tree().root.propagate_notification(NOTIFICATION_WM_CLOSE_REQUEST)
+```
+
+发送此通知将通知所有节点程序终止，但不会像 3.X 中那样终止程序本身。为了实现之前的行为，应在通知后调用 SceneTree.quit。
+
 ## 性能
 
 ### 简介
