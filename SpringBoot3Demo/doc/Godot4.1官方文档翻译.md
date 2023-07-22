@@ -5036,6 +5036,1297 @@ get_tree().root.propagate_notification(NOTIFICATION_WM_CLOSE_REQUEST)
 
 发送此通知将通知所有节点程序终止，但不会像 3.X 中那样终止程序本身。为了实现之前的行为，应在通知后调用 SceneTree.quit。
 
+## 数学
+
+### 向量数学
+
+#### 简介
+
+本教程是对线性代数应用于游戏开发的简短而实用的介绍。线性代数是研究向量及其用途的学科。矢量在二维和三维开发中都有许多应用，Godot 广泛使用它们。培养对向量数学的良好理解对于成为一名强大的游戏开发人员至关重要。
+
+> **注意：**
+>
+> 本教程不是关于线性代数的正式教材。我们将只关注它是如何应用于游戏开发的。要更广泛地了解数学，请参阅 https://www.khanacademy.org/math/linear-algebra
+
+#### 坐标系（2D）
+
+在二维空间中，使用水平轴（`x`）和垂直轴（`y`）定义坐标。2D 空间中的特定位置被写成一对值，例如 `(4, 3)`。
+
+> **注意：**
+>
+> 如果你是计算机图形学的新手，那么正 `y` 轴指向下方而不是上方可能会显得很奇怪，就像你在数学课上学到的那样。然而，这在大多数计算机图形应用程序中是常见的。
+
+2D 平面中的任何位置都可以用这种方式通过一对数字来识别。然而，我们也可以将位置 `(4, 3)` 视为从 `(0, 0)` 点或原点的偏移。绘制一个从原点指向该点的箭头：
+
+这是一个**矢量**。矢量表示许多有用的信息。除了告诉我们点在 `(4, 3)`，我们还可以将其视为角度 `θ`（theta）和长度（或幅度）`m`。在这种情况下，箭头是一个**位置向量**，它表示相对于原点的空间位置。
+
+关于向量，需要考虑的一个非常重要的点是，它们只表示**相对**方向和大小。没有矢量位置的概念。以下两个矢量相同：
+
+两个矢量都表示右边 4 个单位和某个起点下面 3 个单位的点。向量在平面上的何处绘制并不重要，它始终表示相对的方向和大小。
+
+#### 矢量运算
+
+您可以使用任意一种方法（x 和 y 坐标或角度和幅度）来引用向量，但为了方便起见，程序员通常使用坐标表示法。例如，在 Godot 中，原点是屏幕的左上角，因此要将名为 `Node2D` 的 2D 节点向右放置 400 像素，向下放置 300 像素，请使用以下代码：
+
+```python
+$Node2D.position = Vector2(400, 300)
+```
+
+Godot 分别支持 Vector2 和 Vector3 用于 2D 和 3D 用途。本文中讨论的相同数学规则适用于这两种类型，无论我们在类引用中链接到 Vector2 方法，您也可以查看它们的 Vector3 对应方法。
+
+##### 成员访问
+
+矢量的各个分量可以通过名称直接访问。
+
+```python
+# Create a vector with coordinates (2, 5).
+var a = Vector2(2, 5)
+# Create a vector and assign x and y manually.
+var b = Vector2()
+b.x = 3
+b.y = 1
+```
+
+##### 添加矢量
+
+当将两个矢量相加或相减时，将添加相应的分量：
+
+```python
+var c = a + b  # (2, 5) + (3, 1) = (5, 6)
+```
+
+我们还可以通过在第一个向量的末尾添加第二个向量来直观地看到这一点：
+
+请注意，将 `a + b` 相加会得到与 `b + a` 相同的结果。
+
+##### 标量乘法
+
+> **注意：**
+>
+> 矢量表示方向和大小。一个只表示大小的值称为**标量**。标量在 Godot 中使用浮点类型。
+
+向量可以与**标量**相乘：
+
+```python
+var c = a * 2  # (2, 5) * 2 = (4, 10)
+var d = b / 3  # (3, 6) / 3 = (1, 2)
+```
+
+> **注意：**
+>
+> 向量与标量相乘不会改变其方向，只会改变其大小。这就是**缩放**矢量的方式。
+
+#### 实际应用
+
+让我们来看看向量加法和减法的两种常见用法。
+
+##### 运动
+
+矢量可以表示**任何**具有大小和方向的量。典型的例子有：位置、速度、加速度和力。在该图像中，步骤1中的宇宙飞船具有 `(1, 3)` 的位置矢量和 `(2, 1)` 的速度矢量。速度矢量表示船舶每走一步移动的距离。我们可以通过将速度添加到当前位置来找到步骤 2 的位置。
+
+> **提示：**
+>
+> 速度测量单位时间内位置的变化。新位置是通过将速度乘以经过的时间（这里假设为一个单位，例如 1s）与先前位置相加来找到的。
+>
+> 在典型的 2D 游戏场景中，您将获得以像素每秒为单位的速度，并将其乘以_process() 或 _physics_process() 回调中的 `delta` 参数（自上一帧以来经过的时间）。
+
+##### 指向目标
+
+在这个场景中，你有一辆坦克希望将炮塔指向机器人。从机器人的位置减去坦克的位置，得到从坦克指向机器人的矢量。
+
+> **提示：**
+>
+> 要找到从 `A` 指向 `B` 的矢量，请使用 `B - A`。
+
+#### 单位矢量
+
+**大小**为 `1` 的向量称为**单位向量**。它们有时也称为**方向向量**或**法线**。当您需要跟踪某个方向时，单位向量非常有用。
+
+##### 规范化
+
+**规范化**向量意味着将其长度减少到 `1`，同时保留其方向。这是通过将其每个分量除以其大小来实现的。因为这是一个常见的操作，Godot 为此提供了一个专用的 normalized() 方法：
+
+```python
+a = a.normalized()
+```
+
+> **警告：**
+>
+> 由于规格化涉及除以向量的长度，因此无法规格化长度为 `0` 的向量。尝试这样做通常会导致错误。不过，在 GDScript 中，尝试对长度为 0 的向量调用 normalized() 方法会使值保持不变，从而避免出现错误。
+
+##### 反射
+
+单位向量的一个常见用途是指示**法线**。法向量是垂直于曲面排列的单位向量，定义曲面的方向。它们通常用于照明、碰撞和其他涉及曲面的操作。
+
+例如，假设我们有一个移动的球，我们想从墙上或其他物体上反弹：
+
+曲面法线的值为 `(0, -1)`，因为这是一个水平曲面。当球碰撞时，我们采取它的剩余运动（当它撞击表面时剩余的量），并使用法线反射它。在 Godot 中，有一个 bounce() 方法来处理这个问题。以下是使用 CharacterBody2D 的上图的代码示例：
+
+```python
+var collision: KinematicCollision2D = move_and_collide(velocity * delta)
+if collision:
+    var reflect = collision.get_remainder().bounce(collision.get_normal())
+    velocity = velocity.bounce(collision.get_normal())
+    move_and_collide(reflect)
+```
+
+#### 点积
+
+**点积**是向量数学中最重要的概念之一，但经常被误解。点积是对两个向量的运算，返回一个**标量**。与同时包含大小和方向的矢量不同，标量值只有大小。
+
+点积的公式有两种常见形式：
+
+$A \cdot B = \left\| A \right\| \left\| B \right\| \cos \theta$
+
+和
+
+$A \cdot B = A_xB_x + A_yB_y$
+
+数学符号 *||A||* 代表向量 `A` 的大小，Ax 表示向量 `A` 的 `x` 分量。
+
+然而，在大多数情况下，使用内置的 dot() 方法是最容易的。请注意，两个向量的顺序并不重要：
+
+```python
+var c = a.dot(b)
+var d = b.dot(a)  # These are equivalent.
+```
+
+当与单位向量一起使用时，点积是最有用的，使第一个公式简化为仅 `cos(θ)`。这意味着我们可以使用点积来告诉我们两个向量之间的角度：
+
+使用单位向量时，结果将始终在 `-1`（180°）和 `1`（0°）之间。
+
+##### 面向
+
+我们可以利用这个事实来检测一个物体是否面向另一个物体。在下图中，玩家 `P` 试图避开僵尸 `A` 和僵尸 `B`。假设僵尸的视野是 **180°**，他们能看到玩家吗？
+
+绿色箭头 `fA` 和 `fB` 是表示僵尸面向方向的**单位向量**，蓝色半圆表示其视野。对于僵尸 `A`，我们使用 `P - A` 找到指向玩家的方向向量 `AP`，并对其进行归一化，然而，Godot 有一个辅助方法，称为 direction_to()。如果这个矢量和对面矢量之间的角度小于 90°，那么僵尸可以看到玩家。
+
+在代码中，它看起来是这样的：
+
+```python
+var AP = A.direction_to(P)
+if AP.dot(fA) > 0:
+    print("A sees P!")
+```
+
+#### 叉积
+
+像点积一样，叉积是对两个向量的运算。然而，叉积的结果是一个方向垂直于两者的向量。它的大小取决于它们的相对角度。如果两个向量是平行的，那么它们的叉积的结果将是零向量。
+
+$\left\| a \times b \right\| = \left\| a \right\| \left\| b \right\| \left| \sin(a, b) \right|$
+
+叉积是这样计算的：
+
+```python
+var c = Vector3()
+c.x = (a.y * b.z) - (a.z * b.y)
+c.y = (a.z * b.x) - (a.x * b.z)
+c.z = (a.x * b.y) - (a.y * b.x)
+```
+
+使用 Godot，您可以使用内置的 Vector3.cross() 方法：
+
+```python
+var c = a.cross(b)
+```
+
+叉积在 2D 中没有数学定义。Vector2.cross() 方法是 2D 向量的 3D 叉积的常用模拟方法。
+
+> **注意：**
+>
+> 在交叉积中，顺序很重要。`a.cross(b)` 给出的结果与 `b.cross(a)` 不同。得到的向量指向**相反的**方向。
+
+##### 计算法线
+
+叉积的一个常见用途是在三维空间中找到平面或曲面的曲面法线。如果我们有三角形 `ABC`，我们可以使用向量减法来找到两条边 `AB` 和 `AC`。使用叉积，`AB × AC`产生一个垂直于这两条边的向量：曲面法线。
+
+下面是一个计算三角形法线的函数：
+
+```python
+func get_triangle_normal(a, b, c):
+    # Find the surface normal given 3 vertices.
+    var side1 = b - a
+    var side2 = c - a
+    var normal = side1.cross(side2)
+    return normal
+```
+
+##### 指向目标
+
+在上面的点积部分，我们看到了如何使用它来找到两个向量之间的角度。然而，在 3D 中，这还不够。我们还需要知道围绕什么轴旋转。我们可以通过计算当前面向的方向和目标方向的叉积来发现这一点。得到的垂直矢量是旋转轴。
+
+#### 更多信息
+
+有关在 Godot 中使用矢量数学的更多信息，请参阅以下文章：
+
+- 高级矢量数学
+- 矩阵与变换
+
+### 高级向量数学
+
+#### 平面
+
+点积在单位向量上还有另一个有趣的性质。想象一下，垂直于该向量（并通过原点）经过一个平面。平面将整个空间分为正（平面上）和负（平面下），（与流行的观点相反）你也可以在 2D 中使用它们的数学：
+
+垂直于曲面的单位向量（因此，它们描述曲面的方向）称为**单位法线向量**。不过，通常它们只是缩写为法线。法线出现在平面、三维几何体（用于确定每个面或顶点的侧边位置）等中。**法线**是一个**单位向量**，但由于其用途，它被称为法线。（就像我们称 (0, 0) 为原点！）。
+
+平面经过原点，其表面垂直于单位向量（或法线）。向量指向的一侧是正半空间，而另一侧是负半空间。在 3D 中，这是完全相同的，只是平面是一个无限曲面（想象一张无限平的纸，你可以确定方向并固定到原点），而不是一条线。
+
+##### 到平面的距离
+
+既然平面是什么已经很清楚了，让我们回到点积。**单位向量**和**空间中任意点**之间的点积（是的，这次我们在向量和位置之间做点积），返回**从点到平面的距离**：
+
+```python
+var distance = normal.dot(point)
+```
+
+但不仅仅是绝对距离，如果点在负半空间中，距离也将是负的：
+
+这使我们能够判断一个点在平面的哪一边。
+
+##### 远离原点
+
+我知道你在想什么！到目前为止，这很好，但*真实的*平面在空间中无处不在，不仅仅是穿过原点。你想要真正的*平面*动作，你*现在*就想要。
+
+请记住，平面不仅将空间一分为二，而且它们还具有*极性*。这意味着可以有完全重叠的平面，但它们的负半空间和正半空间是交换的。
+
+考虑到这一点，让我们将全平面描述为**法线** N 和**与原点**标量 D **的距离**。因此，我们的平面由 N 和 D 表示。例如：
+
+对于三维数学，Godot 提供了一个 Plane 内置类型来处理此问题。
+
+基本上，N 和 D 可以表示空间中的任何平面，无论是 2D 平面还是 3D 平面（取决于 N 的维数），两者的数学运算都是相同的。它和以前一样，但 D 是从原点到平面的距离，沿 N 方向行进。举个例子，假设你想到达平面上的一个点，你只需要做：
+
+```python
+var point_in_plane = N*D
+```
+
+这将拉伸（调整大小）法向量并使其接触平面。这个数学可能看起来很混乱，但实际上比看起来简单得多。如果我们想再次说明从点到平面的距离，我们也可以这样做，但要调整距离：
+
+```python
+var distance = N.dot(point) - D
+```
+
+同样，使用内置函数：
+
+```python
+var distance = plane.distance_to(point)
+```
+
+这将再次返回正距离或负距离。
+
+翻转平面的极性可以通过否定 N 和 D 来完成。这将导致平面处于相同位置，但具有倒置的负半空间和正半空间：
+
+```python
+N = -N
+D = -D
+```
+
+Godot 还在 Plane 中实现了这个运算符。因此，使用以下格式将按预期工作：
+
+```python
+var inverted_plane = -plane
+```
+
+记住，平面的主要实际用途是我们可以计算到它的距离。那么，什么时候计算从一点到平面的距离有用呢？让我们看一些例子。
+
+##### 在 2D 中构造平面
+
+飞机显然不是凭空产生的，所以必须建造。在 2D 中构建它们很容易，这可以从一个法线（单位向量）和一个点，或者从空间中的两个点来完成。
+
+在一个法线和一个点的情况下，大部分的功都完成了，因为法线已经计算好了，所以从法线和点的点积计算 D。
+
+```python
+var N = normal
+var D = normal.dot(point)
+```
+
+对于空间中的两个点，实际上有两个平面穿过它们，共享相同的空间，但法线指向相反的方向。要从两个点计算法线，必须首先获得方向向量，然后需要将其向任意一侧旋转 90°：
+
+```python
+# Calculate vector from `a` to `b`.
+var dvec = (point_b - point_a).normalized()
+# Rotate 90 degrees.
+var normal = Vector2(dvec.y, -dvec.x)
+# Alternatively (depending the desired side of the normal):
+# var normal = Vector2(-dvec.y, dvec.x)
+```
+
+其余部分与前面的示例相同。point_a 或 point_b 都可以工作，因为它们位于同一平面中：
+
+```python
+var N = normal
+var D = normal.dot(point_a)
+# this works the same
+# var D = normal.dot(point_b)
+```
+
+在 3D 中做同样的事情稍微复杂一些，下面将进一步解释。
+
+##### 平面的一些例子
+
+下面是一个平面有用的例子。假设你有一个凸多边形。例如，矩形、梯形、三角形或任何没有面向内弯曲的多边形。
+
+对于多边形的每一段，我们计算经过该段的平面。一旦我们有了平面列表，我们就可以做一些简单的事情，例如检查一个点是否在多边形内。
+
+我们遍历所有平面，如果我们能找到一个到点的距离为正的平面，那么该点就在多边形之外。如果我们做不到，那么问题就在内部。
+
+代码应该是这样的：
+
+```python
+var inside = true
+for p in planes:
+    # check if distance to plane is positive
+    if (p.distance_to(point) > 0):
+        inside = false
+        break # with one that fails, it's enough
+```
+
+很酷吧？但情况好多了！只要再努力一点，类似的逻辑就会让我们知道两个凸多边形何时也重叠。这被称为分离轴定理（SAT），大多数物理引擎都使用它来检测碰撞。
+
+对于一个点，只需检查平面是否返回正距离就足以判断该点是否在外部。对于另一个多边形，我们必须找到一个*所有其他多边形点*都返回正距离的平面。此检查是用 A 的平面对 B 的点执行的，然后用 B 的平面对 A 的点执行：
+
+代码应该是这样的：
+
+```python
+var overlapping = true
+
+for p in planes_of_A:
+    var all_out = true
+    for v in points_of_B:
+        if (p.distance_to(v) < 0):
+            all_out = false
+            break
+
+    if (all_out):
+        # a separating plane was found
+        # do not continue testing
+        overlapping = false
+        break
+
+if (overlapping):
+    # only do this check if no separating plane
+    # was found in planes of A
+    for p in planes_of_B:
+        var all_out = true
+        for v in points_of_A:
+            if (p.distance_to(v) < 0):
+                all_out = false
+                break
+
+        if (all_out):
+            overlapping = false
+            break
+
+if (overlapping):
+    print("Polygons Collided!")
+```
+
+正如你所看到的，飞机非常有用，而这只是冰山一角。您可能想知道非凸多边形会发生什么。这通常只是通过将凹多边形拆分为较小的凸多边形来处理，或者使用诸如 BSP 之类的技术（现在很少使用）。
+
+#### 3D 中的碰撞检测
+
+这是另一个额外的奖励，是对耐心和跟上这篇长教程的奖励。这是另一条智慧。这可能不是一个直接的用例（Godot 已经很好地进行了碰撞检测），但几乎所有的物理引擎和碰撞检测库都使用它 :)
+
+还记得将 2D 中的凸形转换为 2D 平面阵列对于碰撞检测很有用吗？您可以检测一个点是否在任何凸形内，或者两个 2D 凸形是否重叠。
+
+好吧，这在 3D 中也适用，如果两个 3D 多面体形状碰撞，你将无法找到分离平面。如果找到了一个分离平面，那么这些形状肯定不会碰撞。
+
+为了刷新一点，分离平面意味着多边形 A 的所有顶点都在平面的一侧，而多边形 B 的所有顶点在另一侧。该平面始终是多边形 A 或多边形 B 的面平面之一。
+
+然而，在 3D 中，这种方法存在问题，因为在某些情况下可能找不到分离平面。这就是这种情况的一个例子：
+
+为了避免这种情况，需要测试一些额外的平面作为分隔符，这些平面是多边形 A 的边和多边形 B 的边之间的叉积
+
+所以最后的算法是这样的：
+
+```python
+var overlapping = true
+
+for p in planes_of_A:
+    var all_out = true
+    for v in points_of_B:
+        if (p.distance_to(v) < 0):
+            all_out = false
+            break
+
+    if (all_out):
+        # a separating plane was found
+        # do not continue testing
+        overlapping = false
+        break
+
+if (overlapping):
+    # only do this check if no separating plane
+    # was found in planes of A
+    for p in planes_of_B:
+        var all_out = true
+        for v in points_of_A:
+            if (p.distance_to(v) < 0):
+                all_out = false
+                break
+
+        if (all_out):
+            overlapping = false
+            break
+
+if (overlapping):
+    for ea in edges_of_A:
+        for eb in edges_of_B:
+            var n = ea.cross(eb)
+            if (n.length() == 0):
+                continue
+
+            var max_A = -1e20 # tiny number
+            var min_A = 1e20 # huge number
+
+            # we are using the dot product directly
+            # so we can map a maximum and minimum range
+            # for each polygon, then check if they
+            # overlap.
+
+            for v in points_of_A:
+                var d = n.dot(v)
+                max_A = max(max_A, d)
+                min_A = min(min_A, d)
+
+            var max_B = -1e20 # tiny number
+            var min_B = 1e20 # huge number
+
+            for v in points_of_B:
+                var d = n.dot(v)
+                max_B = max(max_B, d)
+                min_B = min(min_B, d)
+
+            if (min_A > max_B or min_B > max_A):
+                # not overlapping!
+                overlapping = false
+                break
+
+        if (not overlapping):
+            break
+
+if (overlapping):
+   print("Polygons collided!")
+```
+
+#### 更多信息
+
+有关在 Godot 中使用向量数学的更多信息，请参阅以下文章：
+
+- 矩阵与变换
+
+如果您想要更多的解释，您应该查看 3Blue1Brown 的优秀视频系列“线性代数的本质”：https://www.youtube.com/watch?v=fNk_zzaMoSs&list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab
+
+### 矩阵与变换
+
+#### 简介
+
+在阅读本教程之前，我们建议您彻底阅读并理解矢量数学教程，因为本教程需要矢量知识。
+
+本教程是关于*转换*以及我们如何在 Godot 中使用矩阵来表示它们。它并不是矩阵的全面深入指南。变换在大多数情况下应用为平移、旋转和缩放，因此我们将重点讨论如何用矩阵表示这些变换。
+
+本指南的大部分内容都集中在 2D 上，使用 Transform2D 和 Vector2，但 3D 中的工作方式非常相似。
+
+> **注意：**
+>
+> 如前一教程中所述，重要的是要记住，在 Godot 中，Y 轴在 2D 中向下指向。这与大多数学校教授线性代数的方式相反，Y 轴指向上。
+
+> **注意：**
+>
+> 惯例是 X 轴为红色，Y 轴为绿色，Z 轴为蓝色。本教程的颜色编码与这些约定相匹配，但我们也将用蓝色表示原点向量。
+
+##### 矩阵分量与恒等矩阵
+
+单位矩阵表示没有平移、没有旋转和没有缩放的变换。让我们先来看看单位矩阵，以及它的组成部分与它的视觉表现之间的关系。
+
+矩阵有行和列，变换矩阵对每个矩阵的作用有特定的约定。
+
+在上面的图像中，我们可以看到红色的 X 矢量由矩阵的第一列表示，绿色的 Y 矢量同样由第二列表示。对列的更改将更改这些向量。我们将在接下来的几个例子中看到它们是如何被操纵的。
+
+您不应该担心直接操作行，因为我们通常处理列。然而，您可以将矩阵的行视为显示哪些向量有助于在给定方向上移动。
+
+当我们引用诸如 *t.x.y* 之类的值时，它是 X 列向量的 Y 分量。换句话说，矩阵的左下角。类似地，*t.x.x* 是左上角，*t.y.x* 是右上角，而 *t.y.y* 是右下角，其中 *t* 是 Transform2D。
+
+##### 缩放变换矩阵
+
+应用量表是最容易理解的操作之一。让我们首先将 Godot 标志放在向量下面，这样我们就可以直观地看到对象上的效果：
+
+现在，要缩放矩阵，我们所需要做的就是将每个分量乘以我们想要的缩放比例。让我们把它放大 2。1 乘以 2 变成 2，0 乘以 2 变成 0，所以我们得出这样的结论：
+
+为了在代码中做到这一点，我们将每个向量相乘：
+
+```python
+var t = Transform2D()
+# Scale
+t.x *= 2
+t.y *= 2
+transform = t # Change the node's transform to what we calculated.
+```
+
+如果我们想将其恢复到原始比例，我们可以将每个分量乘以 0.5。这几乎就是缩放变换矩阵的全部内容。
+
+要根据现有的变换矩阵计算对象的比例，可以对每个列向量使用 `length()`。
+
+> **注意：**
+>
+> 在实际项目中，可以使用 `scaled()` 方法来执行缩放。
+
+##### 旋转变换矩阵
+
+我们将以与前面相同的方式开始，在身份矩阵下面添加 Godot 标志：
+
+举个例子，假设我们想将 Godot 徽标顺时针旋转 90 度。现在，X 轴指向右侧，Y 轴指向下方。如果我们在脑海中旋转这些，我们会从逻辑上看到新的 X 轴应该指向下方，新的 Y 轴应该指向左侧。
+
+你可以想象，你抓住 Godot 标志和它的矢量，然后围绕中心旋转。无论您在哪里完成旋转，向量的方向都决定了矩阵是什么。
+
+我们需要在法线坐标中表示“向下”和“向左”，这意味着我们将 X 设置为 (0, 1)，将 Y 设置为 (-1, 0)。这些也是 `Vector2.DOWN` 和 `Vector2.LEFT` 的值。当我们这样做时，我们会得到旋转对象所需的结果：
+
+如果你在理解上面的内容时有困难，可以试试这个练习：剪一张正方形的纸，在上面画 X 和 Y 向量，把它放在图形纸上，然后旋转它并记下端点。
+
+要在代码中执行旋转，我们需要能够以编程方式计算这些值。此图显示了从旋转角度计算变换矩阵所需的公式。如果这部分看起来很复杂，不要担心，我保证这是你需要知道的最难的事情。
+
+> **注意：**
+>
+> Godot 用弧度而不是度数表示所有旋转。一整圈是 *TAU* 或 *PI*2* 弧度，而 90 度的四分之一圈是 *TAU/4* 或 *PI/2* 弧度。使用 *TAU* 通常会产生可读性更强的代码。
+
+> **注意：**
+>
+> 有趣的事实：除了在 Godot 中 Y *向下*，旋转是顺时针表示的。这意味着所有的数学和 trig 函数的行为与 Y-is-up CCW 系统相同，因为这些差异“抵消”了。你可以把两个系统中的旋转都看作是“从 X 到 Y”。
+
+为了执行 0.5 弧度（约 28.65 度）的旋转，我们将 0.5 的值代入上述公式，并进行评估，以找到实际值：
+
+以下是如何在代码中完成的（将脚本放在 Node2D 上）：
+
+```python
+var rot = 0.5 # The rotation to apply.
+var t = Transform2D()
+t.x.x = cos(rot)
+t.y.y = cos(rot)
+t.x.y = sin(rot)
+t.y.x = -sin(rot)
+transform = t # Change the node's transform to what we calculated.
+```
+
+若要根据现有变换矩阵计算对象的旋转，可以使用 `atan2(t.x.y，t.x.x)`，其中 t 是 Transform2D。
+
+> **注意：**
+>
+> 在实际项目中，可以使用 `rotated()` 方法执行旋转。
+
+##### 变换矩阵的基础
+
+到目前为止，我们只研究了 *x* 和 *y*，向量，它们负责表示旋转、缩放和/或剪切（高级，最后介绍）。X 和 Y 向量一起被称为变换矩阵的基。“基”和“基向量”这两个术语很重要。
+您可能已经注意到 Transform2D 实际上有三个 Vector2 值：`x`、`y` 和 `origin`。`origin` 不是基础的一部分，但它是变换的一部分。我们需要它来表示位置。从现在起，我们将跟踪所有示例中的原点向量。你可以将起源视为另一个专栏，但通常最好将其视为完全独立的。
+
+请注意，在 3D 中，Godot 有一个单独的 Basis 结构，用于保存基的三个 Vector3 值，因为代码可能会变得复杂，并且将其与 Transform3D（由一个 Basis 和一个额外的 Vector3 组成）分离是有意义的。
+
+##### 转换转换矩阵
+
+改变 `origin` 向量称为平移变换矩阵。平移基本上是一个“移动”物体的技术术语，但它明确不涉及任何旋转。
+
+让我们通过一个例子来帮助理解这一点。我们将像上次一样从恒等式变换开始，只是这次我们将跟踪原点向量。
+
+如果我们想将对象移动到 (1, 2) 的位置，我们需要将其 `origin` 向量设置为 (1, 2) 中：
+
+还有一个 `translated()` 方法，它执行与直接添加或更改 `origin` 不同的操作。`translated()` 方法将*相对于对象自身的旋转*平移对象。例如，当使用 `Vector2.UP` 调用 `translated()` 时，顺时针旋转 90 度的对象将向右移动。
+
+> **注意：**
+>
+> Godot 的 2D 使用基于像素的坐标，因此在实际项目中，您需要平移数百个单位。
+
+##### 综合起来
+
+我们将把迄今为止提到的所有内容应用到一个变换上。接下来，使用 Sprite2D 节点创建一个项目，并使用 Godot 徽标作为纹理资源。
+
+让我们将平移设置为 (350, 150)，旋转 -0.5 弧度，缩放 3。我发布了一张截图，以及复制它的代码，但我鼓励你尝试在不看代码的情况下复制截图！
+
+```python
+var t = Transform2D()
+# Translation
+t.origin = Vector2(350, 150)
+# Rotation
+var rot = -0.5 # The rotation to apply.
+t.x.x = cos(rot)
+t.y.y = cos(rot)
+t.x.y = sin(rot)
+t.y.x = -sin(rot)
+# Scale
+t.x *= 3
+t.y *= 3
+transform = t # Change the node's transform to what we calculated.
+```
+
+##### 剪切变换矩阵（高级）
+
+> **注意：**
+>
+> 如果您只是想了解如何*使用*变换矩阵，请随意跳过本教程的这一部分。本节探讨了变换矩阵的一个不常见的方面，目的是建立对它们的理解。
+>
+> Node2D 提供了开箱即用的剪切特性。
+
+您可能已经注意到，变换比上述动作的组合具有更多的自由度。2D 变换矩阵的基础在两个 Vector2 值中总共有四个数字，而旋转值和缩放的 Vector2 只有 3 个数字。缺失自由度的高级概念被称为剪切。
+
+通常情况下，基本向量总是相互垂直。但是，剪切在某些情况下可能很有用，了解剪切可以帮助您了解变换是如何工作的。
+
+为了直观地向您展示它的外观，让我们在 Godot 徽标上覆盖一个网格：
+
+该网格上的每个点都是通过将基向量相加而获得的。右下角是 X + Y，而右上角是 X - Y。如果我们改变基向量，整个网格都会随之移动，因为网格是由基向量组成的。无论我们对基向量做什么更改，网格上当前平行的所有线都将保持平行。
+
+例如，让我们将 Y 设置为 (1, 1)：
+
+```python
+var t = Transform2D()
+# Shear by setting Y to (1, 1)
+t.y = Vector2.ONE
+transform = t # Change the node's transform to what we calculated.
+```
+
+> **注意：**
+>
+> 不能在编辑器中设置 Transform2D 的原始值，因此如果要剪切对象，则*必须*使用代码。
+
+由于矢量不再垂直，对象已被剪切。栅格的底部中心（相对于自身为 (0, 1)）现在位于 (1, 1) 的世界位置。
+
+对象内坐标在纹理中被称为 UV 坐标，所以让我们借用这个术语。要从相对位置找到世界位置，公式为 U * X + V * Y，其中 U 和 V 是数字，X 和 Y 是基向量。
+
+栅格的右下角始终位于 UV 位置 (1, 1) 处，位于世界位置 (2, 1)，该位置是根据 X * 1 + Y * 1 计算得出的，即 (1, 0) + (1, 1)、或 (1 + 1, 0 + 1) 或 (2, 1)。这与我们观察到的图像右下角的位置相吻合。
+
+类似地，始终位于 UV 位置 (1, -1) 的栅格的右上角位于世界位置 (0, -1)，该位置是根据 X * 1 + Y * -1 计算的，即 (1, 0) - (1, 1)、或 (1 - 1, 0 - 1) 或 (0, -1)。这与我们观察到的图像右上角的位置相吻合。
+
+希望您现在能够完全理解变换矩阵如何影响对象，以及基向量之间的关系，以及对象的 “UV” 或“内部坐标”如何改变其世界位置。
+
+> **注意：**
+>
+> 在 Godot 中，所有变换数学运算都是相对于父节点进行的。当我们提到“世界位置”时，如果节点有父节点，那么它将相对于节点的父节点。
+
+如果您想了解更多解释，请查看 3Blue1Brown 关于线性变换的精彩视频：https://www.youtube.com/watch?v=kYB8IZa5AuE
+
+#### 变换的实际应用
+
+在实际项目中，通常通过将多个 Node2D 或 Node3D 节点作为彼此的父节点来处理变换内部的变换。
+
+然而，了解如何手动计算我们需要的值是很有用的。我们将介绍如何使用 Transform2D 或 Transform3D 手动计算节点的变换。
+
+##### 转换变换之间的位置
+
+在许多情况下，您希望在变换中转换位置和从变换中转换出位置。例如，如果您有一个相对于玩家的位置，并希望找到世界（父相对）位置，或者如果您有世界位置，并想知道它相对于玩家的相对位置。
+
+我们可以使用 `*` 运算符找到在世界空间中相对于玩家的向量的定义：
+
+```python
+# World space vector 100 units below the player.
+print(transform * Vector2(0, 100))
+```
+
+我们可以按相反的顺序使用 `*` 运算符来找到一个世界空间位置，如果它是相对于玩家定义的：
+
+```python
+# Where is (0, 100) relative to the player?
+print(Vector2(0, 100) * transform)
+```
+
+> **注意：**
+>
+> 如果您事先知道变换位于 (0, 0)，则可以使用 “basis_xform” 或 “basis_xform_inv” 方法，这些方法可以跳过处理转换。
+
+##### 相对于自身移动对象
+
+一种常见的操作，尤其是在 3D 游戏中，是相对于物体本身移动物体。例如，在第一人称射击游戏中，按 `W` 时，您希望角色向前移动（-Z 轴）。
+
+由于基向量是相对于父对象的方向，而原点向量是相对于其父对象的位置，因此我们可以将基向量的倍数相加，以相对于对象本身移动对象。
+
+此代码将一个对象向右移动 100 个单位：
+
+```python
+transform.origin += transform.x * 100
+```
+
+对于在三维中移动，您需要将 “x” 替换为 “based.x”。
+
+> **注意：**
+>
+> 在实际项目中，可以在三维中使用 `translate_object_local` 或在二维中使用 `move_local_x` 和 `move_local_y` 来执行此操作。
+
+##### 将变换应用于变换
+
+关于变换，需要了解的最重要的一点是如何将其中的几个变换一起使用。父节点的变换会影响其所有子节点。让我们剖析一个例子。
+
+在该图中，子节点在组件名称后面有一个“2”，以将它们与父节点区分开来。这么多数字可能看起来有点让人不知所措，但请记住，每个数字都显示两次（在箭头旁边和矩阵中），而且几乎一半的数字都是零。
+
+这里进行的唯一转换是，父节点被赋予了 (2, 1) 的比例，子节点被赋予 (0.5, 0.5) 的比例并且两个节点都被赋予了位置。
+
+所有子变换都受父变换的影响。子对象的比例为 (0.5, 0.5)，因此您希望它是 1:1 的比例平方，而且它确实是，但仅相对于父对象。子对象的 X 向量最终在世界空间中为 (1, 0)，因为它是由父对象的基向量缩放的。类似地，子节点的 `origin` 向量设置为 (1, 1)，但由于父节点的基向量，这实际上会在世界空间中移动它 (2, 1)。
+
+要手动计算子变换的世界空间变换，我们将使用以下代码：
+
+```python
+# Set up transforms like in the image, except make positions be 100 times bigger.
+var parent = Transform2D(Vector2(2, 0), Vector2(0, 1), Vector2(100, 200))
+var child = Transform2D(Vector2(0.5, 0), Vector2(0, 0.5), Vector2(100, 100))
+
+# Calculate the child's world space transform
+# origin = (2, 0) * 100 + (0, 1) * 100 + (100, 200)
+var origin = parent.x * child.origin.x + parent.y * child.origin.y + parent.origin
+# basis_x = (2, 0) * 0.5 + (0, 1) * 0
+var basis_x = parent.x * child.x.x + parent.y * child.x.y
+# basis_y = (2, 0) * 0 + (0, 1) * 0.5
+var basis_y = parent.x * child.y.x + parent.y * child.y.y
+
+# Change the node's transform to what we calculated.
+transform = Transform2D(basis_x, basis_y, origin)
+```
+
+在实际项目中，我们可以通过使用 `*` 运算符将一个变换应用于另一个变换来找到子对象的世界变换：
+
+```python
+# Set up transforms like in the image, except make positions be 100 times bigger.
+var parent = Transform2D(Vector2(2, 0), Vector2(0, 1), Vector2(100, 200))
+var child = Transform2D(Vector2(0.5, 0), Vector2(0, 0.5), Vector2(100, 100))
+
+# Change the node's transform to what would be the child's world transform.
+transform = parent * child
+```
+
+> **注意：**
+>
+> 矩阵相乘时，顺序很重要！不要把它们弄混。
+
+最后，应用身份转换始终不会起到任何作用。
+
+如果您想了解更多解释，请查看 3Blue1Brown 关于矩阵组成的精彩视频：https://www.youtube.com/watch?v=XkY2DOUCWMU
+
+##### 反转变换矩阵
+
+“affine_inverse” 函数返回一个“撤消”上一个变换的变换。这在某些情况下可能很有用。让我们来看看几个例子。
+
+将逆变换与法线变换相乘将撤消所有变换：
+
+```python
+var ti = transform.affine_inverse()
+var t = ti * transform
+# The transform is the identity transform.
+```
+
+通过变换及其逆变换对位置进行变换会得到相同的位置：
+
+```python
+var ti = transform.affine_inverse()
+position = transform * position
+position = ti * position
+# The position is the same as before.
+```
+
+#### 这一切是如何在 3D 中工作的？
+
+变换矩阵的一大优点是，它们在 2D 和 3D 变换之间的工作方式非常相似。上面用于 2D 的所有代码和公式在 3D 中都是一样的，除了 3 个例外：添加了第三个轴，每个轴的类型都是 Vector3，而且 Godot 将 Basis 与 Transform3D 分开存储，因为数学可能会变得复杂，将其分开是有意义的。
+
+与 2D 相比，3D 中平移、旋转、缩放和剪切的所有概念都是相同的。为了进行缩放，我们取每个分量并将其相乘；为了旋转，我们改变每个基向量指向的位置；为了变换，我们操纵原点；对于剪切，我们将基向量改变为非垂直的。
+
+如果你愿意的话，玩转换是一个好主意，以了解它们是如何工作的。Godot 允许您直接从检查器编辑三维变换矩阵。您可以下载这个项目，它有彩色的线和立方体，以帮助在二维和三维中可视化基本矢量和原点：https://github.com/godotengine/godot-demo-projects/tree/master/misc/matrix_transform
+
+> **注意：**
+>
+> 您不能在 Godot 4.0 的检查器中直接编辑 Node2D 的变换矩阵。这一点可能会在 Godot 的未来版本中有所改变。
+
+如果您想了解更多解释，请查看 3Blue1Brown 关于 3D 线性变换的精彩视频：https://www.youtube.com/watch?v=rHLEWRxRGiM
+
+##### 以 3D 表示旋转（高级）
+
+二维和三维变换矩阵之间最大的区别是如何在没有基向量的情况下单独表示旋转。
+
+对于 2D，我们有一种简单的方法（atan2）在变换矩阵和角度之间切换。在三维中，旋转过于复杂，无法表示为一个数字。有一种叫做欧拉角的东西，它可以将旋转表示为一组 3 个数字，然而，除了琐碎的情况外，它们是有限的，也不是很有用。
+
+在 3D 中，我们通常不使用角度，我们要么使用变换基（在 Godot 中几乎到处都使用），要么使用四元数。Godot 可以使用四元数结构来表示四元数。我给你的建议是完全忽略它们是如何在引擎盖下工作的，因为它们非常复杂和不直观。
+
+然而，如果你真的必须知道它是如何工作的，这里有一些很棒的资源，你可以按顺序遵循：
+https://www.youtube.com/watch?v=mvmuCPvRoWQ
+https://www.youtube.com/watch?v=d4EgbgTm0Bg
+https://eater.net/quaternions
+
+### 插值
+
+插值是图形编程中非常基本的操作。熟悉它是件好事，这样可以拓展你作为图形开发人员的视野。
+
+基本思想是，您希望从 A 转换到 B。值 `t` 表示介于两者之间的状态。
+
+例如，如果 `t` 是 0，则状态是 A。如果 `t` 是 1，则状态为 B。介于两者之间的任何东西都是*插值*。
+
+在两个实数（浮点）之间，插值可以描述为：
+
+```python
+interpolation = A * (1 - t) + B * t
+```
+
+并经常简写成：
+
+```python
+interpolation = A + (B - A) * t
+```
+
+这种以*恒定速度*将一个值转换为另一个值的插值的名称是“*线性*”。所以，当你听说*线性插值*时，你知道他们指的是这个公式。
+
+还有其他类型的插值，这里不涉及。之后推荐阅读 Bezier 页面。
+
+#### 矢量插值
+
+向量类型（Vector2 和 Vector3）也可以进行插值，它们附带了方便的函数 Vector2.lerp() 和 Vector3.lerp()。
+
+对于三次插值，还有 Vector2.cubic_interpolate() 和 Vector3.cubic_interpolate()，它们执行贝塞尔风格的插值。
+
+以下是使用插值从点 A 到点 B 的伪代码示例：
+
+```python
+var t = 0.0
+
+func _physics_process(delta):
+    t += delta * 0.4
+
+    $Sprite2D.position = $A.position.lerp($B.position, t)
+```
+
+它将产生以下运动：
+
+#### 变换插值
+
+也可以对整个变换进行插值（确保它们具有均匀的比例，或者至少具有相同的非均匀比例）。为此，可以使用函数 Transform3D.interpole_with()。
+
+以下是将猴子从位置 1 转换为位置 2 的示例：
+
+使用如下伪代码：
+
+```python
+var t = 0.0
+
+func _physics_process(delta):
+    t += delta
+
+    $Monkey.transform = $Position1.transform.interpolate_with($Position2.transform, t)
+```
+
+再一次，它生成如下运动：
+
+#### 平滑运动
+
+插值可用于平滑移动、旋转等。以下是使用平滑运动跟随鼠标的圆的示例：
+
+```python
+const FOLLOW_SPEED = 4.0
+
+func _physics_process(delta):
+    var mouse_pos = get_local_mouse_position()
+
+    $Sprite2D.position = $Sprite2D.position.lerp(mouse_pos, delta * FOLLOW_SPEED)
+```
+
+这是它看上去的样子：
+
+这对于平滑相机移动、盟友跟随你（确保他们保持在一定范围内）以及许多其他常见的游戏模式非常有用。
+
+### 贝塞尔、曲线和路径
+
+贝塞尔曲线是自然几何形状的数学近似。我们使用它们来表示一条信息尽可能少且具有高度灵活性的曲线。
+
+与更抽象的数学概念不同，贝塞尔曲线是为工业设计而创建的。它们是图形软件行业中流行的工具。
+
+它们依赖于插值，正如我们在上一篇文章中看到的那样，将多个步骤结合起来创建平滑的曲线。为了更好地理解贝塞尔曲线是如何工作的，让我们从它最简单的形式开始：二次贝塞尔曲线。
+
+#### 二次贝塞尔
+
+取三点，二次贝塞尔函数工作所需的最小值：
+
+为了在它们之间绘制曲线，我们首先在由三个点形成的两个线段中的每个线段的两个顶点上逐渐插值，使用范围从 0 到 1 的值。当我们将 `t` 的值从 0 更改为 1 时，这给了我们两个沿着线段移动的点。
+
+```python
+func _quadratic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, t: float):
+    var q0 = p0.lerp(p1, t)
+    var q1 = p1.lerp(p2, t)
+```
+
+然后，我们对 `q0` 和 `q1` 进行插值，以获得沿着曲线移动的单个点 `r`。
+
+```python
+var r = q0.lerp(q1, t)
+return r
+```
+
+这种类型的曲线称为二次贝塞尔曲线。
+
+#### 三次贝塞尔
+
+在前面的例子的基础上，我们可以通过在四个点之间进行插值来获得更多的控制。
+
+我们首先使用具有四个参数的函数，以四个点作为输入，`p0`、`p1`、`p2` 和 `p3`：
+
+```python
+func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float):
+```
+
+我们对每对点应用线性插值，将它们减少为三个：
+
+```python
+var q0 = p0.lerp(p1, t)
+var q1 = p1.lerp(p2, t)
+var q2 = p2.lerp(p3, t)
+```
+
+然后，我们将我们的三点归结为两点：
+
+```python
+var r0 = q0.lerp(q1, t)
+var r1 = q1.lerp(q2, t)
+```
+
+再归为一点：
+
+```python
+var s = r0.lerp(r1, t)
+return s
+```
+
+这是整个函数：
+
+```python
+func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float):
+    var q0 = p0.lerp(p1, t)
+    var q1 = p1.lerp(p2, t)
+    var q2 = p2.lerp(p3, t)
+
+    var r0 = q0.lerp(q1, t)
+    var r1 = q1.lerp(q2, t)
+
+    var s = r0.lerp(r1, t)
+    return s
+```
+
+结果将是在所有四个点之间插值的平滑曲线：
+
+> **注意：**
+>
+> 三次贝塞尔插值在三维中的作用相同，只需使用 Vector3 而不是 Vector2。
+
+#### 添加控制点
+
+基于三次贝塞尔，我们可以改变其中两个点的工作方式，以自由控制曲线的形状。相比于有 `p0`、`p1`、`p2` 和 `p3`，我们将它们存储为：
+
+- `point0 = p0`：是第一个点，即源
+- `control0 = p1 - p0`：是相对于第一个控制点的矢量
+- `control1 = p3 - p2`：是相对于第二个控制点的矢量
+- `point1 = p3`：是第二个点，即目的地
+
+通过这种方式，我们有两个点和两个控制点，它们是各自点的相对向量。如果您以前使用过图形或动画软件，这可能看起来很熟悉：
+
+这就是图形软件向用户呈现贝塞尔曲线的方式，以及它们在 Godot 中的工作和外观。
+
+#### Curve2D、Curve3D、Path 和 Path2D
+
+有两个对象包含曲线：Curve3D 和 Curve2D（分别用于 3D 和 2D）。
+
+它们可以包含多个点，从而允许更长的路径。也可以将它们设置为节点：Path3D 和 Path2D（也可以分别用于 3D 和 2D）：
+
+然而，使用它们可能并不完全显而易见，所以下面是对贝塞尔曲线最常见的用例的描述。
+
+#### 评估
+
+只评估它们可能是一种选择，但在大多数情况下，这并不是很有用。Bezier 曲线的最大缺点是，如果以恒定速度遍历它们，从 `t=0` 到 `t=1`，实际插值将不会以恒定速度移动。速度也是点 `p0`、`p1`、`p2` 和 `p3` 之间的距离之间的插值，并且没有以恒定速度遍历曲线的数学上简单的方法。
+
+让我们用以下伪代码做一个示例：
+
+```python
+var t = 0.0
+
+func _process(delta):
+    t += delta
+    position = _cubic_bezier(p0, p1, p2, p3, t)
+```
+
+正如你所看到的，即使t以恒定的速度增加，圆的速度（以每秒像素为单位）也会发生变化。这使得边框很难用于任何开箱即用的实用工具。
+
+#### 绘制
+
+绘制边框（或基于曲线的对象）是一个非常常见的用例，但这也不容易。几乎在任何情况下，贝塞尔曲线都需要转换为某种线段。然而，如果不产生非常高的数量，这通常是困难的。
+
+原因是曲线的某些部分（特别是拐角）可能需要大量的点，而其他部分可能不需要：
+
+此外，如果两个控制点都是 `0, 0`（记住它们是相对向量），则贝塞尔曲线将只是一条直线（因此绘制大量点将是浪费的）。
+
+在绘制贝塞尔曲线之前，需要进行*镶嵌*。这通常是通过递归或分治函数来完成的，该函数分割曲线，直到曲率量小于某个阈值。
+
+*Curve* 类通过 Curve2D.steslate() 函数（该函数接收递归和角度 `tolerance` 参数的可选 `stages`）提供这一点。这样，基于曲线绘制东西更容易。
+
+#### 遍历
+
+曲线的最后一个常见用例是遍历它们。由于前面提到的恒速，这也是很困难的。
+
+为了更容易做到这一点，需要将曲线烘焙成等距点。这样，它们可以用正则插值来近似（可以用三次选项进一步改进）。要做到这一点，只需将 Curve3D.sample_baked() 方法与 Curve2D.get_baked_length() 一起使用即可。对其中任何一个的第一次调用都会在内部烘焙曲线。
+
+那么，可以使用以下伪代码以恒定速度进行遍历：
+
+```python
+var t = 0.0
+
+func _process(delta):
+    t += delta
+    position = curve.sample_baked(t * curve.get_baked_length(), true)
+```
+
+然后，输出将以恒定速度移动：
+
+### 随机数生成
+
+许多游戏依靠随机性来实现核心游戏机制。本页指导您了解常见类型的随机性，以及如何在 Godot 中实现它们。
+
+在简要概述了生成随机数的有用函数后，您将了解如何从数组、字典中获取随机元素，以及如何在 GDScript 中使用噪声生成器。
+
+> **注意：**
+>
+> 计算机无法生成“真实”的随机数。相反，它们依赖于伪随机数生成器（PRNG）。
+
+#### 全局作用域与 RandomNumberGenerator 类
+
+Godot 公开了两种生成随机数的方法：通过全局范围方法或使用 RandomNumberGenerator 类。
+
+全局范围方法更容易设置，但它们不能提供那么多控制。
+
+RandomNumberGenerator 需要更多的代码来使用，但允许创建多个实例，每个实例都有自己的种子和状态。
+
+本教程使用全局范围方法，除非该方法仅存在于 RandomNumberGenerator 类中。
+
+#### randomize() 方法
+
+在全局范围内，您可以找到一个 randomize() 方法。**当项目开始初始化随机种子时，只应调用一次此方法。**多次调用它是不必要的，可能会对性能产生负面影响。
+
+将其放在主场景脚本的 `_ready()` 方法中是一个不错的选择：
+
+```python
+func _ready():
+    randomize()
+```
+
+您也可以使用 seed() 设置固定的随机种子。这样做将使您在运行过程中获得*确定性*结果：
+
+```python
+func _ready():
+    seed(12345)
+    # To use a string as a seed, you can hash it to a number.
+    seed("Hello world".hash())
+```
+
+使用 RandomNumberGenerator 类时，应该对实例调用 `randomize()`，因为它有自己的种子：
+
+```python
+var random = RandomNumberGenerator.new()
+random.randomize()
+```
+
+#### 获取随机数
+
+让我们来看看 Godot 中生成随机数的一些最常用的函数和方法。
+
+函数 randi() 返回一个介于 0 和 2^32-1 之间的随机数。由于最大值是巨大的，您很可能希望使用模运算符（`%`）将结果绑定在 0 和分母之间：
+
+```python
+# Prints a random integer between 0 and 49.
+print(randi() % 50)
+
+# Prints a random integer between 10 and 60.
+print(randi() % 51 + 10)
+```
+
+randf() 返回一个介于 0 和 1 之间的随机浮点数。这对于实现加权随机概率系统等是有用的。
+
+randfn() 返回一个遵循正态分布的随机浮点数。这意味着返回的值更有可能在平均值（默认值为 0.0）附近，随偏差（默认值 1.0）而变化：
+
+```python
+# Prints a random floating-point number from a normal distribution with a mean 0.0 and deviation 1.0.
+var random = RandomNumberGenerator.new()
+random.randomize()
+print(random.randfn())
+```
+
+randf_range() 接受 `from` 和 `to` 两个参数，并返回一个介于 `from` 和 `to` 之间的随机浮点数：
+
+```python
+# Prints a random floating-point number between -4 and 6.5.
+print(randf_range(-4, 6.5))
+```
+
+RandomNumberGenerator.randi_range() 接受 `from` 和 `to` 两个参数，并返回一个介于 `from` 和 `to` 之间的随机整数：
+
+```python
+# Prints a random integer between -10 and 10.
+var random = RandomNumberGenerator.new()
+random.randomize()
+print(random.randi_range(-10, 10))
+```
+
+#### 获取一个随机数组元素
+
+我们可以使用随机整数生成来从数组中获取随机元素：
+
+```python
+var _fruits = ["apple", "orange", "pear", "banana"]
+
+func _ready():
+    randomize()
+
+    for i in range(100):
+        # Pick 100 fruits randomly.
+        print(get_fruit())
+
+
+func get_fruit():
+    var random_fruit = _fruits[randi() % _fruits.size()]
+    # Returns "apple", "orange", "pear", or "banana" every time the code runs.
+    # We may get the same fruit multiple times in a row.
+    return random_fruit
+```
+
+为了防止同一种水果被连续采摘不止一次，我们可以为这种方法添加更多的逻辑：
+
+```python
+var _fruits = ["apple", "orange", "pear", "banana"]
+var _last_fruit = ""
+
+
+func _ready():
+    randomize()
+
+    # Pick 100 fruits randomly.
+    for i in range(100):
+        print(get_fruit())
+
+
+func get_fruit():
+    var random_fruit = _fruits[randi() % _fruits.size()]
+    while random_fruit == _last_fruit:
+        # The last fruit was picked, try again until we get a different fruit.
+        random_fruit = _fruits[randi() % _fruits.size()]
+
+    # Note: if the random element to pick is passed by reference,
+    # such as an array or dictionary,
+    # use `_last_fruit = random_fruit.duplicate()` instead.
+    _last_fruit = random_fruit
+
+    # Returns "apple", "orange", "pear", or "banana" every time the code runs.
+    # The function will never return the same fruit more than once in a row.
+    return random_fruit
+```
+
+这种方法有助于减少随机数生成的重复性。尽管如此，它并不能阻止结果在有限的一组值之间“乒乓球”。为了防止这种情况发生，请改用洗牌袋模式。
+
+#### 获取随机字典值
+
+我们还可以将类似的逻辑从数组应用到字典中：
+
+```python
+var metals = {
+    "copper": {"quantity": 50, "price": 50},
+    "silver": {"quantity": 20, "price": 150},
+    "gold": {"quantity": 3, "price": 500},
+}
+
+
+func _ready():
+    randomize()
+
+    for i in range(20):
+        print(get_metal())
+
+
+func get_metal():
+    var random_metal = metals.values()[randi() % metals.size()]
+    # Returns a random metal value dictionary every time the code runs.
+    # The same metal may be selected multiple times in succession.
+    return random_metal
+```
+
+#### 加权随机概率
+
+randf() 方法返回一个介于 0.0 和 1.0 之间的浮点数。我们可以用它来创建一个“加权”概率，其中不同的结果具有不同的可能性：
+
+```python
+func _ready():
+    randomize()
+
+    for i in range(100):
+        print(get_item_rarity())
+
+
+func get_item_rarity():
+    var random_float = randf()
+
+    if random_float < 0.8:
+        # 80% chance of being returned.
+        return "Common"
+    elif random_float < 0.95:
+        # 15% chance of being returned.
+        return "Uncommon"
+    else:
+        # 5% chance of being returned.
+        return "Rare"
+```
+
+#### 使用洗牌袋“更好”的随机性
+
+举一个与上面相同的例子，我们想随机挑选水果。然而，每次选择水果时依赖随机数生成可能会导致分布不太均匀。如果玩家运气好（或不好），他们可以连续三次或更多次获得相同的水果。
+
+您可以使用洗牌袋模式来完成此操作。它的工作原理是在选择一个元素后将其从数组中删除。经过多次选择后，数组最终为空。发生这种情况时，您可以将其重新初始化为默认值：
+
+```python
+var _fruits = ["apple", "orange", "pear", "banana"]
+# A copy of the fruits array so we can restore the original value into `fruits`.
+var _fruits_full = []
+
+
+func _ready():
+    randomize()
+    _fruits_full = _fruits.duplicate()
+    _fruits.shuffle()
+
+    for i in 100:
+        print(get_fruit())
+
+
+func get_fruit():
+    if _fruits.empty():
+        # Fill the fruits array again and shuffle it.
+        _fruits = _fruits_full.duplicate()
+        _fruits.shuffle()
+
+    # Get a random fruit, since we shuffled the array,
+    # and remove it from the `_fruits` array.
+    var random_fruit = _fruits.pop_front()
+    # Prints "apple", "orange", "pear", or "banana" every time the code runs.
+    return random_fruit
+```
+
+当运行上述代码时，有机会连续两次获得相同的结果。一旦我们选择了一个水果，它将不再是一个可能的返回值，除非数组现在为空。当数组为空时，我们将其重置回默认值，从而可以再次获得相同的结果，但只能获得一次。
+
+#### 随机噪声
+
+当您需要一个根据输入*缓慢*变化的值时，上面显示的随机数生成可以显示其极限。输入可以是位置、时间或任何其他信息。
+
+为此，可以使用随机噪波函数。噪波函数在生成逼真地形的过程生成中尤其流行。Godot 为此提供了 FastNoiseLite，它支持 1D、2D 和 3D 噪声。以下是 1D 噪声的示例：
+
+```python
+var _noise = FastNoiseLite.new()
+
+func _ready():
+    randomize()
+    # Configure the FastNoiseLite instance.
+    _noise.noise_type = FastNoiseLite.NoiseType.TYPE_SIMPLEX_SMOOTH
+    _noise.seed = randi()
+    _noise.fractal_octaves = 4
+    _noise.frequency = 1.0 / 20.0
+
+    for i in 100:
+        # Prints a slowly-changing series of floating-point numbers
+        # between -1.0 and 1.0.
+        print(_noise.get_noise_1d(i))
+```
+
+
+
 ## 性能
 
 ### 简介
