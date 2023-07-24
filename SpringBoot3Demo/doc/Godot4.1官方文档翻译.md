@@ -6325,7 +6325,1621 @@ func _ready():
         print(_noise.get_noise_1d(i))
 ```
 
+## 导航
 
+### 二维导航概述
+
+Godot 提供了多个对象、类和服务器，以便于 2D 和 3D 游戏的基于网格或网格的导航和寻路。以下部分快速概述了 Godot 中用于 2D 场景的所有可用导航相关对象及其主要用途。
+
+Godot 为二维导航提供了以下对象和类：
+
+- **[Astar2D](https://docs.godotengine.org/en/stable/classes/class_astar2d.html#class-astar2d)**
+
+  `Astar2D` 对象提供了在加权**点**图中查找最短路径的选项。
+
+  AStar2D 类最适合基于细胞的 2D 游戏，该游戏不需要演员到达区域内的任何可能位置，只需要预定义的不同位置。
+
+- **[NavigationServer2D](https://docs.godotengine.org/en/stable/classes/class_navigationserver2d.html#class-navigationserver2d)**
+
+  `NavigationServer2D` 提供了一个功能强大的服务器 API，用于查找导航网格定义的区域上两个位置之间的最短路径。
+
+  NavigationServer 最适合 2D 实时游戏，该游戏需要演员到达导航网格定义区域内的任何可能位置。基于网格的导航可以很好地适应大型游戏世界，因为当需要许多网格单元时，通常可以用单个多边形定义大区域。
+
+  NavigationServer 保存不同的导航地图，每个导航地图由保存导航网格数据的区域组成。可以将代理放置在地图上进行规避计算。RID 用于在与服务器通信时引用内部地图、区域和代理。
+
+  **以下 NavigationServer RID 类型可用。**
+
+  - **导航地图（NavMap）RID**
+    对包含区域和代理的特定导航地图的引用。地图将尝试通过接近度加入区域的已更改导航网格。该地图将同步每个物理帧的区域和代理。
+
+  - **导航区域（NavRegion）RID**
+
+    对可以保存导航网格数据的特定导航区域的引用。该区域可以启用/禁用，也可以使用导航层位掩码限制使用。
+
+  - **导航链接（NavLink）RID**
+
+    对特定导航链接的引用，该链接连接任意距离上的两个导航网格位置。
+
+  - **导航代理（NavAgent）RID**
+
+    对半径值仅用于回避的特定回避代理人的引用。
+
+以下场景树节点可用作使用 NavigationServer2D API 的助手。
+
+- **导航区域2D（[NavigationRegion2D](https://docs.godotengine.org/en/stable/classes/class_navigationregion2d.html#class-navigationregion2d)）节点**
+
+  持有 NavigationPolygon 资源的节点，该资源定义 NavigationServer2D 的导航网格。
+
+  - 可以启用/禁用该区域。
+  - 可以通过导航层位掩码进一步限制在寻路中的使用。
+  - 区域可以通过组合导航网格的接近度来连接其导航网格。
+
+- **导航链接2D（[NavigationLink2D](https://docs.godotengine.org/en/stable/classes/class_navigationlink2d.html#class-navigationlink2d)）节点**
+
+  在任意距离上连接导航网格上两个位置以进行路径查找的节点。
+
+  - 可以启用/禁用链接。
+  - 链接可以是单向的，也可以是双向的。
+  - 可以通过导航层位掩码进一步限制在寻路中的使用。
+
+  链接告诉路径查找连接的存在以及代价。实际的代理处理和移动需要在自定义脚本中进行。
+
+- **导航代理2D（[NavigationAgent2D](https://docs.godotengine.org/en/stable/classes/class_navigationagent2d.html#class-navigationagent2d)）节点**
+
+  帮助通用 NavigationServer2D API 的可选帮助节点调用 Node2D 继承父节点的路径查找和回避。
+
+- **导航障碍2D（[NavigationObstacle2D](https://docs.godotengine.org/en/stable/classes/class_navigationobstacle2d.html#class-navigationobstacle2d)）节点**
+
+  作为具有回避半径的代理的节点，需要将其添加到继承父节点的 Node2D 下才能工作。障碍物旨在作为无法有效地重新（烘焙）到导航网格的不断移动对象的最后选择。此节点也仅在使用 RVO 处理时工作。
+
+二维导航网格是使用以下资源定义的：
+
+- **导航多边形（[NavigationPolygon](https://docs.godotengine.org/en/stable/classes/class_navigationpolygon.html#class-navigationpolygon)）资源**
+
+  一种资源，用于保存二维导航网格数据，并提供多边形绘制工具，以便在编辑器内以及运行时定义导航区域。
+
+  - NavigationRegion2D 节点使用此资源来定义其导航区域。
+  - NavigationServer2D 使用此资源来更新各个区域的导航网格。
+  - 在定义平铺导航区域时，平铺集编辑器会在内部创建并使用此资源。
+
+> **参考：**
+>
+> 您可以使用 2D navigation Polygon 和基于网格的 navigation with AStarGrid2D 演示项目来了解 2D 导航是如何工作的。
+
+#### 2D 场景的设置
+
+以下步骤显示了 2D 中使用 NavigationServer2D 和 NavigationAgent2D 进行路径移动的最小可行导航的基本设置。
+
+1. 将 NavigationRegion2D 节点添加到场景中。
+
+2. 单击区域节点并将新的 NavigationPolygon 资源添加到区域节点。
+
+3. 使用 NavigationPolygon 绘制工具定义可移动导航区域。
+
+   > **注意：**
+   >
+   > 导航网格定义了演员可以站立和移动的区域。在导航多边形边和碰撞对象之间留出足够的余量，以避免路径跟随演员在碰撞时重复卡住。
+
+4. 在场景中添加 CharacterBody2D 节点，该节点具有基本碰撞形状和用于视觉效果的精灵或网格。
+
+5. 在角色节点下方添加 NavigationAgent2D 节点。
+
+6. 将以下脚本添加到 CharacterBody2D 节点。我们确保在场景完全加载并且 NavigationServer 有时间同步后设置移动目标。
+
+```python
+extends CharacterBody2D
+
+var movement_speed: float = 200.0
+var movement_target_position: Vector2 = Vector2(60.0,180.0)
+
+@onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
+
+func _ready():
+    # These values need to be adjusted for the actor's speed
+    # and the navigation layout.
+    navigation_agent.path_desired_distance = 4.0
+    navigation_agent.target_desired_distance = 4.0
+
+    # Make sure to not await during _ready.
+    call_deferred("actor_setup")
+
+func actor_setup():
+    # Wait for the first physics frame so the NavigationServer can sync.
+    await get_tree().physics_frame
+
+    # Now that the navigation map is no longer empty, set the movement target.
+    set_movement_target(movement_target_position)
+
+func set_movement_target(movement_target: Vector2):
+    navigation_agent.target_position = movement_target
+
+func _physics_process(delta):
+    if navigation_agent.is_navigation_finished():
+        return
+
+    var current_agent_position: Vector2 = global_position
+    var next_path_position: Vector2 = navigation_agent.get_next_path_position()
+
+    var new_velocity: Vector2 = next_path_position - current_agent_position
+    new_velocity = new_velocity.normalized()
+    new_velocity = new_velocity * movement_speed
+
+    velocity = new_velocity
+    move_and_slide()
+```
+
+> **注意：**
+>
+> 在第一帧中，NavigationServer 映射没有同步区域数据，任何路径查询都将返回空。等待一帧以暂停脚本，直到 NavigationServer 有时间同步为止。
+
+### 三维导航概述
+
+Godot 提供了多个对象、类和服务器，以便于 2D 和 3D 游戏的基于网格或网格的导航和寻路。以下部分快速概述了 Godot 中用于 3D 场景的所有可用导航相关对象及其主要用途。
+
+Godot 为三维导航提供了以下对象和类：
+
+- **[Astar3D](https://docs.godotengine.org/en/stable/classes/class_astar3d.html#class-astar3d)**
+
+  `Astar3D` 对象提供了在加权**点**图中查找最短路径的选项。
+
+  AStar3D 类最适合基于细胞的 3D 游戏，该游戏不需要演员到达区域内的任何可能位置，只需要预定义的不同位置。
+
+- **[NavigationServer3D](https://docs.godotengine.org/en/stable/classes/class_navigationserver3d.html#class-navigationserver3d)**
+  `NavigationServer3D` 提供了一个功能强大的服务器 API，用于查找由导航网格定义的区域上两个位置之间的最短路径。
+
+  NavigationServer 最适合 3D 实时游戏，它确实需要演员到达导航网格定义区域内的任何可能位置。基于网格的导航可以很好地适应大型游戏世界，因为当需要许多网格单元时，通常可以用单个多边形定义大区域。
+
+  NavigationServer 保存不同的导航地图，每个导航地图由保存导航网格数据的区域组成。可以将代理放置在地图上进行规避计算。RID 用于在与服务器通信时引用内部地图、区域和代理。
+
+  **以下 NavigationServer RID 类型可用。**
+
+  - **导航地图（NavMap）RID**
+
+    对包含区域和代理的特定导航地图的引用。地图将尝试通过接近度加入区域的已更改导航网格。该地图将同步每个物理帧的区域和代理。
+
+  - **导航区域（NavRegion）RID**
+
+    对可以保存导航网格数据的特定导航区域的引用。该区域可以启用/禁用，也可以使用导航层位掩码限制使用。
+
+  - **导航链接（NavLink）RID**
+
+    对特定导航链接的引用，该链接连接任意距离上的两个导航网格位置。
+
+  - **导航代理（NavAgent）RID**
+
+    对半径值仅用于回避的特定回避代理人的引用。
+
+以下场景树节点可用作使用 NavigationServer3D API 的助手。
+
+- **导航区域3D（[NavigationRegion3D](https://docs.godotengine.org/en/stable/classes/class_navigationregion3d.html#class-navigationregion3d)）节点**
+
+  持有导航网格资源的节点，该资源定义 NavigationServer3D 的导航网格。
+
+  - 可以启用/禁用该区域。
+  - 可以通过导航层位掩码进一步限制在寻路中的使用。
+  - 区域可以通过组合导航网格的接近度来连接其导航网格。
+
+- **导航链接3D（[NavigationLink3D](https://docs.godotengine.org/en/stable/classes/class_navigationlink3d.html#class-navigationlink3d)）节点**
+
+  在任意距离上连接导航网格上两个位置以进行路径查找的节点。
+
+  - 可以启用/禁用链接。
+  - 链接可以是单向的，也可以是双向的。
+  - 可以通过导航层位掩码进一步限制在寻路中的使用。
+
+  链接告诉路径查找连接的存在以及代价。实际的代理处理和移动需要在自定义脚本中进行。
+
+- **导航代理3D（[NavigationAgent3D](https://docs.godotengine.org/en/stable/classes/class_navigationagent3d.html#class-navigationagent3d)）节点**
+
+  帮助通用 NavigationServer3D API 的可选帮助节点调用 Node3D 继承父节点的路径查找和回避。
+
+- **导航障碍3D（[NavigationObstacle3D](https://docs.godotengine.org/en/stable/classes/class_navigationobstacle3d.html#class-navigationobstacle3d)）节点**
+
+  作为具有回避半径的代理的节点，需要将其添加到继承父节点的 Node3D 下才能工作。障碍物旨在作为无法有效地重新（烘焙）到导航网格的不断移动对象的最后选择。此节点也仅在使用 RVO 处理时工作。
+
+三维导航网格是使用以下资源定义的：
+
+- **导航网格（[NavigationMesh](https://docs.godotengine.org/en/stable/classes/class_navigationmesh.html#class-navigationmesh)）资源**
+
+  保存三维导航网格数据并提供三维几何体烘焙选项的资源，用于在编辑器内以及运行时定义导航区域。
+
+  - NavigationRegion3D 节点使用此资源来定义其导航区域。
+  - NavigationServer3D 使用此资源来更新各个区域的导航网格。
+  - 当为每个网格单元定义特定的导航网格时，GridMap 编辑器将使用此资源。
+
+> **参考：**
+>
+> 您可以使用 3D 导航演示项目了解 3D 导航在实际操作中的工作原理。
+
+#### 3D 场景设置
+
+以下步骤显示如何在使用 NavigationServer3D 和 NavigationAgent3D 进行路径移动的 3D 中设置最小可行导航。
+
+1. 将 NavigationRegion3D 节点添加到场景中。
+2. 单击区域节点并将新的 NavigationMesh 资源添加到区域节点。
+3. 添加一个新的 MeshInstance3D 节点作为区域节点的子节点。
+4. 选择 MeshInstance3D 节点并添加新的 PlaneMesh，然后将 xy 大小增加到 10。
+5. 再次选择区域节点，然后按顶部栏上的“烘焙 Navmesh”按钮。
+6. 现在出现了一个透明的导航网格，它在平面网格的顶部徘徊了一段距离。
+7. 在场景中添加 CharacterBody3D 节点，该节点具有基本碰撞形状和一些用于视觉效果的网格。
+8. 在角色节点下方添加 NavigationAgent3D 节点。
+9. 将具有以下内容的脚本添加到 CharacterBody3D 节点。我们确保在场景完全加载并且 NavigationServer 有时间同步后设置移动目标。此外，添加 Camera3D 和一些灯光和环境可以看到一些东西。
+
+```python
+extends CharacterBody3D
+
+var movement_speed: float = 2.0
+var movement_target_position: Vector3 = Vector3(-3.0,0.0,2.0)
+
+@onready var navigation_agent: NavigationAgent3D = $NavigationAgent3D
+
+func _ready():
+    # These values need to be adjusted for the actor's speed
+    # and the navigation layout.
+    navigation_agent.path_desired_distance = 0.5
+    navigation_agent.target_desired_distance = 0.5
+
+    # Make sure to not await during _ready.
+    call_deferred("actor_setup")
+
+func actor_setup():
+    # Wait for the first physics frame so the NavigationServer can sync.
+    await get_tree().physics_frame
+
+    # Now that the navigation map is no longer empty, set the movement target.
+    set_movement_target(movement_target_position)
+
+func set_movement_target(movement_target: Vector3):
+    navigation_agent.set_target_position(movement_target)
+
+func _physics_process(delta):
+    if navigation_agent.is_navigation_finished():
+        return
+
+    var current_agent_position: Vector3 = global_position
+    var next_path_position: Vector3 = navigation_agent.get_next_path_position()
+
+    var new_velocity: Vector3 = next_path_position - current_agent_position
+    new_velocity = new_velocity.normalized()
+    new_velocity = new_velocity * movement_speed
+
+    velocity = new_velocity
+    move_and_slide()
+```
+
+> **注意：**
+>
+> 在第一帧中，NavigationServer 映射没有同步区域数据，任何路径查询都将返回空。等待一帧以暂停脚本，直到 NavigationServer 有时间同步为止。
+
+### 使用 NavigationServer
+
+NavigationServer 的 2D 和 3D 版本分别作为 NavigationServer2D 和 NavigationServer3D 提供。
+
+2D 和 3D 都使用相同的 NavigationServer，NavigationServer3D 是主服务器。NavigationServer2D 是一个前端，可将 2D 位置转换为 3D 位置并返回。因此，完全有可能（如果不是有点麻烦的话）将 NavigationServer3D API 专门用于 2D 导航。
+
+#### 与 NavigationServer 通信
+
+使用 NavigationServer 意味着为可以发送到 NavigationServer 以进行更新或请求数据的 `query` 准备参数。
+
+为了引用内部 NavigationServer 对象（如地图、区域和代理），使用 RID 作为标识号。SceneTree 中的每个与导航相关的节点都有一个返回该节点 RID 的函数。
+
+#### 线程和同步
+
+NavigationServer 不会立即更新每一个更改，而是等待到 `physics_frame` 结束时将所有更改同步在一起。
+
+需要等待同步才能将更改应用于所有映射、区域和代理。之所以进行同步，是因为某些更新（如重新计算整个导航地图）非常昂贵，并且需要来自所有其他对象的更新数据。此外，NavigationServer 默认情况下使用 `threadpool` 来实现某些功能，如代理之间的回避计算。
+
+对于大多数只从 NavigationServer 请求数据而不进行更改的 `get()` 函数，不需要等待。请注意，并非所有数据都会考虑到在同一帧中所做的更改。例如，如果回避 `agent` 在此帧更改了导航 `map`，那么 `agent_get_map()` 函数仍将返回同步之前的旧地图。例外情况是在将更新发送到 NavigationServer 之前在内部存储其值的节点。当节点上的 getter 用于在同一帧中更新的值时，它将返回存储在节点上的已更新值。
+
+NavigationServer 是 `thread-safe`（线程安全）的，因为它放置了所有希望在队列中进行更改的 API 调用，以便在同步阶段执行。完成脚本和节点的场景输入后，NavigationServer 的同步将在物理帧的中间进行。
+
+> **注意：**
+>
+> 重要的一点是，大多数 NavigationServer 更改在下一个物理帧之后生效，而不是立即生效。这包括场景树中与导航相关的节点或通过脚本所做的所有更改。
+
+以下功能将仅在同步阶段执行：
+
+- map_set_active()
+- map_set_up()
+- map_set_cell_size()
+- map_set_edge_connection_margin()
+- region_set_map()
+- region_set_transform()
+- region_set_enter_cost()
+- region_set_travel_cost()
+- region_set_navigation_layers()
+- region_set_navigation_mesh()
+- agent_set_map()
+- agent_set_neighbor_dist()
+- agent_set_max_neighbors()
+- agent_set_time_horizon()
+- agent_set_radius()
+- agent_set_max_speed()
+- agent_set_velocity()
+- agent_set_target_velocity()
+- agent_set_position()
+- agent_set_ignore_y()
+- agent_set_callback()
+- free()
+
+#### 2D 和 3D NavigationServer 的差异
+
+NavigationServer2D 和 NavigationServer3D 在其维度的功能上是等效的，并且都在场景后面使用相同的 NavigationServer。
+
+严格意义上讲，NavigationServer2D 是一个神话。NavigationServer2D 是一个前端，便于将 Vector2(x, y) 转换为 Vector3(x, 0.0, z)，然后再转换为 NavigationServer 3D API。2D 使用平面三维网格寻路，NavigationServer2D 便于转换。当指南只使用 NavigationServer 而不使用 2D 或 3D 后缀时，它通常通过将 Vector2(x, y) 与 Vector3(x, 0.0, z) 或反向交换来同时适用于这两个服务器。
+
+从技术上讲，可以使用工具为其他维度创建导航网格，例如，当使用平面三维源几何体时，使用三维导航网格烘焙二维导航网格，或者使用 NavigationRegion2D 和 NavigationPolygons 的多边形轮廓绘制工具创建三维平面导航网格。
+
+使用 NavigationServer2D API 创建的任何 RID 都可以在 NavigationServer 3D API 上运行，2D 和 3D 回避代理都可以存在于同一地图上。
+
+> **注意：**
+>
+> 在二维和三维中创建的区域将在放置在同一地图上时合并它们的导航网格，并应用合并条件。NavigationServer 不会区分 NavigationRegion2D 和 NavigationRegion3D 节点，因为这两个节点都是服务器上的区域。默认情况下，这些节点在不同的导航地图上注册，因此只有在手动更改地图（例如使用脚本）时才能进行合并。
+>
+> 启用回避功能的演员将在放置在同一地图上时同时避开 2D 和 3D 回避代理。
+
+> **警告：**
+> 在 Godot 自定义生成上禁用 3D 时，无法使用 NavigationServer2D。
+
+#### 正在等待同步
+
+在游戏开始时，新的场景或过程导航更改了 NavigationServer 的任何路径查询都将返回空或错误。
+
+导航地图此时仍然为空或未更新。SceneTree 中的所有节点都需要首先将其导航相关数据上传到 NavigationServer。每个添加或更改的地图、区域或代理都需要在 NavigationServer 中注册。之后，NavigationServer 需要一个用于同步的 `physics_frame` 来更新地图、区域和代理。
+
+一种解决方法是延迟调用自定义设置函数（这样所有节点都准备好了）。设置功能进行所有导航更改，例如添加程序性内容。然后，函数在继续路径查询之前等待下一个 physics_frame。
+
+```python
+extends Node3D
+
+func _ready():
+    # use call deferred to make sure the entire SceneTree Nodes are setup
+    # else await / yield on 'physics_frame' in a _ready() might get stuck
+    call_deferred("custom_setup")
+
+func custom_setup():
+
+    # create a new navigation map
+    var map: RID = NavigationServer3D.map_create()
+    NavigationServer3D.map_set_up(map, Vector3.UP)
+    NavigationServer3D.map_set_active(map, true)
+
+    # create a new navigation region and add it to the map
+    var region: RID = NavigationServer3D.region_create()
+    NavigationServer3D.region_set_transform(region, Transform())
+    NavigationServer3D.region_set_map(region, map)
+
+    # create a procedural navigation mesh for the region
+    var new_navigation_mesh: NavigationMesh = NavigationMesh.new()
+    var vertices: PackedVector3Array = PoolVector3Array([
+        Vector3(0,0,0),
+        Vector3(9.0,0,0),
+        Vector3(0,0,9.0)
+    ])
+    new_navigation_mesh.set_vertices(vertices)
+    var polygon: PackedInt32Array = PackedInt32Array([0, 1, 2])
+    new_navigation_mesh.add_polygon(polygon)
+    NavigationServer3D.region_set_navigation_mesh(region, new_navigation_mesh)
+
+    # wait for NavigationServer sync to adapt to made changes
+    await get_tree().physics_frame
+
+    # query the path from the navigationserver
+    var start_position: Vector3 = Vector3(0.1, 0.0, 0.1)
+    var target_position: Vector3 = Vector3(1.0, 0.0, 1.0)
+    var optimize_path: bool = true
+
+    var path: PackedVector3Array = NavigationServer3D.map_get_path(
+        map,
+        start_position,
+        target_position,
+        optimize_path
+    )
+
+    print("Found a path!")
+    print(path)
+```
+
+#### 服务器避免回调
+
+如果注册了 RVO 回避代理进行回避回调，NavigationServer 会在 PhysicsServer 同步之前调度其 `safe_velocity` 信号。
+
+要了解有关 NavigationAgent 的更多信息，请参阅使用 NavigationAgent。
+
+使用回避的 NavigationAgent 的简化执行顺序：
+
+- 物理帧开始。
+- _physics_process(delta)。
+- NavigationAgent 节点上的 set_velocity()。
+- 代理向 NavigationServer 发送速度和位置。
+- NavigationServer 正在等待同步。
+- NavigationServer 同步并计算所有注册回避代理的回避速度。
+- NavigationServer 为每个注册的回避代理发送带有信号的 safe_velocity 矢量。
+- 代理接收信号并移动其父对象，例如使用 move_and_slide 或 linear_velocity。
+- PhysicsServer 进行同步。
+- 物理帧结束。
+
+因此，在具有 safe_velocity 的回调函数中移动 physics_body 参与者是完全线程和物理安全的，因为在 PhysicsServer 提交更改并进行自己的计算之前，所有这些都发生在同一个 physics_frame 内。
+
+### 使用 NavigationMaps
+
+NavigationMap 是 NavigationServer 上由 NavigationServer RID 标识的抽象导航世界。
+
+地图可以容纳几乎无限多的导航区域，并将其与导航网格连接起来，以构建游戏世界的可遍历区域，用于寻路。
+
+地图可以由回避代理加入以处理回避代理之间的冲突回避。
+
+> **注意：**
+>
+> 不同的 NavigationMap 彼此完全隔离，但导航区域和回避代理可以在每次服务器同步后在不同的地图之间切换。
+
+#### 默认导航地图
+
+默认情况下，Godot 为根视口的每个 World2D 和 World3D 创建导航地图 RID。
+
+2D 默认导航 `map` 可以通过 `get_world_2d().get_navigation_map()` 从任何 Node2D 继承节点获得。
+
+3D 默认导航 `map` 可以通过 `get_world_3d().get_navigation_map()` 从任何 Node3D 继承节点获得。
+
+```python
+extends Node2D
+
+var default_2d_navigation_map_rid: RID = get_world_2d().get_navigation_map()
+```
+
+```python
+extends Node3D
+
+var default_3d_navigation_map_rid: RID = get_world_3d().get_navigation_map()
+```
+
+#### 创建新的导航地图
+
+NavigationServer 可以创建并支持特定游戏所需的任意数量的导航地图。其他导航地图是通过直接使用 NavigationServer API 创建和维护的，例如支持不同的回避代理或参与者移动类型。
+
+例如，不同导航地图的使用请参见支持不同的角色类型和支持不同的演员移动。
+
+每个导航地图将排队的更改分别同步到其导航区域和回避代理。未接收到更改的导航地图几乎不需要处理时间。导航区域和规避代理只能是单个导航地图的一部分，但它们可以随时切换地图。
+
+> **注意：**
+>
+> 导航地图切换只有在下一次 NavigationServer 同步之后才会生效。
+
+```python
+extends Node2D
+
+var new_navigation_map: RID = NavigationServer2D.map_create()
+NavigationServer2D.map_set_active(true)
+```
+
+```python
+extends Node3D
+
+var new_navigation_map: RID = NavigationServer3D.map_create()
+NavigationServer3D.map_set_active(true)
+```
+
+> **注意：**
+>
+> 使用 NavigationServer2D API 或 NavigationServer 3D API 创建的导航地图没有区别。
+
+### 使用 NavigationRegions
+
+NavigationRegions 是 NavigationServer 上导航 `map` `region` 的可视化节点表示。每个 NavigationRegion 节点都为导航网格数据保存一个资源。
+
+2D 和 3D 版本分别提供 NavigationRegion2D 和 NavigationRegion3D。
+
+各个 NavigationRegions 将其 2D NavigationPolygon 或 3D NavigationMesh 资源数据上载到 NavigationServer。NavigationServer 映射将这些信息转换为用于路径查找的组合导航映射。
+
+若要使用 SceneTree 创建导航区域，请将 `NavigationRegion2D` 或 `NavigationRegion3D` 节点添加到场景中。所有区域都需要导航网格资源才能正常工作。请参阅使用导航网格，了解如何创建和应用导航网格。
+
+NavigationRegions 将自动将 `global_transform` 更改推送到 NavigationServer 上的区域，使其适合移动平台。当各个区域的导航网格足够近时，NavigationServer 将尝试连接它们。有关详细信息，请参见连接导航网格。要在任意距离上连接 NavigationRegions，请参阅使用 NavigationLinks 以了解如何创建和使用 `NavigationLink`。
+
+> **警告：**
+>
+> 虽然更改 NavigationRegion 节点的变换会更新 NavigationServer 上的区域位置，但更改比例不会。导航网格资源没有比例，当源几何图形更改比例时需要完全更新。
+
+可以启用/禁用区域，如果禁用，则不会对未来的路径查找查询做出贡献。
+
+> **注意：**
+>
+> 启用/禁用某个区域时，不会自动更新现有路径。
+
+#### 创建新的导航区域
+
+新的 NavigationRegion 节点将自动注册到其 2D/3D 维度的默认世界导航地图。
+
+然后可以使用 `get_region_rid()` 从 NavigationRegion Nodes 获取区域 RID。
+
+```python
+extends NavigationRegion3D
+
+var navigationserver_region_rid: RID = get_region_rid()
+```
+
+还可以使用 NavigationServer API 创建新区域，并将其添加到任何现有地图中。
+
+如果直接使用 NavigationServer API 创建区域，则需要手动为其分配导航地图。
+
+```python
+extends Node2D
+
+var new_2d_region_rid: RID = NavigationServer2D.region_create()
+var default_2d_map_rid: RID = get_world_2d().get_navigation_map()
+NavigationServer2D.region_set_map(new_2d_region_rid, default_2d_map_rid)
+```
+
+```python
+extends Node3D
+
+var new_3d_region_rid: RID = NavigationServer3D.region_create()
+var default_3d_map_rid: RID = get_world_3d().get_navigation_map()
+NavigationServer3D.region_set_map(new_3d_region_rid, default_3d_map_rid)
+```
+
+> **注意：**
+>
+> NavigationRegions 只能分配给单个 NavigationMap。如果将现有区域指定给新地图，它将离开旧地图。
+
+### 使用 NavigationMeshes
+
+导航网格的 2D 和 3D 版本分别作为 NavigationPolygon 和 NavigationMesh 提供。
+
+> **注意：**
+>
+> 导航网格描述了代理的可遍历安全区域，其中心位置为零半径。如果希望路径查找考虑代理的（碰撞）大小，则需要相应地缩小导航网格。
+
+导航的工作独立于其他引擎部分，如渲染和物理。导航网格是从其他系统交换信息的数据格式，因为它描述了特定代理的可穿越安全区域。在创建导航网格时，需要考虑来自其他发动机部件的所有必要信息。例如，代理不应该剪辑的视觉效果或代理不应该碰撞的物理碰撞形状。考虑到来自其他引擎部件（如视觉效果和碰撞）的所有导航限制的过程通常称为导航网格烘焙。
+
+如果您在遵循导航路径时遇到剪裁或碰撞问题，请始终记住，您需要通过适当的导航网格告诉导航系统您的意图。导航系统本身永远不会知道“这是一个树/岩石/墙壁碰撞的形状或视觉网格”，因为它只知道“在这里，我被告知我可以安全地行驶，因为它在导航网格上”。
+
+#### 创建二维导航网格
+
+2D 编辑器中的导航网格是在 NavigationPolygon 绘制工具的帮助下创建的，当选择 NavigationRegion2D 时，这些工具会显示在编辑器的顶部栏中。
+
+NavigationPolygon 绘制工具可用于通过定义 `outline` 多边形来创建和编辑导航网格。轮廓多边形稍后将转换为 NavigationServer 区域的真实 NavigationMesh 资源。
+
+可以将多个轮廓添加到同一 NavPolygon 资源中，只要它们不相交或重叠即可。每个附加的轮廓都将在由较大轮廓创建的多边形中剪切一个孔。如果较大的多边形已经是一个洞，它将在里面创建一个新的导航网格多边形。
+
+如果意图合并对齐的多边形，例如网格单元中的多边形，则轮廓不能替换。正如名称所暗示的那样，轮廓不能相互交叉或具有任何重叠的顶点位置。
+
+如图所示的轮廓布局将无法实现导航网格生成所需的凸划分。在这种布局情况下，不能使用大纲工具。使用 Geometry2D 类进行多边形合并或相交操作，以创建用于导航的有效合并网格。
+
+笔记
+NavigationServer 不连接来自同一 NavigationMesh 资源的导航网格岛。如果以后应该连接，请不要在同一 NavigationRegion2D 和 NavPoly 资源中创建多个断开连接的岛。
+
+对于 2D，不存在类似于 3D 的带有几何体解析的导航网格烘焙。用于偏移、合并、相交和剪裁的 Geometry2D 类函数可用于将现有 NavigationPolygons 缩小或放大到不同的演员大小。
+
+#### 创建三维导航网格
+
+三维编辑器中的导航网格是在编辑器检查器中显示的 NavigationMeshGenerator 单例和 NavigationMesh 烘焙设置的帮助下创建的。
+
+NavigationMesh 烘焙是创建简化网格的过程，用于从（复杂的）3D 级几何体中查找路径。在这个过程中，Godot 解析场景几何体，并将原始网格或碰撞数据交给第三方 ReCast 库，用于处理和创建最终导航网格。
+
+由于性能和技术原因，生成的 NavigationMesh 是源几何体曲面的近似值。不要期望 NavigationMesh 完全遵循原始曲面。尤其是放置在坡道上的导航多边形将无法与地面保持相等的距离。要使演员与地面完美对齐，请使用其他方法，如物理学。
+
+> **警告：**
+>
+> 网格需要进行三角测量才能用作导航网格。不支持其他网格面格式，如 quad 或 ngon。
+
+#### NavigationMesh 在运行时重新生成
+
+要在运行时重新生成 `NavigationMesh`，请使用 NavigationRegion3D.bake_navigation_mesh() 函数。另一种选择是直接将 NavigationMeshGenerator.bake() Singleton 函数与 NavigationMesh 资源一起使用。如果导航网格资源已经准备好，也可以使用 NavigationServer3D API 直接更新区域。
+
+```python
+extends NavigationRegion3D
+
+func update_navigation_mesh():
+
+    # use bake and update function of region
+    var on_thread: bool = true
+    bake_navigation_mesh(on_thread)
+
+    # or use the NavigationMeshGenerator Singleton
+    var _navigationmesh: NavigationMesh = navigation_mesh
+    NavigationMeshGenerator.bake(_navigationmesh, self)
+    # remove old resource first to trigger a full update
+    navigation_mesh = null
+    navigation_mesh = _navigationmesh
+
+    # or use NavigationServer API to update region with prepared navigation mesh
+    var region_rid: RID = get_region_rid()
+    NavigationServer3D.region_set_navigation_mesh(region_rid, navigation_mesh)
+```
+
+> **注意：**
+>
+> 在运行时烘焙 NavigationMesh 是一项成本高昂的操作。复杂的导航网格需要一些时间来烘焙，如果在主线程上完成，则可以冻结游戏。（重新）烘焙大的导航网格最好在单独的线程中完成。
+
+> **警告：**
+> NavigationMesh 资源（如 `cell_size`）上的属性值需要与内部存储的实际网格数据相匹配，以便在没有问题的情况下合并不同的导航网格。
+
+NavigationRegion2D 和 Navigation3D 都使用网格来标记可遍历区域，只有创建它们的工具不同。
+
+对于二维导航，多边形资源用于在编辑器中绘制轮廓点。NavigationServer2D 根据这些轮廓点创建一个网格，以便将导航数据上载到 NavigationServer。
+
+对于三维导航，将使用网格资源。3D 变体不提供绘制工具，而是提供大量参数，以直接从 3D 源几何体烘焙导航网格。
+
+> **注意：**
+>
+> 从技术上讲，2D 和 3D 之间没有硬性区别——如何使用给定的工具集来创建平面导航网格。2D 绘图工具可用于创建平面 3D 导航网格，3D 烘焙工具可用于将平面 3D 几何体解析为 2D 适当的导航网格。
+
+#### 来自碰撞多边形的二维导航网格
+
+以下脚本为 CollisionPolygons 解析 NavigationRegion2D 的所有子节点，并将其形状烘焙到 NavigationPolygon 中。由于 NavigationPolygon 根据轮廓数据创建导航网格，因此形状不能重叠。
+
+```python
+extends NavigationRegion2D
+
+var new_navigation_polygon: NavigationPolygon = get_navigation_polygon()
+
+func _ready():
+
+    parse_2d_collisionshapes(self)
+
+    new_navigation_polygon.make_polygons_from_outlines()
+    set_navigation_polygon(new_navigation_polygon)
+
+func parse_2d_collisionshapes(root_node: Node2D):
+
+    for node in root_node.get_children():
+
+        if node.get_child_count() > 0:
+            parse_2d_collisionshapes(node)
+
+        if node is CollisionPolygon2D:
+
+            var collisionpolygon_transform: Transform2D = node.get_global_transform()
+            var collisionpolygon: PackedVector2Array = node.polygon
+
+            var new_collision_outline: PackedVector2Array = collisionpolygon_transform * collisionpolygon
+
+            new_navigation_polygon.add_outline(new_collision_outline)
+```
+
+#### 程序 2D 导航网格
+
+以下脚本将创建一个新的二维导航区域，并使用 NavigationPolygon 资源中程序生成的导航网格数据填充该区域。
+
+```python
+extends Node2D
+
+var new_2d_region_rid: RID = NavigationServer2D.region_create()
+
+var default_2d_map_rid: RID = get_world_2d().get_navigation_map()
+NavigationServer2D.region_set_map(new_2d_region_rid, default_2d_map_rid)
+
+var new_navigation_polygon: NavigationPolygon = NavigationPolygon.new()
+var new_outline: PackedVector2Array = PackedVector2Array([
+    Vector2(0.0, 0.0),
+    Vector2(50.0, 0.0),
+    Vector2(50.0, 50.0),
+    Vector2(0.0, 50.0),
+])
+new_navigation_polygon.add_outline(new_outline)
+new_navigation_polygon.make_polygons_from_outlines()
+
+NavigationServer2D.region_set_navigation_polygon(new_2d_region_rid, new_navigation_polygon)
+```
+
+#### 程序三维导航网格
+
+以下脚本将创建一个新的三维导航区域，并使用 NavigationMesh 资源中过程生成的导航网格数据填充该区域。
+
+```python
+extends Node3D
+
+var new_3d_region_rid: RID = NavigationServer3D.region_create()
+
+var default_3d_map_rid: RID = get_world_3d().get_navigation_map()
+NavigationServer3D.region_set_map(new_3d_region_rid, default_3d_map_rid)
+
+var new_navigation_mesh: NavigationMesh = NavigationMesh.new()
+# Add vertices for a triangle.
+new_navigation_mesh.vertices = PackedVector3Array([
+    Vector3(-1.0, 0.0, 1.0),
+    Vector3(1.0, 0.0, 1.0),
+    Vector3(1.0, 0.0, -1.0)
+])
+# Add indices for the polygon.
+new_navigation_mesh.add_polygon(
+    PackedInt32Array([0, 1, 2])
+)
+NavigationServer3D.region_set_navigation_mesh(new_3d_region_rid, new_navigation_mesh)
+```
+
+#### 三维网格地图的 Navmesh
+
+以下脚本为每个 GridMap 项创建一个新的三维导航网格，清除当前网格单元，并使用新的导航网格添加新的过程网格单元。
+
+```python
+extends GridMap
+
+# enable navigation mesh for grid items
+set_bake_navigation(true)
+
+# get grid items, create and set a new navigation mesh for each item in the MeshLibrary
+var gridmap_item_list: PackedInt32Array = mesh_library.get_item_list()
+for item in gridmap_item_list:
+    var new_item_navigation_mesh: NavigationMesh = NavigationMesh.new()
+    # Add vertices and polygons that describe the traversable ground surface.
+    # E.g. for a convex polygon that resembles a flat square.
+    new_item_navigation_mesh.vertices = PackedVector3Array([
+        Vector3(-1.0, 0.0, 1.0),
+        Vector3(1.0, 0.0, 1.0),
+        Vector3(1.0, 0.0, -1.0),
+        Vector3(-1.0, 0.0, -1.0),
+    ])
+    new_item_navigation_mesh.add_polygon(
+        PackedInt32Array([0, 1, 2, 3])
+    )
+    mesh_library.set_item_navigation_mesh(item, new_item_navigation_mesh)
+    mesh_library.set_item_navigation_mesh_transform(item, Transform3D())
+
+# clear the cells
+clear()
+
+# add procedual cells using the first item
+var _position: Vector3i = Vector3i(global_transform.origin)
+var _item: int = 0
+var _orientation: int = 0
+for i in range(0,10):
+    for j in range(0,10):
+        _position.x = i
+        _position.z = j
+        gridmap.set_cell_item(_position, _item, _orientation)
+        _position.x = -i
+        _position.z = -j
+        gridmap.set_cell_item(_position, _item, _orientation)
+```
+
+### 使用 NavigationPaths
+
+#### 获取导航路径
+
+导航路径可以直接从 NavigationServer 查询，并且不需要任何其他节点或对象，只要导航地图具有可使用的导航网格即可。
+
+要获取二维路径，请使用 `NavigationServer2D.map_get_path(map, from, to, optimize, navigation_layers)`。
+
+要获取三维路径，请使用 `NavigationServer3D.map_get_path(map, from, to, optimize, navigation_layers)`。
+
+有关需要额外设置的更多可自定义导航路径查询，请参阅使用 NavigationPathQueryObjects。
+
+查询所需的参数之一是导航地图的 RID。每个游戏 `World` 都有一个自动创建的默认导航地图。默认导航地图可以使用 `get_world_2d().get_navigation_map()` 从任何 Node2D 继承节点检索，也可以使用 `get_world_3d().get_navigation_map()` 在任何 Node3D 继承节点检索。第二和第三参数是起始位置和目标位置，作为 2D 的 Vector2 或 3D 的 Vector3。
+
+如果 `optimized` 参数为 `true`，则通过额外的漏斗算法过程，路径位置将沿着多边形角缩短。这对于具有不等大小多边形的导航网格上的自由移动非常有效，因为路径将围绕 A* 算法找到的多边形走廊的角。对于小单元，A* 算法创建了一个非常窄的漏斗走廊，当与网格一起使用时，可能会创建难看的拐角路径。
+
+如果 `optimized` 参数为 `false`，则路径位置将放置在每个多边形边的中心。这适用于具有相等大小多边形的导航网格上的纯网格移动，因为路径将穿过网格单元的中心。在网格之外，由于多边形通常用一条长边覆盖大的开放区域，这可能会产生不必要的长弯路。
+
+```python
+extends Node2D
+ # basic query for a navigation path in 2D using the default navigation map
+var default_2d_map_rid: RID = get_world_2d().get_navigation_map()
+var start_position: Vector2 = Vector2(0.0, 0.0)
+var target_position: Vector2 = Vector2(5.0, 0.0)
+var path: PackedVector2Array = NavigationServer2D.map_get_path(
+    default_2d_map_rid,
+    start_position,
+    target_position,
+    true
+)
+```
+
+```python
+extends Node3D
+# basic query for a navigation path in 3D using the default navigation map
+var default_3d_map_rid: RID = get_world_3d().get_navigation_map()
+var start_position: Vector3 = Vector3(0.0, 0.0, 0.0)
+var target_position: Vector3 = Vector3(5.0, 0.0, 3.0)
+var path: PackedVector3Array = NavigationServer3D.map_get_path(
+    default_3d_map_rid,
+    start_position,
+    target_position,
+    true
+)
+```
+
+NavigationServer 返回的 `path` 将是用于 2D 的 `PackedVector2Array` 或用于 3D 的 `PackedVector3Array`。这些只是一个内存优化的矢量位置 `Array`。阵列内的所有位置向量都保证位于 NavigationPolygon 或 NavigationMesh 内。如果路径数组不为空，则其导航网格位置最接近第一个索引 `path[0]` 位置的起始位置。离目标位置最近的可用导航网格位置是最后一个索引 `path[path.size()-1]` 位置。之间的所有索引都是参与者在不离开导航网格的情况下到达目标所应遵循的路径点。
+
+> **注意：**
+>
+> 如果目标位置位于未合并或连接的不同导航网格上，则导航路径将指向起始位置导航网格上尽可能接近的位置。
+
+以下脚本通过使用 `set_movement_target()` 设置目标位置，使用默认导航地图沿导航路径移动 Node3D 继承节点。
+
+```python
+var movement_speed: float = 4.0
+var movement_delta: float
+var path_point_margin: float = 0.5
+var default_3d_map_rid: RID = get_world_3d().get_navigation_map()
+
+var current_path_index: int = 0
+var current_path_point: Vector3
+var current_path: PackedVector3Array
+
+func set_movement_target(target_position: Vector3):
+
+    var start_position: Vector3 = global_transform.origin
+
+    current_path = NavigationServer3D.map_get_path(
+        default_3d_map_rid,
+        start_position,
+        target_position,
+        true
+    )
+
+    if not current_path.is_empty():
+        current_path_index = 0
+        current_path_point = current_path[0]
+
+func _physics_process(delta):
+
+    if current_path.is_empty():
+        return
+
+    movement_delta = move_speed * delta
+
+    if global_transform.origin.distance_to(current_path_point) <= path_point_margin:
+        current_path_index += 1
+        if current_path_index >= current_path.size():
+            current_path = []
+            current_path_index = 0
+            current_path_point = global_transform.origin
+            return
+
+    current_path_point = current_path[current_path_index]
+
+    var new_velocity: Vector3 = (current_path_point - global_transform.origin).normalized() * movement_delta
+
+    global_transform.origin = global_transform.origin.move_toward(global_transform.origin + new_velocity, movement_delta)
+```
+
+### 使用 NavigationPathQueryObjects
+
+`NavigationPathQueryObjects` 可以与 `NavigationServer.query_path()` 一起使用，以获得高度**定制**的导航路径，包括有关该路径的可选**元数据**。
+
+与获得普通 NavigationPath 相比，这需要更多的设置，但可以根据项目的不同需求定制寻路和提供的路径数据。
+
+NavigationPathQueryObjects 由一对对象组成，一个 `NavigationPathQueryParameters` 对象保存查询的自定义选项，另一个 `NavigationPathQueryResult` 从查询中接收（定期）更新的结果路径和元数据。
+
+`NavigationPathQueryParameters` 的 2D 和 3D 版本分别作为 NavigationPathQueryParameters2D 和 NavigationPathqueryParameters3D 提供。
+`NavigationPathQueryResult` 的 2D 和 3D 版本分别作为 NavigationPathQuerResult2D 和 NavigationPathQueryResult3D 提供。
+
+参数和结果都与 `NavigationServer.query_path()` 函数成对使用。
+
+有关可用的自定义选项及其使用，请参阅参数的类文档。
+
+虽然这不是一个严格的要求，但这两个对象都打算提前创建一次，存储在代理的持久变量中，并通过更新的参数重复用于每个后续路径查询。如果一个项目有大量定期更新路径的同时代理，这种重用可以避免频繁创建对象所带来的性能影响。
+
+```python
+# prepare query objects
+var query_parameters = NavigationPathQueryParameters2D.new()
+var query_result  = NavigationPathQueryResult2D.new()
+
+# update parameters object
+query_parameters.map = get_world_2d().get_navigation_map()
+query_parameters.start_position = agent2d_current_global_position
+query_parameters.target_position = agent2d_target_global_position
+
+# update result object
+NavigationServer2D.query_path(query_parameters, query_result)
+var path: PackedVector2Array = query_result.get_path()
+```
+
+```python
+# prepare query objects
+var query_parameters = NavigationPathQueryParameters3D.new()
+var query_result  = NavigationPathQueryResult3D.new()
+
+# update parameters object
+query_parameters.map = get_world_3d().get_navigation_map()
+query_parameters.start_position = agent3d_current_global_position
+query_parameters.target_position = agent3d_target_global_position
+
+# update result object
+NavigationServer3D.query_path(query_parameters, query_result)
+var path: PackedVector3Array = query_result.get_path()
+```
+
+### 使用 NavigationAgents
+
+NavigationsAgent 是辅助节点，它结合了 Node2D/3D 继承父节点的路径查找、路径跟随和代理避免功能。它们为初学者以更方便的方式代表父参与者节点调用 NavigationServer API 提供了便利。
+
+NavigationAgents 的 2D 和 3D 版本分别作为 NavigationAgent2D 和 NavigationAgent3D 提供。
+
+新的 NavigationAgent 节点将自动加入 World2D/World3D 上的默认导航地图。
+
+NavigationsAgent 节点是可选的，不是使用导航系统的硬性要求。它们的整个功能可以替换为对 NavigationServer API 的脚本和直接调用。
+
+#### NavigationAgent 路径查找
+
+当其 `target_position` 设置为全局位置时，NavigationAgent 会在其当前导航地图上查询新的导航路径。
+
+路径查找的结果可能受到以下属性的影响。
+
+- `navigation_layers` 位掩码可用于限制代理可以使用的导航网格。
+- `pathfinding_algorithm` 控制路径搜索中路径查找在导航网格多边形中的传播方式。
+- `path_postprocessing` 设置在返回路径查找找到的原始路径道路之前是否或如何更改该道路。
+- `path_metadata_flags` 允许收集路径返回的附加路径点元数据。
+
+> **警告：**
+> 禁用路径元标志将禁用代理上的相关信号发射。
+
+#### NavigationAgent 路径跟随
+
+在为代理设置了 `target_position` 之后，可以使用 `get_next_path_position()` 函数检索路径中的下一个位置。
+
+一旦接收到下一个路径位置，使用您自己的移动代码将代理的父参与者节点移到此路径位置。
+
+> **注意：**
+>
+> 导航系统从不移动 NavigationAgent 的父节点。这场运动完全掌握在用户及其自定义脚本的手中。
+
+NavigationAgent 有自己的内部逻辑来处理当前路径并调用更新。
+
+`get_next_path_position()` 函数负责更新代理的许多内部状态和属性。该函数应在每个 `physics_process` 中重复调用一次，直到 `is_navigation_finished()` 告诉路径已完成。在到达目标位置或路径末端后不应调用该函数，因为它可能会由于重复的路径更新而使代理在适当位置抖动。如果路径已经完成，请始终在脚本中尽早使用 `is_navigation_finished()` 进行检查。
+
+以下属性会影响路径跟随行为。
+
+- `path_dedesired_distance` 定义代理将其内部路径索引推进到下一个路径位置的距离。
+- `target_dedesired_distance` 定义了代理认为要到达的目标位置的距离及其末端的路径。
+- `path_max_distance` 定义代理何时请求新路径，因为它移动得离当前路径点段太远。
+
+重要的更新都是在 `_physics_process()` 中调用 `get_next_path_position()` 函数时触发的。
+
+NavigationAgent 可以与 `process` 一起使用，但仍限于在 `physics_process` 中发生的单个更新。
+
+以下是 NavigationAgent 常用的各种节点的脚本示例。
+
+##### Pathfollowing 常见问题
+
+在编写代理移动脚本时，需要考虑一些常见的用户问题和重要的注意事项。
+
+- **路径返回为空**
+
+  如果代理在导航地图同步之前查询路径，例如在 _ready() 函数中，路径可能返回空。在这种情况下，get_next_path_position() 函数将返回与代理父节点相同的位置，并且代理将考虑到达的路径末端。这是通过进行延迟调用或使用回调来解决的，例如等待导航地图更改信号。
+
+- **代理被困在两个位置之间跳舞**
+
+  这通常是由每一帧非常频繁的路径更新引起的，无论是故意的还是意外的（例如，设置的最大路径距离太短）。路径查找需要找到导航网格上有效的最近位置。如果每一帧都请求一条新的路径，那么第一个路径位置最终可能会在代理当前位置的前后不断切换，导致代理在两个位置之间跳跃。
+
+- **代理有时会反悔**
+
+  如果一个代理移动得很快，它可能会在不推进路径索引的情况下超过 path_dedesired_distance 检查。这可能导致代理回溯到它后面的路径点，直到它通过距离检查以增加路径索引。为您的代理速度和更新率相应地增加所需的距离通常可以解决这一问题，以及一个更平衡的导航网格多边形布局，不需要太多的多边形边在小空间中挤在一起。
+
+- **代理有时会回头寻找一个框架**
+
+  就像在两个位置之间卡住跳舞的代理一样，这通常是由每一帧非常频繁的路径更新引起的。根据导航网格布局，尤其是当代理直接放置在导航网格边缘或边缘连接上时，路径位置有时会稍微“落后”于参与者的当前方向。这种情况的发生是由于精度问题，并非总是可以避免的。如果演员被立即旋转以面对当前路径位置，这通常只是一个可见的问题。
+
+#### 导航代理回避
+
+本节介绍如何使用特定于 NavigationAgent 的导航回避。
+
+为了让 NavigationAgent 使用回避功能，必须将 `enable_avoidance` 属性设置为 `true`。
+
+必须连接 NavigationAgent 节点的 velocity_computerd 信号才能接收 `safe_velocity` 计算结果。
+
+为了触发回避速度计算，必须使用 `_physics_process()` 中 NavigationAgent 节点上的 `set_velocity()` 设置代理父节点的当前速度。
+
+在处理回避的短暂等待之后（仍然在同一帧中），`safe_velocity` 矢量将与信号一起被接收。该速度矢量应用于移动 NavigationAgent 的父节点，以避免与其他使用代理或回避障碍物的回避发生碰撞。
+
+> **注意：**
+>
+> 只有在同一地图上注册了回避的其他代理人才会被考虑在回避计算中。
+
+以下 NavigationAgent 属性与回避相关：
+
+- 属性 `height` 仅在三维中可用。高度与代理的当前全局 y 轴位置一起决定了代理在回避模拟中的垂直位置。使用 2D 回避的代理将自动忽略其下方或上方的其他代理或障碍物。
+- 属性 `radius` 控制回避圆的大小，如果是三维球体，则控制代理周围的大小。该区域描述的是特工的身体，而不是躲避机动距离。
+- 当搜索应避免的其他代理时，属性 `neighbor_distance` 控制代理的搜索半径。较低的值可降低加工成本。
+- 属性 `max_neighbors` 控制在避免计算中考虑多少其他代理（如果它们都具有重叠半径）。较低的值降低了处理成本，但过低的值可能导致代理忽略避免。
+- 属性 `time_horizon_agents` 和 `time_horizo_obstacles` 控制其他代理或障碍物的回避预测时间（以秒为单位）。当特工计算他们的安全速度时，他们选择的速度可以保持这几秒钟，而不会与另一个躲避物体相撞。预测时间应该尽可能低，因为代理会减慢速度以避免在该时间段内发生碰撞。
+- 属性 `max_speed` 控制代理回避计算所允许的最大速度。如果代理的父级移动速度超过此值，则避免 `safe_velocity` 可能不够准确，无法避免碰撞。
+- `use_3d_avoidance` 属性在下次更新时在 2D 回避（xz 轴）和 3D 回避（xyz 轴）之间切换代理。请注意，2D 回避和 3D 回避在单独的回避模拟中运行，因此在它们之间划分的代理不会相互影响。
+- 属性 `avoidance_layers` 和 `avoidance_mask` 是类似于例如物理层的位掩码。代理将仅避开位于与其自己的回避掩码位中的至少一个相匹配的回避层上的其他回避对象。
+- `avoidance_priority` 使优先级较高的代理忽略优先级较低的代理。这可以用于在避免模拟中赋予某些代理更大的重要性，例如重要的 npc 角色，而不必不断改变其整个避免层或掩码。
+
+回避存在于其自身的空间中，并且没有来自导航网格或物理碰撞的信息。场景背后的回避代理只是平面 2D 平面上具有不同半径的圆，或者是其他空的 3D 空间中的球体。导航障碍物可用于向回避模拟添加一些环境约束，请参阅使用导航障碍物。
+
+> **注意：**
+>
+> 回避不会影响寻路。它应该被视为一个额外的选项，用于不断移动无法有效地（重新）烘焙到导航网格中以在其周围移动的对象。
+
+使用 NavigationAgent `enable_avoidance` 属性是切换回避的首选选项。以下代码片段可用于在代理上切换回避、创建或删除回避回调或切换回避模式。
+
+```python
+extends NavigationAgent2D
+
+var agent: RID = get_rid()
+# Enable avoidance
+NavigationServer2D.agent_set_avoidance_enabled(agent, true)
+# Create avoidance callback
+NavigationServer2D.agent_set_avoidance_callback(agent, Callable(self, "_avoidance_done"))
+
+# Disable avoidance
+NavigationServer2D.agent_set_avoidance_enabled(agent, false)
+# Delete avoidance callback
+NavigationServer2D.agent_set_avoidance_callback(agent, Callable())
+```
+
+```python
+extends NavigationAgent3D
+
+var agent: RID = get_rid()
+# Enable avoidance
+NavigationServer3D.agent_set_avoidance_enabled(agent, true)
+# Create avoidance callback
+NavigationServer3D.agent_set_avoidance_callback(agent, Callable(self, "_avoidance_done"))
+# Switch to 3D avoidance
+NavigationServer3D.agent_set_use_3d_avoidance(agent, true)
+
+# Disable avoidance
+NavigationServer3D.agent_set_avoidance_enabled(agent, false)
+# Delete avoidance callback
+NavigationServer3D.agent_set_avoidance_callback(agent, Callable())
+# Switch to 2D avoidance
+NavigationServer3D.agent_set_use_3d_avoidance(agent, false)
+```
+
+#### NavigationAgent 脚本模板
+
+以下部分提供了 NavigationAgents 常用节点的脚本模板。
+
+##### 扮演 Node3D
+
+此脚本将基本导航移动添加到具有 NavigationAgent3D 子节点的 Node3D 中。
+
+```python
+extends Node3D
+
+@export var movement_speed: float = 4.0
+@onready var navigation_agent: NavigationAgent3D = get_node("NavigationAgent3D")
+var movement_delta: float
+
+func _ready() -> void:
+    navigation_agent.velocity_computed.connect(Callable(_on_velocity_computed))
+
+func set_movement_target(movement_target: Vector3):
+    navigation_agent.set_target_position(movement_target)
+
+func _physics_process(delta):
+    if navigation_agent.is_navigation_finished():
+        return
+
+    movement_delta = movement_speed * delta
+    var next_path_position: Vector3 = navigation_agent.get_next_path_position()
+    var current_agent_position: Vector3 = global_position
+    var new_velocity: Vector3 = (next_path_position - current_agent_position).normalized() * movement_delta
+    if navigation_agent.avoidance_enabled:
+        navigation_agent.set_velocity(new_velocity)
+    else:
+        _on_velocity_computed(new_velocity)
+
+func _on_velocity_computed(safe_velocity: Vector3) -> void:
+    global_position = global_position.move_toward(global_position + safe_velocity, movement_delta)
+```
+
+##### 扮演 CharacterBody3D
+
+此脚本将基本导航移动添加到具有 NavigationAgent3D 子节点的 CharacterBody3D 中。
+
+```python
+extends CharacterBody3D
+
+@export var movement_speed: float = 4.0
+@onready var navigation_agent: NavigationAgent3D = get_node("NavigationAgent3D")
+
+func _ready() -> void:
+    navigation_agent.velocity_computed.connect(Callable(_on_velocity_computed))
+
+func set_movement_target(movement_target: Vector3):
+    navigation_agent.set_target_position(movement_target)
+
+func _physics_process(delta):
+    if navigation_agent.is_navigation_finished():
+        return
+
+    var next_path_position: Vector3 = navigation_agent.get_next_path_position()
+    var current_agent_position: Vector3 = global_position
+    var new_velocity: Vector3 = (next_path_position - current_agent_position).normalized() * movement_speed
+    if navigation_agent.avoidance_enabled:
+        navigation_agent.set_velocity(new_velocity)
+    else:
+        _on_velocity_computed(new_velocity)
+
+func _on_velocity_computed(safe_velocity: Vector3):
+    velocity = safe_velocity
+    move_and_slide()
+```
+
+##### 扮演 RigidBody3D
+
+此脚本将基本导航移动添加到具有 NavigationAgent3D 子节点的 RigidBody3D 中。
+
+```python
+extends RigidBody3D
+
+@export var movement_speed: float = 4.0
+@onready var navigation_agent: NavigationAgent3D = get_node("NavigationAgent3D")
+
+func _ready() -> void:
+    navigation_agent.velocity_computed.connect(Callable(_on_velocity_computed))
+
+func set_movement_target(movement_target: Vector3):
+    navigation_agent.set_target_position(movement_target)
+
+func _physics_process(delta):
+    if navigation_agent.is_navigation_finished():
+        return
+
+    var next_path_position: Vector3 = navigation_agent.get_next_path_position()
+    var current_agent_position: Vector3 = global_position
+    var new_velocity: Vector3 = (next_path_position - current_agent_position).normalized() * movement_speed
+    if navigation_agent.avoidance_enabled:
+        navigation_agent.set_velocity(new_velocity)
+    else:
+        _on_velocity_computed(new_velocity)
+
+func _on_velocity_computed(safe_velocity: Vector3):
+    linear_velocity = safe_velocity
+```
+
+### 使用 NavigationObstacles
+
+导航障碍物可以用作静态或动态障碍物，以影响规避控制主体。
+
+- 当静态使用时，导航障碍物会将躲避控制的代理约束在多边形定义区域的外部或内部。
+- 当动态使用时，导航障碍物会推开周围半径范围内的躲避控制代理。
+
+NavigationObstructs 节点的 2D 和 3D 版本分别作为 NavigationObstact2D 和 NavigationObstect3D 可用。
+
+> **注意：**
+>
+> 导航障碍物不会以任何方式改变或影响寻路。导航障碍物只影响由回避控制的主体的回避速度。
+
+#### 静态障碍物
+
+当 NavigationObstruct 的顶点属性由位置的轮廓数组填充以形成多边形时，它被视为静态的。
+
+- 静态障碍物起到了坚硬的作用——不跨越边界使用代理进行躲避，例如类似于物理碰撞，但用于躲避。
+- 静态障碍物通过一组轮廓 `vertices`（位置）定义其边界，在 3D 的情况下，则使用额外的 `height` 属性。
+- 静态障碍物仅适用于使用 2D 回避模式的代理。
+- 静态障碍通过顶点的缠绕顺序来定义，若代理被推出或吸入。
+- 静止的障碍物不能改变它们的位置。它们只能被扭曲到一个新的位置，然后从头开始重建。因此，静态障碍物不适合每帧改变位置的用途，因为持续重建具有高性能成本。
+- 瞬移到另一个位置的静态障碍物无法由代理预测。如果静态障碍物瞬移在代理身上，这就产生了代理被卡住的风险。
+
+当在 3D 中使用 2D 回避时，Vector3 顶点的 y 轴将被忽略。相反，障碍物的全局 y 轴位置被用作高程级别。代理将忽略三维中位于其下方或上方的静态障碍物。这是由障碍物和代理的全局 y 轴位置自动确定的，作为高程水平以及它们各自的高度特性。
+
+#### 动态障碍
+
+当导航障碍物的 `radius` 属性大于零时，该障碍物被认为是动态的。
+
+- 动态障碍物就像一个柔软的请远离我的物体，使用代理进行躲避，例如，类似于它们躲避其他代理的方式。
+- 动态障碍物用 2D 圆的单个 `radius` 定义其边界，或者在 3D 躲避的情况下用球体形状定义其边界。
+- 动态障碍物可以在每帧改变其位置，而无需额外的性能成本。
+- 具有设定速度的动态障碍物可以通过代理在其运动中进行预测。
+- 在拥挤或狭窄的空间中，动态障碍物不是约束代理人的可靠方法。
+
+虽然静态和动态特性可以在同一障碍物上同时激活，但不建议这样做以提高性能。理想情况下，当障碍物移动时，静态顶点被移除，而半径被激活。当障碍物到达新的最终位置时，它应该逐渐扩大半径，将所有其他物体推开。在障碍物周围创建了足够的节省空间后，应再次添加静态顶点并移除半径。这有助于避免在重建静态边界完成时，代理卡在突然出现的静态障碍中。
+
+与代理类似，障碍物可以使用 `avoidance_layers` 位掩码。所有在自己的回避遮罩上有匹配位的代理都会避开障碍物。
+
+#### 程序障碍
+
+可以直接在 NavigationServer 上创建新的障碍物，而无需节点。
+
+用脚本创建的障碍至少需要一个 `map` 和一个 `position`。对于动态使用，需要 `radius`。对于静态使用，需要一个 `vertices` 数组。
+
+```python
+# For 2D
+
+# create a new "obstacle" and place it on the default navigation map.
+var new_obstacle_rid: RID = NavigationServer2D.obstacle_create()
+var default_2d_map_rid: RID = get_world_2d().get_navigation_map()
+
+NavigationServer2D.obstacle_set_map(new_obstacle_rid, default_2d_map_rid)
+NavigationServer2D.obstacle_set_position(new_obstacle_rid, global_position)
+
+# Use obstacle dynamic by increasing radius above zero.
+NavigationServer2D.obstacle_set_radius(new_obstacle_rid, 5.0)
+
+# Use obstacle static by adding a square that pushes agents out.
+var outline = PackedVector2Array([Vector2(-100, -100), Vector2(100, -100), Vector2(100, 100), Vector2(-100, 100)])
+NavigationServer2D.obstacle_set_vertices(new_obstacle_rid, outline)
+
+# Enable the obstacle.
+NavigationServer2D.obstacle_set_avoidance_enabled(new_obstacle_rid, true)
+```
+
+```python
+# For 3D
+
+# Create a new "obstacle" and place it on the default navigation map.
+var new_obstacle_rid: RID = NavigationServer3D.obstacle_create()
+var default_3d_map_rid: RID = get_world_3d().get_navigation_map()
+
+NavigationServer3D.obstacle_set_map(new_obstacle_rid, default_3d_map_rid)
+NavigationServer3D.obstacle_set_position(new_obstacle_rid, global_position)
+
+# Use obstacle dynamic by increasing radius above zero.
+NavigationServer3D.obstacle_set_radius(new_obstacle_rid, 0.5)
+
+# Use obstacle static by adding a square that pushes agents out.
+var outline = PackedVector3Array([Vector3(-5, 0, -5), Vector3(5, 0, -5), Vector3(5, 0, 5), Vector3(-5, 0, 5)])
+NavigationServer3D.obstacle_set_vertices(new_obstacle_rid, outline)
+# Set the obstacle height on the y-axis.
+NavigationServer3D.obstacle_set_height(new_obstacle_rid, 1.0)
+
+# Enable the obstacle.
+NavigationServer3D.obstacle_set_avoidance_enabled(new_obstacle_rid, true)
+```
+
+### 使用 NavigationLinks
+
+NavigationLinks 用于在任意距离上连接 NavigationRegion2D 和 NavigationRegion3D 中的导航网格多边形，以进行路径查找。
+
+NavigationLinks 还用于考虑通过与游戏对象（如梯子、跳跃垫或传送带）交互而获得的路径查找中的移动快捷方式。
+
+NavigationJumplinks 节点的二维和三维版本分别作为 NavigationLink2D 和 NavigationLink3D 提供。
+
+不同的 NavigationRegions 可以在不需要 NavigationLink 的情况下连接其导航网格，只要它们位于导航地图 `edge_connection_emargin` 内并具有兼容的 `navigation_layers` 即可。一旦距离变得太大，建立有效的连接就成了一个问题——NavigationLinks 可以解决这个问题。
+
+请参阅使用导航区域以了解有关导航区域使用的更多信息。请参见连接导航网格以了解有关如何连接导航网格的详细信息。
+
+NavigationLinks 与 NavigationRegions 共享许多属性，如 `navigation_layers`。与 NavigationRegions 相比，NavigationLinks 在任意距离的两个位置之间添加了单个连接，NavigationRegion 使用导航网格资源添加了更局部的可遍历区域。
+
+NavigationLinks 有一个 `start_position` 和 `end_position`，并且在启用 `bidirectional` 时可以双向运行。放置导航链接后，导航链接会连接搜索半径内最靠近其 `start_position` 和 `end_position` 的导航网格多边形，以进行路径查找。
+
+多边形搜索半径可以在 `navigation/2d_or_3d/default_link_connection_radius` 下的 ProjectSettings 中全局配置，也可以使用 `NavigationServer.map_set_link_connection_radius()` 函数为每个导航地图单独设置。
+
+`start_position` 和 `end_position` 在编辑器中都有调试标记。位置的可见半径显示多边形搜索半径。将比较内部的所有导航网格多边形，并为边连接拾取最近的多边形。如果在搜索半径内未找到有效的多边形，则导航链接将被禁用。
+
+链接调试视觉效果可以在编辑器 ProjectSettings 中的 `debug/shapes/navigation` 下更改。调试的可见性也可以在编辑器三维视口 gizmo 菜单中进行控制。
+
+> **注意：**
+>
+> NavigationLinks 本身不会在两个链接位置之间移动代理。
+
+导航链接不提供通过链接的任何自动移动。相反，当代理到达链接的位置时，游戏代码需要做出反应（例如通过区域触发器），并为代理移动通过链接以最终到达链接的其他位置（例如通过传送或动画）以继续沿着路径。
+
+### 使用 NavigationLayers
+
+NavigationLayers 是一个可选功能，用于进一步控制在路径查询中考虑哪些导航网格以及可以连接哪些区域。它们的工作原理类似于物理层如何控制碰撞对象之间的碰撞，或者视觉层如何控制渲染到 Viewport 的内容。
+
+NavigationLayers 可以在 `ProjectSettings` 中与 PhysicsLayers 或 VisualLayers 相同地命名。
+
+如果两个区域没有一个兼容的层，NavigationServer 将不会合并它们。有关合并导航网格的更多信息，请参见连接导航网格。
+
+如果某个区域没有一个具有路径查询 `navigation_layers` 参数的兼容导航层，则在寻路时将跳过该区域导航网格。有关在 NavigationServer 中查询路径的详细信息，请参阅使用 NavigationPaths。
+
+NavigationLayers 是用作 `bitMask` (位掩码) 的单个 `int` 值。许多与导航相关的节点都有 `set_navigation_layer_value()` 和 `get_navigation_Layeer_value()` 函数，可以直接设置和获取层数，而不需要更复杂的逐位操作。
+
+在脚本中，可以使用以下辅助函数来处理 navigation_layers 位掩码。
+
+```python
+func change_layers():
+    var region: NavigationRegion3D = get_node("NavigationRegion3D")
+    # enables 4-th layer for this region
+    region.navigation_layers = enable_bitmask_inx(region.navigation_layers, 4)
+    # disables 1-rst layer for this region
+    region.navigation_layers = disable_bitmask_inx(region.navigation_layers, 1)
+
+    var agent: NavigationAgent3D = get_node("NavigationAgent3D")
+    # make future path queries of this agent ignore regions with 4-th layer
+    agent.navigation_layers = disable_bitmask_inx(agent.navigation_layers, 4)
+
+    var path_query_navigation_layers: int = 0
+    path_query_navigation_layers = enable_bitmask_inx(path_query_navigation_layers, 2)
+    # get a path that only considers 2-nd layer regions
+    var path: PoolVector3Array = NavigationServer3D.map_get_path(
+        map,
+        start_position,
+        target_position,
+        true,
+        path_query_navigation_layers
+        )
+
+static func is_bitmask_inx_enabled(_bitmask: int, _index: int) -> bool:
+    return _bitmask & (1 << _index) != 0
+
+static func enable_bitmask_inx(_bitmask: int, _index: int) -> int:
+    return _bitmask | (1 << _index)
+
+static func disable_bitmask_inx(_bitmask: int, _index: int) -> int:
+    return _bitmask & ~(1 << _index)
+```
+
+更改路径查询的导航层是启用/禁用整个导航区域的一种性能友好的替代方案。与区域更改相比，具有不同导航层的导航路径查询不会触发 NavigationServer 上的大规模更新。
+
+更改 NavigationAgent 节点的导航层将对下一个路径查询产生直接影响。更改区域的导航层将立即对区域产生影响，但任何新的区域连接或断开连接都将仅在下一个物理帧之后生效。
+
+### 导航调试工具
+
+> **注意：**
+>
+> 调试工具、属性和函数仅在 Godot 调试构建中可用。不要在将成为发布构建一部分的代码中使用它们中的任何一个。
+
+#### 启用调试导航
+
+默认情况下，导航调试可视化在编辑器中启用。若要在运行时可视化导航网格和连接，请启用编辑器调试菜单中的 `Visible Navigation`（可见导航）选项。
+
+在 Godot 调试构建中，还可以通过脚本在 NavigationServers 上切换导航调试。
+
+```python
+NavigationServer2D.set_debug_enabled(false)
+NavigationServer3D.set_debug_enabled(true)
+```
+
+#### 调试导航设置
+
+导航调试的外观可以在 `debug/shapes/navigation` 下的 ProjectSettings 中更改。某些调试功能也可以随意启用或禁用，但可能需要重新启动场景才能应用。
+
+#### 调试导航网格多边形
+
+如果启用了 `enable_edge_lines`，则导航网格多边形的边将高亮显示。如果同时启用 `enable_edge_lines_xray`，则导航网格的边将通过几何体可见。
+
+如果启用 `enable_geometry_face_random_color`，则每个导航网格面接收与来自 `geometry_face_color` 的主颜色混合的随机颜色。
+
+#### 调试边缘连接
+
+在 `edge_connection_margin` 距离内连接的不同导航网格被覆盖。覆盖的颜色由导航调试 `edge_connection_color` 控制。可以使用导航调试 `enable_edge_connections_xray` 属性使连接通过几何体可见。
+
+> **注意：**
+>
+> 只有当 NavigationServer 处于活动状态时，边缘连接才可见。
+
+#### 调试性能
+
+要测量 NavigationServer 性能，可以在编辑器调试器中的 *“调试器”->“监视器”->“NavigationProcess”* 下找到一个专用监视器。
+
+NavigationProcess 以毫秒为单位显示 NavigationServer 更新其内部的时间。NavigationProcess 的工作原理类似于视觉帧渲染的 Process 和碰撞和修复更新的 PhysicsProcess。
+
+NavigationProcess 负责 `navigation maps`、`navigation regions` 和 `navigation agents` 的所有更新，以及更新框架的所有 `avoidance calculations`。
+
+> **注意：**
+>
+> NavigationProcess 不包括寻路性能，因为寻路操作独立于服务器进程更新的导航地图数据。
+
+一般情况下，NavigationProcess 的运行时性能应尽可能低且稳定，以避免帧速率问题。请注意，由于 NavigationServer 进程更新发生在物理更新的中间，NavigationProcess 的增加将自动增加 PhysicsProcess 相同的数量。
+
+Navigation 还提供了有关 NavigationServer 上当前导航相关对象和导航地图组成的更详细统计信息。
+
+这里显示的导航统计数据不能被判断为性能的好坏，因为它完全取决于项目的合理或过度。
+
+导航统计信息有助于识别不太明显的性能瓶颈，因为源可能并不总是具有可见的表示形式。例如，由于具有数千条边/多边形的导航网格过于详细而导致的寻路性能问题，或者由于过程导航出错而导致的问题。
+
+### 连接导航网格
+
+当一条边的至少两个顶点位置完全重叠时，NavigationServer 会自动合并不同的导航网格。
+
+要在任意距离上进行连接，请参见使用导航链接。
+
+对于多个 NavigationPolygon 资源也是如此。只要它们的轮廓点正好重叠，NavigationServer 就会将它们合并。NavigationPolygon 轮廓必须来自不同的 NavigationPolyon 资源才能连接。
+
+在同一 NavigationPolygon 上重叠或相交的轮廓将无法创建导航网格。来自不同 NavigationPolygons 的重叠或相交轮廓通常无法在 NavigationServer 上创建导航区域边缘连接，因此应避免。
+
+> **警告:**
+>
+> 精确意味着顶点位置合并的精确性。导入网格经常发生的小浮动错误将阻止顶点合并的成功。
+
+或者，当 `NavigationMesh` 的边几乎平行且彼此相距一定距离时，NavigationMesh 不会合并，但仍被 NavigationServer 视为连接。连接距离由每个导航地图的 `edge_connection_margin` 定义。在许多情况下，NavigationMesh 边在部分重叠时无法正确连接。为了实现一致的合并行为，最好始终避免任何导航网格重叠。
+
+如果启用了导航调试并且 NavigationServer 处于活动状态，则已建立的导航网格连接将被可视化。有关导航调试选项的详细信息，请参阅导航调试工具。
+
+默认的 2D `edge_connection_margin` 可以在 `navigation/2d/default_edge_connection_margin` 下的 ProjectSettings 中更改。
+
+默认的 3D `edge_connection_margin` 可以在 `navigation/3d/default_edge_connection_margin` 下的 ProjectSettings 中更改。
+
+也可以使用 NavigationServer API 在运行时更改任何导航地图的边缘连接边距值。
+
+```python
+extends Node2D
+# 2D margins are designed to work with "pixel" values
+var default_2d_map_rid: RID = get_world_2d().get_navigation_map()
+NavigationServer2D.map_set_edge_connection_margin(default_2d_map_rid, 50.0)
+```
+
+```python
+extends Node3D
+# 3D margins are designed to work with 3D unit values
+var default_3d_map_rid: RID = get_world_3d().get_navigation_map()
+NavigationServer3D.map_set_edge_connection_margin(default_3d_map_rid, 0.5)
+```
+
+> **注意：**
+>
+> 更改边缘连接边距将触发 NavigationServer 上所有导航网格连接的完全更新。
+
+### 支持不同的演员类型
+
+为了支持不同的行动者类型，例如，由于它们的大小，每种类型都需要自己的导航地图和导航网格，并使用适当的代理半径和高度烘焙。同样的方法可以用于区分例如陆上行走、游泳或飞行代理。
+
+> **注意：**
+>
+> 代理仅由烘焙导航网格、路径查找和避免的半径和高度值定义。不支持更复杂的形状。
+
+```python
+# create navigation mesh resources for each actor size
+var navigation_mesh_standard_size: NavigationMesh = NavigationMesh.new()
+var navigation_mesh_small_size: NavigationMesh = NavigationMesh.new()
+var navigation_mesh_huge_size: NavigationMesh = NavigationMesh.new()
+
+# set appropriated agent parameters
+navigation_mesh_standard_size.agent_radius = 0.5
+navigation_mesh_standard_size.agent_height = 1.8
+navigation_mesh_small_size.agent_radius = 0.25
+navigation_mesh_small_size.agent_height = 0.7
+navigation_mesh_huge_size.agent_radius = 1.5
+navigation_mesh_huge_size.agent_height = 2.5
+
+# get the root node for the baking to parse geometry
+var root_node: Node3D = get_node("NavigationMeshBakingRootNode")
+
+# bake the navigation geometry for each agent size
+NavigationMeshGenerator.bake(navigation_mesh_standard_size, root_node)
+NavigationMeshGenerator.bake(navigation_mesh_small_size, root_node)
+NavigationMeshGenerator.bake(navigation_mesh_huge_size, root_node)
+
+# create different navigation maps on the NavigationServer
+var navigation_map_standard: RID = NavigationServer3D.map_create()
+var navigation_map_small: RID = NavigationServer3D.map_create()
+var navigation_map_huge: RID = NavigationServer3D.map_create()
+
+# create a region for each map
+var navigation_map_standard_region: RID = NavigationServer3D.region_create()
+var navigation_map_small_region: RID = NavigationServer3D.region_create()
+var navigation_map_huge_region: RID = NavigationServer3D.region_create()
+
+# set navigation mesh for each region
+NavigationServer3D.region_set_navigation_mesh(navigation_map_standard_region, navigation_mesh_standard_size)
+NavigationServer3D.region_set_navigation_mesh(navigation_map_small_region, navigation_mesh_small_size)
+NavigationServer3D.region_set_navigation_mesh(navigation_map_huge_region, navigation_mesh_huge_size)
+
+# add regions to maps
+navigation_map_standard_region.region_set_map(navigation_map_standard_region, navigation_map_standard)
+navigation_map_small_region.region_set_map(navigation_map_small_region, navigation_map_small)
+navigation_map_huge_region.region_set_map(navigation_map_huge_region, navigation_map_huge)
+
+# wait a physics frame for sync
+await get_tree().physics_frame
+
+# query paths for each size
+var path_standard_agent = NavigationServer3D.map_get_path(navigation_map_standard, start_pos, end_pos, true)
+var path_small_agent = NavigationServer3D.map_get_path(navigation_mesh_small_size, start_pos, end_pos, true)
+var path_huge_agent = NavigationServer3D.map_get_path(navigation_map_huge, start_pos, end_pos, true)
+```
+
+### 支持不同的演员移动
+
+为了支持不同的演员移动，如蹲下和爬行，需要类似于支持不同演员类型的地图设置。
+
+为蹲着或爬行的演员烘焙具有适当高度的不同导航网格，这样他们就可以在游戏世界中的狭窄区域找到路径。
+
+当演员改变运动状态时，例如站起来、开始蹲下或爬行，请在适当的地图上查询路径。
+
+如果回避行为也应该随着运动而改变，例如仅在站立时回避或仅避开处于相同运动状态的其他代理，则随着每次运动的改变，将参与者的回避代理切换到另一个回避图。
+
+```python
+func update_path():
+
+    if actor_standing:
+        path = NavigationServer3D.map_get_path(standing_navigation_map_rid, start_position, target_position, true)
+    elif actor_crouching:
+        path = NavigationServer3D.map_get_path(crouched_navigation_map_rid, start_position, target_position, true)
+    elif actor_crawling:
+        path = NavigationServer3D.map_get_path(crawling_navigation_map_rid, start_position, target_position, true)
+
+func change_agent_avoidance_state():
+
+    if actor_standing:
+        NavigationServer3D.agent_set_map(avoidance_agent_rid, standing_navigation_map_rid)
+    elif actor_crouching:
+        NavigationServer3D.agent_set_map(avoidance_agent_rid, crouched_navigation_map_rid)
+    elif actor_crawling:
+        NavigationServer3D.agent_set_map(avoidance_agent_rid, crawling_navigation_map_rid)
+```
+
+> **注意：**
+>
+> 虽然可以立即对多个映射执行路径查询，但回避代理映射切换只有在下一次服务器同步后才会生效。
+
+### 支持不同的演员区域访问
+
+在游戏中，不同区域访问的一个典型例子是用不同的导航网格连接房间的门，并非所有演员都能一直访问。
+
+在门位置添加 NavigationRegion。添加一个适当的导航网格，其大小与可以与周围导航网格连接的门相同。为了控制访问启用/禁用导航层位，使用相同导航层位的路径查询可以通过“门”导航网格找到路径。
+
+比特掩码可以充当一组门钥匙或能力，并且只有在其寻路查询中具有至少一个匹配并启用的比特层的参与者才能找到通过该区域的路径。有关如何使用导航层和位掩码的详细信息，请参见使用导航层。
+
+如果需要，也可以启用/禁用整个“门”区域，但如果禁用，将阻止所有路径查询的访问。
+
+尽可能在路径查询中使用导航层，因为启用或禁用区域上的导航层会触发导航地图连接的性能昂贵的重新计算。
+
+> **警告：**
+>
+> 更改导航层只会影响新路径查询，但不会自动更新现有路径。
+
+### 优化导航性能
+
+常见的导航相关性能问题可分为以下主题：
+
+- 解析导航网格烘焙的 SceneTree 节点时出现性能问题。
+- 烘焙实际导航网格时的性能问题。
+- NavigationAgent 路径查询的性能问题。
+- 实际路径搜索的性能问题。
+- 同步导航地图时出现性能问题。
+
+在以下部分中，可以找到有关如何识别和修复或至少减轻其对帧速率的影响的信息。
+
+#### 解析场景树节点的性能问题
+
+> **提示：**
+>
+> 更喜欢使用边缘尽可能少的简单形状，例如没有像圆形、球体或圆环体那样的圆形。
+>
+> 与复杂的视觉网格相比，更喜欢使用物理碰撞形状作为源几何体，因为网格需要从 GPU 复制，并且通常比必要的要详细得多。
+
+通常，避免使用非常复杂的几何体作为烘焙导航网格的源几何体。例如，永远不要使用非常详细的视觉网格，因为将其形状解析为数据阵列并对其进行体素化以进行导航网格烘焙需要很长时间，因为最终导航网格上没有真正的质量增益。相反，使用形状的非常简化的细节级别版本。更好的是，使用非常原始的形状，如方框和矩形，它们只大致覆盖相同的几何体，但仍然可以产生足够好的烘焙结果来进行寻路。
+
+与视觉网格相比，更喜欢使用简单的物理碰撞形状，作为烘焙导航网格的源几何体。默认情况下，物理形状是非常有限和优化的形状，易于快速解析。另一方面，视觉网格可以从简单到复杂。最重要的是，为了访问视觉网格数据，解析器需要从 RenderingServer 请求网格数据阵列，因为视觉网格数据直接存储在 GPU 上，而不是缓存在 CPU 上。这需要锁定 RenderingServer 线程，并且在多线程渲染运行时可能会严重影响运行时的帧速率。如果渲染运行单线程，则帧率影响可能会更糟，网格解析可能会在复杂网格上冻结整个游戏几秒钟。
+
+#### 导航网格烘焙的性能问题
+
+> **提示：**
+>
+> 在运行时，始终倾向于使用背景线程烘焙导航网格。
+>
+> 增加 NavigationMesh `cell_size` 和 `cell_height` 以创建更少的体素。
+>
+> 将 `SamplePartitionType` 从分水岭更改为单调或图层以获得烘焙性能。
+
+> **警告：**
+>
+> 切勿使用节点缩放源几何体以避免精度错误。大多数比例仅在视觉上适用，即使在缩小比例的情况下，在基本比例下非常大的形状仍需要大量额外的处理。
+
+如果可能的话，在运行时烘焙导航网格应该始终在后台线程中完成。即使是小尺寸的导航网格，烘焙所需的时间也可能比压缩到单个帧中所需的要长得多，至少在帧速率应保持在可承受水平的情况下是这样。
+
+从 SceneTree 节点解析的源几何体数据的复杂性对烘焙性能有很大影响，因为所有东西都需要映射到网格/体素。对于运行时烘焙性能，NavigationMesh 单元格大小和单元格高度应设置得尽可能高，而不会导致游戏的导航网格质量问题。如果单元大小或单元高度设置得过低，则烘焙将被迫创建过多的体素来处理源几何体。如果源几何体跨越一个非常大的游戏世界，则烘焙过程甚至可能会耗尽中间的内存并导致游戏崩溃。分区类型也可以根据游戏源几何体的复杂程度来降低，以获得一些性能。例如，具有块状几何体的大部分平面的游戏可以摆脱单调或分层模式，这种模式烘焙速度要快得多（例如，因为它们不需要远距离传球）。
+
+从不使用节点缩放源几何体。它不仅会导致许多错误匹配的顶点和边的精度误差，而且一些缩放只作为视觉效果存在，而不存在于实际解析的数据中。例如，如果在编辑器中以视觉方式缩小网格，例如在 MeshInstance 上设置为 0.001 的比例，则网格仍然需要处理巨大且非常复杂的体素网格以进行烘焙。
+
+#### NavigationAgent 路径查询的性能问题
+
+> **提示：**
+>
+> 避免不必要的路径重置和查询 NavigationAgent 脚本中的每一帧。
+>
+> 避免在同一帧中更新所有 NavigationAgent 路径。
+
+自定义 NavigationAgent 脚本中的逻辑错误和浪费操作是导致性能问题的常见原因，例如，注意每一帧重置路径。默认情况下，NavigationAgent 被优化为仅在目标位置更改、导航地图更改或被迫离所需路径距离太远时查询新路径。
+
+例如，当 AI 应该移动到玩家时，不应该将目标位置设置为每一帧的玩家位置，因为这会在每一帧中查询新的路径。相反，应该比较从当前目标位置到玩家位置的距离，并且只有当玩家移动得太远时，才应该设置新的目标位置。
+
+不要事先检查是否每帧都能到达目标位置。看似无害的检查相当于在后台进行昂贵的路径查询。如果计划无论如何都要请求一条新的路径（如果该位置可以到达），则应直接查询路径。通过查看返回路径的最后一个位置，如果该位置与检查位置相距“可达”距离，则回答“该位置可达吗？”问题。这避免了对同一 NavigationAgent 在每帧执行两个完整路径查询。
+
+将 NavigationAgent 的总数划分为更新组或使用随机计时器，以便它们不会在同一帧中全部请求新路径。
+
+#### 实际路径搜索的性能问题
+
+> **提示：**
+>
+> 通过减少多边形和边的数量来优化过度细化的导航网格。
+
+实际路径搜索的成本与导航网格多边形和边的数量直接相关，而与游戏世界的实际大小无关。如果一个巨大的游戏世界使用非常优化的导航网格，只有很少的多边形覆盖大面积，那么性能应该是可以接受的。如果游戏世界被分割成非常小的导航网格，每个导航网格都有微小的多边形（就像 TileMaps 一样），寻路性能将降低。
+
+一个常见的问题是，当路径查询中无法到达目标位置时，性能会突然下降。这种性能下降是“正常的”，是因为导航网格太大、太未优化，有太多的多边形和边需要搜索。在可以快速到达目标位置的正常路径搜索中，一旦到达该位置，寻路就会提前退出，这可以在一段时间内隐藏这种缺乏优化的情况。如果无法到达目标位置，寻路必须在可用多边形中进行更长的搜索，以确认该位置绝对无法到达。
+
+#### 导航地图同步的性能问题
+
+> **提示：**
+>
+> 尽可能按顶点而不是按边连接合并导航网格多边形。
+
+当对导航网格或导航区域等进行更改时，NavigationServer 需要同步导航地图。根据导航网格的复杂性，这可能需要相当长的时间，这可能会影响帧速率。
+
+NavigationServer 通过顶点或边连接合并导航网格。当两条不同边的两个顶点位于同一地图网格单元中时，会发生按顶点合并。这是一个相当快速和低成本的操作。边连接合并发生在第二次过程中，用于所有仍然未合并的边。通过距离和角度检查所有自由边缘是否存在可能的边缘连接，这是相当昂贵的。
+
+因此，除了具有尽可能少的多边形边的一般规则外，应该通过顶点提前合并尽可能多的边，这样只剩下几条边用于更昂贵的边连接计算。调试导航性能监视器可用于获取有关可用多边形和边的数量以及其中有多少未按顶点合并或未按顶点进行合并的统计信息。如果合并的顶点和边连接之间的比率太大（顶点应该高得多），则导航网格的创建或放置会非常低效。
 
 ## 性能
 
