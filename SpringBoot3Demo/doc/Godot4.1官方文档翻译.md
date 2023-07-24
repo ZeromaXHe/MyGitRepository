@@ -7941,6 +7941,974 @@ NavigationServer 通过顶点或边连接合并导航网格。当两条不同边
 
 因此，除了具有尽可能少的多边形边的一般规则外，应该通过顶点提前合并尽可能多的边，这样只剩下几条边用于更昂贵的边连接计算。调试导航性能监视器可用于获取有关可用多边形和边的数量以及其中有多少未按顶点合并或未按顶点进行合并的统计信息。如果合并的顶点和边连接之间的比率太大（顶点应该高得多），则导航网格的创建或放置会非常低效。
 
+## 网络
+
+### 高级多人
+
+#### 高级与低级 API
+
+下面解释 Godot 中高级和低级网络的差异以及一些基本原理。如果您想从头开始，并将网络添加到您的第一个节点，请跳到下面的初始化网络。但是以后一定要读剩下的！
+
+Godot 始终支持通过 UDP、TCP 和一些更高级别的协议（如 HTTP 和 SSL）进行标准的低级别网络连接。这些协议是灵活的，几乎可以用于任何事情。然而，使用它们手动同步游戏状态可能需要大量的工作。有时，这项工作是无法避免的，或者是值得的，例如，在后端使用自定义服务器实现时。但在大多数情况下，值得考虑 Godot 的高级网络 API，它牺牲了对低级网络的一些细粒度控制，以获得更大的易用性。
+
+这是由于低级别协议的固有限制：
+
+- TCP 确保数据包总是可靠且有序地到达，但由于纠错，延迟通常会更高。它也是一个相当复杂的协议，因为它了解什么是“连接”，并针对通常不适合多人游戏等应用程序的目标进行优化。数据包被缓冲，以便以更大的批量发送，以更低的每个数据包开销换取更高的延迟。这可能对 HTTP 之类的东西有用，但通常对游戏不有用。其中一些可以配置和禁用（例如，通过禁用 TCP 连接的“Nagle 算法”）。
+- UDP 是一种更简单的协议，只发送数据包（没有“连接”的概念）。没有纠错使它非常快速（低延迟），但数据包可能会在传输过程中丢失或以错误的顺序接收。除此之外，UDP 的 MTU（最大数据包大小）通常很低（只有几百字节），因此传输较大的数据包意味着拆分它们，重新组织它们，并在某个部分出现故障时重试。
+
+一般来说，TCP 可以被认为是可靠的、有序的和缓慢的；UDP 是不可靠、无序和快速的。由于性能差异很大，重新构建游戏所需的 TCP 部分（可选的可靠性和数据包顺序），同时避免不需要的部分（拥塞/流量控制功能、Nagle 算法等）通常是有意义的。正因为如此，大多数游戏引擎都有这样的实现，Godot 也不例外。
+
+总之，您可以使用低级网络 API 进行最大程度的控制，并在裸网络协议之上实现所有功能，或者使用基于 SceneTree 的高级 API，该 API 以通常优化的方式在幕后完成大部分繁重的工作。
+
+> **注意：**
+>
+> Godot 支持的大多数平台都提供了上述所有或大部分高级和低级网络功能。然而，由于网络始终在很大程度上依赖于硬件和操作系统，一些功能可能会在某些目标平台上更改或不可用。最值得注意的是，HTML5 平台目前提供 WebSockets 和 WebRTC 支持，但缺乏一些更高级别的功能，以及对 TCP 和 UDP 等低级别协议的原始访问。
+
+> **注意：**
+>
+> 有关 TCP/IP、UDP 和网络的详细信息：https://gafferongames.com/post/udp_vs_tcp/
+>
+> Gaffer On Games 有很多关于游戏中网络的有用文章（这里），包括对游戏中网络模型的全面介绍。
+>
+> 如果您想使用您选择的低级网络库，而不是 Godot 的内置网络，请参阅此处获取示例：https://github.com/PerduGames/gdnet3
+
+> **警告：**
+>
+> 在游戏中添加网络是有责任的。如果操作不当，它可能会使您的应用程序变得脆弱，并可能导致作弊或漏洞利用。它甚至可能允许攻击者破坏您的应用程序运行的机器，并使用您的服务器发送垃圾邮件、攻击他人或在用户玩您的游戏时窃取用户的数据。
+>
+> 当涉及网络而与 Godot 无关时，情况总是如此。当然，您可以进行实验，但当您发布网络应用程序时，请始终注意任何可能的安全问题。
+
+#### 中级抽象
+
+在讨论如何跨网络同步游戏之前，了解用于同步的基础网络 API 是如何工作的可能会有所帮助。
+
+Godot 使用中级对象 MultiplayerPeer。这个对象并不是要直接创建的，而是为了让几个 C++ 实现能够提供它而设计的。
+
+此对象从 PacketPeer 扩展而来，因此它继承了所有用于序列化、发送和接收数据的有用方法。除此之外，它还添加了设置对等点、传输模式等的方法。它还包括可以让您知道对等点何时连接或断开连接的信号。
+
+这个类接口可以抽象大多数类型的网络层、拓扑和库。默认情况下，Godot 提供了一个基于 ENet（ENetMultiplayerPeer）、一个基于 WebRTC（WebRTCMultiplayerPee）和一个基于 WebSocket（WebSocketPeer）的实现，但这可以用于实现移动 API（用于特设 WiFi、蓝牙）或自定义设备/控制台特定的网络 API。
+
+对于大多数常见情况，不鼓励直接使用此对象，因为 Godot 提供了更高级别的网络设施。如果游戏对较低级别的 API 有特定需求，这个对象仍然可用。
+
+#### 托管注意事项
+
+当托管服务器时，局域网上的客户端可以使用内部 IP 地址进行连接，该地址的格式通常为 `192.168.*.*`。非局域网/互联网客户端无法访问该内部 IP 地址。
+在 Windows 上，您可以通过打开命令提示符并输入 `ipconfig` 来找到您的内部 IP 地址。在 macOS 上，打开一个终端并输入 `ifconfig`。在 Linux 上，打开一个终端并输入 `ip addr`。
+
+如果你在自己的机器上托管服务器，并希望非局域网客户端连接到它，你可能必须转发路由器上的服务器端口。由于大多数住宅连接使用 NAT，因此这是使您的服务器可以从 Internet 访问所必需的。Godot 的高级多人 API 仅使用 UDP，因此您必须以 UDP 而不仅仅是 TCP 转发端口。
+
+在转发 UDP 端口并确保您的服务器使用该端口后，您可以使用此网站查找您的公共 IP 地址。然后将此公共 IP 地址提供给任何希望连接到服务器的 Internet 客户端。
+
+Godot 的高级多人 API 使用 ENet 的修改版本，该版本允许完全支持 IPv6。
+
+#### 初始化网络
+
+Godot 中控制网络的对象与控制所有与树相关的内容的对象相同：SceneTree。
+
+要初始化高级网络，必须为 SceneTree 提供 NetworkedMultiplayerPeer 对象。
+
+要创建该对象，首先必须将其初始化为服务器或客户端。
+
+作为服务器初始化，在给定的端口上侦听，具有给定的最大对等数量：
+
+```python
+var peer = NetworkedMultiplayerENet.new()
+peer.create_server(SERVER_PORT, MAX_PLAYERS)
+get_tree().network_peer = peer
+```
+
+作为客户端初始化，连接到给定的 IP 和端口：
+
+```python
+var peer = NetworkedMultiplayerENet.new()
+peer.create_client(SERVER_IP, SERVER_PORT)
+get_tree().network_peer = peer
+```
+
+获取先前设置的网络对等端：
+
+```python
+get_tree().get_network_peer()
+```
+
+正在检查树是否初始化为服务器或客户端：
+
+```python
+get_tree().is_network_server()
+```
+
+终止网络功能：
+
+```python
+get_tree().network_peer = null
+```
+
+（尽管根据你的游戏，先发送一条消息让其他对等方知道你要离开，而不是让连接关闭或超时，这可能是有意义的。）
+
+> **警告：**
+>
+> 导出到 Android 时，在导出项目或使用一键部署之前，请确保在Android导出预设中启用INTERNET权限。否则，任何类型的网络通信都将被安卓系统阻止。
+
+#### 管理连接
+
+有些游戏在任何时候都接受连接，另一些则在大厅阶段。Godot 可以被请求在任何时候不再接受连接（请参阅 SceneTree 上的 `set_refuse_new_network_connections(bool)` 和相关方法）。为了管理连接者，Godot 在 SceneTree 中提供以下信号：
+
+服务器和客户端：
+
+- `network_peer_connected(int id)`
+- `network_peer_disconnected(int id)`
+
+当一个新的对等端连接或断开连接时，连接到服务器的每个对等端（包括服务器上的对等端）都会调用上述信号。客户端将使用大于 1 的唯一 ID 进行连接，而网络对等方 ID  1 始终是服务器。任何低于 1 的都应视为无效。您可以通过 `SceneTree.get_network_unique_id()` 检索本地系统的 ID。这些 ID 主要用于大厅管理，通常应该存储，因为它们可以识别连接的对等方，从而识别玩家。您还可以使用 ID 仅向某些对等方发送消息。
+
+客户端：
+
+- `connected_to_server`
+- `connection_failed`
+- `server_disconnected`
+
+同样，所有这些功能主要用于大厅管理或动态添加/删除玩家。对于这些任务，服务器显然必须作为服务器工作，您必须手动执行任务，例如向新连接的玩家发送有关其他已连接玩家的信息（例如，他们的姓名、统计数据等）。
+
+Lobbies 可以以任何方式实现，但最常见的方式是在所有对等体的场景中使用具有相同名称的节点。通常，自动加载的节点/单例非常适合这样做，始终可以访问，例如 “/root/loglog”。
+
+#### RPC
+
+要在对等方之间进行通信，最简单的方法是使用 RPC（远程过程调用）。这是在 Node 中实现的一组功能：
+
+- `rpc("function_name", <optional_args>)`
+- `rpc_id(<peer_id>,"function_name", <optional_args>)`
+- `rpc_unreliable("function_name", <optional_args>)`
+- `rpc_unreliable_id(<peer_id>, "function_name", <optional_args>)`
+
+同步成员变量也是可能的：
+
+- `rset("variable", value)`
+- `rset_id(<peer_id>, "variable", value)`
+- `rset_unreliable("variable", value)`
+- `rset_unreliable_id(<peer_id>, "variable", value)`
+
+函数可以用两种方式调用：
+
+- 可靠：当函数调用到达时，会发回确认消息；如果在一定时间后没有收到确认，则函数调用将被重新传输。
+- 不可靠：函数调用只发送一次，没有检查它是否到达，但也没有任何额外的开销。
+
+在大多数情况下，需要可靠。不可靠在同步对象位置时最有用（同步必须不断发生，如果数据包丢失，也没那么糟糕，因为新的数据包最终会到达，而且它可能会过时，因为在此期间对象移动得更远，即使它被可靠地重新发送）。
+
+`SceneTree` 中还有 `get_rpc_sender_id` 函数，可用于检查哪个对等方（或对等方 id）发送了 RPC。
+
+#### 返回大厅
+
+让我们回到大厅。想象一下，每个连接到服务器的玩家都会告诉每个人这件事。
+
+```python
+# Typical lobby implementation; imagine this being in /root/lobby.
+
+extends Node
+
+# Connect all functions
+
+func _ready():
+    get_tree().network_peer_connected.connect(_player_connected)
+    get_tree().network_peer_disconnected.connect(_player_disconnected)
+    get_tree().connected_to_server.connect(_connected_ok)
+    get_tree().connection_failed.connect(_connected_fail)
+    get_tree().server_disconnected.connect(_server_disconnected)
+
+# Player info, associate ID to data
+var player_info = {}
+# Info we send to other players
+var my_info = { name = "Johnson Magenta", favorite_color = Color8(255, 0, 255) }
+
+func _player_connected(id):
+    # Called on both clients and server when a peer connects. Send my info to it.
+    rpc_id(id, "register_player", my_info)
+
+func _player_disconnected(id):
+    player_info.erase(id) # Erase player from info.
+
+func _connected_ok():
+    pass # Only called on clients, not server. Will go unused; not useful here.
+
+func _server_disconnected():
+    pass # Server kicked us; show error and abort.
+
+func _connected_fail():
+    pass # Could not even connect to server; abort.
+
+remote func register_player(info):
+    # Get the id of the RPC sender.
+    var id = get_tree().get_rpc_sender_id()
+    # Store the info
+    player_info[id] = info
+
+    # Call function to update lobby UI here
+```
+
+您可能已经注意到了一些不同之处，那就是 `register_player` 函数中 `remote` 关键字的用法：
+
+```python
+remote func register_player(info):
+```
+
+这个关键字有两个主要用途。第一个是让 Godot 知道这个函数可以从 RPC 调用。如果没有添加关键字，Godot 将阻止任何为安全起见调用函数的尝试。这使得安全工作变得容易得多（因此客户端不能调用函数来删除另一个客户端系统上的文件）。
+
+第二个用途是指定如何通过 RPC 调用函数。有四个不同的关键字：
+
+- `remote`
+- `remotesync`
+- `master`
+- `puppet`
+
+`remote` 关键字表示 `rpc()` 调用将通过网络远程执行。
+
+`remotesync` 关键字意味着 `rpc()` 调用将通过网络远程执行，但也将在本地执行（执行正常的函数调用）。
+
+其他的将进一步解释。请注意，您还可以在 `SceneTree` 上使用 `get_rpc_sender_id` 函数来检查哪个对等方实际对 `register_player` 进行了 RPC 调用。
+
+有了这一点，大厅管理或多或少应该得到解释。一旦你开始游戏，你很可能会想添加一些额外的安全措施，以确保客户端不会做任何有趣的事情（只需验证他们不时发送的信息，或在游戏开始前发送的信息）。为了简单起见，也因为每个游戏都会共享不同的信息，所以这里没有显示。
+
+#### 开始游戏
+
+一旦大厅里聚集了足够多的玩家，服务器就应该开始游戏了。这本身并没有什么特别的，但我们将解释一些在这一点上可以做的好技巧，让你的生活变得更轻松。
+
+##### 玩家场景
+
+在大多数游戏中，每个玩家都可能有自己的场景。请记住，这是一款多人游戏，因此在每个对等体中，您需要为**每个连接到它的玩家实例化一个场景**。对于 4 人游戏，每个对等体需要实例化 4 个玩家节点。
+
+那么，如何命名这样的节点呢？在 Godot 中，节点需要有一个唯一的名称。玩家也必须相对容易地判断哪个节点代表每个玩家 ID。
+
+解决方案是简单地将实例化的玩家场景的根节点命名为它们的网络 ID。这样，它们在每个对等体中都是相同的，RPC 将非常有效！以下是一个示例：
+
+```python
+remote func pre_configure_game():
+    var selfPeerID = get_tree().get_network_unique_id()
+
+    # Load world
+    var world = load(which_level).instantiate()
+    get_node("/root").add_child(world)
+
+    # Load my player
+    var my_player = preload("res://player.tscn").instantiate()
+    my_player.set_name(str(selfPeerID))
+    my_player.set_multiplayer_authority(selfPeerID) # Will be explained later
+    get_node("/root/world/players").add_child(my_player)
+
+    # Load other players
+    for p in player_info:
+        var player = preload("res://player.tscn").instantiate()
+        player.set_name(str(p))
+        player.set_multiplayer_authority(p) # Will be explained later
+        get_node("/root/world/players").add_child(player)
+
+    # Tell server (remember, server is always ID=1) that this peer is done pre-configuring.
+    # The server can call get_tree().get_rpc_sender_id() to find out who said they were done.
+    rpc_id(1, "done_preconfiguring")
+```
+
+**注意：**
+根据执行 pre_configure_game() 的时间，您可能需要通过 `call_deferred()` 将对 `add_child()` 的任何调用更改为延迟调用，因为场景树在创建场景时被锁定（例如，在调用 `_ready()` 时）。
+
+##### 同步游戏开始
+
+由于滞后、硬件不同或其他原因，设置玩家可能需要每个对等方花费不同的时间。为了确保游戏在每个人都准备好的时候真正开始，暂停游戏直到所有玩家都准备好可能很有用：
+
+```python
+remote func pre_configure_game():
+    get_tree().set_pause(true) # Pre-pause
+    # The rest is the same as in the code in the previous section (look above)
+```
+
+当服务器从所有对等端获得 OK 时，它可以告诉它们启动，例如：
+
+```python
+var players_done = []
+remote func done_preconfiguring():
+    var who = get_tree().get_rpc_sender_id()
+    # Here are some checks you can do, for example
+    assert(get_tree().is_network_server())
+    assert(who in player_info) # Exists
+    assert(not who in players_done) # Was not added yet
+
+    players_done.append(who)
+
+    if players_done.size() == player_info.size():
+        rpc("post_configure_game")
+
+remote func post_configure_game():
+    # Only the server is allowed to tell a client to unpause
+    if 1 == get_tree().get_rpc_sender_id():
+        get_tree().set_pause(false)
+        # Game starts now!
+```
+
+#### 同步游戏
+
+在大多数游戏中，多人网络的目标是让游戏在所有玩它的同行上同步运行。除了提供 RPC 和远程成员变量集实现外，Godot 还添加了网络主机的概念。
+
+##### 网络主机
+
+节点的网络主节点是对其拥有最终权限的对等节点。
+
+如果未明确设置，则网络主机将从父节点继承，如果未更改，则父节点将始终是服务器（ID 1）。因此，默认情况下，服务器对所有节点都具有权限。
+
+可以使用以下函数设置网络主机：ref:`Node.set_multiplier_authority(id，recursive)`（recursive 默认为 `true`，意味着网络主机也在节点的所有子节点上递归设置）。
+
+通过调用 `Node.is_network_master()` 来检查对等体上的特定节点实例是否是该节点的网络主机。当在服务器上执行时，这将返回 `true`，而在所有客户端对等体上返回 `false`。
+
+如果你已经注意到前面的例子，你可能会注意到每个对等点都被设置为拥有自己玩家（节点）的网络主权限，而不是服务器：
+
+```python
+[...]
+# Load my player
+var my_player = preload("res://player.tscn").instantiate()
+my_player.set_name(str(selfPeerID))
+my_player.set_multiplayer_authority(selfPeerID) # The player belongs to this peer; it has the authority.
+get_node("/root/world/players").add_child(my_player)
+
+# Load other players
+for p in player_info:
+    var player = preload("res://player.tscn").instantiate()
+    player.set_name(str(p))
+    player.set_multiplayer_authority(p) # Each other connected peer has authority over their own player.
+    get_node("/root/world/players").add_child(player)
+[...]
+```
+
+每次在每个对等体上执行这段代码时，对等体都会使自己在其控制的节点上成为主节点，而所有其他节点都保持为傀儡，服务器是它们的网络主节点。
+
+为了澄清，这里有一个轰炸机演示中的例子：
+
+##### master 和 puppet 关键词
+
+该模型的真正优势在于与 GDScript 中的 `master`/`puppet` 关键字（或 C# 中的等效关键字）一起使用。与 `remote` 关键字类似，函数也可以使用它们进行标记：
+
+炸弹代码示例：
+
+```python
+for p in bodies_in_area:
+    if p.has_method("exploded"):
+        p.rpc("exploded", bomb_owner)
+```
+
+玩家代码示例：
+
+```python
+puppet func stun():
+    stunned = true
+
+master func exploded(by_who):
+    if stunned:
+        return # Already stunned
+
+    rpc("stun")
+
+    # Stun this player instance for myself as well; could instead have used
+    # the remotesync keyword above (in place of puppet) to achieve this.
+    stun()
+```
+
+在上面的例子中，炸弹在某个地方爆炸（可能由该炸弹节点的主节点管理，例如主机）。炸弹知道该区域中的尸体（玩家节点），因此在调用之前会检查它们是否包含 `explode` 方法。
+
+回想一下，每个对等体都有一组完整的玩家节点实例，每个对等方（包括其自身和主机）有一个实例。每个对等体都将自己设置为与自己对应的实例的主节点，并将不同的对等体设置为其他每个实例的主对象。
+
+现在，回到对 `exploded` 方法的调用，主机上的炸弹已经在该区域所有有该方法的物体上远程调用了它。但是，此方法位于玩家节点中，并且有一个 `master` 关键字。
+
+玩家节点中 `exploded` 方法上的 `master` 关键字表示如何进行此调用的两个方面。首先，从主叫对等体（主机）的角度来看，主叫对等方只会尝试远程调用其设置为所讨论的播放器节点的网络主机的对等体上的方法。其次，从主机向其发送呼叫的对等方的角度来看，只有当对等方将自己设置为被调用方法（具有 `master` 关键字）的玩家节点的网络主机时，对等方才会接受呼叫。只要所有同行都同意谁是什么的主人，这就很有效。
+
+上述设置意味着，只有拥有受影响身体的同伴才有责任告诉所有其他同伴，在被宿主的炸弹远程指示后，它的身体被震撼了。因此，拥有它的对等点（仍然使用 `explode` 方法）告诉所有其他对等点，它的玩家节点被震撼了。对等方通过在该玩家节点的所有实例上（在其他对等方上）远程调用 `stun` 方法来实现这一点。因为 `stun` 方法有 `puppet` 关键字，所以只有没有将自己设置为节点的网络主机的对等方才会调用它（换句话说，这些对等方由于不是该节点的网络主而被设置为该节点的 puppet）。
+
+这次调用 `stun` 的结果是让玩家在所有对等体的屏幕上看起来都被震撼了，包括当前的网络主对等体（由于 `rpc("stun")` 之后的本地调用 `stun`）。
+
+炸弹的主人（主持人）对该区域中的每一具尸体重复上述步骤，这样炸弹区域中任何玩家的所有实例都会在所有同行的屏幕上被震撼。
+
+请注意，您也可以使用 `rpc_id(<id>, "exploded", bomb_owner)` 仅向特定玩家发送 `stun()` 消息。这对于炸弹这样的作用区域来说可能没有多大意义，但在其他情况下可能会有意义，比如单目标损伤。
+
+```python
+rpc_id(TARGET_PEER_ID, "stun") # Only stun the target peer
+```
+
+#### 为专用服务器导出
+
+一旦你制作了一个多人游戏，你可能想把它导出到一个没有 GPU 的专用服务器上运行。有关详细信息，请参阅导出专用服务器。
+
+> **注意：**
+>
+> 此页面上的代码示例不是为在专用服务器上运行而设计的。你必须修改它们，这样服务器就不会被视为玩家。您还必须修改游戏启动机制，以便第一个加入的玩家可以启动游戏。
+
+> **注意：**
+>
+> 这里的 bomberman 示例主要是为了说明目的，在主机端没有做任何事情来处理对等方使用自定义客户端进行欺骗的情况，例如拒绝震撼自己。在当前的实现中，这种欺骗是完全可能的，因为每个客户端都是其自己玩家的网络主机，而玩家的网络主控器是决定是否在所有其他对等体和其自身上调用 I-was-stunned 方法（`stun`）的人。
+
+### 发出 HTTP 请求
+
+#### 为什么要使用 HTTP？
+
+HTTP 请求对于与 web 服务器和其他非 Godot 程序进行通信非常有用。
+
+与 Godot 的其他网络功能（如高级多人游戏）相比，HTTP 请求的开销更大，需要花费更多的时间，因此它们不适合实时通信，也不适合像多人游戏中常见的那样发送大量小更新。
+
+然而，HTTP 提供了与外部网络资源的互操作性，并且非常擅长发送和接收大量数据，例如传输游戏资产等文件。
+
+因此，HTTP 可能对您的游戏登录系统、大厅浏览器、从网络检索一些信息或下载游戏资产很有用。
+
+本教程假定您熟悉 Godot 和 Godot 编辑器。请参阅简介和分步教程，特别是其中的节点和场景以及创建第一个脚本页面（如果需要）。
+
+#### Godot 中的 HTTP 请求
+
+HTTPRequest 节点是在 Godot 中发出 HTTP 请求的最简单方法。它由更低级的 HTTPClient 支持，这里有一个教程。
+
+对于这个例子，我们将向 GitHub 发出 HTTP 请求，以检索最新 Godot 版本的名称。
+
+> **警告：**
+>
+> 导出到 **Android** 时，在导出项目或使用一键部署之前，请确保在 Android 导出预设中启用 **Internet** 权限。否则，任何类型的网络通信都将被 Android 操作系统阻止。
+
+#### 准备场景
+
+创建一个新的空场景，添加一个根节点并添加一个脚本。然后添加一个 HTTPRequest 节点作为子节点。
+
+#### 编写请求脚本
+
+当项目启动时（所以在 `_ready()` 中），我们将使用 HTTPRequest 节点向 Github 发送一个 HTTP 请求，一旦请求完成，我们将解析返回的 JSON 数据，查找 `name` 字段并将其打印到控制台。
+
+```python
+extends Node
+
+func _ready():
+    $HTTPRequest.request_completed.connect(_on_request_completed)
+    $HTTPRequest.request("https://api.github.com/repos/godotengine/godot/releases/latest")
+
+func _on_request_completed(result, response_code, headers, body):
+    var json = JSON.parse_string(body.get_string_from_utf8())
+    print(json["name"])
+```
+
+保存脚本和场景，然后运行项目。Github 上最新发布的 Godot 的名称应该打印到输出日志中。有关解析 JSON 的更多信息，请参阅 JSON 的类引用。
+
+请注意，您可能需要检查 `result` 是否等于 `RESULT_SUCCESS`，以及是否发生 JSON 解析错误，请参阅 JSON 类引用和 HTTPRequest 以了解更多信息。
+在发送另一个请求之前，您必须等待一个请求完成。一次发出多个请求需要每个请求有一个节点。一种常见的策略是根据需要在运行时创建和删除 HTTPRequest 节点。
+
+#### 向服务器发送数据
+
+到目前为止，我们仅限于从服务器请求数据。但是，如果您需要将数据发送到服务器，该怎么办？以下是一种常见的方法：
+
+```python
+var json = JSON.stringify(data_to_send)
+var headers = ["Content-Type: application/json"]
+$HTTPRequest.request(url, headers, HTTPClient.METHOD_POST, json)
+```
+
+#### 设置自定义 HTTP 标头
+
+当然，您也可以设置自定义 HTTP 头。它们以字符串数组的形式给出，每个字符串都包含一个格式为 `"header: value"` 的标头。例如，要设置自定义用户代理（HTTP 用户 `User-Agent`），可以使用以下内容：
+
+```python
+$HTTPRequest.request("https://api.github.com/repos/godotengine/godot/releases/latest", ["User-Agent: YourCustomUserAgent"])
+```
+
+> **警告：**
+>
+> 请注意，有人可能会分析和反编译您发布的应用程序，从而获得任何嵌入的授权信息，如令牌、用户名或密码。这意味着在游戏中嵌入数据库访问凭据等内容通常不是一个好主意。尽可能避免向攻击者提供有用的信息。
+
+### HTTP 客户端类
+
+HTTPClient 提供对 HTTP 通信的低级访问。对于更高级别的接口，您可能想先看一下 HTTPRequest，这里有一个教程。
+
+> **警告：**
+>
+> 导出到 Android 时，在导出项目或使用一键部署之前，请确保在 Android 导出预设中启用 `INTERNET` 权限。否则，任何类型的网络通信都将被安卓系统阻止。
+
+下面是一个使用 HTTPClient 类的示例。它只是一个脚本，因此可以通过执行以下操作来运行：
+
+```shell
+c:\godot> godot -s http_test.gd
+```
+
+它将连接并获取一个网站。
+
+```python
+extends SceneTree
+
+# HTTPClient demo
+# This simple class can do HTTP requests; it will not block, but it needs to be polled.
+
+func _init():
+    var err = 0
+    var http = HTTPClient.new() # Create the Client.
+
+    err = http.connect_to_host("www.php.net", 80) # Connect to host/port.
+    assert(err == OK) # Make sure connection is OK.
+
+    # Wait until resolved and connected.
+    while http.get_status() == HTTPClient.STATUS_CONNECTING or http.get_status() == HTTPClient.STATUS_RESOLVING:
+        http.poll()
+        print("Connecting...")
+        if not OS.has_feature("web"):
+            OS.delay_msec(500)
+        else:
+            yield(Engine.get_main_loop(), "idle_frame")
+
+    assert(http.get_status() == HTTPClient.STATUS_CONNECTED) # Check if the connection was made successfully.
+
+    # Some headers
+    var headers = [
+        "User-Agent: Pirulo/1.0 (Godot)",
+        "Accept: */*"
+    ]
+
+    err = http.request(HTTPClient.METHOD_GET, "/ChangeLog-5.php", headers) # Request a page from the site (this one was chunked..)
+    assert(err == OK) # Make sure all is OK.
+
+    while http.get_status() == HTTPClient.STATUS_REQUESTING:
+        # Keep polling for as long as the request is being processed.
+        http.poll()
+        print("Requesting...")
+        if OS.has_feature("web"):
+            # Synchronous HTTP requests are not supported on the web,
+            # so wait for the next main loop iteration.
+            yield(Engine.get_main_loop(), "idle_frame")
+        else:
+            OS.delay_msec(500)
+
+    assert(http.get_status() == HTTPClient.STATUS_BODY or http.get_status() == HTTPClient.STATUS_CONNECTED) # Make sure request finished well.
+
+    print("response? ", http.has_response()) # Site might not have a response.
+
+    if http.has_response():
+        # If there is a response...
+
+        headers = http.get_response_headers_as_dictionary() # Get response headers.
+        print("code: ", http.get_response_code()) # Show response code.
+        print("**headers:\\n", headers) # Show headers.
+
+        # Getting the HTTP Body
+
+        if http.is_response_chunked():
+            # Does it use chunks?
+            print("Response is Chunked!")
+        else:
+            # Or just plain Content-Length
+            var bl = http.get_response_body_length()
+            print("Response Length: ", bl)
+
+        # This method works for both anyway
+
+        var rb = PackedByteArray() # Array that will hold the data.
+
+        while http.get_status() == HTTPClient.STATUS_BODY:
+            # While there is body left to be read
+            http.poll()
+            # Get a chunk.
+            var chunk = http.read_response_body_chunk()
+            if chunk.size() == 0:
+                if not OS.has_feature("web"):
+                    # Got nothing, wait for buffers to fill a bit.
+                    OS.delay_usec(1000)
+                else:
+                    yield(Engine.get_main_loop(), "idle_frame")
+            else:
+                rb = rb + chunk # Append to read buffer.
+        # Done!
+
+        print("bytes got: ", rb.size())
+        var text = rb.get_string_from_ascii()
+        print("Text: ", text)
+
+    quit()
+```
+
+### SSL 证书
+
+#### 简介
+
+通常需要使用 SSL 连接进行通信，以避免“中间人”攻击。Godot 有一个连接包装器 StreamPeerTLS，它可以接受常规连接并为其添加安全性。HTTPClient 类也通过使用这个包装器支持 HTTPS。
+
+Godot 包括 Mozilla 的 SSL 证书，但您可以在项目设置中提供自己的 .crt 文件：
+
+该文件应包含任何数量的 PEM 格式的公共证书。
+
+当然，记得添加 .crt 作为过滤器，这样导出器在导出项目时就可以识别这一点。
+
+有两种方式可以获得证书：
+
+#### 方法 1：自签名证书
+
+第一种方法是最简单的：生成私钥和公钥对，并将公钥（PEM 格式）添加到 .crt 文件中。私钥应该转到您的服务器。
+
+OpenSSL 有一些相关文档。这种方法也不需要域验证，也不需要花费大量资金从 CA 购买证书。
+
+#### 方法 2：CA 证书
+
+第二种方法包括使用证书颁发机构（CA），如 Verisign、Geotrust 等。这是一个更繁琐的过程，但它更“官方”，并确保您的身份得到明确表示。
+
+除非您与大公司或大公司合作，或者需要连接到其他人的服务器（即，通过 HTTPS 连接到谷歌或其他 REST API 提供商），否则此方法没有那么有用。
+
+此外，当使用 CA 颁发的证书时，**您必须启用域验证**，以确保您要连接的域是预期的域，否则任何网站都可以在同一 CA 中颁发任何证书，并且它可以工作。
+
+如果您使用的是 Linux，您可以使用提供的 certs 文件，该文件通常位于：
+
+```
+/etc/ssl/certs/ca-certificates.crt
+```
+
+该文件允许 HTTPS 连接到几乎任何网站（即谷歌、微软等）。
+
+或者，如果要连接到特定的证书，请选择其中任何一个更具体的证书。
+
+### WebSocket
+
+#### HTML5 和 WebSocket
+
+WebSocket 协议于 2011 年标准化，最初的目标是允许浏览器与服务器建立稳定的双向连接。在此之前，浏览器只支持 HTTPRequest，这不太适合双向通信。
+
+该协议是基于消息的，是向浏览器发送推送通知的非常强大的工具，已用于实现聊天、回合制游戏等。它仍然使用 TCP 连接，这有利于可靠性，但不利于延迟，因此不适合 VoIP 和快节奏游戏等实时应用（请参阅 WebRTC 了解这些用例）。
+
+由于其简单性、广泛的兼容性以及比原始 TCP 连接更容易使用，WebSocket 很快就开始在浏览器之外的本地应用程序中传播，作为与网络服务器通信的一种手段。
+
+Godot 在本机和 HTML5 导出中都支持 WebSocket。
+
+#### 在 Godot 中使用 WebSocket
+
+WebSocket 是通过 WebSocketPeer 在 Godot 中实现的。WebSocket 实现与高级多人游戏兼容。有关更多详细信息，请参阅高级多人游戏部分。
+
+> **警告：**
+>
+> 导出到 Android 时，在导出项目或使用一键部署之前，请确保在 Android 导出预设中启用 `INTERNET` 权限。否则，任何类型的网络通信都将被安卓系统阻止。
+
+##### 最小客户端示例
+
+这个示例将向您展示如何创建到远程服务器的 WebSocket 连接，以及如何发送和接收数据。
+
+```python
+extends Node
+
+# The URL we will connect to
+export var websocket_url = "wss://libwebsockets.org"
+
+# Our WebSocketClient instance
+var _client = WebSocketClient.new()
+
+func _ready():
+    # Connect base signals to get notified of connection open, close, and errors.
+    _client.connection_closed.connect(_closed)
+    _client.connection_error.connect(_closed)
+    _client.connection_established.connect(_connected)
+    # This signal is emitted when not using the Multiplayer API every time
+    # a full packet is received.
+    # Alternatively, you could check get_peer(1).get_available_packets() in a loop.
+    _client.data_received.connect(_on_data)
+
+    # Initiate connection to the given URL.
+    var err = _client.connect_to_url(websocket_url, ["lws-mirror-protocol"])
+    if err != OK:
+        print("Unable to connect")
+        set_process(false)
+
+func _closed(was_clean = false):
+    # was_clean will tell you if the disconnection was correctly notified
+    # by the remote peer before closing the socket.
+    print("Closed, clean: ", was_clean)
+    set_process(false)
+
+func _connected(proto = ""):
+    # This is called on connection, "proto" will be the selected WebSocket
+    # sub-protocol (which is optional)
+    print("Connected with protocol: ", proto)
+    # You MUST always use get_peer(1).put_packet to send data to server,
+    # and not put_packet directly when not using the MultiplayerAPI.
+    _client.get_peer(1).put_packet("Test packet".to_utf8())
+
+func _on_data():
+    # Print the received packet, you MUST always use get_peer(1).get_packet
+    # to receive data from server, and not get_packet directly when not
+    # using the MultiplayerAPI.
+    print("Got data from server: ", _client.get_peer(1).get_packet().get_string_from_utf8())
+
+func _process(delta):
+    # Call this in _process or _physics_process. Data transfer, and signals
+    # emission will only happen when calling this function.
+    _client.poll()
+```
+
+这将打印：
+
+```
+Connected with protocol:
+Got data from server: Test packet
+```
+
+##### 最小服务器示例
+
+这个示例将向您展示如何创建一个监听远程连接的 WebSocket 服务器，以及如何发送和接收数据。
+
+```python
+extends Node
+
+# The port we will listen to
+const PORT = 9080
+# Our WebSocketServer instance
+var _server = WebSocketServer.new()
+
+func _ready():
+    # Connect base signals to get notified of new client connections,
+    # disconnections, and disconnect requests.
+    _server.client_connected.connect(_connected)
+    _server.client_disconnected.connect(_disconnected)
+    _server.client_close_request.connect(_close_request)
+    # This signal is emitted when not using the Multiplayer API every time a
+    # full packet is received.
+    # Alternatively, you could check get_peer(PEER_ID).get_available_packets()
+    # in a loop for each connected peer.
+    _server.data_received.connect(_on_data)
+    # Start listening on the given port.
+    var err = _server.listen(PORT)
+    if err != OK:
+        print("Unable to start server")
+        set_process(false)
+
+func _connected(id, proto):
+    # This is called when a new peer connects, "id" will be the assigned peer id,
+    # "proto" will be the selected WebSocket sub-protocol (which is optional)
+    print("Client %d connected with protocol: %s" % [id, proto])
+
+func _close_request(id, code, reason):
+    # This is called when a client notifies that it wishes to close the connection,
+    # providing a reason string and close code.
+    print("Client %d disconnecting with code: %d, reason: %s" % [id, code, reason])
+
+func _disconnected(id, was_clean = false):
+    # This is called when a client disconnects, "id" will be the one of the
+    # disconnecting client, "was_clean" will tell you if the disconnection
+    # was correctly notified by the remote peer before closing the socket.
+    print("Client %d disconnected, clean: %s" % [id, str(was_clean)])
+
+func _on_data(id):
+    # Print the received packet, you MUST always use get_peer(id).get_packet to receive data,
+    # and not get_packet directly when not using the MultiplayerAPI.
+    var pkt = _server.get_peer(id).get_packet()
+    print("Got data from client %d: %s ... echoing" % [id, pkt.get_string_from_utf8()])
+    _server.get_peer(id).put_packet(pkt)
+
+func _process(delta):
+    # Call this in _process or _physics_process.
+    # Data transfer, and signals emission will only happen when calling this function.
+    _server.poll()
+```
+
+这将打印（当客户端连接时）类似于以下内容：
+
+```
+Client 1348090059 connected with protocol: selected-protocol
+Got data from client 1348090059: Test packet ... echoing
+```
+
+##### 高级聊天演示
+
+godot 演示项目中的 *networking/websocket_chat* 和 *networking/websocket_player* 下提供了一个更高级的聊天演示，可以选择使用多人中级抽象和高级多人演示。
+
+### WebRTC
+
+#### HTML5、WebSocket、WebRTC
+
+Godot 的一个伟大功能是它能够导出到 HTML5/WebAssembly 平台，当用户访问您的网页时，您的游戏可以直接在浏览器中运行。
+
+这对演示和完整游戏来说都是一个很好的机会，但过去也有一些限制。在网络领域，浏览器过去只支持 HTTPRequest，直到最近，第一个 WebSocket 和后来的 WebRTC 被提议作为标准。
+
+##### WebSocket
+
+当 WebSocket 协议在 2011 年 12 月标准化时，它允许浏览器创建与 WebSocket 服务器的稳定双向连接。该协议是一个非常强大的工具，可以向浏览器发送推送通知，并已用于实现聊天、回合制游戏等。
+
+不过，WebSocket 仍然使用 TCP 连接，这有利于可靠性，但不利于延迟，因此不适合 VoIP 和快节奏游戏等实时应用程序。
+
+##### WebRTC
+
+出于这个原因，自 2010 年以来，谷歌开始研究一种名为 WebRTC 的新技术，该技术后来在 2017 年成为 W3C 的候选推荐。WebRTC 是一组复杂得多的规范，它依赖于许多其他幕后技术（ICE、DTLS、SDP）来提供两个对等点之间的快速、实时和安全的通信。
+
+其想法是在两个对等点之间找到最快的路由，并尽可能建立直接通信（即尽量避免中继服务器）。
+
+然而，这是有代价的，即在通信开始之前，必须在两个对等体之间交换一些媒体信息（以会话描述协议 - SDP 字符串的形式）。这通常采用所谓的 WebRTC 信令服务器的形式。
+
+对等方连接到信令服务器（例如 WebSocket 服务器）并发送其媒体信息。然后，服务器将此信息中继到其他对等端，允许它们建立所需的直接通信。一旦完成该步骤，对等端就可以断开与信令服务器的连接，并保持直接对等（P2P）连接的打开状态。
+
+#### 在 Godot 中使用 WebRTC
+
+WebRTC 在 Godot 中通过两个主要类 WebRTCPeerConnection 和 WebRTCDataChannel 以及多玩家 API 实现 WebRTCMultiplayerPeer 实现。有关更多详细信息，请参阅高级多人游戏部分。
+
+> **注意：**
+>
+> 这些类在 HTML5 中自动可用，但**需要在本地（非 HTML5）平台上使用外部 GDExtension 插件**。查看 webrtc 原生插件存储库以获取说明和最新版本。
+
+> **警告：**
+>
+> 导出到 Android 时，在导出项目或使用一键部署之前，请确保在 Android 导出预设中启用 `INTERNET` 权限。否则，任何类型的网络通信都将被安卓系统阻止。
+
+##### 最小连接示例
+
+此示例将向您展示如何在同一应用程序中的两个对等端之间创建 WebRTC 连接。这在现实生活中不是很有用，但会让您很好地了解如何设置 WebRTC 连接。
+
+```python
+extends Node
+
+# Create the two peers
+var p1 = WebRTCPeerConnection.new()
+var p2 = WebRTCPeerConnection.new()
+# And a negotiated channel for each each peer
+var ch1 = p1.create_data_channel("chat", {"id": 1, "negotiated": true})
+var ch2 = p2.create_data_channel("chat", {"id": 1, "negotiated": true})
+
+func _ready():
+    # Connect P1 session created to itself to set local description
+    p1.connect("session_description_created", p1, "set_local_description")
+    # Connect P1 session and ICE created to p2 set remote description and candidates
+    p1.connect("session_description_created", p2, "set_remote_description")
+    p1.connect("ice_candidate_created", p2, "add_ice_candidate")
+
+    # Same for P2
+    p2.connect("session_description_created", p2, "set_local_description")
+    p2.connect("session_description_created", p1, "set_remote_description")
+    p2.connect("ice_candidate_created", p1, "add_ice_candidate")
+
+    # Let P1 create the offer
+    p1.create_offer()
+
+    # Wait a second and send message from P1
+    yield(get_tree().create_timer(1), "timeout")
+    ch1.put_packet("Hi from P1".to_utf8())
+
+    # Wait a second and send message from P2
+    yield(get_tree().create_timer(1), "timeout")
+    ch2.put_packet("Hi from P2".to_utf8())
+
+func _process(_delta):
+    # Poll connections
+    p1.poll()
+    p2.poll()
+
+    # Check for messages
+    if ch1.get_ready_state() == ch1.STATE_OPEN and ch1.get_available_packet_count() > 0:
+        print("P1 received: ", ch1.get_packet().get_string_from_utf8())
+    if ch2.get_ready_state() == ch2.STATE_OPEN and ch2.get_available_packet_count() > 0:
+        print("P2 received: ", ch2.get_packet().get_string_from_utf8())
+```
+
+这将打印：
+
+```
+P1 received: Hi from P1
+P2 received: Hi from P2
+```
+
+##### 本地信号示例
+
+这个例子扩展了前面的例子，在两个不同的场景中分离对等体，并使用单例作为信号服务器。
+
+```python
+# An example P2P chat client (chat.gd)
+extends Node
+
+var peer = WebRTCPeerConnection.new()
+
+# Create negotiated data channel
+var channel = peer.create_data_channel("chat", {"negotiated": true, "id": 1})
+
+func _ready():
+    # Connect all functions
+    peer.ice_candidate_created.connect(_on_ice_candidate)
+    peer.session_description_created.connect(_on_session)
+
+    # Register to the local signaling server (see below for the implementation)
+    Signaling.register(get_path())
+
+func _on_ice_candidate(mid, index, sdp):
+    # Send the ICE candidate to the other peer via signaling server
+    Signaling.send_candidate(get_path(), mid, index, sdp)
+
+func _on_session(type, sdp):
+    # Send the session to other peer via signaling server
+    Signaling.send_session(get_path(), type, sdp)
+    # Set generated description as local
+    peer.set_local_description(type, sdp)
+
+func _process(delta):
+    # Always poll the connection frequently
+    peer.poll()
+    if channel.get_ready_state() == WebRTCDataChannel.STATE_OPEN:
+        while channel.get_available_packet_count() > 0:
+            print(get_path(), " received: ", channel.get_packet().get_string_from_utf8())
+
+func send_message(message):
+    channel.put_packet(message.to_utf8())
+```
+
+现在对于本地信号服务器：
+
+> **注意：**
+>
+> 这个本地信令服务器应该作为一个单例来连接同一场景中的两个对等点。
+
+```python
+# A local signaling server. Add this to autoloads with name "Signaling" (/root/Signaling)
+extends Node
+
+# We will store the two peers here
+var peers = []
+
+func register(path):
+    assert(peers.size() < 2)
+    peers.append(path)
+    # If it's the second one, create an offer
+    if peers.size() == 2:
+        get_node(peers[0]).peer.create_offer()
+
+func _find_other(path):
+    # Find the other registered peer.
+    for p in peers:
+        if p != path:
+            return p
+    return ""
+
+func send_session(path, type, sdp):
+    var other = _find_other(path)
+    assert(other != "")
+    get_node(other).peer.set_remote_description(type, sdp)
+
+func send_candidate(path, mid, index, sdp):
+    var other = _find_other(path)
+    assert(other != "")
+    get_node(other).peer.add_ice_candidate(mid, index, sdp)
+```
+
+然后你可以像这样使用它：
+
+```python
+# Main scene (main.gd)
+extends Node
+
+const Chat = preload("res://chat.gd")
+
+func _ready():
+    var p1 = Chat.new()
+    var p2 = Chat.new()
+    add_child(p1)
+    add_child(p2)
+    yield(get_tree().create_timer(1), "timeout")
+    p1.send_message("Hi from %s" % p1.get_path())
+
+    # Wait a second and send message from P2
+    yield(get_tree().create_timer(1), "timeout")
+    p2.send_message("Hi from %s" % p2.get_path())
+```
+
+这将打印类似的内容：
+
+```python
+/root/main/@@3 received: Hi from /root/main/@@2
+/root/main/@@2 received: Hi from /root/main/@@3
+```
+
+##### 使用 WebSocket 的远程信号
+
+在 *networking/webrtc_signaling* 下的 godot 演示项目中提供了一个使用 WebSocket 进行对等信号和 WebRTCMultiplayerPeer 的更高级演示。
+
 ## 性能
 
 ### 简介
