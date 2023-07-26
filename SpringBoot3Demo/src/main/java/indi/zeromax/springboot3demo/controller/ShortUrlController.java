@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,8 +42,14 @@ public class ShortUrlController {
         if (lToSMap.containsKey(url)) {
             shortenUrl = lToSMap.get(url);
         } else {
-            int id = sToLMap.size();
-            shortenUrl = base62hash(id);
+            String md5 = DigestUtils.md5DigestAsHex(url.getBytes(StandardCharsets.UTF_8));
+            int len = 10;
+            shortenUrl = md5.substring(0, 10);
+            while (sToLMap.containsKey(shortenUrl)) {
+                shortenUrl = md5.substring(++len);
+            }
+//            int id = sToLMap.size();
+//            shortenUrl = base62hash(id);
             sToLMap.put(shortenUrl, url);
             lToSMap.put(url, shortenUrl);
         }
@@ -93,14 +101,14 @@ public class ShortUrlController {
         logger.info("redirectVisitByResp shortenUrl:{}", shortenUrl);
         if (sToLMap.containsKey(shortenUrl)) {
             String redirectUrl = sToLMap.get(shortenUrl);
-            if (redirectUrl.startsWith("http://") || redirectUrl.startsWith("https://")) {
+            if (!redirectUrl.startsWith("http://") && !redirectUrl.startsWith("https://")) {
                 redirectUrl = "http://" + redirectUrl;
             }
             logger.info("redirectVisitByResp redirectUrl:{}", redirectUrl);
             // 302 重定向
             response.sendRedirect(redirectUrl);
         } else {
-            logger.info("redirectVisitByResp shortenUrl:{}", shortenUrl);
+            logger.info("redirectVisitByResp failed, shortenUrl:{}", shortenUrl);
         }
     }
 }
