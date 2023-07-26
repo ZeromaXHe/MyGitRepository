@@ -2120,7 +2120,7 @@ func _physics_process(delta):
 
 在这里，我们添加了两个变量来跟踪我们的旋转方向和速度。旋转将直接应用于实体的 `rotation` 特性。
 
-为了设置速度，我们使用身体的 `transform.x`，这是一个指向身体“向前”方向的向量，并将其乘以速度。
+为了设置速度，我们使用实体的 `transform.x`，这是一个指向实体“向前”方向的向量，并将其乘以速度。
 
 ##### 旋转 + 运动（鼠标）
 
@@ -2168,9 +2168,9 @@ func _physics_process(delta):
         move_and_slide()
 ```
 
-请注意我们在移动之前进行的 `distance _to()` 检查。如果没有这个测试，身体在到达目标位置时会“抖动”，因为它稍微移动过这个位置并试图向后移动，但移动得太远并重复。
+请注意我们在移动之前进行的 `distance _to()` 检查。如果没有这个测试，实体在到达目标位置时会“抖动”，因为它稍微移动过这个位置并试图向后移动，但移动得太远并重复。
 
-如果您愿意，取消对 `look_at()` 线的注释也会使身体指向其运动方向。
+如果您愿意，取消对 `look_at()` 线的注释也会使实体指向其运动方向。
 
 > **提示：**
 >
@@ -7330,7 +7330,7 @@ NavigationAgent 可以与 `process` 一起使用，但仍限于在 `physics_proc
 以下 NavigationAgent 属性与回避相关：
 
 - 属性 `height` 仅在三维中可用。高度与代理的当前全局 y 轴位置一起决定了代理在回避模拟中的垂直位置。使用 2D 回避的代理将自动忽略其下方或上方的其他代理或障碍物。
-- 属性 `radius` 控制回避圆的大小，如果是三维球体，则控制代理周围的大小。该区域描述的是特工的身体，而不是躲避机动距离。
+- 属性 `radius` 控制回避圆的大小，如果是三维球体，则控制代理周围的大小。该区域描述的是代理的身体，而不是躲避机动距离。
 - 当搜索应避免的其他代理时，属性 `neighbor_distance` 控制代理的搜索半径。较低的值可降低加工成本。
 - 属性 `max_neighbors` 控制在避免计算中考虑多少其他代理（如果它们都具有重叠半径）。较低的值降低了处理成本，但过低的值可能导致代理忽略避免。
 - 属性 `time_horizon_agents` 和 `time_horizo_obstacles` 控制其他代理或障碍物的回避预测时间（以秒为单位）。当特工计算他们的安全速度时，他们选择的速度可以保持这几秒钟，而不会与另一个躲避物体相撞。预测时间应该尽可能低，因为代理会减慢速度以避免在该时间段内发生碰撞。
@@ -10162,3 +10162,1336 @@ world.call_deferred("add_child", enemy)
 ##### 资源
 
 不支持修改来自多个线程的唯一资源。然而，支持在多个线程上处理引用，因此也可以在线程上加载资源——场景、纹理、网格等——可以在线程中加载和操作，然后添加到主线程上的活动场景中。这里的限制如上所述，必须注意不要同时从多个线程加载同一资源，因此最容易使用**一个**线程加载和修改资源，然后使用主线程添加资源。
+
+## 物理
+
+### 物理简介
+
+在游戏开发中，您通常需要知道游戏中的两个对象何时相交或接触。这就是所谓的**碰撞检测**。当检测到碰撞时，通常希望发生一些事情。这就是所谓的**碰撞响应**。
+
+Godot 提供了许多 2D 和 3D 碰撞对象，以提供碰撞检测和响应。试图决定在你的项目中使用哪一个可能会让人困惑。如果您了解每种方法的工作原理以及它们的优缺点，就可以避免问题并简化开发。
+
+在本指南中，您将学习：
+
+- Godot 的四种碰撞对象类型
+- 每个碰撞对象的工作方式
+- 何时以及为什么选择一种类型而不是另一种类型
+
+> **注意：**
+>
+> 本文档的示例将使用二维对象。每个二维物理物体和碰撞形状在三维中都有直接的等价物，在大多数情况下，它们的工作方式基本相同。
+
+#### 碰撞对象
+
+Godot 提供了四种碰撞对象，它们都扩展了 CollisionObject2D。下面列出的最后三个是物理体，并额外扩展了 PhysicsBody2D。
+
+- **[Area2D](https://docs.godotengine.org/en/stable/classes/class_area2d.html#class-area2d)**
+
+  `Area2D` 节点提供**检测**和**影响**。它们可以检测物体何时重叠，并可以在物体进出时发出信号。`Area2D` 也可以用于覆盖定义区域中的物理特性，如重力或阻尼。
+
+- **[StaticBody2D](https://docs.godotengine.org/en/stable/classes/class_staticbody2d.html#class-staticbody2d)**
+
+  静止物体是指不被物理引擎移动的物体。它参与碰撞检测，但不响应碰撞而移动。它们最常用于作为环境一部分或不需要任何动态行为的对象。
+
+- **[RigidBody2D](https://docs.godotengine.org/en/stable/classes/class_rigidbody2d.html#class-rigidbody2d)**
+
+  这是实现模拟二维物理的节点。您不直接控制 `RigidBody2D`，而是对其施加力（重力、脉冲等），物理引擎计算产生的运动。阅读有关使用刚体的详细信息。
+
+- **[CharacterBody2D](https://docs.godotengine.org/en/stable/classes/class_characterbody2d.html#class-characterbody2d)**
+
+  一种提供碰撞检测但没有物理功能的物体。所有移动和碰撞响应都必须在代码中实现。
+
+##### 物理材料
+
+可以将静态实体和刚体配置为使用 PhysicsMaterial。这允许调整物体的摩擦和弹跳，并设置其是否具有吸收性和/或粗糙度。
+
+##### 碰撞形状
+
+一个物理体可以容纳任意数量的 Shape2D 对象作为子对象。这些形状用于定义对象的碰撞边界并检测与其他对象的接触。
+
+> **注意：**
+>
+> 为了检测碰撞，必须至少为对象指定一个 `Shape2D`。
+
+指定形状的最常见方法是添加 CollisionShape2D 或 CollisionPolygon2D 作为对象的子对象。这些节点允许您直接在编辑器工作空间中绘制形状。
+
+> **重要：**
+>
+> 请注意不要在编辑器中缩放碰撞形状。Inspector 中的 “Scale” 属性应保持为 `(1, 1)`。更改碰撞形状的大小时，应始终使用大小控制柄，而**不是** `Node2D` 比例控制柄。缩放形状可能会导致意外的碰撞行为。
+
+##### 物理过程回调
+
+物理引擎以固定的速率运行（默认为每秒 60 次迭代）。该速率通常不同于帧速率，帧速率基于所呈现的内容和可用资源而波动。
+
+重要的是，所有与物理相关的代码都以这种固定的速率运行。因此 Godot 区分了物理和空闲处理。运行每一帧的代码被称为空闲处理，在每个物理刻度上运行的代码被称作物理处理。Godot 提供了两个不同的回调，每个回调对应一个处理速率。
+
+物理回调，Node._physics_process()，在每个物理步骤之前调用。任何需要访问实体属性的代码都应该在这里运行。此方法将传递一个 `delta` 参数，该参数是一个浮点数，等于自上一步以来经过的时间（以秒为单位）。当使用默认的 60 赫兹物理更新率时，它通常等于 `0.01666…`（但并不总是如此，请参阅下文）。
+
+> **注意：**
+>
+> 建议在物理计算中始终使用 `delta` 参数，这样，如果您更改物理更新率或玩家的设备无法跟上，游戏就会正常运行。
+
+##### 碰撞层和遮罩
+
+碰撞层系统是最强大但经常被误解的碰撞功能之一。该系统允许您在各种对象之间建立复杂的交互。关键概念是**图层**和**遮罩**。每个 `CollisionObject2D` 都有 32 个不同的物理层，可以与之交互。
+
+让我们依次查看每个属性：
+
+- **collision_layer**
+
+  这描述了对象显示**在**的图层。默认情况下，所有实体都在图层 `1` 上。
+
+- **collision_mask**
+
+  这描述了实体将**扫描**哪些层以进行碰撞。如果某个对象不在某个遮罩层中，则实体将忽略它。默认情况下，所有实体都扫描第 `1` 层。
+
+这些属性可以通过代码进行配置，也可以在检查器中进行编辑。
+
+跟踪你使用每一层的目的可能很困难，所以你可能会发现为你使用的层指定名称很有用。可以在“项目设置”->“图层名称”中指定名称。
+
+###### GUI 示例
+
+游戏中有四种节点类型：墙、玩家、敌人和硬币。玩家和敌人都应该与墙壁碰撞。玩家节点应该检测到敌人和硬币的碰撞，但敌人和硬币应该忽略对方。
+
+首先将 1-4 层命名为“墙”、“玩家”、“敌人”和“硬币”，并使用“层”属性将每个节点类型放置在各自的层中。然后，通过选择应与其交互的层来设置每个节点的“遮罩”属性。例如，玩家的设置如下所示：
+
+###### 代码示例
+
+在函数调用中，层被指定为位掩码。如果函数默认启用所有层，则层掩码将显示为 `0xffffffff`。您的代码可以使用二进制、十六进制或十进制表示法作为图层遮罩，具体取决于您的偏好。
+
+启用了层 1、3 和 4 的上述示例的等效代码如下：
+
+```python
+# Example: Setting mask value for enabling layers 1, 3 and 4
+
+# Binary - set the bit corresponding to the layers you want to enable (1, 3, and 4) to 1, set all other bits to 0.
+# Note: Layer 32 is the first bit, layer 1 is the last. The mask for layers 4,3 and 1 is therefore
+0b10000000_00000000_00000000_00001101
+# (This can be shortened to 0b1101)
+
+# Hexadecimal equivalent (1101 binary converted to hexadecimal)
+0x000d
+# (This value can be shortened to 0xd)
+
+# Decimal - Add the results of 2 to the power of (layer to be enabled - 1).
+# (2^(1-1)) + (2^(3-1)) + (2^(4-1)) = 1 + 4 + 8 = 13
+pow(2, 1-1) + pow(2, 3-1) + pow(2, 4-1)
+```
+
+#### Area2D
+
+区域节点提供**检测**和**影响**。它们可以检测物体何时重叠，并在物体进出时发出信号。区域也可以用于覆盖定义区域中的物理特性，例如重力或阻尼。
+
+Area2D 有三个主要用途：
+
+- 覆盖给定区域中的物理参数（如重力）。
+- 检测其他实体何时进入或离开某个区域，或者某个区域中当前有哪些实体。
+- 检查其他区域是否重叠。
+
+默认情况下，区域还接收鼠标和触摸屏输入。
+
+#### StaticBody2D
+
+静止物体是指不被物理引擎移动的物体。它参与碰撞检测，但不响应碰撞而移动。但是，它可以使用其 `constant_linear_velocity` 和 `constant_angular_velocity` 属性，将运动或旋转传递给碰撞物体，**就好像**它在移动一样。
+
+`StaticBody2D` 节点最常用于作为环境一部分或不需要任何动态行为的对象。
+
+`StaticBody2D` 的示例用法：
+
+- 平台（包括移动平台）
+- 输送带
+- 墙壁和其他障碍物
+
+#### RigidBody2D
+
+这是实现模拟二维物理的节点。您不能直接控制 RigidBody2D。相反，您会对其施加力，物理引擎会计算产生的运动，包括与其他物体的碰撞，以及碰撞响应，如反弹、旋转等。
+
+可以通过“质量”、“摩擦力”或“反弹”等特性修改刚体的行为，这些特性可以在检查器中设置。
+
+实体的行为也会受到世界属性的影响，如在 *“项目设置”->“物理”* 中设置的，或者输入覆盖全局物理属性的区域 2D。
+
+当一个刚体处于静止状态，并且有一段时间没有移动时，它就会进入睡眠状态。睡眠的实体就像静止的实体，它的力不是由物理引擎计算的。当通过碰撞或代码施加力时，实体会苏醒。
+
+##### 使用 RigidBody2D
+
+使用刚体的好处之一是，许多行为可以“免费”进行，而无需编写任何代码。例如，如果你正在制作一个带有掉落积木的“愤怒的小鸟”风格的游戏，你只需要创建 RigidBody2D 并调整它们的属性。堆叠、下落和弹跳将由物理引擎自动计算。
+
+但是，如果您确实希望对刚体有一些控制，则应该小心——更改刚体的 `position`、`linear_velocity` 或其他物理特性可能会导致意外行为。如果需要更改任何与物理相关的属性，则应使用 _integrate_forces() 回调，而不是 `_physics_process()`。在这个回调中，您可以访问实体的 PhysicsDirectBodyState2D，它允许安全地更改属性并将它们与物理引擎同步。
+
+例如，以下是“小行星”式宇宙飞船的代码：
+
+```python
+extends RigidBody2D
+
+var thrust = Vector2(0, -250)
+var torque = 20000
+
+func _integrate_forces(state):
+    if Input.is_action_pressed("ui_up"):
+        state.apply_force(thrust.rotated(rotation))
+    else:
+        state.apply_force(Vector2())
+    var rotation_direction = 0
+    if Input.is_action_pressed("ui_right"):
+        rotation_direction += 1
+    if Input.is_action_pressed("ui_left"):
+        rotation_direction -= 1
+    state.apply_torque(rotation_direction * torque)
+```
+
+请注意，我们不是直接设置 `linear_velocity` 或 `angular_vocity` 属性，而是向物体施加力（`thrust` 和 `torque`），并让物理引擎计算由此产生的运动。
+
+> **注意：**
+>
+> 当刚体进入睡眠状态时，将不会调用 `_integrate_forces()` 函数。若要覆盖此行为，您需要通过创建碰撞、对其施加力或禁用 can_sleep 属性来保持身体清醒。请注意，这可能会对性能产生负面影响。
+
+##### 碰撞报告
+
+默认情况下，刚体不会跟踪接触，因为如果场景中有许多实体，这可能需要大量内存。若要启用联系人报告，请将 max_contacts_reported 属性设置为非零值。然后可以通过 PhysicsDirectBodyState2D.get_contact_count() 和相关函数获取联系人。
+
+可以通过 contact_monitor 属性启用通过信号进行的接触监测。有关可用信号的列表，请参见 RigidBody2D。
+
+#### CharacterBody2D
+
+CharacterBody2D 实体检测与其他实体的碰撞，但不受重力或摩擦等物理特性的影响。相反，它们必须由用户通过代码进行控制。物理引擎不会移动角色的身体。
+
+移动角色身体时，不应直接设置其 `position`。相反，您可以使用 `move_and_collide()` 或 `move_and_slide()` 方法。这些方法沿着给定的向量移动物体，如果检测到与另一个物体发生碰撞，它将立即停止。车身碰撞后，任何碰撞响应都必须手动编码。
+
+##### 角色冲突响应
+
+碰撞后，您可能希望实体反弹、沿墙滑动或更改碰撞对象的属性。处理碰撞响应的方式取决于用于移动 CharacterBody2D 的方法。
+
+###### [move_and_collide](https://docs.godotengine.org/en/stable/classes/class_physicsbody2d.html#class-physicsbody2d-method-move-and-collide)
+
+当使用 `move_and_closure()` 时，函数返回一个 KinematicCollision2D 对象，该对象包含有关碰撞和碰撞体的信息。您可以使用这些信息来确定响应。
+
+例如，如果要查找空间中发生碰撞的点：
+
+```python
+extends PhysicsBody2D
+
+var velocity = Vector2(250, 250)
+
+func _physics_process(delta):
+    var collision_info = move_and_collide(velocity * delta)
+    if collision_info:
+        var collision_point = collision_info.get_position()
+```
+
+或者从碰撞的对象上反弹：
+
+```python
+extends PhysicsBody2D
+
+var velocity = Vector2(250, 250)
+
+func _physics_process(delta):
+    var collision_info = move_and_collide(velocity * delta)
+    if collision_info:
+        velocity = velocity.bounce(collision_info.get_normal())
+```
+
+###### [move_and_slide](https://docs.godotengine.org/en/stable/classes/class_characterbody2d.html#class-characterbody2d-method-move-and-slide)
+
+滑动是一种常见的碰撞反应；想象一个玩家在自上而下的游戏中沿着墙壁移动，或者在平台游戏中在斜坡上跑上跑下。虽然可以在使用 `move_and_collide()` 后自己编写此响应，但 `move_and_slide()` 提供了一种方便的方法来实现滑动，而无需编写太多代码。
+
+> **警告：**
+>
+> `move_and_slide()` 在计算中自动包含时间步长，因此不应将速度矢量乘以 `delta`。
+
+例如，使用以下代码创建一个可以沿地面（包括斜坡）行走并在站在地面上时跳跃的角色：
+
+```python
+extends CharacterBody2D
+
+var run_speed = 350
+var jump_speed = -1000
+var gravity = 2500
+
+func get_input():
+    velocity.x = 0
+    var right = Input.is_action_pressed('ui_right')
+    var left = Input.is_action_pressed('ui_left')
+    var jump = Input.is_action_just_pressed('ui_select')
+
+    if is_on_floor() and jump:
+        velocity.y = jump_speed
+    if right:
+        velocity.x += run_speed
+    if left:
+        velocity.x -= run_speed
+
+func _physics_process(delta):
+    velocity.y += gravity * delta
+    get_input()
+    move_and_slide()
+```
+
+有关使用 `move_and_slide()` 的更多详细信息，请参见运动学角色（2D），包括带有详细代码的演示项目。
+
+### 使用 RigidBody
+
+#### 什么是刚体？
+
+刚体是由物理引擎直接控制以模拟物理对象行为的刚体。为了定义实体的形状，必须为其指定一个或多个 Shape3D 对象。请注意，设置这些形状的位置会影响身体的质心。
+
+#### 如何控制刚体
+
+刚体的行为可以通过设置其特性（例如质量和重量）来更改。需要在刚体中添加物理材料，以调整其摩擦力和弹跳力，并确定其是否具有吸收性和/或粗糙度。这些属性可以在检查器中设置，也可以通过代码设置。有关特性及其效果的完整列表，请参见 RigidBody3D 和 PhysicsMaterial。
+
+有几种方法可以控制刚体的运动，具体取决于所需的应用程序。
+
+如果只需要放置刚体一次，例如设置其初始位置，则可以使用 Node3D 节点提供的方法，如 `set_global_transform()` 或 `look_at()`。然而，这些方法不能在每帧中调用，否则物理引擎将无法正确模拟身体的状态。例如，考虑要旋转的刚体，使其指向另一个对象。实现这种行为时的一个常见错误是在每帧使用 `look_at()`，这会破坏物理模拟。下面，我们将演示如何正确实现这一点。
+
+不能使用 `set_global_transform()` 或 `look_at()` 方法并不意味着不能完全控制刚体。相反，您可以使用 `_integrate_forces()` 回调来控制它。在这种方法中，您可以添加力、施加脉冲或设置速度，以实现您想要的任何运动。
+
+#### “look at” 方法
+
+如上所述，使用 Node3D 的 `look_at()` 方法不能在每一帧都使用以跟随目标。这里有一个自定义的 `look_at()` 方法，它将可靠地处理刚体：
+
+```python
+extends RigidBody3D
+
+func look_follow(state, current_transform, target_position):
+    var up_dir = Vector3(0, 1, 0)
+    var cur_dir = current_transform.basis * Vector3(0, 0, 1)
+    var target_dir = (target_position - current_transform.origin).normalized()
+    var rotation_angle = acos(cur_dir.x) - acos(target_dir.x)
+
+    state.angular_velocity = up_dir * (rotation_angle / state.step)
+
+func _integrate_forces(state):
+    var target_position = $my_target_node3d_node.global_transform.origin
+    look_follow(state, global_transform, target_position)
+```
+
+此方法使用刚体的 `angular_velocity` 属性来旋转刚体。它首先计算当前角度和所需角度之间的差，然后添加在一帧时间内旋转该量所需的速度。
+
+> **注意：**
+>
+> 此脚本将无法在角色模式下处理刚体，因为这样，刚体的旋转将被锁定。在这种情况下，必须使用标准 Node3D 方法旋转附着的网格节点。
+
+### 使用 Area2D
+
+#### 简介
+
+Godot 提供了许多碰撞对象来提供碰撞检测和响应。试图决定在你的项目中使用哪一个可能会让人困惑。如果您了解每个问题的工作原理以及它们的优缺点，您就可以避免问题并简化开发。在本教程中，我们将研究 Area2D 节点，并展示一些如何使用它的示例。
+
+> **注意：**
+>
+> 本文档假设您熟悉 Godot 的各种物理体。请先阅读物理学导论。
+
+#### 什么是区域？
+
+区域 2D 定义了 2D 空间的一个区域。在此空间中，可以检测到其他 CollisionObject2D 节点重叠、进入和退出。区域还允许覆盖局部物理特性。我们将在下面探讨这些函数中的每一个。
+
+#### 区域特性
+
+区域有许多特性，可以用来自定义其行为。
+
+前八个特性用于配置区域的物理覆盖行为。我们将在下面的部分中研究如何使用这些功能。
+
+*监控*和*可监控*用于启用和禁用该区域。
+
+“碰撞”部分用于配置区域的碰撞层和遮罩。
+
+“音频总线”部分允许您覆盖该区域中的音频，例如在播放器移动时应用音频效果。
+
+请注意，Area2D 扩展了 CollisionObject2D，因此它还提供了从该类继承的属性，例如 `input_pickable`。
+
+#### 重叠检测
+
+也许 Area2D 节点最常见的用途是用于接触和重叠检测。当你需要知道两个物体已经接触，但不需要物理碰撞时，你可以使用一个区域来通知你接触的情况。
+
+例如，假设我们正在制作一枚硬币供玩家拾取。硬币不是一个固体物体——玩家不能站在上面或推它——我们只希望它在玩家触摸它时消失。
+
+以下是硬币的节点设置：
+
+为了检测重叠，我们将在 Area2D 上连接适当的信号。使用哪个信号取决于玩家的节点类型。如果玩家在另一个区域，请使用 `area_entered`。然而，让我们假设我们的玩家是 `CharacterBody2D`（因此是 `CollisionObject2D` 类型），因此我们将连接 `body_entered` 信号。
+
+> **注意：**
+>
+> 如果您不熟悉使用信号，请参阅使用信号进行介绍。
+
+```python
+extends Area2D
+
+func _on_coin_body_entered(body):
+    queue_free()
+```
+
+现在我们的玩家可以收集硬币了！
+
+其他一些用法示例：
+
+- 区域非常适合子弹和其他投射物撞击并造成伤害，但不需要任何其他物理特性，如弹跳。
+- 在敌人周围使用一个大的圆形区域来定义其“探测”半径。当玩家在区域外时，敌人看不到它。
+- “安全摄像头”-在一个有多个摄像头的大关卡中，将区域连接到每个摄像头上，并在玩家进入时激活它们。
+
+有关在游戏中使用 Area2D 的示例，请参阅您的第一个 2D 游戏。
+
+#### 区域影响
+
+区域节点的第二个主要用途是改变物理特性。默认情况下，该区域不会执行此操作，但可以使用“空间覆盖”特性启用此操作。当区域重叠时，将按优先级顺序进行处理（优先级较高的区域将首先进行处理）。有四种替代选项：
+
+- *合并*-面积将其值添加到迄今为止计算的值中。
+- *替换*-该区域将替换物理属性，而优先级较低的区域将被忽略。
+- *合并替换*-该区域将其重力/阻尼值添加到迄今为止计算的值中（按优先级顺序），忽略任何优先级较低的区域。
+- *替换合并*-该区域替换迄今为止计算的任何重力/阻尼，但保持计算其余区域。
+
+使用这些属性，可以创建具有多个重叠区域的非常复杂的行为。
+
+可以覆盖的物理属性包括：
+
+- *重力*-重力在区域内的强度。
+- *重力向量*-重力的方向。该向量不需要进行归一化。
+- *线性阻尼*-物体停止移动的速度-每秒损失的线性速度。
+- *角阻尼*-物体停止旋转的速度-每秒损失的角速度。
+
+##### 点重力
+
+“*重力点*”属性允许您创建一个“吸引器”。该区域中的重力将朝着*重力向量*特性给定的点计算。值是相对于 Area2D 的，因此例如使用 `(0, 0)` 会将对象吸引到区域的中心。
+
+##### 示例
+
+下面所附的示例项目有三个区域演示物理覆盖。
+
+您可以在此处下载此项目：area_2d_starter.zip
+
+### 使用 CharacterBody2D/3D
+
+#### 简介
+
+Godot 提供了几个碰撞对象来提供碰撞检测和响应。试图决定在你的项目中使用哪一个可能会让人困惑。如果您了解每个问题的工作原理以及它们的优缺点，您就可以避免问题并简化开发。在本教程中，我们将查看 CharacterBody2D 节点，并展示如何使用它的一些示例。
+
+> **注意：**
+>
+> 虽然本文档在其示例中使用 `CharacterBody2D`，但相同的概念也适用于 3D。
+
+#### 什么是角色身体？
+
+`CharacterBody2D` 用于实现通过代码控制的实体。角色身体在移动时检测与其他身体的碰撞，但不受引擎物理特性（如重力或摩擦）的影响。虽然这意味着你必须编写一些代码来创建它们的行为，但这也意味着你可以更精确地控制它们的移动和反应。
+
+> **注意：**
+>
+> 本文档假设您熟悉 Godot 的各种物理体。请先阅读物理学导论，了解物理学选项的概述。
+
+> **提示：**
+>
+> *CharacterBody2D* 可能会受到重力和其他力的影响，但必须在代码中计算移动。物理引擎不会移动 *CharacterBody2D*。
+
+#### 运动与碰撞
+
+移动 `CharacterBody2D` 时，不应直接设置其 `position` 特性。相反，您可以使用 `move_and_collide()` 或 `move_and_slide()` 方法。这些方法沿着给定的向量移动物体并检测碰撞。
+
+> **警告：**
+>
+> 您应该在 `_physics_process()` 回调中处理物理身体运动。
+
+这两种移动方法有不同的用途，在本教程的后面，您将看到它们如何工作的示例。
+移动
+
+##### move_and_collide
+
+此方法需要一个必需的参数：Vector2，用于指示身体的相对运动。通常，这是速度向量乘以帧时间步长（`delta`）。如果发动机检测到沿该矢量的任何位置发生碰撞，则车身将立即停止移动。如果发生这种情况，该方法将返回一个 KinematicCollision2D 对象。
+
+`KinematicCollision2D` 是一个包含碰撞和碰撞对象数据的对象。使用这些数据，可以计算碰撞响应。
+
+当您只想移动身体并检测碰撞，但不需要任何自动碰撞响应时，`move_and_collide` 最有用。例如，如果你需要一颗从墙上弹开的子弹，你可以在检测到碰撞时直接改变速度的角度。请参阅下面的示例。
+
+##### move_and_slide
+
+`move_and_slide()` 方法旨在简化在希望一个物体沿着另一个物体滑动的常见情况下的碰撞响应。例如，它在平台游戏或自上而下的游戏中尤其有用。
+
+当调用 `move_and_slide()` 时，函数使用许多节点属性来计算其滑动行为。这些属性可以在检查器中找到，也可以在代码中设置。
+
+- `velocity` - 默认值：`Vector2(0, 0)`
+  此属性以每秒像素为单位表示身体的速度矢量。`move_and_slide()` 将在碰撞时自动修改此值。
+- `motion_mode` - 默认值：`MOTION_MODE_GROUNDED`
+  此属性通常用于区分侧滚动和自上而下的移动。使用默认值时，可以使用 `is_on_floor()`、`is_on_wall()` 和 `is_on_ceiling()` 方法来检测物体与哪种类型的表面接触，以及物体将与斜坡相互作用。使用 `MOTION_MODE_FLOATING` 时，所有碰撞都将被视为“墙”。
+- `up_direction` - 默认值：`Vector2(0, -1)`
+  此属性允许您定义引擎应将哪些曲面视为地板。它的值允许您使用 `is_on_floor()`、`is_on_wall()` 和 `is_on_ceiling()` 方法来检测身体接触的表面类型。默认值表示水平曲面的顶面将被视为“地面”。
+- `floor_stop_on_slope` - 默认值：`true`
+  此参数可防止身体在静止时从斜坡上滑下。
+- `wall_min_slide_angle` - 默认值：`0.261799`（弧度，相当于 `15` 度）
+  这是当物体碰到斜坡时允许其滑动的最小角度。
+- `floor_max_angle` - 默认值：`0.785398`（以弧度为单位，相当于 `45` 度）
+  此参数是曲面不再被视为“地板”之前的最大角度
+
+在特定情况下，还有许多其他特性可用于修改身体的行为。有关完整详细信息，请参阅CharacterBody2D文档。
+
+#### 检测碰撞
+
+当使用 `move_and_conflict()` 时，函数会直接返回一个 `KinematicCollision2D`，您可以在代码中使用它。
+
+当使用 `move_and_slide()` 时，可能会发生多次碰撞，因为滑动响应是计算出来的。要处理这些冲突，请使用 `get_slide_collision_count()` 和 `get_slide_collision()`：
+
+```python
+# Using move_and_collide.
+var collision = move_and_collide(velocity * delta)
+if collision:
+    print("I collided with ", collision.get_collider().name)
+
+# Using move_and_slide.
+move_and_slide()
+for i in get_slide_collision_count():
+    var collision = get_slide_collision(i)
+    print("I collided with ", collision.get_collider().name)
+```
+
+> **注意：**
+>
+> *get_slide_collision_count()* 只计算物体碰撞和改变方向的次数。
+
+有关返回碰撞数据的详细信息，请参见 KinematicCollision2D。
+
+#### 使用哪种运动方法？
+
+Godot 新用户的一个常见问题是：“你如何决定使用哪个移动函数？”通常，答案是使用 `move_and_slide()`，因为它看起来更简单，但事实并非如此。一种方法是，`move_and_slide()` 是一种特殊情况，而 `move_and_collide()` 更为一般。例如，以下两个代码片段会导致相同的冲突响应：
+
+```python
+# using move_and_collide
+var collision = move_and_collide(velocity * delta)
+if collision:
+    velocity = velocity.slide(collision.get_normal())
+
+# using move_and_slide
+move_and_slide()
+```
+
+你用 `move_and_slide()` 做的任何事情也可以用 `move_and_collide()` 做，但它可能需要更多的代码。但是，正如我们将在下面的示例中看到的，在某些情况下 `move_and_slide()` 不能提供您想要的响应。
+
+在上面的示例中，`move_and_slide()` 会自动更改 `velocity` 变量。这是因为当角色与环境碰撞时，函数会在内部重新计算速度，以反映减速情况。
+
+例如，如果你的角色摔倒在地板上，你不希望它由于重力的影响而积累垂直速度。相反，您希望其垂直速度重置为零。
+
+`move_and_slide()` 也可以在循环中多次重新计算运动学物体的速度，因为为了产生平滑的运动，它会移动角色，默认情况下最多碰撞五次。在该过程结束时，角色的新速度可用于下一帧。
+
+#### 示例
+
+要查看这些示例，请下载示例项目：character_body_2d_starter.zip
+
+##### 运动和墙壁
+
+如果您已经下载了示例项目，则此示例位于“basic_movement.tscn”中。
+
+对于本例，添加一个具有两个子项的 `CharacterBody2D`：`Sprite2D` 和 `CollisionShape2D`。使用 Godot “icon.svg” 作为 `Sprite2D` 的纹理（将其从 Filesystem dock 拖动到 `Sprite2D` 中的 *Texture* 属性）。在 `CollisionShape2D` 的 *Shape* 属性中，选择 “New RectangleShape2D” 并调整矩形大小以适合精灵图像。
+
+> **注意：**
+>
+> 有关实现二维移动方案的示例，请参见二维移动概述。
+
+将脚本附加到 CharacterBody2D 并添加以下代码：
+
+```python
+extends CharacterBody2D
+
+var speed = 300
+
+func get_input():
+    var input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+    velocity = input_dir * speed
+
+func _physics_process(delta):
+    get_input()
+    move_and_collide(velocity * delta)
+```
+
+运行此场景，您将看到 `move_and_collide()` 按预期工作，沿着速度向量移动身体。现在，让我们看看当您添加一些障碍时会发生什么。添加具有矩形碰撞形状的 StaticBody2D。对于可见性，可以使用 Sprite2D、Polygon2D，或从“调试”菜单中启用“可见碰撞形状”。
+
+再次运行场景并尝试移动到障碍物中。您将看到 `CharacterBody2D` 无法穿透障碍物。然而，试着以一定角度进入障碍物，你会发现障碍物就像胶水一样——感觉身体被卡住了。
+
+发生这种情况是因为没有碰撞响应。当发生碰撞时，`move_and_collide()` 会停止身体的运动。我们需要对碰撞的任何响应进行编码。
+
+尝试将函数更改为 `move_and_slide()`，然后再次运行。
+
+`move_and_slide()` 提供了沿着碰撞对象滑动身体的默认碰撞响应。这对许多游戏类型都很有用，并且可能是获得所需行为所需的全部内容。
+
+##### 弹跳/反射
+
+如果你不想要滑动碰撞响应怎么办？对于这个例子（示例项目中的 “bounce_and_closure.tscn”），我们有一个角色在发射子弹，我们希望子弹从墙上弹开。
+本例使用了三个场景。主场景包含播放器和墙。项目符号和墙是单独的场景，因此可以对它们进行实例化。
+播放机由向前和向后的w和s键控制。瞄准使用鼠标指针。以下是播放器的代码，使用 `move_and_slide()`：
+
+```python
+extends CharacterBody2D
+
+var Bullet = preload("res://bullet.tscn")
+var speed = 200
+
+func get_input():
+    # Add these actions in Project Settings -> Input Map.
+    var input_dir = Input.get_axis("backward", "forward")
+    velocity = transform.x * input_dir * speed
+    if Input.is_action_just_pressed("shoot"):
+        shoot()
+
+func shoot():
+    # "Muzzle" is a Marker2D placed at the barrel of the gun.
+    var b = Bullet.instantiate()
+    b.start($Muzzle.global_position, rotation)
+    get_tree().root.add_child(b)
+
+func _physics_process(delta):
+    get_input()
+    var dir = get_global_mouse_position() - global_position
+    # Don't move if too close to the mouse pointer.
+    if dir.length() > 5:
+        rotation = dir.angle()
+        move_and_slide()
+```
+
+Bullet 的代码：
+
+```python
+extends CharacterBody2D
+
+var speed = 750
+
+func start(_position, _direction):
+    rotation = _direction
+    position = _position
+    velocity = Vector2(speed, 0).rotated(rotation)
+
+func _physics_process(delta):
+    var collision = move_and_collide(velocity * delta)
+    if collision:
+        velocity = velocity.bounce(collision.get_normal())
+        if collision.get_collider().has_method("hit"):
+            collision.get_collider().hit()
+
+func _on_VisibilityNotifier2D_screen_exited():
+    # Deletes the bullet when it exits the screen.
+    queue_free()
+```
+
+该操作发生在 `_physics_process()` 中。在使用 `move_and_collide()` 之后，如果发生碰撞，则返回 `KinematicCollision2D` 对象（否则，返回为 `null`）。
+
+如果有返回的碰撞，我们使用 `Vector2.bounce()` 方法使用碰撞的 `normal` 来反映子弹的 `velocity`。
+
+如果碰撞对象（`collider`）有一个 `hit` 方法，我们也会调用它。在示例项目中，我们为Wall添加了一个闪烁的颜色效果来演示这一点。
+
+##### 平台游戏运动
+
+让我们尝试一个更流行的例子：2D 平台游戏。`move_and_slide()` 是快速启动和运行功能性角色控制器的理想选择。如果您已经下载了示例项目，您可以在 “platformer.tscn” 中找到它。
+
+对于本例，我们假设您有一个由一个或多个 `StaticBody2D` 对象组成的级别。它们可以是任何形状和大小。在示例项目中，我们使用 Polygon2D 创建平台形状。
+
+以下是玩家实体的代码：
+
+```python
+extends CharacterBody2D
+
+var speed = 300.0
+var jump_speed = -400.0
+
+# Get the gravity from the project settings so you can sync with rigid body nodes.
+var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
+
+
+func _physics_process(delta):
+    # Add the gravity.
+    velocity.y += gravity * delta
+
+    # Handle Jump.
+    if Input.is_action_just_pressed("jump") and is_on_floor():
+        velocity.y = jump_speed
+
+    # Get the input direction.
+    var direction = Input.get_axis("ui_left", "ui_right")
+    velocity.x = direction * speed
+
+    move_and_slide()
+```
+
+在这个代码中，我们使用如上所述的 `move_and_slide()` 来沿着物体的速度向量移动物体，沿着任何碰撞表面（如地面或平台）滑动。我们还使用 `is_on_floor()` 来检查是否应该允许跳转。如果没有这个，你就可以在半空中“跳跃”；如果你正在制作《Flappy Bird》，那就太棒了，但不适合平台游戏。
+
+一个完整的平台角色需要更多的东西：加速、双跳、郊狼时间等等。上面的代码只是一个起点。您可以将其作为基础，扩展到您自己项目所需的任何移动行为中。
+
+### 光线投射
+
+#### 简介
+
+游戏开发中最常见的任务之一是投射光线（或自定义形状的对象）并检查它击中了什么。这使得复杂的行为、人工智能等得以发生。本教程将解释如何在二维和三维中执行此操作。
+
+Godot 将所有低级别的游戏信息存储在服务器中，而场景只是前端。因此，光线投射通常是一项较低级别的任务。对于简单的光线投射，像 RayCast3D 和 RayCast2D 这样的节点会起作用，因为它们会返回每一帧光线投射的结果。
+
+然而，很多时候，光线投射需要是一个更具互动性的过程，因此必须有一种通过代码实现这一点的方法。
+
+#### 空间
+
+在物理世界中，Godot 将所有低级别的碰撞和物理信息存储在一个空间中。当前的二维空间（对于二维物理）可以通过访问 [CanvasItem.get_world_2d().space](https://docs.godotengine.org/en/stable/classes/class_canvasitem.html#class-canvasitem-method-get-world-2d) 来获得。对于三维，它是 [Node3D.get_world_3d().space](https://docs.godotengine.org/en/stable/classes/class_node3d.html#class-node3d-method-get-world-3d)。
+
+所得到的空间 RID 可以分别在 PhysicsServer3D 和 PhysicsServer2D 中用于 3D 和 2D。
+
+#### 访问空间
+
+Godot 物理默认情况下与游戏逻辑在同一个线程中运行，但可以设置为在单独的线程上运行，以更有效地工作。因此，访问空间的唯一安全时间是在  [Node._physics_process()](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-physics-process) 回调期间。从该函数外部访问它可能会由于空间*被锁定*而导致错误。
+
+若要对物理空间执行查询，必须使用 PhysicsDirectSpaceState2D 和 PhysicsDirectSpaceState3D。
+
+在二维中使用以下代码：
+
+```python
+func _physics_process(delta):
+    var space_rid = get_world_2d().space
+    var space_state = PhysicsServer2D.space_get_direct_state(space_rid)
+```
+
+或更直接：
+
+```python
+func _physics_process(delta):
+    var space_state = get_world_2d().direct_space_state
+```
+
+在 3D 中：
+
+```python
+func _physics_process(delta):
+    var space_state = get_world_3d().direct_space_state
+```
+
+#### 光线投射查询
+
+为了执行二维光线投射查询，可以使用 PhysicsDirectSpaceState2D.contersect_ray() 方法。例如：
+
+```python
+func _physics_process(delta):
+    var space_state = get_world_2d().direct_space_state
+    # use global coordinates, not local to node
+    var query = PhysicsRayQueryParameters2D.create(Vector2(0, 0), Vector2(50, 100))
+    var result = space_state.intersect_ray(query)
+```
+
+结果是一本字典。如果射线没有击中任何东西，字典就会空了。如果它确实撞到了什么东西，它将包含碰撞信息：
+
+```python
+if result:
+    print("Hit at point: ", result.position)
+```
+
+发生冲突时的 `result` 字典包含以下数据：
+
+```python
+{
+   position: Vector2 # point in world space for collision
+   normal: Vector2 # normal in world space for collision
+   collider: Object # Object collided or null (if unassociated)
+   collider_id: ObjectID # Object it collided against
+   rid: RID # RID it collided against
+   shape: int # shape index of collider
+   metadata: Variant() # metadata of collider
+}
+```
+
+数据在三维空间中是相似的，使用 Vector3 坐标。请注意，要启用与 Area3D 的冲突，布尔参数 `collapse_with_areas` 必须设置为 `true`。
+
+```python
+func _physics_process(delta):
+    var space_state = get_world_3d().direct_space_state
+    var cam = $Camera3D
+    var mousepos = get_viewport().get_mouse_position()
+
+    var origin = cam.project_ray_origin(mousepos)
+    var end = origin + cam.project_ray_normal(mousepos) * RAY_LENGTH
+    var query = PhysicsRayQueryParameters3D.create(origin, end)
+    query.collide_with_areas = true
+
+    var result = space_state.intersect_ray(query)
+```
+
+#### 碰撞例外
+
+光线投射的一个常见用例是使角色能够收集有关其周围世界的数据。其中一个问题是，同一个角色有一个碰撞器，因此光线将只检测其父角色的碰撞器，如下图所示：
+
+为了避免自相交，`intersect_ray()` parameters 对象可以通过其 `exclude` 属性获取一组异常。以下是如何从 CharacterBody2D 或任何其他碰撞对象节点使用它的示例：
+
+```python
+extends CharacterBody2D
+
+func _physics_process(delta):
+    var space_state = get_world_2d().direct_space_state
+    var query = PhysicsRayQueryParameters2D.create(global_position, enemy_position)
+    query.exclude = [self]
+    var result = space_state.intersect_ray(query)
+```
+
+异常数组可以包含对象或 RID。
+
+#### 碰撞遮罩
+
+虽然 exceptions 方法可以很好地排除父实体，但如果您需要一个大的和/或动态的异常列表，则会变得非常不方便。在这种情况下，使用碰撞层/掩模系统要有效得多。
+
+`intersect_ray()` parameters 对象也可以提供碰撞掩码。例如，要使用与父实体相同的遮罩，请使用 `collision_mask` 成员变量。异常数组也可以作为最后一个参数提供：
+
+```python
+extends CharacterBody2D
+
+func _physics_process(delta):
+    var space_state = get_world_2d().direct_space_state
+    var query = PhysicsRayQueryParameters2D.create(global_position, enemy_position,
+        collision_mask, [self])
+    var result = space_state.intersect_ray(query)
+```
+
+有关如何设置碰撞遮罩的详细信息，请参见代码示例。
+
+#### 屏幕上的 3D 光线投射
+
+将光线从屏幕投射到三维物理空间对于对象拾取非常有用。没有太多必要这样做，因为 CollisionObject3D 有一个 “input_event” 信号，可以让你知道它是何时被点击的，但如果有人想手动操作，下面是操作方法。
+
+若要从屏幕投射光线，需要一个 Camera3D 节点。`Camera3D` 可以有两种投影模式：透视和正交。因此，必须同时获得光线的原点和方向。这是因为 `origin` 在正交模式下变化，而 `normal` 在透视模式下变化：
+
+要使用相机获取，可以使用以下代码：
+
+```python
+const RAY_LENGTH = 1000.0
+
+func _input(event):
+    if event is InputEventMouseButton and event.pressed and event.button_index == 1:
+          var camera3d = $Camera3D
+          var from = camera3d.project_ray_origin(event.position)
+          var to = from + camera3d.project_ray_normal(event.position) * RAY_LENGTH
+```
+
+请记住，在 `_input()` 过程中，空间可能会被锁定，因此在实践中，该查询应该在 `_physics_process()` 中运行。
+
+### 布娃娃系统
+
+#### 简介
+
+自 3.1 版本以来，Godot 支持布娃娃物理。布娃娃依靠物理模拟来创建逼真的程序动画。它们被用于许多游戏中的死亡动画。
+
+在本教程中，我们将使用 Platformer3D 演示来设置布娃娃。
+
+> **注意：**
+>
+> 您可以在 GitHub 或使用资产库下载 Platformer3D 演示。
+
+#### 设置布娃娃
+
+##### 创建物理骨骼
+
+与引擎中的许多其他功能一样，有一个节点可以设置布娃娃：PhysicalBone3D 节点。为了简化设置，可以使用骨架节点中的“创建物理骨架”功能生成 `PhysicalBone` 节点。
+
+在 Godot 中打开 platformer 演示，然后打开 Robi 场景。选择“`Skeleton`（骨架）”节点。一个骨架按钮出现在顶部栏菜单上：
+
+单击它并选择 `Create physical skeleton`（创建物理骨架）选项。Godot 将为骨骼中的每个骨骼生成 `PhysicalBone` 节点和碰撞形状，并固定关节以将它们连接在一起：
+
+某些生成的骨骼是不必要的：例如 `MASTER` 骨骼。所以我们将通过移除它们来清理骨架。
+
+##### 清理骨架
+
+引擎需要模拟的每个 PhysicalBone 都有性能成本，因此您希望删除每个太小而无法在模拟中产生影响的骨骼，以及所有实用骨骼。
+
+例如，如果我们取一个人形，你不希望每个手指都有物理骨骼。可以将单个骨骼用于整个手，也可以将一个用于手掌、一个用于拇指，最后一个用于其他四个手指。
+
+移除这些物理骨骼： `MASTER`, `waist`, `neck`, `headtracker`。这为我们提供了一个优化的骨架，并使我们更容易控制布娃娃。
+
+##### 碰撞形状调整
+
+下一个任务是调整碰撞形状和物理骨骼的大小，以匹配每个骨骼应该模拟的身体部分。
+
+##### 关节调整
+
+一旦你调整了碰撞形状，你的布娃娃就差不多准备好了。您只想调整销关节以获得更好的模拟。默认情况下，`PhysicalBone` 节点会指定一个不受约束的固定关节。若要更改销关节，请选择 `PhysicalBone` 并在 `Joint` 区域中更改约束类型。在那里，您可以更改约束的方向及其限制。
+
+这是最终结果：
+
+#### 模拟布娃娃
+
+布娃娃现在可以使用了。要启动模拟并播放布娃娃动画，需要调用 `physical_bones_start_simulation` 方法。将脚本附加到骨架节点，并调用 `_ready` 方法中的方法：
+
+```python
+func _ready():
+    physical_bones_start_simulation()
+```
+
+要停止模拟，请调用 `physical_bones_stop_simulation()` 方法。
+
+也可以将模拟限制为仅限于少数骨骼。要执行此操作，请将骨骼名称作为参数传递。以下是部分布娃娃模拟的示例：
+
+##### 碰撞层和遮罩
+
+确保正确设置碰撞层和遮罩，这样 `CharacterBody3D` 的胶囊就不会妨碍物理模拟：
+
+有关详细信息，请阅读“碰撞层和遮罩”。
+
+### 运动学角色（2D）
+
+#### 简介
+
+是的，这个名字听起来很奇怪。“运动学角色”。那是什么？之所以取这个名字，是因为当物理引擎问世时，它们被称为“动力学”引擎（因为它们主要处理碰撞响应）。人们曾多次尝试使用动力学引擎创建角色控制器，但并不像看上去那么容易。Godot 拥有你能找到的最好的动态角色控制器实现之一（正如在 2d/platformer 演示中所看到的），但使用它需要相当水平的技能和对物理引擎的理解（或者对试错有很大的耐心）。
+
+一些物理引擎，如 Havok，似乎认为动态角色控制器是最佳选择，而其他引擎（PhysX）则更倾向于推广运动学引擎。
+
+那么，有什么区别呢？：
+
+- **动态特性控制器**使用具有无限惯性张量的刚体。它是一个不能旋转的刚体。物理引擎总是让物体移动和碰撞，然后一起解决它们的碰撞。这使得动态角色控制器能够与其他物理对象无缝交互，如 platformer 演示中所示。然而，这些互动并不总是可以预测的。碰撞可能需要多个帧才能解决，因此一些碰撞可能会产生微小的位移。这些问题可以解决，但需要一定的技巧。
+- 假设**运动学角色控制器**始终从非碰撞状态开始，并始终移动到非碰撞状态。如果它在碰撞状态下开始，它会像刚体一样尝试释放自己，但这是例外，而不是规则。这使得它们的控制和运动更加可预测，也更容易编程。然而，不利的一面是，它们不能直接与其他物理对象交互，除非手工编写代码。
+
+本简短教程主要介绍运动学角色控制器。它使用了老派的处理碰撞的方法，这种方法不一定简单，但很好地隐藏起来，并以 API 的形式呈现出来。
+
+#### 物理过程
+
+为了管理运动学物体或角色的逻辑，总是建议使用物理过程，因为它在物理步骤之前被调用，并且它的执行与物理服务器同步，而且它总是每秒被调用相同的次数。这使得物理和运动计算以比使用常规过程更可预测的方式工作，如果帧速率过高或过低，常规过程可能会出现尖峰或失去精度。
+
+```python
+extends CharacterBody2D
+
+func _physics_process(delta):
+    pass
+```
+
+#### 场景设置
+
+为了测试一些东西，下面是场景（来自 tilemap 教程）： kinematic_character_2d_starter.zip。我们将为角色创建一个新场景。使用机器人精灵并创建如下场景：
+
+您会注意到，在我们的 CollisionShape2D 节点旁边有一个警告图标；那是因为我们还没有为它定义形状。在 CollisionShape2D 的 shape 属性中创建一个新的 CircleShape2D。单击 `<CircleShape2D>` 以转到其选项，并将半径设置为 30：
+
+**注意：如前所述，在物理教程中，物理引擎无法处理大多数类型形状的缩放（只有碰撞多边形、平面和线段才能工作），因此始终更改形状的参数（如半径），而不是缩放。运动学/刚体/静体本身也是如此，因为它们的缩放会影响形状的缩放。**
+
+现在，为角色创建一个脚本，上面用作示例的脚本应该作为基础。
+
+最后，在 tilemap 中实例化该角色场景，并使地图场景成为主要场景，以便在按下 play 时运行。
+
+#### 移动运动学角色
+
+回到角色场景，打开剧本，魔法开始了！运动学实体在默认情况下不会执行任何操作，但它有一个名为 `CharacterBody2D.move_and_collide()` 的有用函数。该函数以 Vector2 为参数，并尝试将该运动应用于运动学实体。如果发生碰撞，它会在碰撞的瞬间停止。
+
+所以，让我们向下移动精灵，直到它碰到地板：
+
+```python
+extends CharacterBody2D
+
+func _physics_process(delta):
+    move_and_collide(Vector2(0, 1)) # Move down 1 pixel per physics frame
+```
+
+结果是角色会移动，但在碰到地板时会停止。很酷吧？
+
+下一步将为混合添加重力，这样它的行为更像一个普通的游戏角色：
+
+```python
+extends CharacterBody2D
+
+const GRAVITY = 200.0
+
+func _physics_process(delta):
+    velocity.y += delta * GRAVITY
+
+    var motion = velocity * delta
+    move_and_collide(motion)
+```
+
+现在角色顺利下落。让我们让它在触摸方向键时向左右两侧移动。请记住，所使用的值（至少用于速度）是像素/秒。
+
+这增加了左右按压时行走的基本支撑：
+
+```python
+extends CharacterBody2D
+
+const GRAVITY = 200.0
+const WALK_SPEED = 200
+
+func _physics_process(delta):
+    velocity.y += delta * GRAVITY
+
+    if Input.is_action_pressed("ui_left"):
+        velocity.x = -WALK_SPEED
+    elif Input.is_action_pressed("ui_right"):
+        velocity.x =  WALK_SPEED
+    else:
+        velocity.x = 0
+
+    # "move_and_slide" already takes delta time into account.
+    move_and_slide()
+```
+
+试试看。
+
+这对于平台构建者来说是一个很好的起点。更完整的演示可以在随引擎分发的演示 zip 中找到，或者在 https://github.com/godotengine/godot-demo-projects/tree/master/2d/kinematic_character.
+
+### 使用 SoftBody
+
+柔体（或柔体动力学）模拟可变形对象的运动、形状变化和其他物理特性。例如，这可以用于模拟布料或创建更逼真的角色。
+
+#### 基本设置
+
+SoftBody3D 节点用于柔体模拟。
+
+我们将创建一个有弹性的立方体来演示软体的设置。
+
+以 `Node3D` 节点为根创建新场景。然后，创建一个 `Softbody` 节点。在检查器中节点的 `mesh` 属性中添加 `CubeMesh`，并增加网格的细分以进行模拟。
+
+设置参数以获得您想要的柔体类型。尽量将 `Simulation Precision`（模拟精度）保持在 5 以上，否则，柔体可能会塌陷。
+
+> **注意：**
+>
+> 小心处理某些参数，因为某些值可能会导致奇怪的结果。例如，如果形状没有完全闭合，并且您将压力设置为大于 0，则柔体将在强风下像塑料袋一样四处飞行。
+
+播放场景以查看模拟。
+
+> **提示：**
+>
+> 为了提高仿真结果，提高仿真精度，这将以性能为代价进行显著改进。
+
+#### 斗篷模拟
+
+让我们在 Platformer3D 演示中制作一件斗篷。
+
+> **注意：**
+>
+> 您可以在 GitHub 或资产库上下载 Platformer3D 演示。
+
+打开 `Player` 场景，添加 `SoftBody` 节点并为其指定 `PlaneMesh`。
+
+打开 `PlaneMesh` 属性并设定大小（x:0.5 y:1），然后将 `Subdivide Width`（细分宽度）和 `Subdivide Depth`（细分深度）设定为 5。调整 `SoftBody` 的位置。你最终应该得到这样的结果：
+
+> **提示：**
+>
+> “细分”会生成更细分的网格，以便进行更好的模拟。
+
+在骨骼节点下添加 BoneAttachment3D 节点，然后选择“颈部骨骼”将斗篷附加到角色骨骼。
+
+> **注意：**
+>
+> `BoneAttachment3D` 节点是将对象附着到甲胄（armature）的骨骼上。附着的物体将跟随骨骼的移动，角色的武器可以通过这种方式附着。
+
+若要创建固定关节，请选择 `SoftBody` 节点中的上部顶点：
+
+固定关节可以在 `SoftBody` 的 `Attachments` 属性中找到，选择 `BoneAttachment` 作为每个固定关节的 `SpatialAttachment`，固定关节现在附着到颈部。
+
+最后一步是通过将运动学身体*玩家*添加到 `SoftBody` 的 `Parent Collision Ignore`（父碰撞忽略）来避免剪裁。
+
+播放场景，斗篷应正确模拟。
+
+这涵盖了柔体的基本设置，在制作游戏时对参数进行实验，以达到你想要的效果。
+
+### 碰撞形状（2D）
+
+本指南解释：
+
+- Godot 中二维可用的碰撞形状的类型。
+- 使用转换为多边形的图像作为碰撞形状。
+- 关于 2D 碰撞的性能注意事项。
+
+Godot 提供多种碰撞形状，具有不同的性能和精度权衡。
+
+可以通过添加一个或多个 CollisionShape2D 或 CollisionPolygon2D 作为子节点来定义 PhysicsBody2D 的形状。请注意，必须将 Shape2D *资源*添加到 Inspector 停靠中的碰撞形状节点。
+
+> **注意：**
+>
+> 将多个碰撞形状添加到单个 PhysicsBody2D 中时，不必担心它们重叠。他们不会互相“碰撞”。
+
+#### 基本碰撞形状
+
+Godot提供以下基本体碰撞形状类型：
+
+- [RectangleShape2D](https://docs.godotengine.org/en/stable/classes/class_rectangleshape2d.html#class-rectangleshape2d)
+- [CircleShape2D](https://docs.godotengine.org/en/stable/classes/class_circleshape2d.html#class-circleshape2d)
+- [CapsuleShape2D](https://docs.godotengine.org/en/stable/classes/class_capsuleshape2d.html#class-capsuleshape2d)
+- [SegmentShape2D](https://docs.godotengine.org/en/stable/classes/class_segmentshape2d.html#class-segmentshape2d)
+- [SeparationRayShape2D](https://docs.godotengine.org/en/stable/classes/class_separationrayshape2d.html#class-separationrayshape2d) (专为角色设计)
+- [WorldBoundaryShape2D](https://docs.godotengine.org/en/stable/classes/class_worldboundaryshape2d.html#class-worldboundaryshape2d) (无限平面)
+
+可以使用一个或多个基本体形状来表示大多数较小对象的碰撞。但是，对于更复杂的对象，例如大型船舶或整个标高，可能需要凸形或凹形。下面将详细介绍。
+
+我们建议为动力学对象（如 RigidBodies 和 KinematicBodies）选择基本体形状，因为它们的行为是最可靠的。它们通常也能提供更好的性能。
+
+#### 凸碰撞形状
+
+> **警告：**
+>
+> Godot 目前没有提供创建 2D 凸碰撞形状的内置方法。本节主要用于参考。
+
+凸碰撞形状是原始碰撞形状和凹碰撞形状之间的折衷。它们可以代表任何复杂的形状，但有一个重要的警告。顾名思义，一个单独的形状只能代表一个凸起的形状。例如，一个金字塔是*凸的*，但一个空心的盒子是*凹的*。若要定义具有单个碰撞形状的凹形对象，需要使用凹形碰撞形状。
+
+根据对象的复杂性，使用多个凸形状而不是凹碰撞形状可能会获得更好的性能。Godot 允许您使用*凸分解*来生成大致匹配空心对象的凸形状。请注意，这种性能优势在一定数量的凸起形状之后不再适用。对于大型和复杂的对象，例如整个级别，我们建议使用凹形。
+
+#### 凹凸碰撞形状
+
+凹形碰撞形状，也称为三聚碰撞形状，可以采取任何形式，从几个三角形到数千个三角形。凹形是最慢的选择，但在 Godot 中也是最准确的。**只能在 StaticBodies 中使用凹形。**除非 RigidBody 的模式是静态的，否则它们将无法与 KinematicBodies 或 RigidBodies 一起使用。
+
+> **注意：**
+>
+> 即使凹面形状提供了最准确的*碰撞*，接触报告也可能不如原始形状精确。
+
+当不使用 TileMaps 进行关卡设计时，凹入形状是关卡碰撞的最佳方法。
+
+可以在检查器中配置 CollisionPolygon2D 节点的构建模式。如果将其设置为“**实体**”（默认设置），则碰撞将包括多边形及其包含的区域。如果设置为“**分段**”，则碰撞将仅包括多边形边。
+
+通过选择 Sprite2D 并使用 2D 视口顶部的 **Sprite2D** 菜单，可以从编辑器中生成凹面碰撞形状。Sprite2D 下拉菜单将显示一个名为“**创建碰撞多边形 2D 同级**”的选项。单击后，它将显示一个包含 3 个设置的菜单：
+
+- **简化**：值越高，形状越不详细，从而以精度为代价提高性能。
+- **收缩（像素）**：较高的值将使生成的碰撞多边形相对于精灵的边缘收缩。
+- **增长（像素）**：较高的值将使生成的碰撞多边形相对于精灵的边缘增长。请注意，将“增长”和“收缩”设置为相等的值可能会产生与将两者都保留为 0 不同的结果。
+
+> **注意：**
+>
+> 如果您有一个包含许多小细节的图像，建议创建一个简化版本，并使用它来生成碰撞多边形。这可以带来更好的性能和游戏感觉，因为玩家不会被小的装饰性细节阻挡。
+>
+> 若要使用单独的图像生成碰撞多边形，请创建另一个 Sprite2D，从中生成碰撞多边形同级，然后移除 Sprite2D 节点。通过这种方式，可以从生成的碰撞中排除小细节。
+
+#### 性能注意事项
+
+每个 PhysicsBody 不限于单个碰撞形状。尽管如此，我们还是建议尽可能减少形状的数量，以提高性能，尤其是对于像 RigidBodies 和 KinematicBodies 这样的动态对象。最重要的是，避免平移、旋转或缩放 CollisionShapes，以受益于物理引擎的内部优化。
+
+在 StaticBody 中使用单个未变换的碰撞形状时，引擎的*宽相位*算法可以丢弃不活动的 PhysicsBodies。然后，*窄相位*将只需要考虑活动体的形状。如果 StaticBody 有许多碰撞形状，则宽阶段将失败。然后，较慢的窄阶段必须针对每个形状执行碰撞检查。
+
+如果遇到性能问题，您可能需要在准确性方面进行权衡。大多数游戏都没有 100% 准确的碰撞。他们会找到创造性的方法来隐藏它，或者在正常游戏中让它变得不显眼。
+
+### 碰撞形状（3D）
+
+本指南解释：
+
+- Godot 中三维可用的碰撞形状的类型。
+- 使用凸网格或凹网格作为碰撞形状。
+- 关于三维碰撞的性能注意事项。
+
+Godot 提供多种碰撞形状，具有不同的性能和精度权衡。
+
+可以通过添加一个或多个 CollisionShape3D 作为子节点来定义 PhysicsBody3D 的形状。请注意，必须将 Shape3D 资源添加到 Inspector 停靠中的碰撞形状节点。
+
+> **注意：**
+>
+> 将多个碰撞形状添加到单个 PhysicsBody 时，不必担心它们重叠。他们不会互相“碰撞”。
+
+#### 基本碰撞形状
+
+Godot提供以下基本体碰撞形状类型：
+
+- [BoxShape3D](https://docs.godotengine.org/en/stable/classes/class_boxshape3d.html#class-boxshape3d)
+- [SphereShape3D](https://docs.godotengine.org/en/stable/classes/class_sphereshape3d.html#class-sphereshape3d)
+- [CapsuleShape3D](https://docs.godotengine.org/en/stable/classes/class_capsuleshape3d.html#class-capsuleshape3d)
+- [CylinderShape3D](https://docs.godotengine.org/en/stable/classes/class_cylindershape3d.html#class-cylindershape3d)
+
+可以使用一个或多个基本体形状来表示大多数较小对象的碰撞。但是，对于更复杂的对象，例如大型船舶或整个标高，可能需要凸形或凹形。下面将详细介绍。
+
+我们建议为动力学对象（如 RigidBodies 和 KinematicBodies）选择基本体形状，因为它们的行为是最可靠的。它们通常也能提供更好的性能。
+
+#### 凸碰撞形状
+
+凸碰撞形状是原始碰撞形状和凹碰撞形状之间的折衷。它们可以代表任何复杂的形状，但有一个重要的警告。顾名思义，一个单独的形状只能代表一个凸起的形状。例如，一个金字塔是*凸的*，但一个空心的盒子是*凹的*。若要定义具有单个碰撞形状的凹形对象，需要使用凹形碰撞形状。
+
+根据对象的复杂性，使用多个凸形状而不是凹碰撞形状可能会获得更好的性能。Godot允许您使用*凸分解*来生成大致匹配空心对象的凸形状。请注意，这种性能优势在一定数量的凸起形状之后不再适用。对于大型和复杂的对象，例如整个级别，我们建议使用凹形。
+
+通过选择 MeshInstance3D 并使用 3D 视口顶部的 **Mesh** 菜单，可以从编辑器中生成一个或多个凸碰撞形状。编辑器公开了两种生成模式：
+
+- **创建单个凸碰撞同级**使用“快速外壳”（Quickhull）算法。它将创建一个具有自动生成的凸碰撞形状的 CollisionShape 节点。由于它只生成单个形状，因此性能良好，非常适合小型对象。
+- **创建多个凸碰撞同级**使用 V-HACD 算法。它创建了几个 CollisionShape 节点，每个节点都有一个凸起的形状。由于它可以生成多个形状，因此以牺牲性能为代价对凹面对象更准确。对于中等复杂度的对象，它可能比使用单个凹面碰撞形状更快。
+
+#### 凹凸碰撞形状
+
+凹形碰撞形状，也称为三聚碰撞形状，可以采取任何形式，从几个三角形到数千个三角形。凹形是最慢的选择，但在 Godot 中也是最准确的。**只能在 StaticBodies 中使用凹形。**除非刚体的模式是静态的，否则它们将无法与 KinematicBodies 或 RigidBodies 一起使用。
+
+> **注意：**
+>
+> 即使凹面形状提供了最准确的*碰撞*，接触报告也可能不如原始形状精确。
+
+当不使用网格贴图进行标高设计时，凹入形状是标高碰撞的最佳方法。也就是说，如果你的关卡有一些小细节，为了表现和游戏感觉，你可能想把这些细节排除在碰撞之外。为此，可以在三维建模器中构建简化的碰撞网格，并让 Godot 自动为其生成碰撞形状。下面将详细介绍
+
+请注意，与原始形状和凸面形状不同，凹面碰撞形状没有实际的“体积”。可以将对象放置在造型*外部*，也可以放置在造型*内部*。
+
+通过选择 MeshInstance3D 并使用 3D 视口顶部的 **Mesh** 菜单，可以从编辑器生成凹面碰撞形状。编辑器公开了两个选项：
+
+- **创建 Trimesh 静态实体**是一个方便的选项。它将创建一个 StaticBody，其中包含与网格几何体匹配的凹形。
+- **创建 Trimesh 碰撞同级节点**将创建一个具有与网格几何体匹配的凹形的 CollisionShape 节点。
+
+> **注意：**
+>
+> 假设您需要使刚体在凹形碰撞形状上*滑动*。在这种情况下，您可能会注意到，有时刚体会向上颠簸。若要解决此问题，请打开**“项目” > “项目设置”**，然后启用**“物理” > “三维” > “平滑三网格碰撞”**。
+>
+> 启用平滑三聚碰撞后，请确保凹形是 StaticBody 的唯一形状，并且它位于原点，没有任何旋转。这样，刚体就可以在 StaticBody 上完美地滑动。
+
+> **参考：**
+>
+> 有关如何导出 Godot 模型并在导入时自动生成碰撞形状的信息，请参见导入 3D 场景。
+
+#### 性能注意事项
+
+每个 PhysicsBody 不限于单个碰撞形状。尽管如此，我们还是建议尽可能减少形状的数量，以提高性能，尤其是对于像 RigidBodies 和 KinematicBodies 这样的动态对象。最重要的是，避免平移、旋转或缩放 CollisionShapes，以受益于物理引擎的内部优化。
+在 StaticBody 中使用单个未变换的碰撞形状时，引擎的*宽相位*算法可以丢弃不活动的 PhysicsBodies。然后，*窄相位*将只需要考虑活动体的形状。如果 StaticBody 有许多碰撞形状，则宽阶段将失败。然后，较慢的窄阶段必须针对每个形状执行碰撞检查。
+
+如果遇到性能问题，您可能需要在准确性方面进行权衡。大多数游戏都没有 100% 准确的碰撞。他们会找到创造性的方法来隐藏它，或者在正常游戏中让它变得不显眼。
+
+### 大世界坐标
+
+> **注意：**
+>
+> 大世界坐标主要用于三维项目；在 2D 项目中很少需要它们。此外，与 3D 渲染不同，启用大世界坐标时，2D 渲染当前无法从提高精度中获益。
+
+#### 为什么要使用大世界坐标？
+
+在 Godot 中，物理模拟和渲染都依赖于浮点数。然而，在计算中，浮点数的**精度和范围有限**。对于拥有巨大世界的游戏来说，这可能是一个问题，例如太空或行星级模拟游戏。
+
+当该值接近 `0.0` 时，精度最大。随着值从 `0.0` 增大或减小，精度逐渐降低。每当浮点数的指数增加时就会发生这种情况，当浮点数超过 2 的幂值（2、4、8、16…）时就会发生。每次发生这种情况时，数字的最小步长都会增加，从而导致精度损失。
+在实践中，这意味着随着玩家远离世界原点（2D 游戏中的 `Vector2(0, 0)` 或 3D 游戏中的 `Vector3(0, 0, 0)`），精度将降低。
+
+这种精度的损失可能会导致物体在远离世界原点时看起来“振动”，因为模型的位置将捕捉到可以用浮点数表示的最近值。这也可能导致只有当玩家远离世界时才会出现的物理故障。
+
+范围决定了可以存储在数字中的最小值和最大值。如果玩家试图移动超过这个范围，他们根本无法移动。然而，在实践中，浮点精度几乎总是在范围移动之前成为问题。
+
+范围和精度（两个指数间隔之间的最小步长）由浮点数类型决定。*理论*范围允许将极高的值存储在单精度浮点中，但精度非常低。在实践中，不能表示所有整数值的浮点类型不是很有用。在极值处，精度变得非常低，以至于数字甚至无法区分两个单独的*整数*值。
+
+这是单个整数值可以用浮点数表示的范围：
+
+- **单精度浮点范围（表示所有整数）**：介于 -16,777,216 和 16,777,216 之间
+- **双精度浮点范围（表示所有整数）**：介于 -9 万亿和 9 万亿之间
+
+| 范围             | 单步进     | 双浮点步进            | 注释                                                         |
+| ---------------- | ---------- | --------------------- | ------------------------------------------------------------ |
+| [1; 2]           | ~0.0000001 | ~1e-15                | 精度在 0.0 附近变大（此表缩写）。                            |
+| [2; 4]           | ~0.0000002 | ~1e-15                |                                                              |
+| [4; 8]           | ~0.0000005 | ~1e-15                |                                                              |
+| [8; 16]          | ~0.000001  | ~1e-14                |                                                              |
+| [16; 32]         | ~0.000002  | ~1e-14                |                                                              |
+| [32; 64]         | ~0.000004  | ~1e-14                |                                                              |
+| [64; 128]        | ~0.000008  | ~1e-13                |                                                              |
+| [128; 256]       | ~0.000015  | ~1e-13                |                                                              |
+| [256; 512]       | ~0.00003   | ~1e-13                |                                                              |
+| [512; 1024]      | ~0.00006   | ~1e-12                |                                                              |
+| [1024; 2048]     | ~0.0001    | ~1e-12                |                                                              |
+| [2048; 4096]     | ~0.0002    | ~1e-12                | 没有渲染伪影或物理故障的第一人称3D游戏的最大*推荐*单精度范围。 |
+| [4096; 8192]     | ~0.0005    | ~1e-12                | 没有渲染伪影或物理故障的第三人称3D游戏的最大*推荐*单精度范围。 |
+| [8192; 16384]    | ~0.001     | ~1e-12                |                                                              |
+| [16384; 32768]   | ~0.0019    | ~1e-11                | 自上而下的3D游戏在没有渲染伪影或物理故障的情况下的最大*推荐*单精度范围。 |
+| [32768; 65536]   | ~0.0039    | ~1e-11                | 任何3D游戏的最大*推荐*单精度范围。超过该点通常需要双倍精度（大世界坐标）。 |
+| [65536; 131072]  | ~0.0078    | ~1e-11                |                                                              |
+| [131072; 262144] | ~0.0156    | ~1e-10                |                                                              |
+| > 262144         | > ~0.0313  | ~1e-10 (0.0000000001) | 超过该值后，双精度仍远高于单精度。                           |
+
+当使用单精度浮点数时，可以超过建议的范围，但会出现更明显的伪影，物理故障也会更常见（例如玩家没有朝某些方向笔直行走）。
+
+> **参考：**
+>
+> 有关详细信息，请参阅“浮点精度”一文。
+
+#### 大世界坐标如何工作
+
+大世界坐标（也称为**双精度物理**）提高了引擎内所有浮点计算的精度。
+
+默认情况下，GDScript 中的 float 为64位，但 Vector2、Vector3 和 Vector4 为 32 位。这意味着向量类型的精度要有限得多。为了解决这个问题，我们可以增加 Vector 类型中用于表示浮点数的位数。这导致精度*呈指数级*增长，这意味着最终值的精度不仅是原来的两倍，而且在高值时可能会高出数千倍。通过从单精度浮点转换为双精度浮点，可以表示的最大值也大大增加。
+
+为了避免在远离世界原点时出现模型捕捉问题，Godot 的 3D 渲染引擎将在启用大世界坐标时提高渲染操作的精度。出于性能原因，着色器不使用双精度浮点，但使用一种替代解决方案来模拟使用单精度浮点渲染的双精度。
+
+> **注意：**
+>
+> 启用大型世界坐标会带来性能和内存使用方面的损失，尤其是在 32 位 CPU 上。只有在实际需要时才启用大世界坐标。
+>
+> 此功能是为中端/高端桌面平台量身定制的。大世界坐标在低端移动设备上可能无法正常运行，除非您采取措施通过其他方式（例如减少每秒物理滴答声的数量）减少 CPU 使用量。
+>
+> 在低端平台上，可以使用*原点偏移*方法来实现大世界，而无需使用双精度物理和渲染。原点偏移适用于单精度浮点，但它给游戏逻辑带来了更多的复杂性，尤其是在多人游戏中。因此，本页未详细说明原点偏移。
+
+#### 大世界坐标是给谁的？
+
+3D 空间或行星级模拟游戏通常需要大的世界坐标。这延伸到需要支持*非常*快的移动速度，但有时也需要支持非常慢*和*精确的移动的游戏。
+
+另一方面，重要的是，只有在实际需要时才使用大世界坐标（出于性能原因）。以下情况通常**不**需要大世界坐标：
+
+- 2D 游戏，因为精度问题通常不太明显。
+- 小规模或中等规模世界的游戏。
+- 游戏有很大的世界，但分为不同的级别，加载顺序介于两者之间。您可以将每个级别部分集中在世界原点周围，以避免精度问题，而不会造成性能损失。
+- 开放式世界游戏，*可步行区域*不超过 8192×8192 米（以世界原点为中心）。如上表所示，即使对于第一人称游戏，精度水平在该范围内也可以接受。
+
+**如果有疑问**，您可能不需要在项目中使用大世界坐标。作为参考，大多数现代 AAA 开放世界游戏不使用大型世界坐标系，在渲染和物理方面仍然依赖单精度浮点。
+
+#### 启用大世界坐标
+
+这个过程需要重新编译编辑器和所有要使用的导出模板二进制文件。如果只打算在发布模式下导出项目，则可以跳过调试导出模板的编译。在任何情况下，您都需要编译一个编辑器构建，这样您就可以测试您的大精度世界，而不必每次都导出项目。
+
+有关每个目标平台的编译说明，请参阅编译部分。编译编辑器和导出模板时，需要添加 `precision=double` SCons 选项。
+
+生成的二进制文件将使用 `.double` 后缀命名，以区别于单精度二进制文件（缺少任何精度后缀）。然后，您可以在“导出”对话框中的项目导出预设中将二进制文件指定为自定义导出模板。
+
+#### 单精度和双精度构建之间的兼容性
+
+使用 ResourceSaver singleton 保存*二进制*资源时，如果使用使用双精度数字的构建保存资源，则会在文件中存储一个特殊标志。因此，当您切换到双精度构建并保存时，磁盘上的所有二进制资源都会发生变化。
+
+单精度和双精度都在使用此特殊标志的资源上使用 ResourceLoader 单例构建支持。这意味着单精度构建可以加载使用双精度构建保存的资源，反之亦然。基于文本的资源不存储双精度标志，因为它们不需要这样的标志才能正确读取。
+
+##### 已知不兼容性
+
+- 在网络多人游戏中，服务器和所有客户端应该使用相同的构建类型，以确保客户端之间的精度保持一致。使用不同的构建类型*可能*会起作用，但可能会出现各种问题。
+- GDExtension API 在双精度构建中以不兼容的方式更改。这意味着**必须**重建扩展以使用双精度构建。在扩展开发人员端，当构建精度为 DOUBLE 的 GDExtension 时，将启用 `REAL_T_IS_DUBLE` 定义。`real_t` 可以用作单精度构建中 `float` 的别名，也可以用作双精度构建中 `double` 的别名。
+
+#### 限制
+
+由于 3D 渲染着色器实际上并不使用双精度浮点，因此在 3D 渲染精度方面存在一些限制：
+
+- 使用 `skip_vertex_transform` 或 `world_vertex_coords` 的着色器不会从提高的精度中受益。
+- 三平面映射不能从提高精度中获益。使用三平面贴图的材质在远离世界原点时会显示出可见的抖动。
+
+启用大世界坐标后，二维渲染当前无法从提高的精度中获益。这可能会导致在远离世界原点时发生可见模型捕捉（从典型缩放级别的几百万像素开始）。尽管如此，2D 物理计算仍将受益于提高的精度。
+
+### 排除物理问题
+
+使用物理引擎时，您可能会遇到意想不到的结果。
+
+虽然这些问题中的许多可以通过配置来解决，但其中一些是引擎错误的结果。有关物理引擎的已知问题，请参阅 GitHub 上的开放式物理相关问题。浏览已关闭的问题也有助于回答与物理引擎行为相关的问题。
+
+#### 物体以高速相互穿过
+
+这就是所谓的*隧穿*。在 RigidBody 属性中启用 **Continuous CD** 有时可以解决此问题。如果这没有帮助，您可以尝试其他解决方案：
+
+- 使静态碰撞形状更厚。例如，如果玩家无法以某种方式到达较薄的地板下方，则可以使碰撞器比地板的视觉表示更厚。
+- 根据快速移动对象的移动速度修改其碰撞形状。对象移动得越快，碰撞形状应该延伸到对象外部越大，以确保它能够更可靠地与薄壁碰撞。
+- 在高级项目设置中增加**每秒物理滴答声**。虽然这还有其他好处（如更稳定的模拟和减少输入滞后），但这增加了 CPU 利用率，可能不适用于移动/ web 平台。默认值为 `60`（如 `120`、`180` 或 `240`）的倍数应是大多数显示器上平滑外观的首选。
+
+#### 堆叠的对象不稳定且摇摆
+
+尽管看起来是一个简单的问题，但在物理引擎中很难实现具有堆叠对象的稳定刚体模拟。这是由相互作用的综合力造成的。堆叠的物体越多，相互作用的力就越强。这最终会导致模拟变得不稳定，使对象无法在不移动的情况下彼此叠放。
+
+提高物理模拟速率可以帮助缓解这个问题。为此，请在高级项目设置中增加“每秒物理刻度”。请注意，这会增加 CPU 利用率，并且可能不适用于移动/ web 平台。默认值为 `60`（如 `120`、`180` 或 `240`）的倍数应是大多数显示器上平滑外观的首选。
+
+#### 缩放的物理体或碰撞形状未正确碰撞
+
+Godot 目前不支持物理体或碰撞形状的缩放。作为一种解决方法，请更改碰撞形状的范围，而不是更改其比例。如果希望视觉表示的比例也更改，请分别更改基础视觉表示（Sprite2D、MeshInstance3D…）的比例和更改碰撞形状的范围。在这种情况下，请确保碰撞形状不是视觉表示的子对象。
+
+由于默认情况下资源是共享的，因此如果不希望将更改应用于场景中使用相同碰撞形状资源的所有节点，则必须使碰撞形状资源唯一。这可以通过在更改冲突形状资源的大小之前在脚本中调用 `duplicate()` 来完成。
+
+#### 薄物体放在地板上时会摇晃
+
+这可能是由于以下两种原因之一：
+
+- 地板的碰撞形状太薄。
+- 刚体的碰撞形状太薄。
+
+在第一种情况下，可以通过使地板的碰撞形状更厚来减轻这种情况。例如，如果玩家无法以某种方式到达较薄的地板下方，则可以使碰撞器比地板的视觉表示更厚。
+
+在第二种情况下，这通常只能通过提高物理模拟率来解决（因为使形状变厚会导致刚体的视觉表示与其碰撞之间的脱节）。
+
+在这两种情况下，提高物理模拟速率也有助于缓解这一问题。为此，请在高级项目设置中增加“**每秒物理刻度**”。请注意，这会增加 CPU 利用率，并且可能不适用于移动/ web 平台。默认值为 `60`（如 `120`、`180` 或 `240`）的倍数应是大多数显示器上平滑外观的首选。
+
+#### 圆柱体碰撞形状不稳定
+
+在 Godot 4 中从子弹到 GodotPhysics 的过渡过程中，圆柱体碰撞形状必须从头开始重新实现。然而，圆柱体碰撞形状是最难支持的形状之一，这就是为什么许多其他物理引擎没有为它们提供任何支持的原因。目前有几个已知的圆柱体碰撞形状错误。
+
+目前，我们建议对字符使用长方体或胶囊碰撞形状。盒子通常提供了最好的可靠性，但也有让角色在对角线上占据更多空间的缺点。胶囊碰撞形状没有这个缺点，但它们的形状会使精确平台成型更加困难。
+
+#### 车辆车身模拟不稳定，尤其是在高速情况下
+
+当一个物理物体以高速移动时，它在每个物理步骤之间都会移动很长的距离。例如，当在 3D 中使用 1 个单位 = 1 米的约定时，以 360 公里/小时行驶的车辆每秒将行驶 100 个单位。默认物理模拟速率为 60 Hz 时，车辆每次物理刻度移动约 1.67 个单位。这意味着小型物体可能会被车辆完全忽略（由于隧穿），但在如此高的速度下，模拟通常几乎没有数据可供使用。
+
+快速移动的车辆可以从物理模拟速率的提高中受益匪浅。为此，请在高级项目设置中增加“**每秒物理刻度**”。请注意，这会增加 CPU 利用率，并且可能不适用于移动/ web 平台。默认值为 `60`（如 `120`、`180` 或 `240`）的倍数应是大多数显示器上平滑外观的首选。
+
+#### 当对象在瓷砖上移动时，碰撞会导致颠簸
+
+这是物理引擎中一个已知的问题，由物体碰撞到一个形状的边缘引起，即使该边缘被另一个形状覆盖。这可能发生在二维和三维中。
+
+解决这个问题的最好方法是创建一个“复合”对撞机。这意味着，您可以创建一个碰撞形状来表示一组瓷砖的碰撞，而不是单个瓷砖发生碰撞。通常，您应该在每个岛的基础上拆分复合碰撞器（这意味着每组接触瓷砖都有自己的碰撞器）。
+
+在某些情况下，使用复合对撞机还可以提高物理模拟性能。然而，由于复合碰撞形状要复杂得多，这可能不是所有情况下的净性能胜利。
+
+#### 当一个对象触摸另一个对象时帧率下降
+
+这可能是由于其中一个对象使用了过于复杂的碰撞形状。出于性能原因，凸碰撞形状应使用尽可能少的形状。当依赖 Godot 的自动生成时，可能会为单个凸形碰撞资源创建数十个甚至数百个形状。
+
+在某些情况下，用几个基本碰撞形状（长方体、球体或胶囊）替换凸碰撞器可以提供更好的性能。
+
+使用非常详细的三聚（凹）碰撞的 StaticBodies 也可能出现此问题。在这种情况下，使用标高几何体的简化表示作为碰撞器。这不仅可以显著提高物理模拟性能，还可以通过消除碰撞中的小固定装置和裂缝来提高稳定性。
+
+#### 物理模拟在远离世界原点时是不可靠的
+
+这是由浮点精度误差引起的，随着物理模拟发生在离世界更远的地方，浮点精度误差变得更加明显。此问题还会影响渲染，从而导致摄影机在远离世界原点时移动不稳定。有关详细信息，请参见大世界坐标。
