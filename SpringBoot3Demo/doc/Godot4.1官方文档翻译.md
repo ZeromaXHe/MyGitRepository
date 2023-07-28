@@ -11943,3 +11943,3836 @@ iOS设备通常没有卡顿，但运行新版本操作系统的旧设备可能�
 如果您报告输入滞后问题，请附上使用高速摄像头拍摄的图像（如手机的慢动作视频模式）。捕捉**必须**使屏幕和输入设备都可见，以便可以计算输入和屏幕结果之间的帧数。此外，一定要提到显示器的刷新率和输入设备的轮询率（尤其是鼠标）。
 
 此外，确保根据表现出的行为使用正确的术语（抖动、卡顿、输入滞后）。这将有助于更快地理解您的问题。提供一个可以用来重现问题的项目，如果可能的话，包括一个演示错误的屏幕截图。
+
+## 脚本
+
+### 编程语言
+
+#### GDScript
+
+##### GDScript 参考
+
+GDScript 是一种为 Godot 构建的高级、面向对象、命令式和逐步类型化的编程语言。它使用了一种基于缩进的语法，类似于 Python 之类的语言。它的目标是针对 Godot 引擎进行优化并与之紧密集成，从而为内容创建和集成提供极大的灵活性。
+
+GDScript 完全独立于 Python，并不是基于它。
+
+###### 历史
+
+> **注意：**
+>
+> 有关 GDScript 历史记录的文档已移至常见问题解答。
+
+###### GDScript 示例
+
+有些人可以通过查看语法来更好地学习，因此这里有一个 GDScript 的外观示例。
+
+```python
+# Everything after "#" is a comment.
+# A file is a class!
+
+# (optional) icon to show in the editor dialogs:
+@icon("res://path/to/optional/icon.svg")
+
+# (optional) class definition:
+class_name MyClass
+
+# Inheritance:
+extends BaseClass
+
+
+# Member variables.
+var a = 5
+var s = "Hello"
+var arr = [1, 2, 3]
+var dict = {"key": "value", 2: 3}
+var other_dict = {key = "value", other_key = 2}
+var typed_var: int
+var inferred_type := "String"
+
+# Constants.
+const ANSWER = 42
+const THE_NAME = "Charly"
+
+# Enums.
+enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}
+enum Named {THING_1, THING_2, ANOTHER_THING = -1}
+
+# Built-in vector types.
+var v2 = Vector2(1, 2)
+var v3 = Vector3(1, 2, 3)
+
+
+# Functions.
+func some_function(param1, param2, param3):
+    const local_const = 5
+
+    if param1 < local_const:
+        print(param1)
+    elif param2 > 5:
+        print(param2)
+    else:
+        print("Fail!")
+
+    for i in range(20):
+        print(i)
+
+    while param2 != 0:
+        param2 -= 1
+
+    match param3:
+        3:
+            print("param3 is 3!")
+        _:
+            print("param3 is not 3!")
+
+    var local_var = param1 + 3
+    return local_var
+
+
+# Functions override functions with the same name on the base/super class.
+# If you still want to call them, use "super":
+func something(p1, p2):
+    super(p1, p2)
+
+
+# It's also possible to call another function in the super class:
+func other_something(p1, p2):
+    super.something(p1, p2)
+
+
+# Inner class
+class Something:
+    var a = 10
+
+
+# Constructor
+func _init():
+    print("Constructed!")
+    var lv = Something.new()
+    print(lv.a)
+```
+
+如果您以前有使用静态类型语言（如C、C++或C#）的经验，但以前从未使用过动态类型语言，建议您阅读本教程：GDScript：动态语言简介。
+
+###### 语言
+
+在下文中，将对 GDScript 进行概述。应该在链接的类描述中查找详细信息，例如哪些方法可用于数组或其他对象。
+
+###### 标识符
+
+任何将自身限制为字母字符（`a` 到 `z` 和 `A` 到 `Z`）、数字（`0` 到 `9`）和 `_` 的字符串都可以作为标识符。此外，标识符不得以数字开头。标识符区分大小写（`foo` 与 `FOO` 不同）。
+
+标识符也可能包含 UAX#31 的大部分 Unicode 字符。这允许您使用以英语以外的语言编写的标识符名称。标识符中不允许使用 ASCII 字符和表情符号中被认为“容易混淆”的 Unicode 字符。
+
+###### 关键词
+
+以下是该语言支持的关键字列表。由于关键字是保留字（标记），因此不能用作标识符。以下部分中列出的运算符（如 `in`、`not`、`and` 和 `or`）和内置类型的名称也保留。
+
+关键字是在 GDScript 标记化器中定义的，以备您深入了解。
+
+| 关键字     | 描述                                                         |
+| ---------- | ------------------------------------------------------------ |
+| if         | 参考 [if/else/elif](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#if-else-elif). |
+| elif       | 参考 [if/else/elif](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#if-else-elif). |
+| else       | 参考 [if/else/elif](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#if-else-elif). |
+| for        | 参考 [for](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#for). |
+| while      | 参考 [while](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#while). |
+| match      | 参考 [match](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#match). |
+| break      | 退出当前执行的 `for` 或 `while` 循环.                        |
+| continue   | 立即跳至 `for` 或 `while` 循环的下一次迭代.                  |
+| pass       | 在语法上需要语句但不希望执行代码的情况下使用，例如在空函数中。 |
+| return     | 返回函数中的值。                                             |
+| class      | 定义一个类。                                                 |
+| class_name | 将脚本定义为具有指定名称的全局可访问类。                     |
+| extends    | 定义要使用当前类扩展的类。                                   |
+| is         | 测试变量是扩展了给定的类，还是具有给定的内置类型。           |
+| in         | 测试值是否在字符串、列表、范围、字典或节点中。当与 `for` 一起使用时，它会遍历它们，而不是测试。 |
+| as         | 如果可能，请将值强制转换为给定类型。                         |
+| self       | 指当前类实例。                                               |
+| signal     | 定义一个信号。                                               |
+| func       | 定义一个函数。                                               |
+| static     | 定义一个静态函数。不允许使用静态成员变量。                   |
+| const      | 定义一个常量。                                               |
+| enum       | 定义一个枚举。                                               |
+| var        | 定义一个变量。                                               |
+| breakpoint | 调试器断点的编辑器帮助程序。与在槽中单击创建的断点不同，“断点”存储在脚本本身中。这使得在使用版本控制时，它在不同的机器之间保持不变。 |
+| preload    | 预加载类或变量。参见 [Classes as resources](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#classes-as-resources). |
+| await      | 等待信号或协同活动结束。参见 [Awaiting for signals or coroutines](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#awaiting-for-signals-or-coroutines). |
+| yield      | 以前用于协程。保留为转换的关键字。                           |
+| assert     | 断言一个条件，在失败时记录错误。在非调试生成中忽略。参见 [Assert keyword](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#assert-keyword). |
+| void       | 用于表示函数不返回任何值。                                   |
+| PI         | PI 常数。                                                    |
+| TAU        | TAU 常数。                                                   |
+| INF        | 无穷大常数。用于比较和计算结果。                             |
+| NAN        | NAN（不是数字）常数。用作不可能的计算结果。                  |
+
+###### 运算符
+
+以下是支持的运算符及其优先级的列表。
+
+| **运算符**                                                   | **描述**                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `(` `)`                                                      | 分组（最高优先级）括号并不是真正的运算符，但允许您显式指定操作的优先级。 |
+| `x[index]`                                                   | 订阅                                                         |
+| `x.attribute`                                                | 属性引用                                                     |
+| `foo()`                                                      | 函数调用                                                     |
+| `await x`                                                    | [等待信号或协程](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#awaiting-for-signals-or-coroutines) |
+| `x is Node`                                                  | 类型检查<br />也可以参考 [is_instance_of()](https://docs.godotengine.org/en/stable/classes/class_%40gdscript.html#class-gdscript-method-is-instance-of) 函数. |
+| `x ** y`                                                     | 幂次<br />`x` 自乘 `y` 次，和调用 [pow()](https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#class-globalscope-method-pow) 函数类似。<br />**注意：** 在 GDScript 中，`**` 运算符是 [左结合的](https://en.wikipedia.org/wiki/Operator_associativity)。请参阅表后的详细说明。 |
+| `~x`                                                         | 按位取反                                                     |
+| `+x`<br/>`-x`                                                | 原数 / 负数                                                  |
+| `x * y`<br/>`x / y`<br/>`x % y`                              | 乘法 / 除法 / 取余<br />`%` 运算符还可以用于[格式化字符串](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_format_string.html#doc-gdscript-printf).<br />**注意：**这些运算符具有与 C++ 相同的行为，这对于来自 Python、JavaScript 等的用户来说可能是出乎意料的。请参阅表后的详细说明。 |
+| `x + y`<br/>`x - y`                                          | 加法（或连接）/减法                                          |
+| `x << y`<br/>`x >> y`                                        | 位移                                                         |
+| `x & y`                                                      | 按位与                                                       |
+| `x ^ y`                                                      | 按位异或                                                     |
+| `x | y`                                                      | 按位或                                                       |
+| `x == y`<br/>`x != y`<br/>`x < y`<br/>`x > y`<br/>`x <= y`<br/>`x >= y` | 比较<br />请参阅表后的详细说明。                             |
+| `x in y`<br/>`x not in y`                                    | 包含检查<br />`in` 也与 [for](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#for) 一起使用关键字作为语法的一部分。 |
+| `not x`<br/>`!x`                                             | 布尔“非”与它的[不建议的](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html#boolean-operators)别名 |
+| `x and y`<br/>`x && y`                                       | 布尔“和”与它的[不建议的](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html#boolean-operators)别名 |
+| `x or y`<br/>`x || y`                                        | 布尔“或”与它的[不建议的](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html#boolean-operators)别名 |
+| `true_expr if cond else false_expr`                          | 三元 if/else                                                 |
+| `x as Node`                                                  | [类型转换](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#casting) |
+| `x = y`<br/>`x += y`<br/>`x -= y`<br/>`x *= y`<br/>`x /= y`<br/>`x **= y`<br/>`x %= y`<br/>`x &= y`<br/>`x |= y`<br/>`x ^= y`<br/>`x <<= y`<br/>`x >>= y | 赋值（最低优先级）<br />不能在表达式中使用赋值运算符。       |
+
+> **注意：**
+>
+> 某些操作员的行为可能与您预期的不同：
+>
+> 1. 如果 `/` 运算符的两个操作数都是 int，则执行整数除法而不是分数除法。例如 `5 / 2 == 2`，而不是 `2.5`。如果不需要，请至少使用一个浮点文字（`x / 2.0`）、强制转换（`float(x) / y`）或乘以 `1.0`（`x * 1.0 / y`）。
+> 2. `%` 运算符仅适用于 int，对于 float，请使用 `fmod()` 函数。
+> 3. 对于负值，`%` 运算符和 `fmod()` 使用截断，而不是向负无穷大取整。这意味着余数有一个符号。如果你需要数学意义上的余数，请使用 posmod() 和 fposmod() 函数。
+> 4. `**` 运算符保持关联。这意味着 `2 ** 2 ** 3`等于 `(2 ** 2) ** 3`。使用括号明确指定所需的优先级，例如 `2 ** (2 ** 3)`。
+> 5. `==` 和 `!=` 运算符有时允许您比较不同类型的值（例如，`1 == 1.0` 为 true），但在其他情况下，它可能会导致运行时错误。如果您不确定操作数的类型，可以安全地使用 is_same() 函数（但请注意，它对类型和引用更严格）。若要比较浮点值，请改用 is_equal_approx() 和 is_zero_approx() 函数。
+
+###### 字面量
+
+| **字面量**         | **类型**                                                     |
+| ------------------ | ------------------------------------------------------------ |
+| `45`               | 十进制整数                                                   |
+| `0x8f51`           | 十六进制整数                                                 |
+| `0b101010`         | 二进制整数                                                   |
+| `3.14`, `58.1e-10` | 浮点数（实数）                                               |
+| `"Hello"`, `'Hi'`  | 字符串                                                       |
+| `"""Hello"""`      | 多行字符串                                                   |
+| `&"name"`          | [StringName](https://docs.godotengine.org/en/stable/classes/class_stringname.html#class-stringname) |
+| `^"Node/Label"`    | [NodePath](https://docs.godotengine.org/en/stable/classes/class_nodepath.html#class-nodepath) |
+| `$NodePath`        | `get_node("NodePath")` 的速写                                |
+| `%UniqueNode`      | `get_node("%UniqueNode")` 的速写                             |
+
+整数和浮点数可以用 `_` 分隔，以使它们更具可读性。以下写数字的方法都是有效的：
+
+```python
+12_345_678  # Equal to 12345678.
+3.141_592_7  # Equal to 3.1415927.
+0x8080_0000_ffff  # Equal to 0x80800000ffff.
+0b11_00_11_00  # Equal to 0b11001100.
+```
+
+###### 注解
+
+GDScript 中有一些特殊的标记，它们的作用类似于关键字，但不是，而是注解。每个注解都以 `@` 字符开头，并由一个名称指定。每个注释的详细描述和示例可以在 GDScript 类引用中找到。
+
+注解会影响外部工具处理脚本的方式，通常不会更改行为。
+
+例如，您可以使用它将值导出到编辑器：
+
+```python
+@export_range(1, 100, 1, "or_greater")
+var ranged_var: int = 50
+```
+
+有关导出属性的更多信息，请阅读 GDScript 导出文章。
+
+任何与所需参数类型兼容的常量表达式都可以作为注解参数值传递：
+
+```python
+const MAX_SPEED = 120.0
+
+@export_range(0.0, 0.5 * MAX_SPEED)
+var initial_speed: float = 0.25 * MAX_SPEED
+```
+
+可以每行指定一个注解，也可以在同一行中指定所有注解。它们影响下一个不是注解的语句。注解可以在括号之间发送参数，并用逗号分隔。
+
+两者相同：
+
+```python
+@annotation_a
+@annotation_b
+var variable
+
+@annotation_a @annotation_b var variable
+```
+
+###### *@onready* 注解
+
+使用节点时，通常希望在变量中保留对场景部分的引用。由于只有在进入活动场景树时才保证配置场景，因此只有在调用 `Node._ready()` 时才能获得子节点。
+
+```python
+var my_label
+
+
+func _ready():
+    my_label = get_node("MyLabel")
+```
+
+这可能会有点麻烦，尤其是当节点和外部引用堆积时。为此，GDScript 有 `@onready` 注解，它将成员变量的初始化推迟到调用 `_ready()`。它可以用一行代码替换上述代码：
+
+```python
+@onready var my_label = get_node("MyLabel")
+```
+
+> **警告：**
+>
+> 将 `@onready` 和任何 `@export` 注解应用于同一变量都不会像您预期的那样起作用。`@onready` 注解将导致在 `@export` 生效后设置默认值，并将覆盖它：
+>
+> ```python
+> @export var a = "init_value_a"
+> @onready @export var b = "init_value_b"
+> 
+> func _init():
+>     prints(a, b) # init_value_a <null>
+> 
+> func _notification(what):
+>     if what == NOTIFICATION_SCENE_INSTANTIATED:
+>         prints(a, b) # exported_value_a exported_value_b
+> 
+> func _ready():
+>     prints(a, b) # exported_value_a init_value_b
+> ```
+>
+> 因此，会生成 `ONREADY_WITH_EXPORT` 警告，默认情况下会将其视为错误。我们不建议禁用或忽略它。
+
+###### 注释
+
+从 `#` 到行尾的任何内容都将被忽略，并被视为注释。
+
+```python
+# This is a comment.
+```
+
+###### 续行
+
+GDScript 中的一行代码可以使用反斜杠（`\`）在下一行继续。在一行的末尾加一个，下一行的代码就会像反斜杠所在的地方一样。下面是一个例子：
+
+```python
+var a = 1 + \
+2
+```
+
+一行可以像这样连续多次：
+
+```python
+var a = 1 + \
+4 + \
+10 + \
+4
+```
+
+###### 内置类型
+
+内置类型是堆栈分配的。它们作为值传递。这意味着在每次赋值或将它们作为参数传递给函数时都会创建一个副本。唯一的例外是 `Array` 和 `Dictionary`，它们是通过引用传递的，因此它们是共享的。（`PackedByteArray` 等压缩数组仍作为值传递。）
+
+###### 基本内置类型
+
+GDScript 中的一个变量可以分配给几个内置类型。
+
+**null**
+
+`null` 是一个空数据类型，它不包含任何信息，并且不能分配任何其他值。
+
+**[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html#class-bool)**
+
+布尔值的缩写，它只能包含 `true` 或 `false`。
+
+**[int](https://docs.godotengine.org/en/stable/classes/class_int.html#class-int)**
+
+整数的缩写，它存储整数（正数和负数）。它存储为 64 位值，相当于 C++ 中的 “int64_t”。
+
+**[float](https://docs.godotengine.org/en/stable/classes/class_float.html#class-float)**
+
+使用浮点值存储实数，包括小数。它存储为 64 位值，相当于 C++ 中的 “double”。注意：目前，Vector2、Vector3 和 PackedFloat32Array 等数据结构存储 32 位单精度“浮点”值。
+
+**[String](https://docs.godotengine.org/en/stable/classes/class_string.html#class-string)**
+
+Unicode 格式的字符序列。字符串可以包含以下转义序列：
+
+| **转义序列** | **扩展为**                                              |
+| ------------ | ------------------------------------------------------- |
+| `\n`         | 新行（换行）                                            |
+| `\t`         | 水平制表符                                              |
+| `\r`         | 回车                                                    |
+| `\a`         | 警报（哔哔声/铃声）                                     |
+| `\b`         | 退格                                                    |
+| `\f`         | Formfeed 分页符                                         |
+| `\v`         | 垂直制表符                                              |
+| `\"`         | 双引号                                                  |
+| `\'`         | 单引号                                                  |
+| `\\`         | 反斜线                                                  |
+| `\uXXXX`     | UTF-16 Unicode 代码点 `XXXX` (十六进制, 大小写不敏感)   |
+| `\UXXXXXX`   | UTF-32 Unicode 代码点 `XXXXXX` (十六进制, 大小写不敏感) |
+
+有两种方法可以表示 0xFFFF 以上的转义 Unicode 字符：
+
+- 作为 UTF-16 代理对 `\uXXXX\uXXXX`。
+- 作为单个 UTF-32 码点 `\UXXXXXX`。
+
+此外，在字符串中使用 `\` 后跟换行符可以在下一行继续使用，而无需在字符串中插入换行符。
+
+GDScript 还支持格式化字符串。
+
+**[StringName](https://docs.godotengine.org/en/stable/classes/class_stringname.html#class-stringname)**
+
+一个不可变的字符串，每个名称只允许有一个实例。它们的创建速度较慢，并且可能导致在多线程时等待锁定。作为交换，它们的比较速度非常快，这使它们成为字典关键字的好候选者。
+
+**[NodePath](https://docs.godotengine.org/en/stable/classes/class_nodepath.html#class-nodepath)**
+
+节点或节点属性的预解析路径。它可以很容易地分配给字符串，也可以从字符串中分配。它们对于与树交互以获得节点或影响属性（如 Tweens）非常有用。
+
+###### 矢量内置类型
+
+**[Vector2](https://docs.godotengine.org/en/stable/classes/class_vector2.html#class-vector2)**
+
+包含 `x` 和 `y` 字段的二维矢量类型。也可以作为数组访问。
+
+**[Vector2i](https://docs.godotengine.org/en/stable/classes/class_vector2i.html#class-vector2i)**
+
+与 Vector2 相同，但组件是整数。用于在二维网格中表示项目。
+
+**[Rect2](https://docs.godotengine.org/en/stable/classes/class_rect2.html#class-rect2)**
+
+2D 矩形类型，包含两个矢量字段：`position` 和 `size`。还包含一个 `end` 字段，该字段为 `position + size`。
+
+**[Vector3](https://docs.godotengine.org/en/stable/classes/class_vector3.html#class-vector3)**
+
+包含 `x`、`y` 和 `z` 字段的三维矢量类型。这也可以作为数组访问。
+
+**[Vector3i](https://docs.godotengine.org/en/stable/classes/class_vector3i.html#class-vector3i)**
+
+与 Vector3 相同，但组件是整数。可用于为三维网格中的项目编制索引。
+
+**[Transform2D](https://docs.godotengine.org/en/stable/classes/class_transform2d.html#class-transform2d)**
+
+用于 2D 变换的 3×2 矩阵。
+
+**[Plane](https://docs.godotengine.org/en/stable/classes/class_plane.html#class-plane)**
+
+标准化形式的 3D 平面类型，包含 `normal` 向量场和 `d` 标量距离。
+
+**[Quaternion](https://docs.godotengine.org/en/stable/classes/class_quaternion.html#class-quaternion)**
+
+四元数是一种用于表示三维旋转的数据类型。它对于插值旋转很有用。
+
+**[AABB](https://docs.godotengine.org/en/stable/classes/class_aabb.html#class-aabb)**
+
+轴对齐边界框（或三维框）包含两个矢量字段：`position` 和 `size`。还包含一个 `end` 字段，该字段为 `position + size`。
+
+**[Basis](https://docs.godotengine.org/en/stable/classes/class_basis.html#class-basis)**
+
+用于三维旋转和缩放的 3x3 矩阵。它包含 3 个矢量字段（`x`、`y` 和 `z`），也可以作为 3D 矢量数组访问。
+
+**[Transform3D](https://docs.godotengine.org/en/stable/classes/class_transform3d.html#class-transform3d)**
+
+3D 变换包含一个 Basis 字段 `basis` 和一个 Vector3 字段 `origin`。
+
+###### 引擎内建类型
+
+**[Color](https://docs.godotengine.org/en/stable/classes/class_color.html#class-color)**
+
+颜色数据类型包含 `r`、`g`、`b` 和 `a` 字段。它也可以作为 `h`、`s` 和 `v` 访问色调/饱和度/值。
+
+**[RID](https://docs.godotengine.org/en/stable/classes/class_rid.html#class-rid)**
+
+资源 ID（RID）。服务器使用通用 RID 来引用不透明数据。
+
+**[Object](https://docs.godotengine.org/en/stable/classes/class_object.html#class-object)**
+
+任何非内置类型的基类。
+
+###### 容器内建类型
+
+**[Array](https://docs.godotengine.org/en/stable/classes/class_array.html#class-array)**
+
+任意对象类型的通用序列，包括其他数组或字典（见下文）。数组可以动态调整大小。数组从索引 `0` 开始进行索引。负指数从末尾开始计数。
+
+```python
+var arr = []
+arr = [1, 2, 3]
+var b = arr[1] # This is 2.
+var c = arr[arr.size() - 1] # This is 3.
+var d = arr[-1] # Same as the previous line, but shorter.
+arr[0] = "Hi!" # Replacing value 1 with "Hi!".
+arr.append(4) # Array is now ["Hi!", 2, 3, 4].
+```
+
+为了提高速度，GDScript 数组在内存中线性分配。然而，大型数组（超过数万个元素）可能会导致内存碎片。如果这是一个问题，那么可以使用特殊类型的数组。这些只接受单一的数据类型。它们避免了内存碎片，使用更少的内存，但是原子数组，运行速度往往比通用数组慢。因此，建议仅将它们用于大型数据集：
+
+- [PackedByteArray](https://docs.godotengine.org/en/stable/classes/class_packedbytearray.html#class-packedbytearray): 一个字节（0 到 255 的整数）数组。
+- [PackedInt32Array](https://docs.godotengine.org/en/stable/classes/class_packedint32array.html#class-packedint32array): 一个 32 位整数数组。
+- [PackedInt64Array](https://docs.godotengine.org/en/stable/classes/class_packedint64array.html#class-packedint64array): 一个 64 位整数数组。
+- [PackedFloat32Array](https://docs.godotengine.org/en/stable/classes/class_packedfloat32array.html#class-packedfloat32array): 一个 32 位浮点数数组。
+- [PackedFloat64Array](https://docs.godotengine.org/en/stable/classes/class_packedfloat64array.html#class-packedfloat64array): 一个 64 位浮点数数组。
+- [PackedStringArray](https://docs.godotengine.org/en/stable/classes/class_packedstringarray.html#class-packedstringarray): 一个字符串数组。
+- [PackedVector2Array](https://docs.godotengine.org/en/stable/classes/class_packedvector2array.html#class-packedvector2array): 一个 [Vector2](https://docs.godotengine.org/en/stable/classes/class_vector2.html#class-vector2) 对象数组。
+- [PackedVector3Array](https://docs.godotengine.org/en/stable/classes/class_packedvector3array.html#class-packedvector3array): 一个 [Vector3](https://docs.godotengine.org/en/stable/classes/class_vector3.html#class-vector3) 对象数组。
+- [PackedColorArray](https://docs.godotengine.org/en/stable/classes/class_packedcolorarray.html#class-packedcolorarray): 一个 [Color](https://docs.godotengine.org/en/stable/classes/class_color.html#class-color) 对象数组。
+
+**[Dictionary](https://docs.godotengine.org/en/stable/classes/class_dictionary.html#class-dictionary)**
+
+包含由唯一键引用的值的关联容器。
+
+```python
+var d = {4: 5, "A key": "A value", 28: [1, 2, 3]}
+d["Hi!"] = 0
+d = {
+    22: "value",
+    "some_key": 2,
+    "other_key": [2, 3, 4],
+    "more_key": "Hello"
+}
+```
+
+还支持 Lua 样式表语法。Lua 样式使用 `=` 而不是 `:` 并且不使用引号来标记字符串键（这样写起来会稍微少一些）。但是，以这种形式编写的键不能以数字开头（就像任何 GDScript 标识符一样）。
+
+```python
+var d = {
+    test22 = "value",
+    some_key = 2,
+    other_key = [2, 3, 4],
+    more_key = "Hello"
+}
+```
+
+要将键添加到现有字典中，请像访问现有键一样对其进行访问并分配：
+
+```python
+var d = {} # Create an empty Dictionary.
+d.waiting = 14 # Add String "waiting" as a key and assign the value 14 to it.
+d[4] = "hello" # Add integer 4 as a key and assign the String "hello" as its value.
+d["Godot"] = 3.01 # Add String "Godot" as a key and assign the value 3.01 to it.
+
+var test = 4
+# Prints "hello" by indexing the dictionary with a dynamic key.
+# This is not the same as `d.test`. The bracket syntax equivalent to
+# `d.test` is `d["test"]`.
+print(d[test])
+```
+
+> **注意：**
+>
+> 中括号语法可用于访问任何对象的属性，而不仅仅是 Dictionaries。请记住，在尝试索引不存在的属性时，它会导致脚本错误。要避免这种情况，请改用 Object.get() 和 Object.set() 方法。
+
+**[Signal](https://docs.godotengine.org/en/stable/classes/class_signal.html#class-signal)**
+
+信号是一个对象可以向想要收听它的人发出的消息。信号类型可以用于传递发射器。
+
+通过从实际对象中获取信号，例如 `$Button.button_p`，可以更好地使用信号。
+
+**[Callable](https://docs.godotengine.org/en/stable/classes/class_callable.html#class-callable)**
+
+包含一个对象和一个函数，用于将函数作为值传递（例如，连接到信号时）。
+
+获取一个方法作为成员将返回一个可调用的。`var x = $Sprite2D.rotate` 会将 `x` 的值设置为可调用，并将 `$Sprite2D` 作为对象和 `rotate` 作为方法。
+
+您可以使用 `call` 方法调用它：`x.call(PI)`。
+
+###### 数据
+
+###### 变量
+
+变量可以作为类成员存在，也可以作为函数的局部变量存在。它们是用 `var` 关键字创建的，并且可以在初始化时为其指定一个值（可选）。
+
+```python
+var a # Data type is 'null' by default.
+var b = 5
+var c = 3.8
+var d = b + c # Variables are always initialized in order.
+```
+
+变量可以选择具有类型规范。当指定类型时，变量将被强制始终具有相同的类型，并且尝试分配不兼容的值将引发错误。
+
+类型在变量声明中使用 `:`（冒号）符号在变量名称后指定，后跟类型。
+
+```python
+var my_vector2: Vector2
+var my_node: Node = Sprite2D.new()
+```
+
+如果变量在声明中初始化，则可以推断类型，因此可以省略类型名称：
+
+```python
+var my_vector2 := Vector2() # 'my_vector2' is of type 'Vector2'.
+var my_node := Sprite2D.new() # 'my_node' is of type 'Sprite2D'.
+```
+
+只有当赋值具有已定义的类型时，才可能进行类型推断，否则会引发错误。
+
+有效类型为：
+
+- 内置类型（Array、Vector2、int、String 等）。
+- 引擎类（Node、Resource、Reference 等）。
+- 常量名称，如果它们包含脚本资源（如果您声明 `const MyScript = preload("res://my_script.gd")` 则为 `MyScript`）。
+- 同一脚本中的其他类，尊重作用域（如果在同一作用域中的 `class InnerClass` 内部声明了 `class NestedClass`，则为 `InnerClass.NestedClass`）。
+- 使用 `class_name` 关键字声明的脚本类。
+- 自动加载注册为 singleton。
+
+> **注意：**
+>
+> 虽然 `Variant` 是一个有效的类型规范，但它不是一个实际的类型。它只意味着没有设置类型，相当于根本没有静态类型。因此，`Variant` 默认情况下不允许推断，因为这很可能是一个错误。
+>
+> 通过在项目设置中更改此检查，可以关闭此检查，也可以将其设为警告。有关详细信息，请参阅 GDScript 警告系统。
+
+###### 强制转换
+
+分配给类型化变量的值必须具有兼容的类型。如果需要强制值为特定类型，特别是对于对象类型，可以使用强制转换运算符 `as`。
+
+如果值属于同一类型或强制转换类型的子类型，则对象类型之间的强制转换将产生同一对象。
+
+```python
+var my_node2D: Node2D
+my_node2D = $Sprite2D as Node2D # Works since Sprite2D is a subtype of Node2D.
+```
+
+如果该值不是子类型，则强制转换操作将导致 `null` 值。
+
+```python
+var my_node2D: Node2D
+my_node2D = $Button as Node2D # Results in 'null' since a Button is not a subtype of Node2D.
+```
+
+对于内置类型，如果可能，它们将被强制转换，否则引擎将引发错误。
+
+```python
+var my_int: int
+my_int = "123" as int # The string can be converted to int.
+my_int = Vector2() as int # A Vector2 can't be converted to int, this will cause an error.
+```
+
+在与场景树交互时，投射对于具有更好的类型安全变量也很有用：
+
+```python
+# Will infer the variable to be of type Sprite2D.
+var my_sprite := $Character as Sprite2D
+
+# Will fail if $AnimPlayer is not an AnimationPlayer, even if it has the method 'play()'.
+($AnimPlayer as AnimationPlayer).play("walk")
+```
+
+###### 常量
+
+常量是在游戏运行时无法更改的值。它们的值必须在编译时已知。使用 `const` 关键字可以为常量值命名。在常量声明后试图将值赋给它会导致错误。
+
+当一个值不打算更改时，我们建议使用常量。
+
+```python
+const A = 5
+const B = Vector2(20, 20)
+const C = 10 + 20 # Constant expression.
+const D = Vector2(20, 30).x # Constant expression: 20.
+const E = [1, 2, 3, 4][0] # Constant expression: 1.
+const F = sin(20) # 'sin()' can be used in constant expressions.
+const G = x + 20 # Invalid; this is not a constant expression!
+const H = A + 20 # Constant expression: 25 (`A` is a constant).
+```
+
+尽管常量的类型是根据赋值推断的，但也可以添加显式类型规范：
+
+```python
+const A: int = 5
+const B: Vector2 = Vector2()
+```
+
+指定不兼容类型的值将引发错误。
+
+您还可以在函数中创建常量，这对于命名局部魔术值非常有用。
+
+> **注意：**
+>
+> 由于对象、数组和字典是通过引用传递的，所以常量是“平面”的。这意味着，如果您声明了一个常量数组或字典，之后仍然可以对其进行修改。但是，不能用其他值重新分配它们。
+
+###### 枚举
+
+枚举基本上是常量的简写，如果您想将连续整数分配给某个常量，它非常有用。
+
+```python
+enum {TILE_BRICK, TILE_FLOOR, TILE_SPIKE, TILE_TELEPORT}
+
+# Is the same as:
+const TILE_BRICK = 0
+const TILE_FLOOR = 1
+const TILE_SPIKE = 2
+const TILE_TELEPORT = 3
+```
+
+如果将名称传递给枚举，它将把所有键放入该名称的常量 Dictionary 中。这意味着字典的所有常量方法也可以与命名枚举一起使用。
+
+> **重要：**
+>
+> 命名枚举中的键未注册为全局常量。它们应该以枚举的名称（`Name.KEY`）为前缀进行访问。
+
+```python
+enum State {STATE_IDLE, STATE_JUMP = 5, STATE_SHOOT}
+
+# Is the same as:
+const State = {STATE_IDLE = 0, STATE_JUMP = 5, STATE_SHOOT = 6}
+
+func _ready():
+    # Access values with Name.KEY, prints '5'
+    print(State.STATE_JUMP)
+    # Use constant dictionary functions
+    # prints '["STATE_IDLE", "STATE_JUMP", "STATE_SHOOT"]'
+    print(State.keys())
+```
+
+###### 函数
+
+函数总是属于一个类。变量查找的作用域优先级为：local → 类成员→ 全局。`self` 变量始终可用，并作为访问类成员的选项提供，但并不总是必需的（与 Python 不同，*不*应作为函数的第一个参数发送）。
+
+```python
+func my_function(a, b):
+    print(a)
+    print(b)
+    return a + b  # Return is optional; without it 'null' is returned.
+```
+
+函数可以在任意点 `return`。默认返回值为 `null`。
+
+如果一个函数只包含一行代码，那么它可以写在一行上：
+
+```python
+func square(a): return a * a
+
+func hello_world(): print("Hello World")
+
+func empty_function(): pass
+```
+
+函数还可以具有参数和返回值的类型规范。参数的类型可以以类似于变量的方式添加：
+
+```python
+func my_function(a: int, b: String):
+    pass
+```
+
+如果函数参数具有默认值，则可以推断类型：
+
+```python
+func my_function(int_arg := 42, String_arg := "string"):
+    pass
+```
+
+函数的返回类型可以在参数列表之后使用箭头标记（`->`）指定：
+
+```python
+func my_int_function() -> int:
+    return 0
+```
+
+具有返回类型的函数**必须**返回正确的值。将类型设置为 `void` 意味着函数不返回任何内容。Void 函数可以使用 `return` 关键字提前返回，但不能返回任何值。
+
+```python
+func void_function() -> void:
+    return # Can't return a value.
+```
+
+> **注意：**
+>
+> 非 void 函数必须**始终**返回一个值，因此如果您的代码具有分支语句（如 `if` / `else` 构造），则所有可能的路径都必须有一个返回。例如，如果在 `if` 块内部有一个 `return`，但在它之后没有，编辑器将引发一个错误，因为如果不执行该块，函数将没有有效的返回值。
+
+###### 引用函数
+
+就 Callable 对象而言，函数是第一级的项。按名称引用函数而不调用它将自动生成正确的可调用函数。这可以用于将函数作为参数传递。
+
+```python
+func map(arr: Array, function: Callable) -> Array:
+    var result = []
+    for item in arr:
+        result.push_back(function.call(item))
+    return result
+
+func add1(value: int) -> int:
+    return value + 1;
+
+func _ready() -> void:
+    var my_array = [1, 2, 3]
+    var plus_one = map(my_array, add1)
+    print(plus_one) # Prints [2, 3, 4].
+```
+
+> **注意：**
+>
+> **必须**使用 `call` 方法调用 Callable。不能直接使用 `()` 运算符。实现此行为是为了避免直接函数调用的性能问题。
+
+###### Lambda 函数
+
+Lambda 函数允许您声明不属于类的函数。相反，会创建一个 Callable，并将其直接分配给变量。这对于创建 Callable 以在不污染类作用域的情况下传递非常有用。
+
+```python
+var lambda = func(x): print(x)
+lambda.call(42) # Prints "42"
+```
+
+Lambda 函数可以出于调试目的进行命名：
+
+```python
+var lambda = func my_lambda(x):
+    print(x)
+```
+
+Lambda 函数捕捉本地环境。局部变量是按值传递的，因此如果在局部函数中发生更改，它们将不会在 lambda 中更新：
+
+```python
+var x = 42
+var my_lambda = func(): print(x)
+my_lambda.call() # Prints "42"
+x = "Hello"
+my_lambda.call() # Prints "42"
+```
+
+> **注意：**
+>
+> 外部作用域的值的行为类似于常量。因此，如果您声明了一个数组或字典，之后仍然可以对其进行修改。
+
+###### 静态函数
+
+函数可以声明为静态函数。当函数是静态的时，它不能访问实例成员变量或 `self`。这对于制作辅助函数库非常有用：
+
+```python
+static func sum2(a, b):
+    return a + b
+```
+
+Lambdas 不能声明为静态。
+
+###### 语句和控制流程
+
+语句是标准的，可以是赋值、函数调用、控制流结构等（见下文）。`;` 作为语句分隔符是完全可选的。
+
+###### 表达式
+
+表达式是运算符及其操作数的有序序列。表达式本身也可以是一个语句，尽管只有调用才可以用作语句，因为其他表达式没有副作用。
+
+表达式返回可以分配给有效目标的值。某个运算符的操作数可以是另一个表达式。赋值不是表达式，因此不会返回任何值。
+
+以下是一些表达式示例：
+
+```python
+2 + 2 # Binary operation.
+-5 # Unary operation.
+"okay" if x > 4 else "not okay" # Ternary operation.
+x # Identifier representing variable or constant.
+x.a # Attribute access.
+x[4] # Subscript access.
+x > 2 or x < 5 # Comparisons and logic operators.
+x == y + 2 # Equality test.
+do_something() # Function call.
+[1, 2, 3] # Array definition.
+{A = 1, B = 2} # Dictionary definition.
+preload("res://icon.png") # Preload builtin function.
+self # Reference to current instance.
+```
+
+标识符、属性和下标是有效的分配目标。其他表达式不能位于赋值的左侧。
+
+###### if/else/elif
+
+简单条件是通过使用 `if`/`else`/`elif` 语法创建的。条件周围的圆括号是允许的，但不是必需的。考虑到基于制表符的缩进的性质，可以使用 `elif` 而不是 `else`/`if`来保持缩进级别。
+
+```python
+if (expression):
+    statement(s)
+elif (expression):
+    statement(s)
+else:
+    statement(s)
+```
+
+简短的陈述可以与以下条件写在同一行：
+
+```python
+if 1 + 1 == 2: return 2 + 2
+else:
+    var x = 3 + 3
+    return x
+```
+
+有时，您可能需要根据布尔表达式指定不同的初始值。在这种情况下，三元 if 表达式派上了用场：
+
+```python
+var x = (value) if (expression) else (value)
+y += 3 if y < 10 else -1
+```
+
+三元 if 表达式可以嵌套以处理 2 种以上的情况。嵌套三元 if 表达式时，建议将完整的表达式包装在多行上，以保持可读性：
+
+```python
+var count = 0
+
+var fruit = (
+        "apple" if count == 2
+        else "pear" if count == 1
+        else "banana" if count == 0
+        else "orange"
+)
+print(fruit)  # banana
+
+# Alternative syntax with backslashes instead of parentheses (for multi-line expressions).
+# Less lines required, but harder to refactor.
+var fruit_alt = \
+        "apple" if count == 2 \
+        else "pear" if count == 1 \
+        else "banana" if count == 0 \
+        else "orange"
+print(fruit_alt)  # banana
+```
+
+您可能还希望检查某个值是否包含在某个内容中。您可以将 `if` 语句与 `in` 运算符结合使用来完成此操作：
+
+```python
+# Check if a letter is in a string.
+var text = "abc"
+if 'b' in text: print("The string contains b")
+
+# Check if a variable is contained within a node.
+if "varName" in get_parent(): print("varName is defined in parent!")
+```
+
+###### while
+
+简单循环是通过使用 `while` 语法创建的。循环可以使用 `break` 中断，也可以使用 `continue` 继续（跳到循环的下一次迭代，而不在当前迭代中执行任何进一步的代码）：
+
+```python
+while (expression):
+    statement(s)
+```
+
+###### for
+
+要在一个范围（如数组或表）中进行迭代，需要使用 *for* 循环。在数组上迭代时，当前数组元素存储在循环变量中。在字典上迭代时，*key* 存储在循环变量中。
+
+```python
+for x in [5, 7, 11]:
+    statement # Loop iterates 3 times with 'x' as 5, then 7 and finally 11.
+
+var dict = {"a": 0, "b": 1, "c": 2}
+for i in dict:
+    print(dict[i]) # Prints 0, then 1, then 2.
+
+for i in range(3):
+    statement # Similar to [0, 1, 2] but does not allocate an array.
+
+for i in range(1, 3):
+    statement # Similar to [1, 2] but does not allocate an array.
+
+for i in range(2, 8, 2):
+    statement # Similar to [2, 4, 6] but does not allocate an array.
+
+for i in range(8, 2, -2):
+    statement # Similar to [8, 6, 4] but does not allocate an array.
+
+for c in "Hello":
+    print(c) # Iterate through all characters in a String, print every letter on new line.
+
+for i in 3:
+    statement # Similar to range(3).
+
+for i in 2.2:
+    statement # Similar to range(ceil(2.2)).
+```
+
+如果您想在数组迭代时为其赋值，最好在使用 `for i in array.size()`。
+
+```python
+for i in array.size():
+        array[i] = "Hello World"
+```
+
+循环变量是 for 循环的本地变量，分配给它不会更改数组上的值。通过引用传递的对象（如节点）仍然可以通过调用循环变量上的方法进行操作。
+
+```python
+for string in string_array:
+    string = "Hello World" # This has no effect
+
+for node in node_array:
+    node.add_to_group("Cool_Group") # This has an effect
+```
+
+###### match
+
+`match` 语句用于分支程序的执行。它相当于许多其他语言中的 `switch` 语句，但提供了一些附加功能。
+
+基本语法：
+
+```python
+match (expression):
+    [pattern](s):
+        [block]
+    [pattern](s):
+        [block]
+    [pattern](s):
+        [block]
+```
+
+> **警告：**
+> `match` 比 `==` 运算符更严格。例如，`1` 将与 `1.0` **不**匹配。唯一的例外是 `String` 与 `StringName` 的匹配：例如，字符串 `"hello"` 被认为等于StringName `&"hello"`。
+
+**针对熟悉 switch 语句的人员的速成课程：**
+
+1. 用 `match` 更换 `switch`。
+2. 去除 `case`。
+3. 去除任何 `break`。
+4. 将 `default` 更改为单个下划线。
+
+**控制流程：**
+
+图案从上到下是匹配的。如果模式匹配，则将执行第一个相应的块。之后，在 `match` 语句下面继续执行。
+
+> **注意：**
+>
+> 在 Godot 4.0 中删除了 3.x 中支持的 `match` 中的特殊 `continue` 行为。
+
+有 6 种模式类型：
+
+- **常量模式**
+  常量基本类型，如数字和字符串：
+
+  ```python
+  match x:
+      1:
+          print("We are number one!")
+      2:
+          print("Two are better than one!")
+      "test":
+          print("Oh snap! It's a string!")
+  ```
+
+- **变量模式**
+  匹配变量/枚举的内容：
+
+  ```python
+  match typeof(x):
+      TYPE_FLOAT:
+          print("float")
+      TYPE_STRING:
+          print("text")
+      TYPE_ARRAY:
+          print("array")
+  ```
+
+- **通配符模式**
+  这种模式匹配所有内容。它被写成一个下划线。
+  它可以在其他语言的 `switch` 语句中用作 `default` 的等价物：
+
+  ```python
+  match x:
+      1:
+          print("It's one!")
+      2:
+          print("It's one times two!")
+      _:
+          print("It's not 1 or 2. I don't care to be honest.")
+  ```
+
+- **绑定模式**
+  绑定模式引入了一个新变量。与通配符模式一样，它匹配所有内容，并为该值命名。它在数组和字典模式中特别有用：
+
+  ```python
+  match x:
+      1:
+          print("It's one!")
+      2:
+          print("It's one times two!")
+      var new_var:
+          print("It's not 1 or 2, it's ", new_var)
+  ```
+
+- **数组模式**
+  匹配数组。阵列模式的每个元素本身就是一个模式，因此可以嵌套它们。
+  首先测试数组的长度，它必须与模式大小相同，否则模式不匹配。
+  **开放式数组**：通过使用最后一个子模式 `...` 可以使匹配数组大于模式。
+  每个子模式都必须用逗号分隔。
+
+  ```python
+  match x:
+      []:
+          print("Empty array")
+      [1, 3, "test", null]:
+          print("Very specific array")
+      [var start, _, "test"]:
+          print("First element is ", start, ", and the last is \"test\"")
+      [42, ..]:
+          print("Open ended array")
+  ```
+
+- **字典模式**
+  工作方式与数组模式相同。每个键都必须是一个不变的模式。
+  首先测试字典的大小，它必须与模式的大小相同，否则模式不匹配。
+  开放式字典：通过使用最后一个子模式 `...` 可以使匹配字典大于模式。
+  每个子模式都必须用逗号分隔。
+  如果没有指定值，则只检查键的存在性。
+  值模式与键模式用一个 `:` 分隔开。
+
+  ```python
+  match x:
+      {}:
+          print("Empty dict")
+      {"name": "Dennis"}:
+          print("The name is Dennis")
+      {"name": "Dennis", "age": var age}:
+          print("Dennis is ", age, " years old.")
+      {"name", "age"}:
+          print("Has a name and an age, but it's not Dennis :(")
+      {"key": "godotisawesome", ..}:
+          print("I only checked for one entry and ignored the rest")
+  ```
+
+- **多种模式**
+  也可以指定多个用逗号分隔的模式。这些模式中不允许有任何绑定。
+
+  ```python
+  match x:
+      1, 2, 3:
+          print("It's 1 - 3")
+      "Sword", "Splash potion", "Fist":
+          print("Yep, you've taken damage")
+  ```
+
+###### 类
+
+默认情况下，所有脚本文件都是未命名的类。在这种情况下，只能使用文件的路径引用它们，使用相对路径或绝对路径。例如，如果将脚本文件命名为 `character.gd`：
+
+```python
+# Inherit from 'character.gd'.
+
+extends "res://path/to/character.gd"
+
+# Load character.gd and create a new node instance from it.
+
+var Character = load("res://path/to/character.gd")
+var character_node = Character.new()
+```
+
+###### 注册命名类
+
+您可以为类指定一个名称，以便在 Godot 的编辑器中将其注册为新类型。为此，您可以使用 `class_name` 关键字。您可以选择将 `@icon` 注解与图像的路径一起使用，以将其用作图标。然后，您的类将在编辑器中显示其新图标：
+
+```python
+# item.gd
+
+@icon("res://interface/icons/item.png")
+class_name Item
+extends Node
+```
+
+下面是一个类文件示例：
+
+```python
+# Saved as a file named 'character.gd'.
+
+class_name Character
+
+
+var health = 5
+
+
+func print_health():
+    print(health)
+
+
+func print_this_script_three_times():
+    print(get_script())
+    print(ResourceLoader.load("res://character.gd"))
+    print(Character)
+```
+
+如果您也想使用 `extends`，可以将两者保持在同一行：
+
+```python
+class_name MyNode extends Node
+```
+
+> **注意：**
+>
+> Godot 的类语法是紧凑的：它只能包含成员变量或函数。可以使用静态函数，但不能使用静态成员变量。同样，每次创建实例时，引擎都会初始化变量，其中包括数组和字典。这符合线程安全的精神，因为脚本可以在用户不知情的情况下在单独的线程中初始化。
+
+###### 继承
+
+类（存储为文件）可以继承自：
+
+- 一个全局类。
+- 另一个类文件。
+- 另一个类文件中的内部类。
+
+不允许多重继承。
+
+继承使用 `extends` 关键字：
+
+```python
+# Inherit/extend a globally available class.
+extends SomeClass
+
+# Inherit/extend a named class file.
+extends "somefile.gd"
+
+# Inherit/extend an inner class in another file.
+extends "somefile.gd".SomeInnerClass
+```
+
+> **注意：**
+>
+> 如果没有明确定义继承，则类将默认为继承 RefCounted。
+
+要检查给定实例是否继承自给定类，可以使用 `is` 关键字：
+
+```python
+# Cache the enemy class.
+const Enemy = preload("enemy.gd")
+
+# [...]
+
+# Use 'is' to check inheritance.
+if entity is Enemy:
+    entity.apply_damage()
+```
+
+要调用*超类*（即当前类中 `extend` 的类）中的函数，请使用 `super` 关键字：
+
+```python
+super(args)
+```
+
+这特别有用，因为扩展类中的函数会替换其超类中同名的函数。如果你仍然想给他们打电话，你可以使用 `super`：
+
+```python
+func some_func(x):
+    super(x) # Calls the same function on the super class.
+```
+
+如果需要从超类调用不同的函数，可以使用属性运算符指定函数名称：
+
+```python
+func overriding():
+    return 0 # This overrides the method in the base class.
+
+func dont_override():
+    return super.overriding() # This calls the method as defined in the base class.
+```
+
+###### 类构造函数
+
+在类实例化时调用的类构造函数名为 `_init`。如果你想调用基类构造函数，你也可以使用 `super` 语法。注意，每个类都有一个总是被调用的隐式构造函数（定义类变量的默认值）。`super` 用于调用显式构造函数：
+
+```python
+func _init(arg):
+   super("some_default", arg) # Call the custom base constructor.
+```
+
+这可以通过例子更好地解释。考虑这种情况：
+
+```python
+# state.gd (inherited class).
+var entity = null
+var message = null
+
+
+func _init(e=null):
+    entity = e
+
+
+func enter(m):
+    message = m
+
+
+# idle.gd (inheriting class).
+extends "state.gd"
+
+
+func _init(e=null, m=null):
+    super(e)
+    # Do something with 'e'.
+    message = m
+```
+
+这里需要记住以下几点：
+
+1. 如果继承类（`state.gd`）定义了一个带参数的 `_init` 构造函数（本例中为 `e`），那么继承类（`idle.gd`）也必须定义 `_init`，并从 `state.gd` 向 `_init` 传递适当的参数。
+
+2. `idle.gd` 可以具有与基类 `state.gd` 不同数量的参数。
+
+3. 在上面的例子中，传递给 `state.gd` 构造函数的 `e` 与传递给 `idle.gd` 的 `e` 相同。
+
+4. 如果 `idle.gd` 的 `_init` 构造函数接受 0 个参数，那么它仍然需要向 `state.gd` 基类传递一些值，即使它什么都不做。这使我们认识到，您也可以将表达式传递给基构造函数，而不仅仅是变量，例如：
+   ```python
+   # idle.gd
+   
+   func _init():
+       super(5)
+   ```
+
+###### 内部类
+
+类文件可以包含内部类。内部类是使用 `class` 关键字定义的。它们是使用 `ClassName.new()` 函数实例化的。
+
+```python
+# Inside a class file.
+
+# An inner class in this class file.
+class SomeInnerClass:
+    var a = 5
+
+
+    func print_value_of_a():
+        print(a)
+
+
+# This is the constructor of the class file's main class.
+func _init():
+    var c = SomeInnerClass.new()
+    c.print_value_of_a()
+```
+
+###### 作为资源的类
+
+存储为文件的类被视为资源。必须从磁盘加载它们才能在其他类中访问它们。这可以使用 `load` 或 `preload` 函数来完成（见下文）。加载的类资源的实例化是通过调用类对象上的 `new` 函数来完成的：
+
+```python
+# Load the class resource when calling load().
+var MyClass = load("myclass.gd")
+
+# Preload the class only once at compile time.
+const MyClass = preload("myclass.gd")
+
+
+func _init():
+    var a = MyClass.new()
+    a.some_function()
+```
+
+###### 导出
+
+> **注意：**
+>
+> 有关导出的文档已移至 GDScript 导出。
+
+###### 属性（setter 和 getter）
+
+有时，您希望类的成员变量不仅仅是保存数据，而是在其值发生变化时实际执行一些验证或计算。可能还希望以某种方式封装其访问。
+
+为此，GDScript 提供了一种特殊的语法来在变量声明后使用 `set` 和 `get` 关键字定义属性。然后，您可以定义一个代码块，该代码块将在访问或分配变量时执行。
+
+示例：
+
+```python
+var milliseconds: int = 0
+var seconds: int:
+    get:
+        return milliseconds / 1000
+    set(value):
+        milliseconds = value * 1000
+```
+
+使用变量的名称将其设置在自己的 setter 中，或将其获取在自己的 getter 中，将直接访问底层成员，因此它不会生成无限递归，并避免显式声明另一个变量：
+
+```python
+signal changed(new_value)
+var warns_when_changed = "some value":
+    get:
+        return warns_when_changed
+    set(value):
+        changed.emit(value)
+        warns_when_changed = value
+```
+
+如果不使用此支持成员变量，则不会创建它。
+
+> **注意：**
+>
+> 与以前 Godot 版本中的 `setget` 不同，属性 setter 和 getter **总是**被调用的，即使在同一个类中访问（带有或不带有 `self.` 前缀）也是如此。这使得行为一致。如果需要直接访问该值，请使用另一个变量进行直接访问，并使属性代码使用该名称。
+
+如果要从变量声明中分离代码，或者需要在多个属性中共享代码，可以使用不同的表示法来使用现有的类函数：
+
+```python
+var my_prop:
+    get = get_my_prop, set = set_my_prop
+```
+
+这也可以在同一行中完成。
+
+###### 工具模式
+
+默认情况下，脚本不在编辑器中运行，只能更改导出的属性。在某些情况下，希望它们在编辑器中运行（只要它们不执行游戏代码或手动避免执行）。为此，`@tool` 注解存在，并且必须放置在文件的顶部：
+
+```python
+@tool
+extends Button
+
+func _ready():
+    print("Hello")
+```
+
+有关详细信息，请参阅在编辑器中运行代码。
+
+> **警告：**
+>
+> 在工具脚本中使用 `queue_free()` 或 `free()` 释放节点时要小心（尤其是脚本的所有者本身）。当工具脚本在编辑器中运行代码时，滥用它们可能会导致编辑器崩溃。
+
+###### 内存管理
+
+Godot 实现引用计数以释放某些不再使用的实例，而不是垃圾收集器，或者需要纯手动管理。RefCounted 类的任何实例（或继承它的任何类，如 Resource）在不再使用时都将自动释放。对于任何不是 RefCounted 的类的实例（如 Node 或基本 Object 类型），它将保留在内存中，直到用 `free()`（或 `queue_free()` 用于 Nodes）删除为止。
+
+> **注意：**
+>
+> 如果一个节点通过 `free()` 或 `queue_free()` 被删除，它的所有子节点也将被递归删除。
+
+为了避免无法释放的引用循环，提供了一个 WeakRef 函数来创建弱引用，该函数允许访问对象而不阻止 RefCounted 释放。以下是一个示例：
+
+```python
+extends Node
+
+var my_file_ref
+
+func _ready():
+    var f = File.new()
+    my_file_ref = weakref(f)
+    # the File class inherits RefCounted, so it will be freed when not in use
+
+    # the WeakRef will not prevent f from being freed when other_node is finished
+    other_node.use_file(f)
+
+func _this_is_called_later():
+    var my_file = my_file_ref.get_ref()
+    if my_file:
+        my_file.close()
+```
+
+或者，当不使用引用时，可以使用 `is_instance_valid(instance)` 来检查对象是否已释放。
+
+###### 信号
+
+信号是一种从对象发出消息的工具，其他对象可以对此做出反应。要为类创建自定义信号，请使用 `signal` 关键字。
+
+```python
+extends Node
+
+
+# A signal named health_depleted.
+signal health_depleted
+```
+
+> **注意：**
+>
+> 信号是一种回调机制。它们还扮演观察者的角色，这是一种常见的编程模式。有关更多信息，请阅读《游戏编程模式》电子书中的《观察者》教程。
+
+您可以像连接 Button 或 RigidBody3D 等节点的内置信号一样，将这些信号连接到方法。
+
+在下面的示例中，我们将 `health_deleted` 信号从 `Character` 节点连接到 `Game` 节点。当 `Character` 节点发出信号时，游戏节点的 `_on_Character_health_deleted` 被调用：
+
+```python
+# game.gd
+
+func _ready():
+    var character_node = get_node('Character')
+    character_node.health_depleted.connect(_on_character_health_depleted)
+
+
+func _on_character_health_depleted():
+    get_tree().reload_current_scene()
+```
+
+可以随信号一起发出任意数量的参数。
+
+下面是一个有用的例子。假设我们希望屏幕上有一个生命条来通过动画对健康变化做出反应，但我们希望将用户界面与场景树中的播放器分开。
+
+在我们的 `character.gd` 脚本中，我们定义了一个 `health_changed` 信号，并使用 Signal.emit() 将其发射，然后从场景树上方的 `Game` 节点，使用 Signal.connect() 方法将其连接到 `Lifebar`：
+
+```python
+# character.gd
+
+...
+signal health_changed
+
+
+func take_damage(amount):
+    var old_health = health
+    health -= amount
+
+    # We emit the health_changed signal every time the
+    # character takes damage.
+    health_changed.emit(old_health, health)
+...
+```
+
+```python
+# lifebar.gd
+
+# Here, we define a function to use as a callback when the
+# character's health_changed signal is emitted.
+
+...
+func _on_Character_health_changed(old_value, new_value):
+    if old_value > new_value:
+        progress_bar.modulate = Color.RED
+    else:
+        progress_bar.modulate = Color.GREEN
+
+    # Imagine that `animate` is a user-defined function that animates the
+    # bar filling up or emptying itself.
+    progress_bar.animate(old_value, new_value)
+...
+```
+
+在 `Game` 节点中，我们获得 `Character` 和 `Lifebar` 节点，然后将发射信号的角色连接到接收器，在本例中为 `Lifebar` 节点。
+
+```python
+# game.gd
+
+func _ready():
+    var character_node = get_node('Character')
+    var lifebar_node = get_node('UserInterface/Lifebar')
+
+    character_node.health_changed.connect(lifebar_node._on_Character_health_changed)
+```
+
+这允许 `Lifebar` 对运行状况更改做出反应，而无需将其耦合到 `Character` 节点。
+
+您可以在信号定义后的括号中写入可选参数名称：
+
+```python
+# Defining a signal that forwards two arguments.
+signal health_changed(old_value, new_value)
+```
+
+这些参数显示在编辑器的节点驳接中，Godot 可以使用它们为您生成回调函数。但是，当您发出信号时，您仍然可以发出任意数量的参数；发出正确的值取决于您。
+
+GDScript 可以将值数组绑定到信号和方法之间的连接。当发出信号时，回调方法接收绑定值。这些绑定参数对于每个连接都是唯一的，并且值将保持不变。
+
+如果发出的信号本身无法访问所需的所有数据，则可以使用此值数组向连接添加额外的常量信息。
+
+在上面的例子的基础上，假设我们想在屏幕上显示每个角色受到的伤害的日志，就像 `Player1 took 22 damage.` 一样。`health_changed` 信号不会告诉我们受到伤害的角色的名字。因此，当我们将信号连接到游戏内控制台时，我们可以在 binds 数组参数中添加角色的名称：
+
+```python
+# game.gd
+
+func _ready():
+    var character_node = get_node('Character')
+    var battle_log_node = get_node('UserInterface/BattleLog')
+
+    character_node.health_changed.connect(battle_log_node._on_Character_health_changed, [character_node.name])
+```
+
+我们的 `BattleLog` 节点接收 binds 数组中的每个元素作为一个额外的参数：
+
+```python
+# battle_log.gd
+
+func _on_Character_health_changed(old_value, new_value, character_name):
+    if not new_value <= old_value:
+        return
+
+    var damage = old_value - new_value
+    label.text += character_name + " took " + str(damage) + " damage."
+```
+
+###### 等待信号或协程
+
+`await` 关键字可用于创建协程，这些协程等待信号发出后再继续执行。将 `await` 关键字与一个信号或对一个也是协程的函数的调用一起使用，将立即将控件返回给调用者。当信号发出（或调用的协程完成）时，它将从停止的点开始恢复执行。
+
+例如，要在用户按下按钮之前停止执行，可以执行以下操作：
+
+```python
+func wait_confirmation():
+    print("Prompting user")
+    await $Button.button_up # Waits for the button_up signal from Button node.
+    print("User confirmed")
+    return true
+```
+
+在这种情况下，`wait_confirmation` 变成了一个协程，这意味着调用者也需要等待它：
+
+```python
+func request_confirmation():
+    print("Will ask the user")
+    var confirmed = await wait_confirmation()
+    if confirmed:
+        print("User confirmed")
+    else:
+        print("User cancelled")
+```
+
+请注意，在没有等待的情况下请求协程的返回值将触发一个错误：
+
+```python
+func wrong():
+    var confirmed = wait_confirmation() # Will give an error.
+```
+
+然而，如果你不依赖于结果，你可以异步调用它，这不会停止执行，也不会使当前函数成为协程：
+
+```python
+func okay():
+    wait_confirmation()
+    print("This will be printed immediately, before the user press the button.")
+```
+
+如果将 await 与既不是信号也不是协程的表达式一起使用，则会立即返回值，并且函数不会将控制权交还给调用方：
+
+```python
+func no_wait():
+    var x = await get_five()
+    print("This doesn't make this function a coroutine.")
+
+func get_five():
+    return 5
+```
+
+这也意味着，从一个不是协程的函数返回信号将使调用者等待该信号：
+
+```python
+func get_signal():
+    return $Button.button_up
+
+func wait_button():
+    await get_signal()
+    print("Button was pressed")
+```
+
+> **注意：**
+>
+> 与先前 Godot 版本中的 `yield` 不同，您无法获得函数状态对象。这样做是为了确保类型安全。有了这种类型安全性，函数不能说它返回了 `int`，而实际上它在运行时返回了函数状态对象。
+
+###### 断言关键字
+
+`assert` 关键字可用于检查调试生成中的条件。这些断言在非调试构建中被忽略。这意味着作为参数传递的表达式将不会在以发布模式导出的项目中进行求值。因此，断言**不能**包含有副作用的表达式。否则，脚本的行为将根据项目是否在调试生成中运行而有所不同。
+
+```python
+# Check that 'i' is 0. If 'i' is not 0, an assertion error will occur.
+assert(i == 0)
+```
+
+从编辑器运行项目时，如果发生断言错误，项目将暂停。
+
+如果断言失败，您可以选择性地传递自定义错误消息以显示：
+
+```python
+assert(enemy_power < 256, "Enemy is too powerful!")
+```
+
+##### GDScript：动态语言导论
+
+###### 关于
+
+本教程旨在为如何更有效地使用 GDScript 提供快速参考。它关注特定于该语言的常见情况，但也涵盖了许多关于动态类型语言的信息。
+
+对于以前很少或根本没有动态类型语言经验的程序员来说，它特别有用。
+
+###### 动态性质
+
+###### 动态类型的优点和缺点
+
+GDScript 是一种动态类型语言。因此，它的主要优势在于：
+
+- 这种语言很容易上手。
+- 大多数代码都可以快速编写和更改，而且没有任何麻烦。
+- 编写的代码越少，需要修复的错误就越少。
+- 代码易于阅读（有点混乱）。
+- 无需编译即可进行测试。
+- 运行时很小。
+- 它具有鸭子类型和多态性。
+
+主要缺点是：
+
+- 性能低于静态类型语言。
+- 更难重构（无法跟踪符号）。
+- 在静态类型语言中，一些通常在编译时检测到的错误只有在运行代码时才会出现（因为表达式解析更严格）。
+- 代码完成的灵活性较低（某些变量类型仅在运行时才知道）。
+
+这意味着 Godot 与 GDScript 的结合旨在快速高效地创建游戏。对于计算密集型且无法从引擎内置工具（如矢量类型、物理引擎、数学库等）中获益的游戏，也存在使用 C++ 的可能性。这使您仍然可以在 GDScript 中创建大部分游戏，并在需要提高性能的区域添加少量 C++。
+
+###### 变量和赋值
+
+动态类型语言中的所有变量都类似于“变体”。这意味着它们的类型不是固定的，只能通过赋值进行修改。示例：
+
+静态：
+
+```C++
+int a; // Value uninitialized.
+a = 5; // This is valid.
+a = "Hi!"; // This is invalid.
+```
+
+动态：
+
+```python
+var a # 'null' by default.
+a = 5 # Valid, 'a' becomes an integer.
+a = "Hi!" # Valid, 'a' changed to a string.
+```
+
+###### 作为函数自变量：
+
+函数也是动态的，这意味着它们可以用不同的参数调用，例如：
+
+静态：
+
+```c++
+void print_value(int value) {
+
+    printf("value is %i\n", value);
+}
+
+[..]
+
+print_value(55); // Valid.
+print_value("Hello"); // Invalid.
+```
+
+动态：
+
+```python
+func print_value(value):
+    print(value)
+
+[..]
+
+print_value(55) # Valid.
+print_value("Hello") # Valid.
+```
+
+###### 指针和引用：
+
+在静态语言中，如 C 或 C++（在某种程度上还有 Java 和 C#），变量和指向变量的指针/引用之间存在区别。后者允许其他函数通过传递对原始函数的引用来修改对象。
+
+在 C# 或 Java 中，所有不是内置类型（int、float，有时是 String）的东西都是指针或引用。引用也是自动垃圾收集的，这意味着它们在不再使用时会被擦除。动态类型语言也倾向于使用这种内存模型。一些示例：
+
+C++：
+
+```c++
+void use_class(SomeClass *instance) {
+
+    instance->use();
+}
+
+void do_something() {
+
+    SomeClass *instance = new SomeClass; // Created as pointer.
+    use_class(instance); // Passed as pointer.
+    delete instance; // Otherwise it will leak memory.
+}
+```
+
+Java:
+
+```java
+@Override
+public final void use_class(SomeClass instance) {
+
+    instance.use();
+}
+
+public final void do_something() {
+
+    SomeClass instance = new SomeClass(); // Created as reference.
+    use_class(instance); // Passed as reference.
+    // Garbage collector will get rid of it when not in
+    // use and freeze your game randomly for a second.
+}
+```
+
+GDScript:
+
+```python
+func use_class(instance): # Does not care about class type
+    instance.use() # Will work with any class that has a ".use()" method.
+
+func do_something():
+    var instance = SomeClass.new() # Created as reference.
+    use_class(instance) # Passed as reference.
+    # Will be unreferenced and deleted.
+```
+
+在 GDScript 中，只有基类型（int、float、string和向量类型）通过值传递给函数（值被复制）。其他所有内容（实例、数组、字典等）都作为引用传递。继承 RefCounted（如果未指定任何内容，则为默认值）的类在不使用时将被释放，但如果从 Object 手动继承，则也允许手动内存管理。
+
+###### 数组
+
+动态类型语言中的数组内部可以包含许多不同的混合数据类型，并且始终是动态的（可以随时调整大小）。比较静态类型语言中的数组示例：
+
+```c++
+int *array = new int[4]; // Create array.
+array[0] = 10; // Initialize manually.
+array[1] = 20; // Can't mix types.
+array[2] = 40;
+array[3] = 60;
+// Can't resize.
+use_array(array); // Passed as pointer.
+delete[] array; // Must be freed.
+
+// or
+
+std::vector<int> array;
+array.resize(4);
+array[0] = 10; // Initialize manually.
+array[1] = 20; // Can't mix types.
+array[2] = 40;
+array[3] = 60;
+array.resize(3); // Can be resized.
+use_array(array); // Passed reference or value.
+// Freed when stack ends.
+```
+
+在 GDScript 中：
+
+```python
+var array = [10, "hello", 40, 60] # You can mix types.
+array.resize(3) # Can be resized.
+use_array(array) # Passed as reference.
+# Freed when no longer in use.
+```
+
+在动态类型语言中，数组也可以兼作其他数据类型，例如列表：
+
+```python
+var array = []
+array.append(4)
+array.append(5)
+array.pop_front()
+```
+
+或无序集合：
+
+```python
+var a = 20
+if a in [10, 20, 30]:
+    print("We have a winner!")
+```
+
+###### 字典
+
+字典在动态类型语言中是一个强大的工具。大多数来自静态类型语言（如 C++ 或 C#）的程序员忽略了它们的存在，并使他们的生活变得不必要地更加困难。这种数据类型通常不存在于此类语言中（或仅以有限的形式存在）。
+
+字典可以将任何值映射到任何其他值，而完全忽略用作键或值的数据类型。与流行的观点相反，它们是高效的，因为它们可以用哈希表来实现。事实上，它们非常高效，以至于有些语言甚至会将数组实现为字典。
+
+词典示例：
+
+```python
+var d = {"name": "John", "age": 22}
+print("Name: ", d["name"], " Age: ", d["age"])
+```
+
+字典也是动态的，可以在任何时候添加或删除键，成本很低：
+
+```python
+d["mother"] = "Rebecca" # Addition.
+d["age"] = 11 # Modification.
+d.erase("name") # Removal.
+```
+
+在大多数情况下，使用字典通常可以更容易地实现二维数组。下面是一个战列舰游戏示例：
+
+```python
+# Battleship Game
+
+const SHIP = 0
+const SHIP_HIT = 1
+const WATER_HIT = 2
+
+var board = {}
+
+func initialize():
+    board[Vector2(1, 1)] = SHIP
+    board[Vector2(1, 2)] = SHIP
+    board[Vector2(1, 3)] = SHIP
+
+func missile(pos):
+    if pos in board: # Something at that position.
+        if board[pos] == SHIP: # There was a ship! hit it.
+            board[pos] = SHIP_HIT
+        else:
+            print("Already hit here!") # Hey dude you already hit here.
+    else: # Nothing, mark as water.
+        board[pos] = WATER_HIT
+
+func game():
+    initialize()
+    missile(Vector2(1, 1))
+    missile(Vector2(5, 8))
+    missile(Vector2(2, 3))
+```
+
+字典也可以用作数据标记或快速结构。虽然 GDScript 的字典类似于 python 字典，但它也支持 Lua 风格的语法和索引，这使得它对于编写初始状态和快速结构非常有用：
+
+```python
+# Same example, lua-style support.
+# This syntax is a lot more readable and usable.
+# Like any GDScript identifier, keys written in this form cannot start
+# with a digit.
+
+var d = {
+    name = "John",
+    age = 22
+}
+
+print("Name: ", d.name, " Age: ", d.age) # Used "." based indexing.
+
+# Indexing
+
+d["mother"] = "Rebecca"
+d.mother = "Caroline" # This would work too to create a new key.
+```
+
+###### for 和 while
+
+在 C 派生语言中使用 C 样式的循环进行迭代可能相当复杂：
+
+```c++
+const char* strings = new const char*[50];
+
+[..]
+
+for (int i = 0; i < 50; i++) {
+
+    printf("Value: %s\n", i, strings[i]);
+}
+
+// Even in STL:
+
+for (std::list<std::string>::const_iterator it = strings.begin(); it != strings.end(); it++) {
+
+    std::cout << *it << std::endl;
+}
+```
+
+正因为如此，GDScript 做出了有主见的决定，改为在可迭代项上使用 for 循环：
+
+```python
+for s in strings:
+    print(s)
+```
+
+容器数据类型（数组和字典）是可迭代的。字典允许迭代键：
+
+```python
+for key in dict:
+    print(key, " -> ", dict[key])
+```
+
+还可以使用索引进行迭代：
+
+```python
+for i in range(strings.size()):
+    print(strings[i])
+```
+
+range() 函数可以接受 3 个参数：
+
+```python
+range(n) # Will count from 0 to n in steps of 1. The parameter n is exclusive.
+range(b, n) # Will count from b to n in steps of 1. The parameters b is inclusive. The parameter n is exclusive.
+range(b, n, s) # Will count from b to n, in steps of s. The parameters b is inclusive. The parameter n is exclusive.
+```
+
+一些涉及循环 C 样式的示例：
+
+```c++
+for (int i = 0; i < 10; i++) {}
+
+for (int i = 5; i < 10; i++) {}
+
+for (int i = 5; i < 10; i += 2) {}
+```
+
+翻译为：
+
+```python
+for i in range(10):
+    pass
+
+for i in range(5, 10):
+    pass
+
+for i in range(5, 10, 2):
+    pass
+```
+
+通过负计数器进行反向循环：
+
+```c++
+for (int i = 10; i > 0; i--) {}
+```
+
+变成：
+
+```python
+for i in range(10, 0, -1):
+    pass
+```
+
+###### While
+
+while() 循环在任何地方都是相同的：
+
+```python
+var i = 0
+
+while i < strings.size():
+    print(strings[i])
+    i += 1
+```
+
+###### 自定义迭代器
+
+您可以通过重写脚本中 Variant 类的 `_iter_init`、`_iter_next` 和 `_iter_get` 函数来创建自定义迭代器，以防默认迭代器不能完全满足您的需求。前向迭代器的示例实现如下：
+
+```python
+class ForwardIterator:
+    var start
+    var current
+    var end
+    var increment
+
+    func _init(start, stop, increment):
+        self.start = start
+        self.current = start
+        self.end = stop
+        self.increment = increment
+
+    func should_continue():
+        return (current < end)
+
+    func _iter_init(arg):
+        current = start
+        return should_continue()
+
+    func _iter_next(arg):
+        current += increment
+        return should_continue()
+
+    func _iter_get(arg):
+        return current
+```
+
+它可以像其他迭代器一样使用：
+
+```python
+var itr = ForwardIterator.new(0, 6, 2)
+for i in itr:
+    print(i) # Will print 0, 2, and 4.
+```
+
+请确保在 `_iter_init` 中重置迭代器的状态，否则使用自定义迭代器嵌套的循环将无法按预期工作。
+
+###### 鸭子类型
+
+从静态类型语言转换为动态类型语言时，最难理解的概念之一是鸭子类型。鸭子类型使整个代码设计更加简单明了，但它的工作原理并不明显。
+
+举个例子，想象一块大石头从隧道里掉下来，把路上的所有东西都砸了。在静态类型语言中，岩石的代码如下：
+
+```c++
+void BigRollingRock::on_object_hit(Smashable *entity) {
+
+    entity->smash();
+}
+```
+
+这样，所有能被石头砸碎的东西都必须继承粉碎。如果一个角色、敌人、家具、小石头都是可粉碎的，那么它们需要从可粉碎类继承，可能需要多重继承。如果不需要多重继承，那么它们将不得不继承像 Entity 这样的公共类。然而，只有在其中一些方法可以被粉碎的情况下，才向 Entity 添加虚拟方法 `smash()` 并不是很好。
+
+对于动态类型语言，这不是问题。鸭子类型确保你只需要在需要的地方定义一个`smash()` 函数就可以了。不需要考虑继承、基类等。
+
+```python
+func _on_object_hit(object):
+    object.smash()
+```
+
+就是这样。如果击中大岩石的对象有一个 `smash()` 方法，它就会被调用。不需要遗传或多态性。动态类型语言只关心具有所需方法或成员的实例，而不关心它继承了什么或类类型。鸭子类型的定义应该更清楚：
+
+*“当我看到一只像鸭子一样走路、像鸭子一样游泳、像鸭子那样嘎嘎叫的鸟时，我就叫它鸭子。”*
+
+在这种情况下，它翻译为：
+
+*“如果这个物体能被砸碎，不管它是什么，只要砸碎它就行了。”*
+
+是的，我们应该称之为绿巨人类型。
+
+被击中的对象可能没有 smash() 函数。一些动态类型语言在方法调用不存在时会忽略它，但 GDScript 更严格，因此需要检查函数是否存在：
+
+```python
+func _on_object_hit(object):
+    if object.has_method("smash"):
+        object.smash()
+```
+
+然后，只要定义这个方法，岩石接触到的任何东西都可以被砸碎。
+
+##### GDScript 导出
+
+###### 导出简介
+
+在 Godot 中，可以导出类成员。这意味着它们的值将与附加到的资源（如场景）一起保存。它们也可以在属性编辑器中进行编辑。导出是通过使用 `@export` 注解完成的。
+
+```python
+@export var number: int = 5
+```
+
+在该示例中，值 5 将被保存并在属性编辑器中可见。
+
+导出的变量必须初始化为常量表达式，或者在变量中具有类型说明符。一些导出注解具有特定的类型，不需要键入变量（请参阅下面的*示例*部分）。
+
+导出成员变量的一个基本好处是使它们在编辑器中可见和可编辑。通过这种方式，美术师和游戏设计者可以修改稍后影响程序运行方式的值。为此，提供了一种特殊的导出语法。
+
+> **注意：**
+>
+> 导出属性也可以用 C# 等其他语言完成。语法因语言而异。有关 C# 导出的信息，请参见 C# 导出。
+
+###### 基本用途
+
+如果导出的值指定了一个常量或常量表达式，则将推断该类型并在编辑器中使用。
+
+```python
+@export var number = 5
+```
+
+如果没有默认值，则可以向变量添加类型。
+
+```python
+@export var number: int
+```
+
+可以导出资源和节点。
+
+```python
+@export var resource: Resource
+@export var node: Node
+```
+
+###### 分组导出
+
+可以使用 @export_group 注解在 Inspector 中对导出的属性进行分组。此注解之后的每个导出属性都将添加到组中。启动一个新组，或使用 `@export_group("")` 进行分组。
+
+```python
+@export_group("My Properties")
+@export var number = 3
+```
+
+注释的第二个参数只能用于对具有指定前缀的属性进行分组。
+
+组不能嵌套，请使用 @export_subgroup 在组中创建子组。
+
+```python
+@export_subgroup("Extra Properties")
+@export var string = ""
+@export var flag = false
+```
+
+您也可以更改主类别的名称，或使用 @export_category 注解在属性列表中创建其他类别。
+
+```python
+@export_category("Main Category")
+@export var number = 3
+@export var string = ""
+
+@export_category("Extra Category")
+@export var flag = false
+```
+
+> **注意：**
+>
+> 属性列表是根据类继承来组织的，新的类别打破了这种期望。小心使用它们，尤其是在创建供公众使用的项目时。
+
+###### 字符串作为路径
+
+字符串作为文件的路径。
+
+```python
+@export_file var f
+```
+
+字符串作为目录的路径。
+
+```python
+@export_dir var f
+```
+
+字符串作为文件的路径，自定义过滤器作为提示提供。
+
+```python
+@export_file("*.txt") var f
+```
+
+在全局文件系统中使用路径也是可能的，但只能在工具模式下的脚本中使用。
+
+字符串作为全局文件系统中 PNG 文件的路径。
+
+```python
+@export_global_file("*.png") var tool_image
+```
+
+字符串作为全局文件系统中某个目录的路径。
+
+```python
+@export_global_dir var tool_dir
+```
+
+多行注解告诉编辑器显示一个大的输入字段，以便在多行上进行编辑。
+
+```python
+@export_multiline var text
+```
+
+###### 限制编辑器输入范围
+
+允许 0 到 20 之间的整数值。
+
+```python
+@export_range(0, 20) var i
+```
+
+允许 -10 到 20 之间的整数值。
+
+```python
+@export_range(-10, 20) var j
+```
+
+允许在 -10 到 20 之间浮动，并将值捕捉到 0.2 的倍数。
+
+```python
+@export_range(-10, 20, 0.2) var k: float
+```
+
+如果添加提示 “or_greater” 和/或 “or_lesser”，则限制只能用于滑块。
+
+```python
+@export_range(0, 100, 1, "or_greater", "or_lesser")
+```
+
+###### 带有缓和提示的浮动
+
+编辑时显示 “ease()” 函数的可视化表示。
+
+```python
+@export_exp_easing var transition_speed
+```
+
+###### 颜色
+
+以红-绿-蓝-alpha 值表示的规则颜色。
+
+```python
+@export var col: Color
+```
+
+给定的颜色为红-绿-蓝值（alpha 将始终为 1）。
+
+```python
+@export_color_no_alpha var col: Color
+```
+
+###### 节点
+
+自 Godot 4.0 以来，节点可以直接导出为脚本中的属性，而无需使用 NodePaths：
+
+```python
+# Allows any node.
+@export var node: Node
+
+# Allows any node that inherits from BaseButton.
+# Custom classes declared with `class_name` can also be used.
+@export var some_button: BaseButton
+```
+
+如果您需要的话，像 Godot3.x 中那样导出 NodePaths 仍然是可能的：
+
+```python
+@export var node_path: NodePath
+var node = get_node(node_path)
+```
+
+如果要限制 NodePaths 的节点类型，可以使用 @export_node_path 注解：
+
+```python
+@export_node_path("Button", "TouchScreenButton") var some_button
+```
+
+###### 资源
+
+```python
+@export var resource: Resource
+```
+
+在 Inspector 中，您可以将资源文件从 FileSystem dock 拖放到变量插槽中。
+
+但是，打开检查器下拉列表可能会导致要创建的类的列表非常长。因此，如果指定 Resource 的扩展，例如：
+
+```python
+@export var resource: AnimationNode
+```
+
+下拉菜单将仅限于 AnimationNode 及其所有继承的类。
+
+必须注意的是，即使脚本在编辑器中没有运行，导出的属性仍然是可编辑的。这可以与“工具”模式下的脚本一起使用。
+
+###### 导出位标志
+
+用作位标志的整数可以在一个属性中存储多个 `true`/`false`（布尔）值。通过使用 `@export_flags` 注解，可以从编辑器中设置它们：
+
+```python
+# Set any of the given flags from the editor.
+@export_flags("Fire", "Water", "Earth", "Wind") var spell_elements = 0
+```
+
+必须为每个标志提供字符串描述。在本例中，`Fire` 的值为 1，`Water` 的值 2，`Earth` 的值 4，`Wind` 对应的值 8。通常，应该相应地定义常量（例如 `const ELEMENT_WIND = 8`，依此类推）。
+
+可以使用冒号添加显式值：
+
+```python
+@export_flags("Self:4", "Allies:8", "Foes:16") var spell_targets = 0
+```
+
+只有 2 的幂值作为位标志选项有效。允许的最低值为 1，因为 0 表示未选择任何内容。您还可以添加其他标志组合的选项：
+
+```python
+@export_flags("Self:4", "Allies:8", "Self and Allies:12", "Foes:16")
+var spell_targets = 0
+```
+
+还为项目设置中定义的物理层、渲染层和导航层提供了导出注解：
+
+```python
+@export_flags_2d_physics var layers_2d_physics
+@export_flags_2d_render var layers_2d_render
+@export_flags_2d_navigation var layers_2d_navigation
+@export_flags_3d_physics var layers_3d_physics
+@export_flags_3d_render var layers_3d_render
+@export_flags_3d_navigation var layers_3d_navigation
+```
+
+使用位标志需要对按位操作有所了解。如果有疑问，请使用布尔变量。
+
+###### 导出枚举
+
+可以使用引用枚举的类型提示导出属性，以将其值限制为枚举的值。编辑器将在 Inspector 中创建一个小部件，列举以下内容：“Thing 1”、“Thing 2”、“Another Thing”。该值将存储为一个整数。
+
+```python
+enum NamedEnum {THING_1, THING_2, ANOTHER_THING = -1}
+@export var x: NamedEnum
+```
+
+整数和字符串属性也可以使用 @export_enum 注解限制为特定的值列表。编辑器将在Inspector中创建一个小部件，列举以下内容：Warrior、Magician、Thief。该值将存储为整数，对应于所选选项的索引（即 `0`、`1` 或 `2`）。
+
+```python
+@export_enum("Warrior", "Magician", "Thief") var character_class: int
+```
+
+可以使用冒号添加显式值：
+
+```python
+@export_enum("Slow:30", "Average:60", "Very Fast:200") var character_speed: int
+```
+
+如果类型为 String，则该值将存储为字符串。
+
+```python
+@export_enum("Rebecca", "Mary", "Leah") var character_name: String
+```
+
+如果要设置初始值，则必须明确指定：
+
+```python
+@export_enum("Rebecca", "Mary", "Leah") var character_name: String = "Rebecca"
+```
+
+###### 导出数组
+
+导出的数组可以有初始值设定项，但它们必须是常量表达式。
+
+如果导出的数组指定了从 Resource 继承的类型，则可以在检查器中通过一次从 FileSystem dock 拖放多个文件来设置数组值。
+
+默认值**必须**是常量表达式。
+
+```python
+@export var a = [1, 2, 3]
+```
+
+导出的数组可以指定类型（使用与以前相同的提示）。
+
+```python
+@export var ints: Array[int] = [1, 2, 3]
+
+# Nested typed arrays such as `Array[Array[float]]` are not supported yet.
+@export var two_dimensional: Array[Array] = [[1.0, 2.0], [3.0, 4.0]]
+```
+
+您可以省略默认值，但如果不赋值，它将为 `null`。
+
+```python
+@export var b: Array
+@export var scenes: Array[PackedScene]
+```
+
+从资源继承的具有指定类型的数组可以通过从 FileSystem dock 拖放多个文件来设置。
+
+```python
+@export var textures: Array[Texture] = []
+@export var scenes: Array[PackedScene] = []
+```
+
+压缩类型数组也可以工作，但仅初始化为空：
+
+```python
+@export var vector3s = PackedVector3Array()
+@export var strings = PackedStringArray()
+```
+
+###### 设置从工具脚本导出的变量
+
+在工具模式下更改脚本中导出变量的值时，检查器中的值不会自动更新。要更新它，请在设置导出变量的值后调用 notify_perty_list_changed()。
+
+###### 高级导出
+
+并不是每种类型的导出都可以在语言本身的级别上提供，以避免不必要的设计复杂性。以下描述了一些或多或少常见的导出功能，这些功能可以用低级 API 实现。
+
+在进一步阅读之前，您应该熟悉处理属性的方式，以及如何使用 _set()、 _get() 和 _get_property_list() 方法自定义属性，如从对象访问数据或逻辑中所述。
+
+> **参考：**
+>
+> 有关在 C++ 中使用上述方法绑定属性的信息，请参见使用 _set / _get / _get_property_list 绑定属性。
+
+> **警告：**
+>
+> 脚本必须在 `tool` 模式下操作，以便上述方法可以在编辑器中工作。
+
+##### GDScript 文档注释
+
+在 GDScript 中，注释可以用来记录代码，并为脚本的成员添加描述。普通注释和文档注释之间有两个区别。首先，文档注释应该以双散列符号 `##` 开头。其次，它必须紧跟在脚本成员之前，或者对于脚本描述，必须放在脚本的顶部。如果导出的变量有文档，则其描述将用作编辑器中的工具提示。该文档可以由编辑器生成为 XML 文件。
+
+###### 记录脚本
+
+记录脚本的注释必须位于任何成员文档之前。脚本文档的建议格式可以分为三个部分。
+
+- 对脚本的简要描述。
+- 详细说明。
+- 教程。
+
+为了将它们彼此分开，文档注释使用了特殊的标记。标记必须位于一行的开头（忽略前面的空白），并且格式必须为 `@`，后跟关键字，并以冒号结尾。
+
+###### 标签
+
+|          |                                                |
+| -------- | ---------------------------------------------- |
+| 简要说明 | 没有标签，并且在文档部分的一开始就存在。       |
+| 描述     | 使用一行空行将说明与简要信息分开。             |
+| 教程     | `@tutorial:`<br />`@tutorial(The Title Here):` |
+
+例如：
+
+```python
+extends Node2D
+## A brief description of the class's role and functionality.
+##
+## The description of the script, what it can do,
+## and any further detail.
+##
+## @tutorial:            https://the/tutorial1/url.com
+## @tutorial(Tutorial2): https://the/tutorial2/url.com
+```
+
+> **警告：**
+>
+> 如果标记名和冒号之间有任何空格，例如 `@tutorial :`，它将不会被视为有效标记，并将被忽略。
+
+> **注意：**
+>
+> 当描述跨越多行时，前面和后面的空白将被剥离，并用一个空格连接。要保留换行符，请使用 `[br]`。另请参阅下面的 BBCode 和类引用。
+
+###### 记录脚本成员
+
+脚本成员的文档必须紧跟在该成员或其注释（如果有）之前。例外情况是枚举值，为了可读性，其描述应与枚举在同一行。描述可以有多行，但每行都必须以双哈希符号 `##` 开头，才能被视为文档的一部分。每次更新脚本时，脚本文档都会在编辑器帮助窗口中更新。如果任何成员变量或函数名称以下划线开头，它将被视为私有。它不会出现在文档中，并且会在帮助窗口中被忽略。
+
+适用于文件编制的成员：
+
+- 内部类
+- 常数
+- 作用
+- 信号
+- 变量
+- 枚举
+- 枚举值
+
+###### 示例
+
+```python
+extends Node2D
+## A brief description of the class's role and functionality.
+##
+## The description of the script, what it can do,
+## and any further detail.
+##
+## @tutorial:            https://the/tutorial1/url.com
+## @tutorial(Tutorial2): https://the/tutorial2/url.com
+
+## The description of a constant.
+const GRAVITY = 9.8
+
+## The description of a signal.
+signal my_signal
+
+## This is a description of the below enums. Note below that
+## the enum values are documented on the same line as the enum.
+enum Direction {
+    UP    = 0,  ## Direction up.
+    DOWN  = 1,  ## Direction down.
+    LEFT  = 2,  ## Direction left.
+    RIGHT = 3,  ## Direction right.
+}
+
+## The description of a constant.
+const GRAVITY = 9.8
+
+## The description of the variable v1.
+var v1
+
+## This is a multiline description of the variable v2.[br]
+## The type information below will be extracted for the documentation.
+var v2: int
+
+## If the member has any annotation, the annotation should
+## immediately precede it.
+@export
+var v3 := some_func()
+
+
+## As the following function is documented, even though its name starts with
+## an underscore, it will appear in the help window.
+func _fn(p1: int, p2: String) -> int:
+    return 0
+
+
+# The below function isn't documented and its name starts with an underscore
+# so it will treated as private and will not be shown in the help window.
+func _internal() -> void:
+    pass
+
+
+## Documenting an inner class.
+##
+## The same rules apply here. The documentation must
+## immediately precede the class definition.
+##
+## @tutorial: https://the/tutorial/url.com
+class Inner:
+
+    ## Inner class variable v4.
+    var v4
+
+
+    ## Inner class function fn.
+    func fn(): pass
+```
+
+###### BBCode 和类参考
+
+呈现文档的编辑器帮助窗口支持 bbcode。因此，可以对文档进行对齐和格式化。可以使用 bbcode 添加彩色文本、图像、字体、表格、URL、动画效果等。
+
+Godot 的类引用支持类似 BBCode 的标记。它们为文本添加了很好的格式，也可以在文档中使用。另请参见类引用 bbcode。
+
+每当链接到另一个类的成员时，都需要指定类名。对于指向同一类的链接，类名是可选的，可以省略。
+
+以下是可用标签的列表：
+
+| 标签和描述                                       | 示例                                  | 结果                                                         |
+| ------------------------------------------------ | ------------------------------------- | ------------------------------------------------------------ |
+| `[Class]`<br />类的链接                          | `Move the [Sprite2D].`                | Move the [Sprite2D](https://docs.godotengine.org/en/stable/classes/class_sprite2d.html#class-sprite2d) |
+| `[annotation Class.name]`<br />注解的链接        | `See [annotation @GDScript.@export].` | See [@GDScript.@export](https://docs.godotengine.org/en/stable/classes/class_%40gdscript.html#class-gdscript-annotation-export). |
+| `[constant Class.name]`<br />常数的链接          | `See [constant @GlobalScope.KEY_F1].` | See [@GlobalScope.KEY_F1](https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#class-globalscope-constant-key-f1). |
+| `[enum Class.name]`<br />枚举的链接              | `See [enum Mesh.ArrayType].`          | See [Mesh.ArrayType](https://docs.godotengine.org/en/stable/classes/class_mesh.html#enum-mesh-arraytype). |
+| `[method Class.name]`<br />方法的链接            | `Call [method Node3D.hide].`          | Call [Node3D.hide()](https://docs.godotengine.org/en/stable/classes/class_node3d.html#class-node3d-method-hide). |
+| `[member Class.name]`<br />成员的链接            | `Get [member Node2D.scale].`          | Get [Node2D.scale](https://docs.godotengine.org/en/stable/classes/class_node2d.html#class-node2d-property-scale). |
+| `[signal Class.name]`<br />信号的链接            | `Emit [signal Node.renamed].`         | Emit [Node.renamed](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-signal-renamed). |
+| `[theme_item Class.name]`<br />主题项的链接      | `See [theme_item Label.font].`        | See [Label.font](https://docs.godotengine.org/en/stable/classes/class_label.html#class-label-theme-font-font). |
+| `[param name]`<br />格式化一个参数名（作为代码） | `Takes [param size] for the size.`    | Takes `size` for the size.                                   |
+| `[br]`<br />换行                                 | `Line 1.[br]`<br />`Line 2.`          | Line 1.<br />Line 2.                                         |
+| `[b]` `[/b]`<br />粗体                           | `Some [b]bold[/b] text.`              | Some **bold** text.                                          |
+| `[i]` `[/i]`<br />斜体                           | `Some [i]italic[/i] text.`            | Some *italic* text.                                          |
+| `[kbd]` `[/kbd]`<br />键盘或鼠标快捷键           | `Some [kbd]Ctrl + C[/kbd] key.`       | Some Ctrl + C key.                                           |
+| `[code]` `[/code]`<br />等宽字体                 | `Some [code]monospace[/code] text.`   | Some `monospace` text.                                       |
+| `[codeblock]` `[/codeblock]`<br />多行预格式化块 | *See below.*                          | *See below.*                                                 |
+
+> **注意：**
+>
+> 1. 目前只有 @GDScript 有注解。
+> 2. `[code]` 禁用 BBCode，直到解析器遇到 `[/code]` 为止。
+> 3. `[codeblock]` 禁用 BBCode，直到解析器遇到 `[/codeblock]`。
+
+> **警告：**
+>
+> 对预格式化的代码块使用 `[codeblock]`。在 `[codeblock]` 中，始终使用**四个空格**进行缩进（解析器将删除制表符）。
+
+```python
+## Do something for this plugin. Before using the method
+## you first have to [method initialize] [MyPlugin].[br]
+## [color=yellow]Warning:[/color] Always [method clean] after use.[br]
+## Usage:
+## [codeblock]
+## func _ready():
+##     the_plugin.initialize()
+##     the_plugin.do_something()
+##     the_plugin.clean()
+## [/codeblock]
+func do_something():
+    pass
+```
+
+##### GDScript 样式指南
+
+本样式指南列出了编写优雅 GDScript 的惯例。目标是鼓励编写干净、可读的代码，并促进项目、讨论和教程之间的一致性。希望这也能支持自动格式化工具的开发。
+
+由于 GDScript 接近 Python，因此本指南的灵感来自 Python 的 PEP8 编程风格指南。
+
+风格指南并非硬性规定。有时，您可能无法应用以下某些指导原则。当这种情况发生时，运用你的最佳判断，并向其他开发人员寻求见解。
+
+一般来说，在项目和团队中保持代码的一致性比遵循本指南更重要。
+
+> **注意：**
+>
+> Godot 的内置脚本编辑器默认情况下使用了许多这样的约定。让它帮助你。
+
+以下是基于这些指导原则的完整课堂示例：
+
+```python
+class_name StateMachine
+extends Node
+## Hierarchical State machine for the player.
+##
+## Initializes states and delegates engine callbacks ([method Node._physics_process],
+## [method Node._unhandled_input]) to the state.
+
+
+signal state_changed(previous, new)
+
+@export var initial_state: Node
+var is_active = true:
+    set = set_is_active
+
+@onready var _state = initial_state:
+    get = set_state
+@onready var _state_name = _state.name
+
+
+func _init():
+    add_to_group("state_machine")
+
+
+func _enter_tree():
+    print("this happens before the ready method!")
+
+
+func _ready():
+    state_changed.connect(_on_state_changed)
+    _state.enter()
+
+
+func _unhandled_input(event):
+    _state.unhandled_input(event)
+
+
+func _physics_process(delta):
+    _state.physics_process(delta)
+
+
+func transition_to(target_state_path, msg={}):
+    if not has_node(target_state_path):
+        return
+
+    var target_state = get_node(target_state_path)
+    assert(target_state.is_composite == false)
+
+    _state.exit()
+    self._state = target_state
+    _state.enter(msg)
+    Events.player_state_changed.emit(_state.name)
+
+
+func set_is_active(value):
+    is_active = value
+    set_physics_process(value)
+    set_process_unhandled_input(value)
+    set_block_signals(not value)
+
+
+func set_state(value):
+    _state = value
+    _state_name = _state.name
+
+
+func _on_state_changed(previous, new):
+    print("state changed")
+    state_changed.emit()
+
+
+class State:
+    var foo = 0
+
+    func _init():
+        print("Hello!")
+```
+
+###### 格式化
+
+###### 编码和特殊字符
+
+- 使用换行符（**LF**）字符换行，而不是 CRLF 或 CR。（*编辑器默认值*）
+- 在每个文件的末尾使用一个换行符。（*编辑器默认值*）
+- 使用不带字节顺序标记的 **UTF-8** 编码。（*编辑器默认值*）
+- 使用**制表符**代替空格进行缩进。（*编辑器默认值*）
+
+###### 缩进
+
+每个缩进级别都应该比包含它的块大一级。
+
+**好：**
+
+```python
+for i in range(10):
+    print("hello")
+```
+
+**坏：**
+
+```python
+for i in range(10):
+  print("hello")
+
+for i in range(10):
+        print("hello")
+```
+
+使用 2 个缩进级别来区分连续行和常规代码块。
+
+**好：**
+
+```python
+effect.interpolate_property(sprite, "transform/scale",
+            sprite.get_scale(), Vector2(2.0, 2.0), 0.3,
+            Tween.TRANS_QUAD, Tween.EASE_OUT)
+```
+
+**坏：**
+
+```python
+effect.interpolate_property(sprite, "transform/scale",
+    sprite.get_scale(), Vector2(2.0, 2.0), 0.3,
+    Tween.TRANS_QUAD, Tween.EASE_OUT)
+```
+
+此规则的例外情况是数组、字典和枚举。使用单个缩进级别来区分连续行：
+
+**好：**
+
+```python
+var party = [
+    "Godot",
+    "Godette",
+    "Steve",
+]
+
+var character_dict = {
+    "Name": "Bob",
+    "Age": 27,
+    "Job": "Mechanic",
+}
+
+enum Tiles {
+    TILE_BRICK,
+    TILE_FLOOR,
+    TILE_SPIKE,
+    TILE_TELEPORT,
+}
+```
+
+**坏：**
+
+```python
+var party = [
+        "Godot",
+        "Godette",
+        "Steve",
+]
+
+var character_dict = {
+        "Name": "Bob",
+        "Age": 27,
+        "Job": "Mechanic",
+}
+
+enum Tiles {
+        TILE_BRICK,
+        TILE_FLOOR,
+        TILE_SPIKE,
+        TILE_TELEPORT,
+}
+```
+
+###### 尾部逗号
+
+在数组、字典和枚举中的最后一行使用尾随逗号。这导致了更容易的重构和更好的版本控制差异，因为添加新元素时不需要修改最后一行。
+
+**好：**
+
+```python
+enum Tiles {
+    TILE_BRICK,
+    TILE_FLOOR,
+    TILE_SPIKE,
+    TILE_TELEPORT,
+}
+```
+
+**坏：**
+
+```python
+enum Tiles {
+    TILE_BRICK,
+    TILE_FLOOR,
+    TILE_SPIKE,
+    TILE_TELEPORT
+}
+```
+
+在单行列表中，尾部逗号是不必要的，所以在这种情况下不要添加它们。
+
+**好：**
+
+```python
+enum Tiles {TILE_BRICK, TILE_FLOOR, TILE_SPIKE, TILE_TELEPORT}
+```
+
+**坏：**
+
+```python
+enum Tiles {TILE_BRICK, TILE_FLOOR, TILE_SPIKE, TILE_TELEPORT,}
+```
+
+###### 空行
+
+用两行空行环绕函数和类定义：
+
+```python
+func heal(amount):
+    health += amount
+    health = min(health, max_health)
+    health_changed.emit(health)
+
+
+func take_damage(amount, effect=null):
+    health -= amount
+    health = max(0, health)
+    health_changed.emit(health)
+```
+
+在函数内部使用一个空行来分隔逻辑部分。
+
+> **注意：**
+>
+> 我们在类引用和本文档中的简短代码片段中使用了类和函数定义之间的单行。
+
+###### 行长度
+
+将每行代码控制在 100 个字符以内。
+
+如果可以的话，尽量将行数控制在 80 个字符以内。这有助于在小型显示器上阅读代码，并在外部文本编辑器中并排打开两个脚本。例如，在查看差异修订时。
+
+###### 每行一句话
+
+千万不要将多个语句组合在一行上。不，C 程序员，即使只有一行条件语句也不行。
+
+**好：**
+
+```python
+if position.x > width:
+    position.x = 0
+
+if flag:
+    print("flagged")
+```
+
+**坏：**
+
+```python
+if position.x > width: position.x = 0
+
+if flag: print("flagged")
+```
+
+该规则的唯一例外是三元运算符：
+
+```python
+next_state = "idle" if is_on_floor() else "fall"
+```
+
+###### 为可读性设置多行语句格式
+
+当您有特别长的 `if` 语句或嵌套的三元表达式时，将它们包装在多行中可以提高可读性。由于连续行仍然是同一表达式的一部分，因此应该使用两个缩进级别，而不是一个。
+
+GDScript 允许使用多行括号或反斜杠包装语句。括号在这个样式指南中很受欢迎，因为它们可以更容易地进行重构。对于反斜杠，您必须确保最后一行的末尾永远不会包含反斜杠。使用括号，您不必担心最后一行的末尾有反斜杠。
+
+将条件表达式包装在多行上时，`and`/`or` 关键字应放在连续行的开头，而不是前一行的末尾。
+
+**好：**
+
+```python
+var angle_degrees = 135
+var quadrant = (
+        "northeast" if angle_degrees <= 90
+        else "southeast" if angle_degrees <= 180
+        else "southwest" if angle_degrees <= 270
+        else "northwest"
+)
+
+var position = Vector2(250, 350)
+if (
+        position.x > 200 and position.x < 400
+        and position.y > 300 and position.y < 400
+):
+    pass
+```
+
+**坏：**
+
+```python
+var angle_degrees = 135
+var quadrant = "northeast" if angle_degrees <= 90 else "southeast" if angle_degrees <= 180 else "southwest" if angle_degrees <= 270 else "northwest"
+
+var position = Vector2(250, 350)
+if position.x > 200 and position.x < 400 and position.y > 300 and position.y < 400:
+    pass
+```
+
+###### 避免不必要的括号
+
+避免在表达式和条件语句中使用括号。除非操作顺序或换行需要，否则它们只会降低可读性。
+
+**好：**
+
+```python
+if is_colliding():
+    queue_free()
+```
+
+**坏：**
+
+```python
+if (is_colliding()):
+    queue_free()
+```
+
+###### 布尔运算符
+
+更推荐纯英文版本的布尔运算符，因为它们是最容易访问的：
+
+- 使用 `and` 而不是 `&&`。
+- 使用 `or` 代替 `||`。
+- 使用 `not` 代替 `!`。
+
+您也可以在布尔运算符周围使用括号来清除任何歧义。这可以使长表达式更容易阅读。
+
+**好：**
+
+```python
+if (foo and bar) or not baz:
+    print("condition is true")
+```
+
+**坏：**
+
+```python
+if foo && bar || !baz:
+    print("condition is true")
+```
+
+###### 注释空格
+
+常规注释应该以空格开头，但注释掉的代码开头不需要。这有助于区分文本注释和禁用代码。
+
+**好：**
+
+```python
+# This is a comment.
+#print("This is disabled code")
+```
+
+**坏：**
+
+```python
+#This is a comment.
+# print("This is disabled code")
+```
+
+> **注意：**
+>
+> 在脚本编辑器中，要切换已注释的选定代码，请按 `Ctrl + K`。此功能在选定行的开头添加一个 # 号。
+
+###### 空白
+
+始终在运算符周围和逗号后面使用一个空格。此外，避免在字典引用和函数调用中使用额外的空格。
+
+**好：**
+
+```python
+position.x = 5
+position.y = target_position.y + 10
+dict["key"] = 5
+my_array = [4, 5, 6]
+print("foo")
+```
+
+**坏：**
+
+```python
+position.x=5
+position.y = mpos.y+10
+dict ["key"] = 5
+myarray = [4,5,6]
+print ("foo")
+```
+
+不要使用空格垂直对齐表达式：
+
+```python
+x        = 100
+y        = 100
+velocity = 500
+```
+
+###### 引号
+
+使用双引号，除非单引号可以使给定字符串中的转义字符更少。请参阅以下示例：
+
+```python
+# Normal string.
+print("hello world")
+
+# Use double quotes as usual to avoid escapes.
+print("hello 'world'")
+
+# Use single quotes as an exception to the rule to avoid escapes.
+print('hello "world"')
+
+# Both quote styles would require 2 escapes; prefer double quotes if it's a tie.
+print("'hello' \"world\"")
+```
+
+###### 数字
+
+不要省略浮点数中前导或尾随的零。否则，这会降低它们的可读性，并且很难一眼就将其与整数区分开来。
+
+**好：**
+
+```python
+var float_number = 0.234
+var other_float_number = 13.0
+```
+
+**坏：**
+
+```python
+var float_number = .234
+var other_float_number = 13.
+```
+
+十六进制数字中的字母使用小写，因为它们的高度较低，使数字更容易读取。
+
+**好：**
+
+```python
+var hex_number = 0xfb8c0b
+```
+
+**坏：**
+
+```python
+var hex_number = 0xFB8C0B
+```
+
+利用 GDScript 在文字中的下划线使大数字更具可读性。
+
+**好：**
+
+```python
+var large_number = 1_234_567_890
+var large_hex_number = 0xffff_f8f8_0000
+var large_bin_number = 0b1101_0010_1010
+# Numbers lower than 1000000 generally don't need separators.
+var small_number = 12345
+```
+
+**坏：**
+
+```python
+var large_number = 1234567890
+var large_hex_number = 0xfffff8f80000
+var large_bin_number = 0b110100101010
+# Numbers lower than 1000000 generally don't need separators.
+var small_number = 12_345
+```
+
+###### 命名约定
+
+这些命名约定遵循 Godot 引擎样式。打破这些规则会使代码与内置的命名约定发生冲突，从而导致代码不一致。
+
+###### 文件名
+
+使用 snake_case 作为文件名。对于命名类，请将 PascalCase 类名转换为 snake_case：
+
+```python
+# This file should be saved as `weapon.gd`.
+class_name Weapon
+extends Node
+```
+
+```python
+# This file should be saved as `yaml_parser.gd`.
+class_name YAMLParser
+extends Object
+```
+
+这与 Godot 源代码中 C++ 文件的命名方式一致。这也避免了将项目从 Windows 导出到其他平台时可能出现的区分大小写问题。
+
+###### 类和节点
+
+对类和节点名称使用 PascalCase：
+
+```python
+extends CharacterBody3D
+```
+
+将类加载到常量或变量中时，也要使用 PascalCase：
+
+```python
+const Weapon = preload("res://weapon.gd")
+```
+
+###### 函数和变量
+
+使用 snake_case 命名函数和变量：
+
+```python
+var particle_effect
+func load_level():
+```
+
+在用户必须覆盖的虚拟方法函数、私有函数和私有变量前面加一个下划线（_）：
+
+```python
+var _counter = 0
+func _recalculate_path():
+```
+
+###### 信号
+
+使用过去时命名信号：
+
+```python
+signal door_opened
+signal score_changed
+```
+
+###### 常量和枚举
+
+使用 CONSTANT_CASE 编写常量，也就是说，用下划线（_）分隔单词的所有大写字母：
+
+```python
+const MAX_SPEED = 200
+```
+
+对枚举*名称*使用 PascalCase，对其成员使用 CONSTANT_CASE，因为它们是常量：
+
+```python
+enum Element {
+    EARTH,
+    WATER,
+    AIR,
+    FIRE,
+}
+```
+
+###### 代码顺序
+
+第一部分主要介绍代码顺序。有关格式设置，请参见格式设置。有关命名约定，请参见命名约定。
+
+我们建议以这种方式组织 GDScript 代码：
+
+```python
+01. @tool
+02. class_name
+03. extends
+04. # docstring
+
+05. signals
+06. enums
+07. constants
+08. @export variables
+09. public variables
+10. private variables
+11. @onready variables
+
+12. optional built-in virtual _init method
+13. optional built-in virtual _enter_tree() method
+14. built-in virtual _ready method
+15. remaining built-in virtual methods
+16. public methods
+17. private methods
+18. subclasses
+```
+
+我们优化了顺序，使从上到下阅读代码变得容易，帮助首次阅读代码的开发人员了解其工作原理，并避免与变量声明顺序相关的错误。
+
+此代码顺序遵循四条经验法则：
+
+1. 属性和信号是第一位的，其次是方法。
+2. 公共先于私人。
+3. 虚拟回调出现在类的接口之前。
+4. 对象的构造和初始化函数 `_init` 和 `_ready` 位于在运行时修改对象的函数之前。
+
+###### 类别声明
+
+如果代码要在编辑器中运行，请将 `@tool` 注解放在脚本的第一行。
+
+如有必要，请使用 `class_name`。您可以使用此功能将 GDScript 文件转换为项目中的全局类型。有关更多信息，请参阅 GDScript 参考。
+
+然后，如果类扩展了内置类型，则添加 `extends` 关键字。
+
+接下来，您应该有该类的可选文档注释。例如，你可以用它来向你的队友解释你的类的角色，它是如何工作的，以及其他开发人员应该如何使用它。
+
+```python
+class_name MyNode
+extends Node
+## A brief description of the class's role and functionality.
+##
+## The description of the script, what it can do,
+## and any further detail.
+```
+
+###### 信号和特性
+
+在文档字符串之后编写信号声明，然后是属性，也就是说，成员变量。
+
+枚举应该在信号之后，因为您可以将它们用作其他属性的导出提示。
+
+然后，按顺序写入常量、导出变量、公共变量、私有变量和 onready 变量。
+
+```python
+signal spawn_player(position)
+
+enum Jobs {KNIGHT, WIZARD, ROGUE, HEALER, SHAMAN}
+
+const MAX_LIVES = 3
+
+@export var job: Jobs = Jobs.KNIGHT
+@export var max_health = 50
+@export var attack = 5
+
+var health = max_health:
+    set(new_health):
+        health = new_health
+
+var _speed = 300.0
+
+@onready var sword = get_node("Sword")
+@onready var gun = get_node("Gun")
+```
+
+> **注意：**
+>
+> GDScript 编译器在 `_ready` 回调之前评估 onready 变量。您可以使用它来缓存节点依赖项，也就是说，在类所依赖的场景中获取子节点。
+
+###### 成员变量
+
+如果成员变量仅在方法中本地使用，则不要声明它们，因为这会使代码更难理解。相反，将它们声明为方法体中的局部变量。
+
+###### 局部变量
+
+声明尽可能接近其首次使用的局部变量。这样可以更容易地跟踪代码，而不必滚动太多来查找变量的声明位置。
+
+###### 方法和静态函数
+
+在类的属性之后是方法。
+
+从 `_init()` 回调方法开始，引擎将在内存中创建对象时调用该方法。接下来是 `_ready()` 回调，Godot 在向场景树添加节点时会调用该回调。
+
+这些函数应该放在第一位，因为它们显示了对象是如何初始化的。
+
+接下来应该是其他内置的虚拟回调，如 `_unhandled_input()` 和 `_physics_process`。这些控制对象的主循环以及与游戏引擎的交互。
+
+类接口的其余部分，公共方法和私有方法，按照这个顺序在后面。
+
+```python
+func _init():
+    add_to_group("state_machine")
+
+
+func _ready():
+    state_changed.connect(_on_state_changed)
+    _state.enter()
+
+
+func _unhandled_input(event):
+    _state.unhandled_input(event)
+
+
+func transition_to(target_state_path, msg={}):
+    if not has_node(target_state_path):
+        return
+
+    var target_state = get_node(target_state_path)
+    assert(target_state.is_composite == false)
+
+    _state.exit()
+    self._state = target_state
+    _state.enter(msg)
+    Events.player_state_changed.emit(_state.name)
+
+
+func _on_state_changed(previous, new):
+    print("state changed")
+    state_changed.emit()
+```
+
+###### 静态类型
+
+自 Godot 3.1 以来，GDScript 支持可选的静态类型。
+
+###### 声明类型
+
+要声明变量的类型，请使用 `<variable>: <type>`：
+
+```python
+var health: int = 0
+```
+
+要声明函数的返回类型，请使用 `-> <type>`：
+
+```python
+func heal(amount: int) -> void:
+```
+
+###### 推断类型
+
+在大多数情况下，您可以让编译器推断类型，使用 `:=`。当类型与赋值写在同一行时推荐使用 `:=`，否则更推荐显式地写类型。
+
+**好：**
+
+```python
+var health: int = 0 # The type can be int or float, and thus should be stated explicitly.
+var direction := Vector3(1, 2, 3) # The type is clearly inferred as Vector3.
+```
+
+当类型不明确时包括类型提示，当类型提示多余时省略类型提示。
+
+**坏：**
+
+```python
+var health := 0 # Typed as int, but it could be that float was intended.
+var direction: Vector3 = Vector3(1, 2, 3) # The type hint has redundant information.
+
+# What type is this? It's not immediately clear to the reader, so it's bad.
+var value := complex_function()
+```
+
+在某些情况下，类型必须显式声明，否则行为将不会如预期的那样，因为编译器只能使用函数的返回类型。例如，除非节点的场景或文件加载在内存中，否则 `get_node()` 无法推断类型。在这种情况下，应该显式设置类型。
+
+**好：**
+
+```python
+@onready var health_bar: ProgressBar = get_node("UI/LifeBar")
+```
+
+或者，您可以使用 `as` 关键字强制转换返回类型，该类型将用于推断 var 的类型。
+
+```python
+@onready var health_bar := get_node("UI/LifeBar") as ProgressBar
+# health_bar will be typed as ProgressBar
+```
+
+此选项也被认为比第一个选项更安全。
+
+**坏：**
+
+```python
+# The compiler can't infer the exact type and will use Node
+# instead of ProgressBar.
+@onready var health_bar := get_node("UI/LifeBar")
+```
+
+##### GDScript 中的静态类型
+
+在本指南中，您将学习：
+
+- **如何在 GDScript 中使用类型**
+- **静态类型可以帮助您避免错误**
+
+在哪里以及如何使用这一新语言功能完全取决于您：您只能在一些敏感的 GDScript 文件中使用它，可以在任何地方使用它，也可以像往常一样编写代码！
+
+静态类型可以用于变量、常量、函数、参数和返回类型。
+
+> **注意：**
+>
+> Typed GDScript 自 Godot 3.1 开始提供。
+
+###### 简要介绍静态类型
+
+使用类型化的 GDScript，Godot 可以在编写代码时检测到更多错误！当你工作时，它会为你和你的队友提供更多的信息，因为当你调用一个方法时，参数的类型会显示出来。
+
+想象一下，你正在编程一个库存系统。您先对 `Item` 节点进行编码，然后再对 `Inventory` 进行编码。若要将项目添加到库存中，使用代码的人员应始终将一个 `Item` 传递给 `Inventory.add` 方法。使用类型，可以强制执行以下操作：
+
+```python
+# In 'item.gd'.
+class_name Item
+# In 'inventory.gd'.
+class_name Inventory
+
+
+func add(reference: Item, amount: int = 1):
+    var item = find_item(reference)
+    if not item:
+        item = _instance_item_from_db(reference)
+
+    item.amount += amount
+```
+
+类型化 GDScript 的另一个显著优点是新的**警告系统**。从 3.1 版开始，Godot 在编写代码时会向您发出有关代码的警告：引擎会识别代码中可能在运行时导致问题的部分，但可以让您决定是否保持代码原样。稍后会有更多信息。
+
+静态类型还为您提供了更好的代码完成选项。下面，您可以看到名为 `PlayerController` 的类的动态类型完成选项和静态类型完成选项之间的区别。
+
+您可能以前在变量中存储过一个节点，并键入了一个没有自动完成建议的点：
+
+这是由于动态代码。Godot 无法知道要传递给函数的节点或值类型。但是，如果显式编写类型，则会从节点中获取所有公共方法和变量：
+
+未来，类型化 GDScript 还将提高代码性能：实时编译和其他编译器改进已经在计划中了！
+
+总的来说，类型化编程给你一种更结构化的体验。它有助于防止错误，并改进脚本的自我文档化方面。当你在团队或长期项目中工作时，这尤其有帮助：研究表明，开发人员大部分时间都在阅读别人的代码或他们过去写过但忘记了的脚本。代码越清晰、越结构化，理解的速度就越快，前进的速度也就越快。
+
+###### 如何使用静态类型
+
+要定义变量或常量的类型，请在变量名称后面写一个冒号，后跟其类型。例如 `var health: int`。这将强制变量的类型始终保持不变：
+
+```python
+var damage: float = 10.5
+const MOVE_SPEED: float = 50.0
+```
+
+如果你写了一个冒号，Godot 会尝试推断类型，但你省略了类型：
+
+```python
+var life_points := 4
+var damage := 10.5
+var motion := Vector2()
+```
+
+目前，您可以使用三种类型的 … 类型：
+
+1. 内置
+2. 核心类和节点（`Object`、`Node`、`Area2D`、`Camera2D` 等）
+3. 您自己的自定义类。查看新的 class_name 功能以在编辑器中注册类型。
+
+> **注意：**
+>
+> 您不需要为常量编写类型提示，因为 Godot 会根据赋值自动设置它。但是，您仍然可以这样做，以使代码的意图更加清晰。
+
+###### 自定义变量类型
+
+您可以将任何类（包括自定义类）用作类型。有两种方法可以在脚本中使用它们。第一种方法是预加载要用作常量中类型的脚本：
+
+```python
+const Rifle = preload("res://player/weapons/rifle.gd")
+var my_rifle: Rifle
+```
+
+第二种方法是在创建时使用 `class_name` 关键字。对于上面的示例，您的 rifle.gd 如下所示：
+
+```python
+class_name Rifle
+extends Node2D
+```
+
+如果您使用 `class_name`，Godot 会在编辑器中全局注册 Rifle 类型，您可以在任何地方使用它，而无需将其预加载到常量中：
+
+```python
+var my_rifle: Rifle
+```
+
+###### 变量强制转换
+
+类型转换是类型语言中的一个关键概念。强制转换是将一个值从一种类型转换为另一种类型。
+
+想象一下你的游戏中有一个敌人，它 `extends Area2D`。您希望它与玩家（`CharacterBody2D`）发生碰撞，该播放器附带一个名为 `PlayerController` 的脚本。您使用 `on_body_entered` 信号来检测碰撞。使用键入的代码，您检测到的主体将是通用的 `PhysicsBody2D`，而不是 `_on_body_entered` 回调上的 `PlayerController`。
+
+您可以使用 `as` 强制转换关键字检查此 `PhysicsBody2D` 是否是您的播放器，并再次使用冒号 `:` 强制变量使用此类型。这将强制变量坚持 `PlayerController` 类型：
+
+```python
+func _on_body_entered(body: PhysicsBody2D) -> void:
+    var player := body as PlayerController
+    if not player:
+        return
+
+    player.damage()
+```
+
+当我们处理自定义类型时，如果 `body` 没有扩展 `PlayerController`，则 `player` 变量将设置为 `null`。我们可以用这个来检查身体是否就是球员。由于演员阵容，我们还将获得玩家变量的完全自动完成。
+
+> **注意：**
+>
+> 如果您尝试使用内置类型进行强制转换，但失败了，Godot 将抛出一个错误。
+
+###### 安全行
+
+您也可以使用强制转换来确保安全行。安全行是 Godot 3.1 中的一个新工具，它可以告诉您不明确的代码行何时是类型安全的。由于可以混合和匹配类型代码和动态代码，Godot 有时没有足够的信息来知道指令在运行时是否会触发错误。
+
+当您获得一个子节点时，就会发生这种情况。让我们以计时器为例：使用动态代码，您可以使用 `$Timer` 获得节点。GDScript 支持鸭子类型，所以即使您的计时器是 `Timer` 类型，它也是 `Node` 和 `Object`，这两个类都是它扩展的。使用动态 GDScript，您也不关心节点的类型，只要它具有需要调用的方法即可。
+
+当你得到一个节点时，你可以使用强制转换来告诉 Godot 你想要的类型：`($Timer as Timer)`, `($Player as CharacterBody2D)` 等。Godot 将确保类型有效，如果有效，那么脚本编辑器左侧的行号将变为绿色。
+
+> **注意：**
+>
+> 您可以在编辑器设置中关闭安全线或更改其颜色。
+
+###### 用箭头定义函数的返回类型 ->
+
+要定义函数的返回类型，请在其声明后写一个短划线和一个直角括号 `->`，然后是返回类型：
+
+```python
+func _process(delta: float) -> void:
+    pass
+```
+
+`void` 类型表示函数不返回任何内容。您可以使用任何类型，如变量：
+
+```python
+func hit(damage: float) -> bool:
+    health_points -= damage
+    return health_points <= 0
+```
+
+您也可以使用自己的节点作为返回类型：
+
+```python
+# inventory.gd
+
+# Adds an item to the inventory and returns it.
+func add(reference: Item, amount: int) -> Item:
+    var item: Item = find_item(reference)
+    if not item:
+        item = ItemDatabase.get_instance(reference)
+
+    item.amount += amount
+    return item
+```
+
+###### 定义数组的元素类型
+
+要定义数组的类型，请将类型名称括在 `[]` 中。
+
+数组的类型适用于 `for` 循环变量，以及一些运算符，如 `[]`、`[]=` 和 `+`。数组方法（如 `push_back`）和其他运算符（如 `==`）仍然是非类型化的。基元类型、内建类和自定义类可以用作类型。不支持嵌套数组类型。
+
+```python
+var scores: Array[int] = [10, 20, 30]
+var vehicles: Array[Node] = [$Car, $Plane]
+var items: Array[Item] = [Item.new()]
+# var arrays: Array[Array] -- disallowed
+
+for score in scores:
+    # score has type `int`
+
+# The following would be errors:
+scores += vehicles
+var s: String = scores[0]
+scores[0] = "lots"
+```
+
+###### 类型或动态：坚持一种风格
+
+类型化 GDScript 和动态 GDScript 可以共存于同一个项目中。但为了代码库和同行的一致性，建议坚持这两种风格。如果你遵循相同的指导方针，每个人都会更容易合作，阅读和理解他人的代码也会更快。
+
+类型代码需要更多的编写，但您可以获得我们上面讨论的好处。下面是一个动态样式的相同空脚本示例：
+
+```python
+extends Node
+
+
+func _ready():
+    pass
+
+
+func _process(delta):
+    pass
+```
+
+使用静态类型：
+
+```python
+extends Node
+
+
+func _ready() -> void:
+    pass
+
+
+func _process(delta: float) -> void:
+    pass
+```
+
+正如您所看到的，您还可以将类型与引擎的虚拟方法一起使用。与任何方法一样，信号回调也可以使用类型。这是一个动态风格的 `body_entered` 的信号：
+
+```python
+func _on_area_2d_body_entered(body):
+    pass
+```
+
+同一个回调，使用类型提示：
+
+```python
+func _on_area_entered(area: CollisionObject2D) -> void:
+    pass
+```
+
+您可以自由地用自己的类型替换，例如 `CollisionObject2D`，以自动转换参数：
+
+```python
+func _on_area_entered(bullet: Bullet) -> void:
+    if not bullet:
+        return
+
+    take_damage(bullet.damage)
+```
+
+`bullet` 变量可以在这里容纳任何 `CollisionObject2D`，但我们确保它是我们的 `Bullet`，是我们为项目创建的节点。如果它是其他任何东西，比如 `Area2D`，或者任何没有扩展 `Bullet` 的节点，则 `bullet`变量将为 `null`。
+
+###### 警告系统
+
+> **注意：**
+>
+> 有关 GDScript 警告系统的文档已移至 GDScript 警告体系。
+
+###### 无法指定类型的情况
+
+为了结束本介绍，让我们介绍一些不能使用类型提示的情况。以下所有示例都**会引发错误**。
+
+不能指定数组中单个成员的类型。这将给您一个错误：
+
+```python
+var enemies: Array = [$Goblin: Enemy, $Zombie: Enemy]
+```
+
+不能强制在 `for` 循环中分配类型，因为 `for` 关键字循环的每个元素都有不同的类型。所以你**不能**写：
+
+```python
+var names = ["John", "Marta", "Samantha", "Jimmy"]
+for name: String in names:
+    pass
+```
+
+###### 摘要
+
+类型化 GDScript 是一个强大的工具。从 Godot 的 3.1 版本开始提供，它可以帮助您编写更多结构化代码，避免常见错误，并创建可扩展的系统。在未来，由于即将进行的编译器优化，静态类型也将为您带来不错的性能提升。
+
+##### GDScript 警告系统
+
+GDScript 警告系统补充了静态类型（但它也可以在没有静态类型的情况下工作）。它可以帮助您避免在开发过程中很难发现的错误，这些错误可能会导致运行时错误。
+
+您可以在名为 **GDScript** 的部分下的项目设置中配置警告：
+
+> **注意：**
+>
+> 如上图所示，必须启用“**高级设置**”才能查看 GDScript 部分。
+
+您可以在脚本编辑器的状态栏中找到活动 GDScript 文件的警告列表。以下示例有 3 个警告：
+
+要忽略一个文件中的特定警告，请插入 `#warning-ignore:warning-id` 形式的特殊注释，或单击警告描述右侧的忽略链接。Godot 将在相应的行上方添加注释，代码将不再触发相应的警告：
+
+您也可以选择使用 `# warning-ignore-all:warning-id` 忽略该文件中特定类型的警告，而不是仅忽略一个，而是忽略所有警告。要忽略文件中所有类型的所有警告，请添加注释 `#warnings-disable`。
+
+警告不会阻止游戏运行，但如果您愿意，可以将其转化为错误。这样，除非你修复了所有警告，否则你的游戏不会编译。前往“项目设置”的 `GDScript` 部分以启用此选项。以下是与上一个示例相同的文件，其中打开了错误警告：
+
+##### GDScript 格式字符串
+
+GDScript 提供了一个称为格式字符串的功能，它允许重用文本模板来简洁地创建不同但相似的字符串。
+
+格式字符串和普通字符串一样，只是它们包含某些占位符字符序列。然后，这些占位符可以很容易地被传递给格式字符串的参数所取代。
+
+例如，使用 `%s` 作为占位符，可以很容易地将格式字符串 `"Hello %s, how are you?"` 更改为 `"Hello World, how are you?"`。注意占位符在字符串的中间；在没有格式字符串的情况下修改它可能会很麻烦。
+
+###### GDScript 中的用法
+
+检查这个具体的 GDScript 示例：
+
+```python
+# Define a format string with placeholder '%s'
+var format_string = "We're waiting for %s."
+
+# Using the '%' operator, the placeholder is replaced with the desired value
+var actual_string = format_string % "Godot"
+
+print(actual_string)
+# Output: "We're waiting for Godot."
+```
+
+占位符总是以 `%` 开头，但下一个或多个字符，即*格式说明符*，决定了如何将给定值转换为字符串。
+
+上面例子中的 `%s` 是最简单的占位符，适用于大多数用例：它通过与隐式字符串转换或 `str()` 相同的方法转换值。字符串保持不变，布尔值变为 `"True"` 或 `"False"`，整数或实数变为十进制，其他类型通常以可读字符串形式返回数据。
+
+GDScript 中还有另一种格式化文本的方法，即 `String.format()` 方法。它用相应的值替换字符串中出现的所有键。该方法可以处理键/值对的数组或字典。
+
+数组可以用作键、索引或混合样式（请参阅以下示例）。只有在使用数组的索引或混合样式时，顺序才重要。
+
+GDScript 中的一个快速示例：
+
+```python
+# Define a format string
+var format_string = "We're waiting for {str}"
+
+# Using the 'format' method, replace the 'str' placeholder
+var actual_string = format_string.format({"str": "Godot"})
+
+print(actual_string)
+# Output: "We're waiting for Godot"
+```
+
+还有其他格式说明符，但它们仅适用于使用 `%` 运算符的情况。
+
+###### 多个占位符
+
+格式字符串可能包含多个占位符。在这种情况下，值以数组的形式传递，每个占位符一个值（除非使用带 `*` 的格式说明符，请参见动态填充）：
+
+```python
+var format_string = "%s was reluctant to learn %s, but now he enjoys it."
+var actual_string = format_string % ["Estragon", "GDScript"]
+
+print(actual_string)
+# Output: "Estragon was reluctant to learn GDScript, but now he enjoys it."
+```
+
+请注意，这些值是按顺序插入的。请记住，必须同时替换所有占位符，因此必须有适当数量的值。
+
+###### 格式说明符
+
+占位符中可以使用除 `s` 之外的其他格式说明符。它们由一个或多个字符组成。他们中的一些像 `s` 一样靠自己就可以工作，一些出现在其他字符之前，一些只使用某些值或字符。
+
+###### 占位符类型
+
+其中一个并且只有一个必须始终作为格式说明符中的最后一个字符出现。除了 `s` 之外，这些还需要某些类型的参数。
+
+|      |                                                              |
+| ---- | ------------------------------------------------------------ |
+| `s`  | 通过与隐式字符串转换相同的方法**简单**转换为字符串。         |
+| `c`  | 单个**Unicode字符**。代码点或单个字符串应为无符号 8 位整数（0-255）。 |
+| `d`  | 一个**十进制整数**。应为整数或实数（将被求底）。             |
+| `o`  | 一个**八进制整数**。应为整数或实数（将被求底）。             |
+| `x`  | 一个带有**小写**字母的**十六进制整数**。应为整数或实数（将被求底）。 |
+| `X`  | 一个带有**大写**字母的**十六进制整数**。应为整数或实数（将被求底）。 |
+| `f`  | 一个**十进制实数**。应为整数或实数。                         |
+
+###### 占位符修饰符
+
+这些字符出现在上面的前面。他们中的一些只在特定条件下工作。
+
+|      |                                                              |
+| ---- | ------------------------------------------------------------ |
+| `+`  | 在数字说明符中，如果为正数，则**显示 + 号**。                |
+| 整数 | 设置**填充**。如果整数或实数占位符中整数以 `0` 开头，则用空格或零填充。如果存在 `-`，则忽略前导 `0`。当在 `.` 之后使用时，请参见 `.`。 |
+| `.`  | 在 `f`之前，将**精度**设置为小数点后 0 位。可以根据数字进行更改。用零填充。 |
+| `-`  | **向右填充**，而不是向左填充。                               |
+| `*`  | **动态填充**，期望附加的整形参数在 `.` 之后设置填充或精度，请参阅[动态填充](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_format_string.html#dynamic-padding)。 |
+
+###### 填充
+
+`.`（*点*）、`*`（*星号*）、`-`（减号）和数字（`0`-`9`）字符用于填充。这允许打印几个垂直对齐的值，就像在一列中一样，前提是使用固定宽度的字体。
+
+要将字符串填充到最小长度，请在说明符中添加一个整数：
+
+```python
+print("%10d" % 12345)
+# output: "     12345"
+# 5 leading spaces for a total length of 10
+```
+
+如果整数以 `0` 开头，则用零而不是空格填充整数值：
+
+```python
+print("%010d" % 12345)
+# output: "0000012345"
+```
+
+可以通过添加后面有一个整数的 `.`（*点*）来指定实数的精度。后面没有整数时，使用精度为 0，四舍五入为整数值。用于填充的整数必须出现在点之前。
+
+```python
+# Pad to minimum length of 10, round to 3 decimal places
+print("%10.3f" % 10000.5555)
+# Output: " 10000.556"
+# 1 leading space
+```
+
+`-` 字符将导致向右而不是向左填充，这对于右文本对齐很有用：
+
+```python
+print("%-10d" % 12345678)
+# Output: "12345678  "
+# 2 trailing spaces
+```
+
+###### 动态填充
+
+通过使用 `*`（*星号*）字符，可以在不修改格式字符串的情况下设置填充或精度。它用于代替格式说明符中的整数。然后在格式化时传递填充值和精度值：
+
+```python
+var format_string = "%*.*f"
+# Pad to length of 7, round to 3 decimal places:
+print(format_string % [7, 3, 8.8888])
+# Output: "  8.889"
+# 2 leading spaces
+```
+
+通过在 `*` 之前加 `0`，仍然可以在整数占位符中填充零：
+
+```python
+print("%0*d" % [2, 3])
+# Output: "03"
+```
+
+###### 转义序列
+
+若要在格式字符串中插入文字 `%` 字符，必须对其进行转义，以避免将其作为占位符读取。这是通过将字符加倍来完成的：
+
+```python
+var health = 56
+print("Remaining health: %d%%" % health)
+# Output: "Remaining health: 56%"
+```
+
+###### 格式化方法示例
+
+以下是如何使用 `String.format` 方法的各种调用的一些示例。
+
+| **类型**   | **风格** | **示例**                                                     | **结果**          |
+| ---------- | -------- | ------------------------------------------------------------ | ----------------- |
+| Dictionary | key      | `"Hi, {name} v{version}!".format({"name":"Godette", "version":"3.0"})` | Hi, Godette v3.0! |
+| Dictionary | index    | `"Hi, {0} v{1}!".format({"0":"Godette", "1":"3.0"})`         | Hi, Godette v3.0! |
+| Dictionary | mix      | `"Hi, {0} v{version}!".format({"0":"Godette", "version":"3.0"})` | Hi, Godette v3.0! |
+| Array      | key      | `"Hi, {name} v{version}!".format([["version","3.0"], ["name","Godette"]])` | Hi, Godette v3.0! |
+| Array      | index    | `"Hi, {0} v{1}!".format(["Godette","3.0"])`                  | Hi, Godette v3.0! |
+| Array      | mix      | `"Hi, {name} v{0}!".format([3.0, ["name","Godette"]])`       | Hi, Godette v3.0! |
+| Array      | no index | `"Hi, {} v{}!".format(["Godette", 3.0], "{}")`               | Hi, Godette v3.0! |
+
+占位符也可以在使用 `String.format` 时进行自定义，下面是该功能的一些示例。
+
+| **类型**        | **示例**                                           | **结果**         |
+| --------------- | -------------------------------------------------- | ---------------- |
+| Infix (default) | `"Hi, {0} v{1}".format(["Godette", "3.0"], "{_}")` | Hi, Godette v3.0 |
+| Postfix         | `"Hi, 0% v1%".format(["Godette", "3.0"], "_%")`    | Hi, Godette v3.0 |
+| Prefix          | `"Hi, %0 v%1".format(["Godette", "3.0"], "%_")`    | Hi, Godette v3.0 |
+
+将 `String.format` 方法和 `%` 运算符结合起来可能很有用，因为 `String.format` 没有处理数字表示的方法。
+
+| **示例**                                                     | **结果**          |
+| ------------------------------------------------------------ | ----------------- |
+| `"Hi, {0} v{version}".format({0:"Godette", "version":"%0.2f" % 3.114})` | Hi, Godette v3.11 |
+
+#### 
