@@ -6,5 +6,7 @@ extends Node
 
 
 func _ready():
-	player.player_fired_bullet.connect(bullet_manager.handle_bullet_spawned)
+	# 刷新随机种子
+	randomize()
+	GlobalSignals.bullet_fired.connect(bullet_manager.handle_bullet_spawned)
 

@@ -1,0 +1,46 @@
+[gd_scene load_steps=9 format=3 uid="uid://cuu4tbysrr5nv"]
+
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_dmxsc"]
+[ext_resource type="Texture2D" uid="uid://bke3jih5i35mr" path="res://assets/top_down_shooter/PNG/Woman Green/womanGreen_hold.png" id="2_u1smu"]
+[ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="3_e4b4j"]
+[ext_resource type="PackedScene" uid="uid://cohfrt8h7aasg" path="res://scenes/health.tscn" id="4_jjtml"]
+[ext_resource type="Script" path="res://scripts/ai.gd" id="5_08uym"]
+[ext_resource type="PackedScene" uid="uid://iesf8n20ul1b" path="res://scenes/team.tscn" id="6_r3vll"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mndd7"]
+radius = 13.0
+height = 42.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_nbyld"]
+radius = 300.0
+
+[node name="Ally" type="CharacterBody2D" groups=["enemy"]]
+script = ExtResource("1_dmxsc")
+
+[node name="BodyImg" type="Sprite2D" parent="."]
+texture = ExtResource("2_u1smu")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_mndd7")
+
+[node name="Weapon" parent="." instance=ExtResource("3_e4b4j")]
+position = Vector2(23, 11)
+
+[node name="Health" parent="." instance=ExtResource("4_jjtml")]
+
+[node name="AI" type="Node2D" parent="."]
+script = ExtResource("5_08uym")
+
+[node name="DetectionZone" type="Area2D" parent="AI"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AI/DetectionZone"]
+shape = SubResource("CircleShape2D_nbyld")
+
+[node name="PatrolTimer" type="Timer" parent="AI"]
+one_shot = true
+
+[node name="Team" parent="." instance=ExtResource("6_r3vll")]
+
+[connection signal="body_entered" from="AI/DetectionZone" to="AI" method="_on_detection_zone_body_entered"]
+[connection signal="body_exited" from="AI/DetectionZone" to="AI" method="_on_detection_zone_body_exited"]
+[connection signal="timeout" from="AI/PatrolTimer" to="AI" method="_on_patrol_timer_timeout"]
