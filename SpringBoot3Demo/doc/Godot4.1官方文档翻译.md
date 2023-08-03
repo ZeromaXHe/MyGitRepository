@@ -15775,4 +15775,1930 @@ print("Remaining health: %d%%" % health)
 | ------------------------------------------------------------ | ----------------- |
 | `"Hi, {0} v{version}".format({0:"Godette", "version":"%0.2f" % 3.114})` | Hi, Godette v3.11 |
 
-#### 
+### 核心特性
+
+#### 如何阅读 Godot API
+
+在本页上，您将学习如何阅读 Godot API 的类引用。
+
+API 或应用程序编程接口是 Godot 为用户提供的索引。它简要概述了哪些类存在，它们如何相互关联，它们具有哪些功能，以及如何使用它们。
+
+##### 继承
+
+在每个文件的顶部，您将看到类的名称。
+
+“继承（Inherits）”部分列出了当前继承的每个类。这里 `CanvasItem` 继承 `Node`，`Node` 继承 `Object`。
+
+“继承者（Inherited By）”部分列出了直接继承当前类的每个类。这里 `Control` 和 `Node2D` 都继承了 `CanvasItem`。
+
+##### 简短的描述
+
+接下来是对类的简要描述。此文本显示在 Godot 编辑器弹出窗口中，用于创建节点、资源和其他类型。
+
+##### 描述
+
+接下来是对类、它的特性和它的用例的更详细的描述。
+
+你可以在这里找到：
+
+1. 类如何工作的具体说明。
+2. 常见用例的代码示例。
+3. 在类的每个方法之间共享的用法详细信息。
+4. 有关所需依赖项或配置的警告。
+5. Godot API 其他相关部分的链接。
+
+##### 教程
+
+然后，该页面提供了指向手册中提及或使用当前类的部分的链接。
+
+##### 属性
+
+Properties 表列出了属于类的每个实例的变量，也称为“属性”
+
+左列包含属性的数据类型。文本也是该数据类型的 Godot API 页面的链接。
+
+中心列包含属性的名称。该文本也是该属性在页面上的完整描述的链接。使用此名称可以获取属性的数据或为其设置新值。
+
+右侧列包含属性的默认值。若要使用不同的值对其进行初始化，必须通过脚本或 Inspector 设置不同的值。
+
+##### 方法
+
+Methods 表列出了属于类的每个实例的函数，也称为“方法”
+
+左列包含方法返回值的数据类型。
+
+右列包含方法的名称、参数和限定符。名称是左括号前的文本。它也是页面上方法完整描述的链接。使用此名称可以调用该方法。
+
+对于每个参数，页面都会详细说明其数据类型、名称和默认值（如果有的话）。
+
+可能的限定符包括...
+
+- `const`：该方法不会更改类实例中的任何数据。
+- `virtual`：该方法什么也不做，只是等待脚本覆盖它。
+- `vararg`：该方法可以接受任意数量的参数。
+
+##### 信号
+
+Signals 列表详细列出了向其他类实例“发出”游戏状态变化的事件的名称和参数。
+
+与 Methods 表一样，任何参数都将包括其数据类型和名称。
+
+每个信号还具有关于信号何时发射的详细说明。
+
+##### 枚举
+
+枚举列表详细说明了与当前类关联的可枚举数据类型。
+
+对于每个枚举，页面都会声明其名称，然后列出其可能的值。
+
+对于每个枚举值，页面都会说明其名称、整数值以及对其用例和/或影响的解释。
+
+##### 常量
+
+Constants 列表详细列出了当前类中的命名整数常量。
+
+对于每个常量，页面都会说明其名称、整数值以及对其用例和/或影响的解释。
+
+`NOTIFICATION_*` 常量的描述将说明哪个引擎事件触发通知。
+
+##### 属性说明
+
+“属性描述”列表详细介绍了每个属性的所有信息。
+
+它重述属性的数据类型和名称。
+
+Godot API 中的每个属性都绑定到一对 setter 和 getter 函数。使用任意一个都是等效的。此处列出了它们。
+
+下面是属性数据表示的内容、其用例和/或更改影响的详细摘要。它可能包括代码示例和/或到 Godot API 相关部分的链接。
+
+> **注意：**
+>
+> 当必须将方法名称或 Callable 绑定到某个对象时，知道 setter 和 getter 名称是有用的。
+
+##### 方法说明
+
+“方法描述”列表详细介绍了每个方法的所有内容。
+
+它重述了方法的返回数据类型、参数名称/类型/默认值和限定符。
+
+下面是该方法的作用及其用例的详细摘要。它可能包括代码示例和/或 Godot API 相关部分的链接。
+
+#### 调试
+
+##### 调试工具总览
+
+本指南将向您概述引擎中可用的调试工具。
+
+Godot 提供了一个强大的调试器和评测器，用于跟踪错误、在运行时检查游戏、监控基本指标和衡量性能。它还提供了在运行的游戏中可视化碰撞框和导航多边形的选项。
+
+最后，您可以选择调试在远程设备上运行的游戏，并在游戏运行时重新加载对场景或代码的更改。
+
+###### 调试器面板
+
+Godot 的许多调试工具都是 Debugger 面板的一部分，您可以在 Debugger 面板中找到有关它的信息。
+
+###### 调试菜单选项
+
+在编辑器中运行游戏时，您可以打开或关闭一些常见的调试选项，这可以帮助您调试游戏。
+
+您可以在“**调试**编辑器”菜单中找到这些选项。
+
+以下是选项的说明：
+
+###### 使用远程调试进行部署
+
+导出和部署时，生成的可执行文件将尝试连接到计算机的 IP 进行调试。
+
+###### 使用网络进行小型部署 FS
+
+此选项加快了对远程设备上占地面积较大的游戏的测试。
+
+当启用“**使用网络 FS 进行小型部署**”时，部署游戏将生成一个最小的可执行文件，而不是导出整个游戏。编辑器然后通过网络提供项目中的文件。
+
+此外，在安卓系统上，游戏使用 USB 电缆进行部署，以加快部署速度。
+
+###### 可见碰撞形状
+
+该选项使碰撞形状和光线投射节点在运行的游戏中可见。
+
+###### 可见导航
+
+导航网格和多边形将在运行的游戏中可见。
+
+###### 同步场景更改
+
+使用此选项，在运行时对编辑器中的场景所做的任何更改都会立即显示。当在设备上远程使用时，使用网络文件系统会更高效。
+
+###### 同步脚本更改
+
+保存的任何脚本都将重新加载到正在运行的游戏中。当在设备上远程使用时，使用网络文件系统会更高效。
+
+###### 脚本编辑器调试工具和选项
+
+脚本编辑器有自己的一组调试工具，可用于断点和两个选项。断点工具也可以在调试器的“调试器”选项卡中找到。
+
+> **提示：**
+>
+> 您可以通过单击脚本编辑器左侧（行号左侧）的槽来创建断点。将光标悬停在该檐槽上时，您将看到一个透明的红点出现，单击放置断点后，该红点将变为不透明的红点。再次单击红点以删除断点。以这种方式创建的断点会在编辑器重新启动时持续存在，即使在退出编辑器时没有保存脚本也是如此。
+>
+> 您还可以在 GDScript 中使用 `breakpoint` 关键字来创建存储在脚本 iself 中的断点。与通过在槽中单击创建的断点不同，当使用版本控制时，这种基于关键字的断点在不同的计算机上是持久的。
+
+“**中断**（Break）”按钮会导致脚本中断，就像断点一样。**Continue** 使游戏在断点处暂停后继续。**Step Over** 进入下一行代码，如果可能的话，**Step Into** 进入函数。否则，它将执行与 **Step Over** 相同的操作。
+
+“**保持调试器打开**”选项可在场景关闭后保持调试器打开。使用“**外部编辑器调试**”选项可以使用外部编辑器调试游戏。也可以在**编辑器设置 > 调试器**中访问此选项。
+
+当调试器在断点上中断时，脚本编辑器的槽中会显示一个绿色三角形箭头。此箭头指示调试器中断的代码行。
+
+> **警告：**
+>
+> 如果代码在线程中运行，断点不会中断代码。这是 GDScript 调试器的当前限制。
+
+###### 调试项目设置
+
+在项目设置中，有一个“**调试**”类别，其中包含三个子类别，用于控制不同的内容。
+
+###### 设置
+
+这些是一些常规设置，如将当前 FPS 打印到“**输出**”面板、分析时的最大功能量等。
+
+###### GDScript
+
+这些设置允许您切换特定的 GDScript 警告，例如未使用的变量。您也可以完全关闭警告。
+
+###### 形状
+
+形状用于调整仅用于调试目的的形状的颜色，例如碰撞形状和导航形状。
+
+###### 远程现场对接
+
+在编辑器中运行游戏时，“**场景**”停靠站顶部会显示两个选项，“**远程**”和“**本地**”。使用 **Remote** 时，您可以在运行的项目中检查或更改节点的参数。
+
+> **注意：**
+>
+> 一些与调试相关的编辑器设置可以在“**编辑器设置**”中的**“网络” > “调试”**和**“调试器”**部分下找到。
+
+##### 调试器面板
+
+Godot 的许多调试工具，包括调试器，都可以在屏幕底部的调试器面板中找到。单击 **Debugger** 打开它。
+
+调试器面板分为几个选项卡，每个选项卡都专注于特定的任务。
+
+###### 调试器
+
+当 GDScript 编译器到达代码中的断点时，“调试器”选项卡将自动打开。
+
+它为您提供堆栈跟踪、有关对象状态的信息以及控制程序执行的按钮。当调试器在断点上中断时，脚本编辑器的槽中会显示一个绿色三角形箭头。此箭头指示调试器中断的代码行。
+
+> **提示：**
+>
+> 您可以通过单击脚本编辑器左侧（行号左侧）的槽来创建断点。将光标悬停在该檐槽上时，您将看到一个透明的红点出现，单击放置断点后，该红点将变为不透明的红点。再次单击红点以删除断点。以这种方式创建的断点会在编辑器重新启动时持续存在，即使在退出编辑器时没有保存脚本也是如此。
+>
+> 您还可以在 GDScript 中使用断点关键字来创建存储在脚本 iself 中的断点。与通过在槽中单击创建的断点不同，当使用版本控制时，这种基于关键字的断点在不同的计算机上是持久的。
+
+您可以使用右上角的按钮：
+
+- 跳过所有断点。这样，您就可以为将来的调试会话保存断点。
+- 复制当前错误消息。
+- **进入**（Step Into）代码。这个按钮将带您进入下一行代码，如果它是一个函数，它将逐行遍历该函数。
+- **跳过**（Step Over）代码。此按钮将转到下一行代码，但它不会逐行遍历函数。
+- **打破**（Break）。此按钮暂停游戏的执行。
+- **继续**（Continue）。此按钮在断点或暂停后恢复游戏。
+
+> **警告：**
+> 如果代码在线程中运行，断点不会中断代码。这是 GDScript 调试器的当前限制。
+
+###### 错误
+
+这是运行游戏时打印错误和警告消息的地方。
+
+您可以在**“项目设置” > “调试” > “GDScript”**中禁用特定警告。
+
+###### 档案器
+
+探查器用于查看项目使用时运行的代码，以及这对性能的影响。
+
+> **参考：**
+>
+> 有关如何使用探查器的详细说明，请参阅专用的“探查器”页面。
+
+###### Visual Profiler
+
+Visual Profiler 可用于分别监视在 CPU 和 GPU 上渲染帧时花费最多时间的部分。这允许跟踪由渲染引起的潜在 CPU 和 GPU 瓶颈的来源。
+
+> **警告：**
+>
+> Visual Profiler 仅测量渲染任务（如执行绘图调用）所花费的 CPU 时间。Visual Profiler 不包括用于其他任务（如脚本和物理）的 CPU 时间。使用标准的 Profiler 选项卡可以跟踪与渲染无关的 CPU 任务。
+
+若要使用可视化探查器，请运行项目，切换到“调试器”底部面板中的“**可视化探查器**”选项卡，然后单击“**启动**”：
+
+您将在探查器运行时看到类别和结果。图形线也会出现，左侧是 CPU 帧图，右侧是 GPU 帧图。
+
+单击“**停止**”以完成分析，这将使结果保持可见但冻结在原位。停止正在运行的项目后，结果仍然可见，但退出编辑器后不会可见。
+
+单击左侧的结果类别，在右侧的 CPU 和 GPU 图形中突出显示它们。您也可以单击图形，将光标移动到特定的帧编号，并在左侧的结果类别中高亮显示选定的数据类型。
+
+您可以在时间值（以每帧毫秒为单位）或目标帧时间的百分比（当前硬编码为 16.67 毫秒或 60 FPS）之间切换结果显示。
+
+如果在分析过程中出现帧速率峰值，这可能会导致图形缩放不好。禁用“**适合帧**”，以便图形缩放到60 FPS+ 部分。
+
+> **注意：**
+>
+> 请记住，Visual Profiler 的结果可能会因视口分辨率而变化很大，如果使用 `disabled` 或 `canvas_items` 拉伸模式，视口分辨率由窗口大小决定。
+>
+> 在比较不同管路的结果时，请确保对所有管路使用相同的视口大小。
+
+使用任何渲染方法（Forward+、Mobile 或 Compatibility）时都支持 Visual Profiler，但报告的类别会因当前渲染方法以及启用的图形功能而异。例如，使用 Forward+ 时，带有阴影投射灯光的简单 2D 场景将导致出现以下类别：
+
+举另一个 Forward+ 的例子，启用阴影投射灯光和各种效果的 3D 场景将导致启用以下类别：
+
+请注意，在三维示例中，几个类别的名称后面附加了**（平行）**。这暗示多个任务正在 GPU 上并行执行。这通常意味着，只禁用其中一个相关功能不会像预期的那样提高性能，因为另一个任务仍然需要按顺序执行。
+
+###### 网络探查器
+
+网络探查器包含通过多玩家 API 进行通信的所有节点的列表，对于每个节点，还包含一些关于传入和传出网络交互量的计数器。它还具有一个带宽计，可以显示任何给定时刻的总带宽使用情况。
+
+> **注意：**
+>
+> 带宽计**没有**考虑到 High-level 多人游戏 API 自己的压缩系统。这意味着改变所使用的压缩算法不会改变带宽计报告的度量。
+
+###### 显示器
+
+监视器是游戏运行时的几个方面的图形，如 FPS、内存使用率、场景中有多少节点等等。所有监视器都会自动跟踪统计数据，所以即使游戏运行时有一个监视器没有打开，你也可以稍后打开它，看看值是如何变化的。
+
+> **参考：**
+>
+> 除了默认的性能监视器之外，您还可以创建自定义性能监视器来跟踪项目中的任意值。
+
+###### 视频 RAM
+
+**视频 RAM** 选项卡显示游戏运行时的视频 RAM 使用情况。它按资源路径、资源类型、格式以及该资源使用的视频 RAM 数量提供了使用视频 RAM 的每个资源的列表。面板右上角还有一个视频 RAM 使用总数。
+
+###### 其他
+
+“**其他**”选项卡包含用于识别在运行时单击的控制节点的工具：
+
+- **单击的控件**告诉单击的节点在场景树中的位置。
+- **单击的控件类型**告诉您单击的节点的类型。
+
+##### 探查器
+
+你在 Godot 上运行游戏并四处玩耍。这很有趣，它的功能正在变得完整，你会觉得它即将发布。
+
+但是，当你打开技能树时，它会因为代码中的某些东西而停止。看着技能树像幻灯片一样滚动是不可接受的。出了什么问题？它是定位技能树元素、UI 还是渲染？
+
+你可以尝试优化一切并重复运行游戏，但你可以在这方面更聪明，缩小可能性。输入 Godot 的探查器。
+
+###### 探查器概述
+
+您可以通过打开“**调试器**”面板并单击“**探查器**”选项卡来打开探查器。
+
+Godot 的探查器不会自动运行，因为探查是性能密集型的。它必须不断地测量游戏中发生的一切，并向调试器报告，因此默认情况下它是关闭的。
+
+要开始分析，请单击左上角的“开始”按钮。运行您的游戏，数据将开始显示。您也可以在游戏之前或游戏期间的任何时间开始评测，具体取决于您是否愿意。
+
+> **注意：**
+>
+> 探查器当前不支持 C# 脚本。可以使用 JetBrains Rider 和带有 Godot 支持插件的 JetBrains dotTrace 来评测 C# 脚本。
+
+您可以随时单击“**清除**”按钮来清除数据。使用“**测量**”下拉菜单可以更改测量的数据类型。测量面板和图形将相应更新。
+
+###### 测量数据
+
+探查器的接口分为两部分。左边是函数列表，右边是性能图。
+
+主要测量是帧时间、物理帧、空闲时间和物理时间。
+
+- **帧时间**是 Godot 为整个图像执行从物理到渲染的所有逻辑所花费的时间。
+- **物理帧**是 Godot 在物理更新之间分配的时间。在理想的情况下，帧时间是您选择的任何时间：默认情况下为 16.66 毫秒，相当于 60FPS。这是一个参考框架，你可以用来做其他的事情。
+- **空闲时间**是 Godot 更新物理以外的逻辑所花费的时间，例如位于 *_process* 中的代码或设置为在**空闲**时更新的计时器和相机。
+- **物理时间**是 Godot 更新物理任务的时间，如 *_physics_process* 和设置为 **Physics** update 的内置节点。
+
+> **注意：**
+>
+> 在 Godot 3 中，**帧时间**包括渲染时间。假设你在游戏中发现了一个神秘的滞后峰值，但你的物理和脚本都运行得很快。延迟可能是由于粒子的出现或视觉效果！
+
+默认情况下，Godot 会勾选“帧时间”和“物理时间”。这为您提供了每个帧相对于所分配的所需物理 FPS 所需时间的概述。您可以通过单击左侧的复选框来打开和关闭功能。其他设施会在你往下列表时出现，比如 Physics 2D、Physics 和 Audio，然后到达 Script 函数，代码就会出现在那里。
+
+如果单击图形，则会更改显示在左侧的帧的信息。在右上角，还有一个帧计数器，您可以手动调整您正在观看的帧，使其更精细。
+
+###### 测量范围和测量窗口
+
+您可以使用“**测量**”下拉菜单更改正在查看的测量。默认情况下，它以“帧时间”开始，并以毫秒为单位列出通过帧所需的时间。平均时间是任何给定函数在多次调用时所花费的平均时间。例如，一个运行五次需要 0.05 毫秒的函数的平均值应该是 0.01 毫秒。
+
+如果精确的毫秒计数不重要，并且您希望查看相对于帧其余部分的时间比例，请使用百分比测量。帧 % 相对于帧时间，物理 % 相对于物理时间。
+
+最后一个选项是时间范围。**Inclusive** 度量函数**对**任何嵌套函数调用所花费的时间。例如：
+
+*get_neighbors*、*find_nearest_neighbor* 和 *move_subject* 都花费了大量时间。你可能会被愚弄，以为这是因为他们三个都很慢。
+
+但当更改为 **Self** 时，Godot 测量在函数体中花费的时间，而不考虑它自己进行的函数调用。
+
+您可以看到 *get_neighbors* 和 *move_subject* 已经失去了很多重要性。实际上，这意味着 *get_neighbors* 和 *move_subject* 花了更多的时间等待其他函数调用完成，而 *find_nearest_neighbor* **实际上**很慢。
+
+###### 使用探查器调试慢速代码
+
+使用探查器查找慢代码可以归结为运行游戏并在绘制性能图时观察它。当在帧时间内出现不可接受的尖峰时，您可以单击图形暂停游戏，并将 `_frame #_` 缩小到尖峰的开始。您可能需要在框架和函数之间来回切换，以找到根本原因。
+
+在“脚本”函数下，启用某些函数的复选框以查找哪些函数需要时间。这些是您需要审查和优化的功能。
+
+###### 以微秒为单位手动测量
+
+如果你的功能很复杂，那么弄清楚哪一部分需要优化可能很有挑战性。是你的数学，还是你访问其他数据的方式？是 *for* 循环吗？*if* 语句？
+
+当代码使用一些临时函数运行时，您可以通过手动计数刻度来缩小测量范围。这两个函数是 *OS* 类对象的一部分。它们是 *get_ticks_msec* 和 *get_ticks_usec*。第一个以毫秒（每秒 1000）为单位进行测量，第二个以微秒（每秒 1000000）为单位测量。
+
+任何一个都会返回自游戏开始以来在各自时间范围内的时间量。这直接来自操作系统，而不是 Godot。
+
+如果用微秒的开始计数和结束计数包装一段代码，那么两者之间的区别就是运行该段代码所花费的时间。
+
+```python
+# Measuring the time it takes for worker_function() to run
+var start = OS.get_ticks_usec()
+worker_function()
+var end = OS.get_ticks_usec()
+var worker_time = (end-start)/1000000.0
+
+# Measuring the time spent running a calculation over each element of an array
+start = OS.get_ticks_usec()
+for calc in calculations:
+    result = pow(2, calc.power) * calc.product
+end = OS.get_ticks_usec()
+var loop_time = (end-start)/1000000.0
+
+print("Worker time: %s\nLoop time: %s" % [worker_time, loop_time])
+```
+
+当你成为一个更有经验的程序员时，这种技术就变得不那么必要了。您开始了解正在运行的程序中哪些部分速度较慢。知道循环和分支可能很慢来自于经验，你可以通过测量和研究来获得经验。
+
+但是，在探查器和 ticks 函数之间，您应该有足够的时间开始查找代码的哪些部分需要优化。
+
+##### 自定义性能监视器
+
+###### 简介
+
+正如调试器面板文档中所解释的，Godot 具有**调试器 > 监视器**底部面板，该面板允许通过显示其随时间演变的图形来跟踪各种值。这些图的数据来源于引擎的性能单例。
+
+自 Godot 4.0 以来，您可以声明要在此监视器选项卡中显示的自定义值。自定义性能监视器的示例用例包括：
+
+- 显示特定于项目的性能指标。例如，在体素游戏中，可以创建一个性能监视器来跟踪每秒加载的块的数量。
+- 显示与性能没有严格关系的游戏中指标，但对于图形调试仍然有用。例如，你可以跟踪游戏中存在的敌人数量，以确保你的生成机制按预期工作。
+
+###### 创建自定义性能监视器
+
+在本例中，我们将创建一个自定义性能监视器来跟踪当前运行的项目中有多少敌人。
+
+主场景具有一个附加了以下脚本的“计时器”节点：
+
+```python
+extends Timer
+
+
+func _ready():
+    # The slash delimiter is used to determine the category of the monitor.
+    # If there is no slash in the monitor name, a generic "Custom" category
+    # will be used instead.
+    Performance.add_custom_monitor("game/enemies", get_enemy_count)
+    timeout.connect(_on_timeout)
+    # Spawn 20 enemies per second.
+    wait_time = 0.05
+    start()
+
+
+func _on_timeout():
+    var enemy = preload("res://enemy.tscn").instantiate()
+    get_parent().add_child(enemy)
+
+
+# This function is called every time the performance monitor is queried
+# (this occurs once per second in the editor, more if called manually).
+# The function must return a number greater than or equal to 0 (int or float).
+func get_enemy_count():
+    return get_tree().get_nodes_in_group("enemies").size()
+```
+
+ *ref:Performance.add_custom_monitor<class_Performance_method_add_custom_monitor>*  的第二个参数是 Callable。
+
+`enemy.tscn` 是一个具有 Node2D 根节点和 Timer 子节点的场景。Node2D 附带了以下脚本：
+
+```python
+extends Node2D
+
+
+func _ready():
+    add_to_group("enemies")
+    $Timer.timeout.connect(_on_timer_timeout)
+    # Despawn enemies 2.5 seconds after they spawn.
+    $Timer.wait_time = 2.5
+    $Timer.start()
+
+
+func _on_timer_timeout():
+    queue_free()
+```
+
+在这个例子中，由于我们每秒生成 20 个敌人，并且每个敌人在生成后 2.5 秒就消失了，我们预计场景中的敌人数量将稳定到 50 个。我们可以通过看图表来确定这一点。
+
+要可视化从此自定义性能监视器创建的图形，请运行项目，在项目运行时切换到编辑器，然后打开编辑器窗口底部的**“调试器”>“监视器”**。向下滚动到最新可用的**游戏**部分并选中**敌人**。您应该看到如下所示的图形：
+
+> **注意：**
+>
+> 性能监视器处理代码不必与节点本身生活在同一个脚本中。您可以选择将性能监视器注册和 getter 函数移动到自动加载。
+
+###### 查询项目中的性能监视器
+
+如果希望在运行项目的窗口（而不是编辑器）中显示性能监视器的值，请使用 `Performance.get_custom_monitor("category/name")` 获取自定义监视器的值。您可以使用标签、RichTextLabel、二维、三维文本中的自定义图形等来显示值。
+
+此方法也可以用于导出的项目（调试和发布模式），允许您在编辑器之外创建可视化。
+
+#### 空闲与物理处理
+
+游戏是循环进行的。每一帧，你都需要更新你的游戏世界的状态，然后再把它画在屏幕上。Godot 在 Node 类中提供了两个虚拟方法：`Node._process()` 和 `Node._physics_process()`。如果在脚本中定义其中一个或两个，引擎将自动调用它们。
+
+您可以使用两种类型的处理：
+
+1. **空闲处理**允许您尽可能频繁地运行每帧更新一个节点的代码。
+2. **物理处理**以固定的速率发生，默认情况下每秒 60 次。这与游戏的实际帧速率无关，并使物理运行平稳。你应该把它用于任何涉及物理引擎的事情，比如移动与环境碰撞的物体。
+
+可以通过在脚本中定义 `_process()` 方法来激活空闲处理。您可以通过调用 Node.set_process() 来关闭并重新打开它。
+
+引擎每次绘制帧时都会调用此方法：
+
+```python
+func _process(delta):
+    # Do something...
+    pass
+```
+
+请记住，引擎调用 `_process()` 的频率取决于应用程序的帧速率，帧速率随时间和设备的不同而变化。
+
+函数的 `delta` 参数是自上次调用 `_process()` 以来所用的时间（以秒为单位）。使用此参数可以独立于帧速率进行计算。例如，您应该始终将速度值乘以 `delta` 以设置移动对象的动画。
+
+物理处理使用类似的虚拟函数：`_physics_process()`。将其用于每个物理步骤之前必须进行的计算，例如移动与游戏世界碰撞的角色。如上所述，`_physics_process()` 尽可能以固定的时间间隔运行，以保持物理交互的稳定。您可以在“项目设置”的“物理”->“公共”->“物理 Fps”下更改物理步骤之间的间隔。默认情况下，它设置为每秒运行 60 次。
+
+引擎在每个物理步骤之前调用此方法：
+
+```python
+func _physics_process(delta):
+    # Do something...
+    pass
+```
+
+函数 `_process()` 与物理不同步。其速率取决于硬件和游戏优化。它还运行在单线程游戏中的物理步骤之后。
+
+通过创建具有单个 Label 节点的场景，并将以下脚本附加到该节点，可以看到 `_process()` 函数在工作：
+
+```python
+extends Label
+
+var time = 0
+
+func _process(delta):
+    time += delta
+    text = str(time) # 'text' is a built-in Label property.
+```
+
+运行场景时，应该会看到计数器在每帧中递增。
+
+#### 组
+
+Godot 中的组就像其他软件中的标签一样工作。可以根据需要将节点添加到任意多个组中。然后，在代码中，可以使用 SceneTree 执行以下操作：
+
+- 获取组中节点的列表。
+- 在组中的所有节点上调用方法。
+- 向组中的所有节点发送通知。
+
+这是组织大型场景和解耦代码的一个有用功能。
+
+##### 管理组
+
+组是通过将一个节点添加到新的组名称中来创建的，同样，通过从给定组中删除所有节点来删除组。
+
+向组中添加/删除节点有两种方法：
+
+- 在设计过程中，使用编辑器中的节点停靠。
+- 在执行期间，通过调用 Node.add_to_group() 或 Node.remove_from_group()。
+
+##### 使用节点停靠
+
+可以使用节点停靠中的“组”选项卡将当前场景中的节点添加到组中。
+
+在“场景”停靠中选择一个或多个节点，并在字段中写入组名称，然后单击“添加”。
+
+您现在应该看到该组出现。
+
+在一个复杂的项目中，最终可能会出现许多组或具有许多节点的大型场景。可以使用“组编辑器”窗口向组添加或删除任何节点。要访问它，请单击“管理组”按钮。
+
+此时将显示“组编辑器”窗口。下面是一个复杂项目的屏幕截图，用来说明该工具的用途。
+
+它有三列：
+
+1. 当前场景中节点使用的组的列表。
+2. 不属于选定组的节点的列表。
+3. 组中节点的列表。
+
+底部的字段允许您在第二列和第三列中添加新组或筛选节点。
+
+> **注意：**
+>
+> 任何灰显的节点名称都表示该节点已添加到另一个场景中的组中，因此无法在此处进行编辑。这种情况尤其发生在场景实例中。
+
+##### 使用代码
+
+您还可以通过脚本管理组。以下代码会在脚本进入场景树后立即将脚本附加到 `guards` 的节点添加到该节点。
+
+```python
+func _ready():
+    add_to_group("guards")
+```
+
+想象一下，你正在创建一个渗透游戏。当敌人发现玩家时，你希望所有的警卫和机器人都处于戒备状态。
+
+在下面这个虚构的例子中，我们使用 `SceneTree.call_group()` 来提醒所有敌人玩家被发现了。
+
+```python
+func _on_player_spotted():
+    get_tree().call_group("guards", "enter_alert_mode")
+```
+
+上面的代码对组 `guards` 的每个成员调用函数 `enter_alert_mode`。
+
+要获得作为数组的 `guards` 组中节点的完整列表，可以调用 SceneTree.get_nodes_in_group()：
+
+```python
+var guards = get_tree().get_nodes_in_group("guards")
+```
+
+SceneTree 类提供了许多更有用的方法来与场景、其节点层次结构和组进行交互。它允许你轻松切换场景或重新加载场景，退出游戏或暂停并取消暂停。它还提供有用的信号。
+
+#### 节点和场景实例
+
+本指南介绍了如何获取节点、创建节点、将它们作为子节点添加以及从代码实例化场景。
+
+##### 获取节点
+
+您可以通过调用 Node.get_node() 方法来获得对节点的引用。若要实现此操作，子节点必须存在于场景树中。在父节点的 `_ready()` 函数中获取它可以保证这一点。
+
+例如，如果有这样的场景树，并且希望获得对 Sprite2D 和 Camera2D 节点的引用，以便在脚本中访问它们。
+
+为此，您可以使用以下代码。
+
+```python
+var sprite2d
+var camera2d
+
+func _ready():
+    sprite2d = get_node("Sprite2D")
+    camera2d = get_node("Camera2D")
+```
+
+请注意，使用节点的名称而不是类型来获取节点。上面，“Sprite2D” 和 “Camera2D” 是场景中节点的名称。
+
+如果在“场景”停靠中将 Sprite2D 节点重命名为“蒙皮（Skin）”，则必须在脚本中将获取节点的行更改为 `get_node("Skin")`。
+
+##### 节点路径
+
+获取对节点的引用时，不限于获取直接子级。`get_node()` 函数支持路径，有点像使用文件浏览器时的路径。在单独的节点上添加斜线。
+
+以以下场景为例，其中脚本附加到 UserInterface 节点。
+
+要获得 AnimationPlayer 节点，您需要使用以下代码。
+
+```python
+var animation_player
+
+func _ready():
+    animation_player = get_node("ShieldBar/AnimationPlayer")
+```
+
+> **注意：**
+>
+> 与文件路径一样，可以使用“..”来获取父节点。最好的做法是避免这样做，尽管不要破坏封装。您也可以用正斜杠开始路径，使其成为绝对路径，在这种情况下，最上面的节点将是应用程序的预定义根视口“/root”。
+
+##### 句法糖
+
+在 GDScript 中，您可以使用两个快捷方式来缩短代码。首先，将 `@onready` 注解放在成员变量之前，可以使其在 `_ready()` 回调之前初始化。
+
+```python
+@onready var sprite2d = get_node("Sprite2D")
+```
+
+`get_node()` 还有一个简短的符号：美元符号“$”。将其放置在要获取的节点的名称或路径之前。
+
+```python
+@onready var sprite2d = $Sprite2D
+@onready var animation_player = $ShieldBar/AnimationPlayer
+```
+
+##### 创建节点
+
+要从代码中创建节点，请像调用任何其他基于类的数据类型一样调用其 `new()` 方法。
+
+您可以将新创建的节点的引用存储在一个变量中，并调用 `add_child()` 将其添加为附加脚本的节点的子节点。
+
+```python
+var sprite2d
+
+func _ready():
+    var sprite2d = Sprite2D.new() # Create a new Sprite2D.
+    add_child(sprite2d) # Add it as a child of this node.
+```
+
+要删除节点并将其从内存中释放，可以调用其 `queue_free()` 方法。这样做会在当前帧完成处理后，在当前帧结束时对节点进行排队删除。此时，引擎将从场景中删除节点，并释放内存中的对象。
+
+```python
+sprite2d.queue_free()
+```
+
+在调用 `sprite2d.queue_free()` 之前，远程场景树如下所示。
+
+引擎释放节点后，远程场景树不再显示精灵。
+
+您也可以调用 `free()` 来立即销毁节点。您应该小心操作，因为对它的任何引用都会立即变为 `null`。我们建议您使用 `queue_free()`，除非您知道自己在做什么。
+
+释放节点时，它也会释放其所有子节点。因此，要删除场景树的整个分支，只需释放最顶部的父节点。
+
+##### 实例化场景
+
+场景是可以根据需要创建任意数量复制品的模板。此操作称为实例化，从代码中执行此操作分为两个步骤：
+
+1. 从本地驱动器加载场景。
+2. 正在创建加载的 PackedScene 资源的实例。
+
+```python
+var scene = load("res://my_scene.tscn")
+```
+
+预加载场景可以改善用户体验，因为加载操作发生在编译器读取脚本时，而不是在运行时。此功能仅适用于 GDScript。
+
+```python
+var scene = preload("res://my_scene.tscn")
+```
+
+此时，`scene` 是一个压缩的场景资源，而不是一个节点。要创建实际节点，您需要调用 PackedScene.instantiate()。它返回一个节点树，可以用作当前节点的子节点。
+
+```python
+var instance = scene.instantiate()
+add_child(instance)
+```
+
+此两步过程的优点是可以保持已加载的场景并动态创建新实例。例如，快速实例化几个敌人或子弹。
+
+#### 可重写函数
+
+Godot 的 Node 类提供了虚拟函数，您可以覆盖这些函数来更新每帧或特定事件上的节点，例如当它们进入场景树时。
+
+本文档介绍了您最常使用的文档。
+
+> **参考：**
+>
+> 在引擎盖下，这些功能依赖于 Godot 的低级通知系统。要了解更多信息，请参阅 Godot 通知。
+
+除了类的构造函数之外，还有两个函数可以初始化和获取节点：`_enter_tree()` 和 `_ready()`。
+
+当节点进入场景树时，它将变为活动状态，引擎将调用其 `_enter_Tree()` 方法。该节点的子节点可能还不是活动场景的一部分。由于可以将节点移除并重新添加到场景树中，因此在节点的整个生命周期中可能会多次调用此函数。
+
+大多数情况下，您将使用 `_ready()`。此函数在节点的生命周期中只调用一次，在 `_enter_tree()` 之后 `_ready()` 确保所有子级都已首先进入场景树，因此可以安全地对其调用 `get_node()`。
+
+> **参考：**
+>
+> 若要了解有关获取节点引用的详细信息，请阅读节点和场景实例。
+
+另一个相关的回调是 `_exit_tree()`，每当节点退出场景树时，引擎都会调用它。这可以是在调用 Node.remove_child() 时，也可以是在释放节点时。
+
+```python
+# Called every time the node enters the scene tree.
+func _enter_tree():
+    pass
+
+# Called when both the node and its children have entered the scene tree.
+func _ready():
+    pass
+
+# Called when the node is about to leave the scene tree, after all its
+# children received the _exit_tree() callback.
+func _exit_tree():
+    pass
+```
+
+两个虚拟方法 `_process()` 和 `_physics_process()` 允许您分别更新节点、每个帧和每个物理帧。有关更多信息，请阅读专用文档：空闲和物理处理。
+
+```python
+# Called every frame, as often as possible.
+func _process(delta):
+    pass
+
+# Called every physics frame.
+func _physics_process(delta):
+    pass
+```
+
+两个更重要的内置节点回调函数是 `Node._unhandled_input()` 和 `Node._input()`，用于接收和处理单个输入事件。`_unhandled_input()` 方法接收每一次按键、鼠标点击等尚未在 `_input()` 回调或用户界面组件中处理的操作。一般情况下，您希望将其用于游戏输入。`_input()` 回调允许您在 `_unhandled_input()` 获取输入事件之前拦截和处理输入事件。
+
+要了解有关 Godot 中输入的更多信息，请参阅输入部分。
+
+```python
+# Called once for every event.
+func _unhandled_input(event):
+    pass
+
+# Called once for every event, before _unhandled_input(), allowing you to
+# consume some events.
+func _input(event):
+    pass
+```
+
+还有一些更可重写的函数，如 `Node._get_configuration_warnings()`。专用节点类型提供了更多的回调，如 `CanvasItem._draw()` 以编程方式绘制或  `Control._gui_put()` 来处理 UI 元素上的点击和输入。
+
+#### 跨语言脚本
+
+Godot 允许您混合和匹配脚本语言以满足您的需求。这意味着一个项目可以在 C# 和 GDScript 中定义节点。本页将介绍用不同语言编写的两个节点之间可能的交互。
+
+以下两个脚本将在本页中用作参考。
+
+```python
+extends Node
+
+var my_field: String = "foo"
+
+func print_node_name(node: Node) -> void:
+    print(node.get_name())
+
+func print_array(arr: Array) -> void:
+    for element in arr:
+        print(element)
+
+func print_n_times(msg: String, n: int) -> void:
+    for i in range(n):
+        print(msg)
+```
+
+##### 实例化节点
+
+如果不使用场景树中的节点，则可能需要直接从代码中实例化节点。
+
+###### 从 GDScript 实例化 C# 节点
+
+从 GDScript 中使用 C# 不需要太多工作。一旦加载（请参阅类作为资源），就可以使用 new() 实例化脚本。
+
+```python
+var my_csharp_script = load("res://path_to_cs_file.cs")
+var my_csharp_node = my_csharp_script.new()
+print(my_csharp_node.str2) # barbar
+```
+
+> **警告：**
+>
+> 在创建 `.cs` 脚本时，您应该始终记住 Godot 将使用的类是与 `.cs` 文件本身类似的名称。如果该类在文件中不存在，您将看到以下错误： `Invalid call. Nonexistent function 'new' in base`。
+>
+> 例如，MyCoolNode.cs 应该包含一个名为 MyCoolNode 的类。
+>
+> C# 类需要派生一个 Godot 类，例如 `GodotObject`。否则，将出现相同的错误。
+>
+> 您还需要检查项目的 `.csproj` 文件中是否引用了您的 `.cs` 文件。否则，将出现相同的错误。
+
+###### 从 C# 实例化 GDScript 节点
+
+从 C# 的角度来看，一切都以相同的方式工作。加载后，可以使用 GDScript.New() 实例化 GDScript。
+
+```python
+GDScript MyGDScript = (GDScript)GD.Load("res://path_to_gd_file.gd");
+GodotObject myGDScriptNode = (GodotObject)MyGDScript.New(); // This is a GodotObject
+```
+
+这里我们使用的是 Object，但您可以使用类型转换，就像在类型转换和强制转换中所解释的那样。
+
+##### 访问字段
+
+###### 从 GDScript 访问 C# 字段
+
+从 GDScript 访问 C# 字段非常简单，您不必担心任何事情。
+
+```python
+print(my_csharp_node.myField) # bar
+my_csharp_node.myField = "BAR"
+print(my_csharp_node.myField) # BAR
+```
+
+###### 从 C# 访问 GDScript 字段
+
+由于 C# 是静态类型的，从 C# 访问 GDScript 有点复杂，因此必须使用 GodotObject.Get() 和 GodotObject.Set()。第一个参数是要访问的字段的名称。
+
+```python
+GD.Print(myGDScriptNode.Get("my_field")); // foo
+myGDScriptNode.Set("my_field", "FOO");
+GD.Print(myGDScriptNode.Get("my_field")); // FOO
+```
+
+请记住，在设置字段值时，应该只使用 GDScript 方面知道的类型。从本质上讲，您希望使用 GDScript 引用中描述的内置类型或扩展 Object 的类。
+
+##### 调用方法
+
+###### 从 GDScript 调用 C# 方法
+
+同样，从 GDScript 调用 C# 方法应该很简单。编组过程将尽最大努力强制转换参数以匹配函数签名。如果这是不可能的，您将看到以下错误：`Invalid call. Nonexistent function 'FunctionName'`。
+
+```python
+my_csharp_node.PrintNodeName(self) # myGDScriptNode
+# my_csharp_node.PrintNodeName() # This line will fail.
+
+my_csharp_node.PrintNTimes("Hello there!", 2) # Hello there! Hello there!
+
+my_csharp_node.PrintArray(["a", "b", "c"]) # a, b, c
+my_csharp_node.PrintArray([1, 2, 3]) # 1, 2, 3
+```
+
+###### 从 C# 调用 GDScript 方法
+
+要从 C# 调用 GDScript 方法，需要使用 GodotObject.Call()。第一个参数是要调用的方法的名称。以下参数将传递给所述方法。
+
+```python
+myGDScriptNode.Call("print_node_name", this); // my_csharp_node
+// myGDScriptNode.Call("print_node_name"); // This line will fail silently and won't error out.
+
+myGDScriptNode.Call("print_n_times", "Hello there!", 2); // Hello there! Hello there!
+
+string[] arr = new string[] { "a", "b", "c" };
+myGDScriptNode.Call("print_array", arr); // a, b, c
+myGDScriptNode.Call("print_array", new int[] { 1, 2, 3 }); // 1, 2, 3
+// Note how the type of each array entry does not matter as long as it can be handled by the marshaller
+```
+
+> **警告：**
+>
+> 如您所见，如果被调用方法的第一个参数是数组，则需要将其强制转换为 `object`。否则，数组中的每个元素都将被视为单个参数，函数签名将不匹配。
+
+##### 继承
+
+GDScript 文件不能从 C# 脚本继承。同样，C# 脚本可能不会从 GDScript 文件继承。由于这将是多么复杂的实施，这一限制不太可能在未来取消。有关详细信息，请参阅本期 GitHub。
+
+#### 创建脚本模板
+
+Godot 提供了一种在创建新脚本时使用脚本模板的方法，如 `Script Create Dialog`（脚本创建对话框）中所示：
+
+编辑器提供了一组内置的脚本模板，但也可以创建新的脚本模板并在默认情况下对其进行设置，无论是在每个项目还是在编辑器范围内。
+
+模板链接到特定的节点类型，因此在创建脚本时，您只能看到与该特定节点或其父类型之一对应的模板。例如，如果要为 CharacterBody3D 创建脚本，则只能看到为 CharacterBody2D、Node3D 或 Nodes 定义的模板。
+
+##### 定位模板
+
+有两个地方可以管理模板。
+
+###### 编辑器定义的模板
+
+这些可在全球范围内的任何项目中使用。这些模板的位置根据每个操作系统确定：
+
+- Windows: `%APPDATA%\Godot\script_templates\`
+- Linux: `$HOME/.config/godot/script_templates/`
+- macOS: `$HOME/Library/Application Support/Godot/script_templates/`
+
+如果没有检测到 `script_templates`，Godot 将自动创建一组默认的内置模板，因此此逻辑可以用于重置默认模板，以防您意外覆盖它们。
+
+###### 项目定义模板
+
+搜索模板的默认路径是 `res://script_templates/` 目录可以通过代码和编辑器在 ProjectSettings 中配置 `editor/script_templates_search_path` 设置来更改路径。
+
+如果在项目中找不到 `script_templates` 目录，它将被忽略。
+
+###### 模板组织和命名
+
+编辑器和项目定义的模板都按以下方式组织：
+
+```python
+template_path/node_type/file.extension
+```
+
+其中：
+
+- `template_path` 是前两节中讨论的两个位置之一
+- `node_type` 是它将应用到的节点（例如，Node 或 CharacterBody3D）
+- `file` 是可以为模板选择的自定义名称（例如：`platformer_movement` 或 `smooth_camera`）
+- `extension`：将指示模板将应用于哪种语言（对于 GDScript 应该是 `gd`，对于 C# 应该是 `cs`）
+
+例如：
+
+- `template_scripts/Node/ssmoot_camera.gd`
+- `template_scripts/CharacterBody3D/platformer_movement.gd`
+
+##### 默认行为及其覆盖
+
+默认情况下：
+
+- 模板的名称与文件名相同（减去扩展名，prettyfied）
+- 描述为空
+- 空格缩进设置为 4
+- 该模板不会设置为给定节点的默认模板
+
+可以通过在文件开头添加元头来自定义这种行为，如下所示：
+
+```python
+# meta-name: Platformer movement
+# meta-description: Predefined movement for classical platformers
+# meta-default: true
+# meta-space-indent: 4
+```
+
+在这种情况下，名称将设置为“Platformer movement”，并带有给定的自定义描述，它将被设置为保存在其中的节点的默认模板。
+
+这是在编辑器和项目级别使用自定义模板的示例：
+
+> **注意：**
+>
+> 脚本模板的扩展名与常规脚本文件的扩展名相同。这可能会导致脚本解析器将这些模板视为项目中的实际脚本的问题。为了避免这种情况，请确保通过创建一个空的 `.gdignore` 文件来忽略包含它们的目录。该目录将不再在整个项目的文件系统中可见，但外部文本编辑器可以随时修改模板。
+
+> **提示：**
+>
+> 默认情况下，项目目录中的每个 C# 文件都包含在编译中。脚本模板必须手动从 C# 项目中排除，以避免生成错误。请参阅 Microsoft 文档中的从内部版本中排除文件。
+
+可以创建编辑器级别的模板，这些模板与项目特定的模板具有相同的级别，也可以创建与内置模板具有相同名称的模板，所有这些都将显示在新脚本对话框中。
+
+##### 默认模板
+
+要覆盖默认模板，请在 `Node` 目录中的编辑器或项目级别创建一个自定义模板（如果只想覆盖子类型，则可以创建更特定的类型），并使用 `meta-default:true` 标头启动文件。
+
+对于同一节点类型，只能同时将一个模板设置为默认模板。
+
+GDScript 和 C# 的基本节点的 `Default` 模板都显示在这里，因此您可以使用这些模板作为创建其他模板的基础：
+
+```python
+# meta-description: Base template for Node with default Godot cycle methods
+
+extends _BASE_
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+     pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+     pass
+```
+
+Godot 编辑器提供了一组有用的内置节点特定模板，例如 CharacterBody2D 和 CharacterBody3D 的 `basic_motion` 以及 EditorPlugin 的 `plugin`。
+
+##### 模板占位符列表
+
+下面介绍了当前实现的内置模板占位符的完整列表。
+
+###### 基本占位符
+
+| Placeholder            | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| `_BINDINGS_NAMESPACE_` | Godot 命名空间的名称（仅在 C# 中使用）。                     |
+| `_CLASS_`              | 新类的名称（仅在 C# 中使用）。                               |
+| `_BASE_`               | 新脚本从中继承的基类型。                                     |
+| `_TS_`                 | 缩进占位符。用于缩进的空白字符的确切类型和数量由 [EditorSettings](https://docs.godotengine.org/en/stable/classes/class_editorsettings.html#class-editorsettings) 中的 `text_editor/indent/type` 和 `text_editor/indent/size` 设置确定。可以由模板上的 `meta-space-indent` 标头覆盖。 |
+
+###### 类型占位符
+
+在 Godot3.x 中，每当使用模板创建新脚本时，GDScript 类型提示的占位符都会被替换，例如： `%INT_TYPE%`, `%STRING_TYPE%`, `%FLOAT_TYPE%` 或 `%VOID_RETURN%`。
+
+占位符不再适用于 Godot 4.x，但如果 EditorSettings 中的设置 `text_editor/completion/add_type_hints` 被禁用，则会自动删除一些基类型的参数和返回类型的类型提示：
+
+- `int`
+- `String`
+- `Array[String]`
+- `float`
+- `void`
+- `:=` 将转换为 `=`
+
+#### 评估表达式
+
+Godot 提供了一个 Expression 类，可以用来计算表达式。
+
+表达式可以是：
+
+- 一个数学表达式，如 `(2 + 4) * 16/4.0`.
+- 像 `deg_to_rad(90)` 这样的内置方法调用。
+- 如果在调用 Expression.execute() 时 `base_instance` 设置为 `null` 以外的值，则对用户提供的脚本（如 `update_health()`）进行方法调用。
+
+> **注意：**
+>
+> Expression 类独立于 GDScript。即使在禁用 GDScript 模块的情况下编译 Godot，它也可用。
+
+##### 基本用法
+
+要计算数学表达式，请使用：
+
+```python
+var expression = Expression.new()
+expression.parse("20 + 10*2 - 5/2.0")
+var result = expression.execute()
+print(result)  # 37.5
+```
+
+以下运算符可用：
+
+| 运算符   | Notes                                                        |
+| -------- | ------------------------------------------------------------ |
+| 加 `+`   | 还可以用于连接字符串和数组：- `"hello" + " world"` = `hello world` - `[1, 2] + [3, 4]` = `[1, 2, 3, 4]` |
+| 减 (`-`) |                                                              |
+| 乘 (`*`) |                                                              |
+| 除 (`/`) | 如果两个操作数都是整数，则执行和整数除法。如果其中至少有一个是浮点数，则返回浮点值。 |
+| 模 (`%`) | 返回整数除法的余数。                                         |
+
+运算符周围的空格是可选的。此外，请记住，通常的操作顺序适用。如果需要，可以使用括号覆盖操作顺序。
+
+Godot 中支持的所有 Variant 类型都可以使用：整数、浮点数、字符串、数组、字典、颜色、矢量…
+
+数组和字典可以像 GDScript 中那样进行索引：
+
+```python
+# Returns 1.
+[1, 2][0]
+
+# Returns 3. Negative indices can be used to count from the end of the array.
+[1, 3][-1]
+
+# Returns "green".
+{"favorite_color": "green"}["favorite_color"]
+
+# All 3 lines below return 7.0 (Vector3 is floating-point).
+Vector3(5, 6, 7)[2]
+Vector3(5, 6, 7)["z"]
+Vector3(5, 6, 7).z
+```
+
+##### 将变量传递给表达式
+
+可以将变量传递给表达式。然后，这些变量将在表达式的“上下文”中可用，并在表达式中使用时被替换：
+
+```python
+var expression = Expression.new()
+# Define the variable names first in the second parameter of `parse()`.
+# In this example, we use `x` for the variable name.
+expression.parse("20 + 2 * x", ["x"])
+# Then define the variable values in the first parameter of `execute()`.
+# Here, `x` is assigned the integer value 5.
+var result = expression.execute([5])
+print(result)  # 30
+```
+
+变量名和变量值都**必须**指定为数组，即使只定义一个变量也是如此。此外，变量名**区分大小写**。
+
+##### 设置表达式的基本实例
+
+默认情况下，表达式的基实例为 `null`。这意味着表达式没有与其关联的基实例。
+
+调用 Expression.execute() 时，可以将 `base_instance` 参数的值设置为特定的对象实例，例如 `self`、另一个脚本实例甚至 singleton：
+
+```python
+func double(number):
+    return number * 2
+
+
+func _ready():
+    var expression = Expression.new()
+    expression.parse("double(10)")
+
+    # This won't work since we're not passing the current script as the base instance.
+    var result = expression.execute([], null)
+    print(result)  # null
+
+    # This will work since we're passing the current script (i.e. self)
+    # as the base instance.
+    result = expression.execute([], self)
+    print(result)  # 20
+```
+
+关联基础实例可以执行以下操作：
+
+- 在表达式中引用实例的常量（`const`）。
+- 在表达式中引用实例的成员变量（`var`）。
+- 调用实例中定义的方法，并在表达式中使用它们的返回值。
+
+> **警告：**
+>
+> 将基实例设置为 `null` 以外的值允许引用常量、成员变量，并调用附加到实例的脚本中定义的所有方法。允许用户输入表达式可能会在你的游戏中作弊，如果你允许任意客户端在其他玩家的设备上运行表达式，甚至可能会引入安全漏洞。
+
+##### 示例脚本
+
+下面的脚本演示了 Expression 类的功能：
+
+```python
+const DAYS_IN_YEAR = 365
+var script_member_variable = 1000
+
+
+func _ready():
+    # Constant mathexpression.
+    evaluate("2 + 2")
+    # Math expression with variables.
+    evaluate("x + y", ["x", "y"], [60, 100])
+
+    # Call built-in method (built-in math function call).
+    evaluate("deg_to_rad(90)")
+
+    # Call user method (defined in the script).
+    # We can do this because the expression execution is bound to `self`
+    # in the `evaluate()` method.
+    # Since this user method returns a value, we can use it in math expressions.
+    evaluate("call_me() + DAYS_IN_YEAR + script_member_variable")
+    evaluate("call_me(42)")
+    evaluate("call_me('some string')")
+
+
+func evaluate(command, variable_names = [], variable_values = []) -> void:
+    var expression = Expression.new()
+    var error = expression.parse(command, variable_names)
+    if error != OK:
+        push_error(expression.get_error_text())
+        return
+
+    var result = expression.execute(variable_values, self)
+
+    if not expression.has_execute_failed():
+        print(str(result))
+
+
+func call_me(argument = null):
+    print("\nYou called 'call_me()' in the expression text.")
+    if argument:
+        print("Argument passed: %s" % argument)
+
+    # The method's return value is also the expression's return value.
+    return 0
+```
+
+脚本的输出将是：
+
+```python
+4
+160
+1.5707963267949
+
+You called 'call_me()' in the expression text.
+1365
+
+You called 'call_me()' in the expression text.
+Argument passed: 42
+0
+
+You called 'call_me()' in the expression text.
+Argument passed: some string
+0
+```
+
+##### 内置功能
+
+@GDScript 作用域中可用的大多数方法在 Expression 类中都可用，即使没有基实例绑定到表达式。可以使用相同的参数和返回类型。
+
+然而，与 GDScript 不同的是，参数**总是必需的**，即使它们在类引用中被指定为可选的。相反，当您将基实例绑定到表达式时，这种对参数的限制不适用于用户生成的函数。
+
+#### 手动更改场景
+
+有时，更好地控制场景的切换方式会有所帮助。如上所述，Viewport 的子节点将渲染到它生成的图像。即使对于“当前”场景之外的节点也是如此。自动加载属于这一类，但在运行时实例化并添加到树中的场景也是如此：
+
+```python
+var simultaneous_scene = preload("res://levels/level2.tscn").instantiate()
+
+func _add_a_scene_manually():
+    # This is like autoloading the scene, only
+    # it happens after already loading the main scene.
+    get_tree().root.add_child(simultaneous_scene)
+```
+
+为了完成这个循环并用旧场景替换新场景，开发人员可以做出选择。存在许多用于从 Viewport 视图中删除场景的策略。权衡包括平衡操作速度和内存消耗，以及平衡数据访问和完整性。
+
+1. **我们可以删除现有场景。**SceneTree.change_scene_to_file() 和 SceneTree.change_scene_to_packed() 将立即删除当前场景。开发人员也可以删除主场景。假设根节点的名称为“Main”，则可以执行 `get_node("/root/Main").free()` 来删除整个场景。
+   - 卸载内存。
+     - Pro：RAM不再拖动自重。
+     - Con：现在回到那个场景的成本更高，因为它必须再次加载回内存（需要时间和内存）。如果没有必要很快回来，那也没问题。
+     - Con：不再可以访问该场景的数据。如果没有必要很快使用这些数据，那也没问题。
+     - 注意：通过将一个或多个节点重新附加到不同的场景，甚至直接附加到 SceneTree，可以在即将删除的场景中保留数据。
+   - 处理停止。
+     - Pro：没有节点意味着没有过程、物理过程或输入处理。CPU 可用于处理新场景的内容。
+     - Con：这些节点的处理和输入处理不再运行。如果不需要使用更新后的数据，也没问题。
+2. **我们可以隐藏现有的场景。**通过更改节点的可见性或碰撞检测，我们可以从玩家的角度隐藏整个节点子树。
+   - 内存仍然存在。
+     - Pro：如果需要，仍然可以访问数据。
+     - Pro：无需移动更多节点来保存数据。
+     - Con：越来越多的数据被保存在内存中，这将成为网络或移动等对内存敏感的平台上的一个问题。
+   - 处理仍在继续。
+     - Pro：数据继续接收处理更新，因此场景将不断更新其中依赖于增量时间或帧数据的任何数据。
+     - Pro：节点仍然是组的成员（因为组属于场景树）。
+     - Con：CPU 的注意力现在分在两个场景中。过多的负载可能导致低帧速率。应该确保在运行时测试性能，以确保目标平台能够支持他们提供的负载。
+3. **我们可以从树中移除现有场景。**将变量指定给现有场景的根节点。然后使用 [Node.remove_child(Node)](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-remove-child) 将整个场景从树中分离。
+   - 内存仍然存在（类似于隐藏内存的优点/缺点）。
+   - 处理停止（与完全删除类似的优点/缺点）。
+   - Pro：这种“隐藏”的变体更容易显示/隐藏。与其潜在地跟踪场景的多个更改，不如只调用一个方法 add/remove_child 方法对。它类似于在其他引擎中禁用游戏对象。
+   - 缺点：与仅在视图中隐藏不同，如果场景中包含的数据依赖于增量时间、输入、组或从 SceneTree 访问派生的其他数据，则该数据将变得过时。
+
+还有一些情况下，人们可能希望同时出现许多场景。可能是在运行时添加自己的单例，或者在场景更改之间保留场景的数据（将场景添加到根节点）。
+
+```python
+get_tree().root.add_child(scene)
+```
+
+也许他们希望使用 SubViewportContainers 同时显示多个场景。在意图在屏幕的不同部分呈现不同内容的情况下，这是最佳的。Minimaps 和分屏多人游戏就是很好的例子。
+
+每个选项都有最合适的情况，因此必须检查每个选项的效果，并确定哪种路径最适合他们的独特情况。
+
+#### 带有信号的实例化
+
+信号提供了一种解耦游戏对象的方法，使您能够避免强制固定的节点排列。当您发现自己在使用 `get_parent()` 时，可能会调用信号。直接引用节点的父节点意味着无法轻松地将该节点移动到场景树中的另一个位置。当您在运行时实例化对象，并且可能希望将它们放置在运行场景树中的任意位置时，这可能会特别有问题。
+
+下面我们将考虑这样一个情况的例子：发射子弹。
+
+##### 射击示例
+
+考虑一个可以旋转并朝鼠标射击的玩家角色。每次点击鼠标按钮，我们都会在玩家的位置创建一个子弹的实例。有关详细信息，请参见创建实例。
+
+我们将使用 `Area2D` 来表示子弹，它以给定的速度直线移动：
+
+```python
+extends Area2D
+
+var velocity = Vector2.ZERO
+
+func _physics_process(delta):
+    position += velocity * delta
+```
+
+然而，如果子弹是作为玩家的孩子添加的，那么它们将在玩家旋转时保持“附着”在玩家身上：
+
+相反，我们需要子弹独立于玩家的移动——一旦发射，它们应该继续直线行进，玩家不能再影响它们。与其将项目符号作为玩家的子项添加到场景树中，不如将项目符号添加到“主”游戏场景的子项中，后者可能是玩家的父项，甚至是树的更上层。
+
+您可以通过将项目符号直接添加到主场景来完成此操作：
+
+```python
+var bullet_instance = Bullet.instantiate()
+get_parent().add_child(bullet_instance)
+```
+
+然而，这将导致另一个问题。现在，如果您尝试独立测试“Player”场景，它将在拍摄时崩溃，因为没有父节点可访问。这使得独立测试玩家代码变得更加困难，也意味着如果您决定更改主场景的节点结构，玩家的父节点可能不再是接收子弹的合适节点。
+
+解决这个问题的方法是使用一个信号来“发射”玩家的子弹。然后，玩家就不需要“知道”子弹在那之后会发生什么——任何连接到信号的节点都可以“接收”子弹，并采取适当的行动来产生它们。
+
+以下是玩家使用信号发射子弹的代码：
+
+```python
+extends Sprite2D
+
+signal shoot(bullet, direction, location)
+
+var Bullet = preload("res://bullet.tscn")
+
+func _input(event):
+    if event is InputEventMouseButton:
+        if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+            shoot.emit(Bullet, rotation, position)
+
+func _process(delta):
+    look_at(get_global_mouse_position())
+```
+
+在主场景中，我们连接玩家的信号（它将出现在检查器的“节点”选项卡中）
+
+```python
+func _on_player_shoot(Bullet, direction, location):
+    var spawned_bullet = Bullet.instantiate()
+    add_child(spawned_bullet)
+    spawned_bullet.rotation = direction
+    spawned_bullet.position = location
+    spawned_bullet.velocity = spawned_bullet.velocity.rotated(direction)
+```
+
+现在，子弹将保持自己的移动，与玩家的旋转无关：
+
+#### 暂停游戏和处理模式
+
+##### 简介
+
+在大多数游戏中，人们希望在某个时候中断游戏，做一些其他事情，比如休息或改变选项。实现对哪些可以暂停（哪些不能暂停）的细粒度控制是一项艰巨的工作，因此 Godot 中提供了一个简单的暂停框架。
+
+##### 暂停的工作原理
+
+要暂停游戏，必须设置暂停状态。这是通过将 `true` 指定给 SceneTree.paused 属性来完成的：
+
+```python
+get_tree().paused = true
+```
+
+这样做会导致两件事。首先，将停止所有节点的 2D 和 3D 物理。其次，某些节点的行为将根据其处理模式而停止或开始。
+
+> **注意：**
+>
+> 物理服务器可以在游戏暂停时使用它们的 `set_active` 方法使其处于活动状态。
+
+##### 处理模式
+
+Godot 中的每个节点都有一个“处理模式”，用于定义它处理的时间。它可以在检查器中的节点的节点属性下找到并更改。
+
+您也可以使用以下代码更改属性：
+
+```python
+func _ready():
+    process_mode = Node.PROCESS_MODE_PAUSABLE
+```
+
+这是每个模式告诉节点要做的事情：
+
+- **继承（Inherit）**：根据父级、外级等的状态进行处理。第一个具有非继承状态的父级。
+- **可暂停（Pausable）**：仅在游戏未暂停时处理节点（及其子节点处于继承模式）。
+- **暂停时（WhenPaused）**：仅在游戏暂停时处理节点（在继承模式下处理其子节点）。
+- **始终（Always）**：无论如何都要处理节点（以及继承模式下的子节点）。无论是否暂停，此节点都将进行处理。
+- **已禁用（Disabled）**：节点（及其处于继承模式的子节点）将完全不进行处理。
+
+默认情况下，所有节点都具有处于“继承”状态的此属性。如果父级设置为“继承”，则将检查祖父母，依此类推。如果在任何祖父母中都找不到状态，则使用 SceneTree 中的暂停状态。这意味着，默认情况下，当游戏暂停时，每个节点都将暂停。当一个节点停止处理时，会发生一些事情。
+
+将不会调用 `_process`、`_physics_process`、`_input` 和 `_input_event` 函数。但是，即使函数的脚本附加到当前未处理的节点，信号仍然可以工作并使其连接的函数运行。
+
+动画节点将暂停其当前动画，音频节点将暂停当前音频流，粒子将暂停。当游戏不再暂停时，这些会自动恢复。
+
+需要注意的是，即使在游戏暂停时节点正在处理，默认情况下物理也**不起**作用。如前所述，这是因为物理服务器已关闭。物理服务器可以在游戏暂停时使用其 `set_active` 方法激活。
+
+##### 暂停菜单示例
+
+这里是一个暂停菜单的例子。创建一个包含控件的弹出窗口或面板，并将其暂停模式设置为“暂停时”，然后将其隐藏。通过将暂停弹出窗口的根设置为“停止时”，所有子代和孙代都将继承该状态。这样，场景树的此分支将在暂停时继续工作。
+
+最后，当按下暂停按钮时（任何按钮都可以），启用暂停并显示暂停屏幕。
+
+```python
+func _on_pause_button_pressed():
+    get_tree().paused = true
+    $pause_popup.show()
+```
+
+要取消暂停，请在暂停屏幕关闭时执行相反操作：
+
+```python
+func _on_pause_popup_close_pressed():
+    $pause_popup.hide()
+    get_tree().paused = false
+```
+
+#### 文件系统
+
+##### 简介
+
+文件系统管理资产的存储方式和访问方式。设计良好的文件系统还允许多个开发人员在协作时编辑相同的源文件和资产。Godot 将所有资产作为文件存储在其文件系统中。
+
+##### 实现
+
+文件系统将资源存储在磁盘上。任何东西，从脚本到场景或 PNG 图像，都是引擎的资源。如果某个资源包含引用磁盘上其他资源的属性，则还会包括指向这些资源的路径。如果资源具有内置的子资源，则该资源将与所有绑定的子资源一起保存在单个文件中。例如，字体资源通常与字体纹理捆绑在一起。
+
+Godot 文件系统避免使用元数据文件。现有的资产管理器和 VCS 比我们能实现的任何东西都要好，所以 Godot 尽最大努力与 Subversion、Git、Mercurial 等合作。
+
+文件系统内容示例：
+
+```python
+/project.godot
+/enemy/enemy.tscn
+/enemy/enemy.gd
+/enemy/enemysprite.png
+/player/player.gd
+```
+
+##### project.godot
+
+project.godot 文件是项目描述文件，它总是位于项目的根目录中。事实上，它的位置定义了根的位置。这是 Godot 在打开项目时查找的第一个文件。
+
+此文件包含使用 win.ini 格式的纯文本项目配置。即使是一个空的 `project.godot` 也可以作为一个空项目的基本定义。
+
+##### 路径分隔符
+
+Godot 仅支持 `/` 作为路径分隔符。这样做是出于可移植性的原因。所有操作系统都支持这一点，即使是 Windows，因此像 `C:\project\project.godot` 这样的路径需要键入为 `C:/project/project.godot`。
+
+##### 资源路径
+
+访问资源时，使用主机操作系统文件系统布局可能很麻烦且不可移植。为了解决这个问题，创建了特殊路径 `res://`。
+
+路径 `res://` 将始终指向项目根（`project.godot` 所在的位置，因此 `res://project.godot` 始终有效）。
+
+仅当从编辑器本地运行项目时，此文件系统才是可读写的。当导出或在不同的设备上运行时（如手机或控制台，或从 DVD 运行），文件系统将变为只读，不再允许写入。
+
+##### 用户路径
+
+保存游戏状态或下载内容包等任务仍然需要写入磁盘。为此，引擎确保有一个始终可写的特殊路径 `user://`。此路径的解析方式因项目运行的操作系统而异。Godot 项目的文件路径中进一步解释了本地路径解析。
+
+##### 主机文件系统
+
+或者，也可以使用主机文件系统路径，但不建议将其用于已发布的产品，因为这些路径不能保证在所有平台上都能工作。但是，在 Godot 中编写开发工具时，使用主机文件系统路径可能很有用。
+
+##### 缺点
+
+这种文件系统设计有一些缺点。第一个问题是，四处移动资产（重命名资产或将其从项目中的一条路径移动到另一条路径）会破坏对这些资产的现有引用。必须重新定义这些引用以指向新的资产位置。
+
+为了避免这种情况，请在 Godot 中的 FileSystem dock 上执行所有移动、删除和重命名操作。永远不要从 Godot 外部移动资产，否则必须手动修复依赖关系（Godot 检测到这一点，并帮助您修复它们，但为什么要走艰难的道路？）。
+
+第二，在 Windows 和 macOS 下，文件名和路径名不区分大小写。如果在不区分大小写的主机文件系统中工作的开发人员将资产保存为 `myfile.PNG`，但随后将其引用为 `myfile.png`，则该资产在他们的平台上可以正常工作，但在其他平台上则不能正常工作，如 Linux、Android 等。这也可能适用于导出的二进制文件，这些文件使用压缩包来存储所有文件。
+
+建议您的团队在使用 Godot 时明确定义文件的命名约定。一个愚蠢的约定是只允许使用小写的文件名和路径名。
+
+#### 资源
+
+##### 节点和资源
+
+在本教程之前，我们关注的是 Godot 中的 Node 类，因为它是用于编码行为的类，并且引擎的大多数功能都依赖于它。还有另一个同样重要的数据类型：Resource。
+
+节点为您提供了功能：它们绘制精灵、3D 模型、模拟物理、排列用户界面等。资源是数据容器。它们自己不做任何事情：相反，节点使用资源中包含的数据。
+
+Godot 从磁盘保存或加载的任何内容都是一种资源。无论是场景（`.tscn` 或 `.scn` 文件）、图像、脚本…… 以下是一些资源示例：
+
+- [Texture](https://docs.godotengine.org/en/stable/classes/class_texture.html#class-texture)
+- [Script](https://docs.godotengine.org/en/stable/classes/class_script.html#class-script)
+- [Mesh](https://docs.godotengine.org/en/stable/classes/class_mesh.html#class-mesh)
+- [Animation](https://docs.godotengine.org/en/stable/classes/class_animation.html#class-animation)
+- [AudioStream](https://docs.godotengine.org/en/stable/classes/class_audiostream.html#class-audiostream)
+- [Font](https://docs.godotengine.org/en/stable/classes/class_font.html#class-font)
+- [Translation](https://docs.godotengine.org/en/stable/classes/class_translation.html#class-translation)
+
+当引擎从磁盘加载资源时，**它只加载一次**。如果该资源的副本已在内存中，尝试再次加载该资源将每次返回相同的副本。由于资源只包含数据，因此不需要重复它们。
+
+每个对象，无论是节点还是资源，都可以导出属性。有许多类型的 Properties，如 String、integer、Vector2 等，其中任何一种类型都可以成为资源。这意味着节点和资源都可以包含资源作为属性：
+
+##### 外部与内置
+
+有两种方法可以节省资源。它们可以是：
+
+- 场景**外部**，作为单独的文件保存在磁盘上。
+- **内置**，保存在它们所附加的 `.tscn` 或 `.scn` 文件中。
+
+更具体地说，这里是 Sprite2D 节点中的 Texture2D：
+
+单击资源预览可以查看资源的属性。
+
+路径属性告诉我们资源的来源。在这种情况下，它来自一个名为 `robi.png` 的 PNG 图像。当资源来自这样的文件时，它就是一个外部资源。如果删除该路径或该路径为空，则该路径将成为内置资源。
+
+保存场景时，会在内置资源和外部资源之间进行切换。在上面的示例中，如果您擦除路径 `"res://robi.png"` 然后保存，Godot 将把图像保存在 `.tscn` 场景文件中。
+
+> **注意：**
+>
+> 即使保存了内置资源，当您多次实例化场景时，引擎也只会加载它的一个副本。
+
+##### 从代码加载资源
+
+有两种方法可以从代码中加载资源。首先，您可以随时使用 `load()` 函数：
+
+```python
+func _ready():
+    # Godot loads the Resource when it reads this very line.
+    var imported_resource = load("res://robi.png")
+    $sprite.texture = imported_resource
+```
+
+您也可以 `preload` 资源。与 `load` 不同，此函数将从磁盘读取文件并在编译时加载。因此，不能使用可变路径调用 `preload`：需要使用常量字符串。
+
+```python
+func _ready():
+    # Godot loads the resource at compile-time
+    var imported_resource = preload("res://robi.png")
+    get_node("sprite").texture = imported_resource
+```
+
+##### 加载场景
+
+场景也是资源，但有一个陷阱。保存到磁盘的场景是 PackedScene 类型的资源。场景被封装在资源中。
+
+要获得场景的实例，必须使用 PackedScene.instantiate() 方法。
+
+```python
+func _on_shoot():
+        var bullet = preload("res://bullet.tscn").instantiate()
+        add_child(bullet)
+```
+
+此方法在场景的层次结构中创建节点，对其进行配置，并返回场景的根节点。然后可以将其添加为任何其他节点的子节点。
+
+这种方法有几个优点。由于 PackedScene.instantiate() 函数速度很快，您可以创建新的敌人、子弹、效果等，而无需每次从磁盘再次加载它们。请记住，与往常一样，图像、网格等都在场景实例之间共享。
+
+##### 释放资源
+
+当资源不再使用时，它将自动释放自己。由于在大多数情况下，资源都包含在节点中，因此当您释放一个节点时，如果没有其他节点使用资源，则引擎也会释放它所拥有的所有资源。
+
+##### 创建自己的资源
+
+像 Godot 中的任何对象一样，用户也可以编写 Resources 的脚本。资源脚本继承了在对象属性和序列化文本或二进制数据（`*.tres`，`*.res`）之间自由转换的能力。它们还继承了引用类型的引用计数内存管理。
+
+与其他数据结构（如 JSON、CSV 或自定义 TXT 文件）相比，这具有许多明显的优势。用户只能将这些资产作为字典（JSON）或 FileAccess 导入以进行解析。资源的区别在于它们对 Object、RefCounted 和 Resource 功能的继承：
+
+- 它们可以定义常量，因此不需要来自其他数据字段或对象的常量。
+- 他们可以定义方法，包括属性的 setter/getter 方法。这允许对底层数据进行抽象和封装。如果资源脚本的结构需要更改，则使用资源的游戏也不需要更改。
+- 他们可以定义信号，这样资源就可以触发对他们管理的数据变化的响应。
+- 他们已经定义了属性，所以用户 100% 知道他们的数据会存在。
+- 资源自动序列化和反序列化是 Godot 引擎的内置功能。用户不需要实现自定义逻辑来导入/导出资源文件的数据。
+- 资源甚至可以递归地序列化子资源，这意味着用户可以设计更复杂的数据结构。
+  用户可以将资源保存为版本控制友好的文本文件（`*.tres`）。在导出游戏时，Godot将资源文件序列化为二进制文件（`*.res`），以提高速度和压缩。
+- Godot 引擎的检查器开箱即用地渲染和编辑资源文件。因此，用户通常不需要实现自定义逻辑来可视化或编辑他们的数据。要执行此操作，请双击 FileSystem dock 中的资源文件，或单击 Inspector 中的文件夹图标，然后在对话框中打开该文件。
+- 它们可以扩展除基本资源之外的**其他**资源类型。
+
+Godot 使在 Inspector 中创建自定义资源变得容易。
+
+1. 在检查器中创建一个普通的 Resource 对象。这甚至可以是派生 Resource 的类型，只要您的脚本正在扩展该类型。
+2. 将检查器中的 `script` 属性设置为您的脚本。
+
+检查器现在将显示资源脚本的自定义属性。如果编辑这些值并保存资源，Inspector 也会序列化自定义属性！要从检查器保存资源，请单击检查器的工具菜单（右上角），然后选择“保存”或“另存为…”。
+
+如果脚本的语言支持脚本类，那么它会简化流程。仅为脚本定义一个名称就会将其添加到 Inspector 的创建对话框中。这将自动将您的脚本添加到您创建的 Resource 对象中。
+
+让我们看一些例子。创建一个资源并将其命名为 `bot_stats`。它应该以全名 `bot_stats.tres` 出现在您的文件选项卡中。如果没有脚本，它是无用的，所以让我们添加一些数据和逻辑！将一个名为 `bot_stats.gd` 的脚本附加到其中（或者只创建一个新脚本，然后将其拖动到其中）。
+
+```python
+extends Resource
+
+@export var health: int
+@export var sub_resource: Resource
+@export var strings: PackedStringArray
+
+# Make sure that every parameter has a default value.
+# Otherwise, there will be problems with creating and editing
+# your resource via the inspector.
+func _init(p_health = 0, p_sub_resource = null, p_strings = []):
+    health = p_health
+    sub_resource = p_sub_resource
+    strings = p_strings
+```
+
+现在，创建一个 CharacterBody3D，将其命名为 `Bot`，并向其中添加以下脚本：
+
+```python
+extends CharacterBody3D
+
+@export var stats: Resource
+
+func _ready():
+    # Uses an implicit, duck-typed interface for any 'health'-compatible resources.
+    if stats:
+        stats.health = 10
+        print(stats.health)
+        # Prints "10"
+```
+
+现在，选择我们命名为 `bot` 的 CharacterBody3D 节点，并将 `bot_stats.tres` 资源拖放到 Inspector 上。它应该打印 10！显然，这种设置可以用于更高级的功能，但只要您真正了解它是如何工作的，就应该了解与参考资料相关的其他一切。
+
+> **注意：**
+>
+> 资源脚本类似于 Unity 的 ScriptableObjects。Inspector 提供了对自定义资源的内置支持。如果需要，用户甚至可以设计自己的基于控件的工具脚本，并将其与 EditorPlugin 组合，为其数据创建自定义可视化和编辑器。
+>
+> 虚幻引擎的 DataTables 和 CurveTables 也很容易用 Resource 脚本重新创建。DataTables 是映射到自定义结构的 String，类似于 Dictionary 将 String 映射到辅助自定义 Resource 脚本。
+>
+> ```python
+> # bot_stats_table.gd
+> extends Resource
+> 
+> const BotStats = preload("bot_stats.gd")
+> 
+> var data = {
+>     "GodotBot": BotStats.new(10), # Creates instance with 10 health.
+>     "DifferentBot": BotStats.new(20) # A different one with 20 health.
+> }
+> 
+> func _init():
+>     print(data)
+> ```
+>
+> 除了内联 Dictionary 值之外，还可以：
+>
+> 1. 从电子表格中导入一个值表，并生成这些键值对。
+> 2. 在编辑器中设计可视化，并创建一个插件，在打开这些类型的资源时将其添加到检查器中。
+>
+> CurveTables 是相同的东西，除了映射到浮点值数组或 Curve2D 资源对象。
+
+>**警告：**
+>
+>请注意，资源文件（`*.tres`/`*.res`）将存储它们在文件中使用的脚本的路径。加载时，它们将获取并加载此脚本作为其类型的扩展。这意味着尝试分配一个子类，即脚本的内部类（例如在 GDScript 中使用 `class` 关键字）将不起作用。Godot 不会正确地序列化脚本子类上的自定义属性。
+>
+>在下面的示例中，Godot 将加载 `Node` 脚本，查看它是否没有扩展 `Resource`，然后确定由于类型不兼容，未能为 Resource 对象加载该脚本。
+>
+>```python
+>extends Node
+>
+>class MyResource:
+>    extends Resource
+>    @export var value = 5
+>
+>func _ready():
+>    var my_res = MyResource.new()
+>
+>    # This will NOT serialize the 'value' property.
+>    ResourceSaver.save(my_res, "res://my_res.tres")
+>```
+
+#### 单例（自动加载）
+
+##### 简介
+
+Godot 的场景系统虽然强大而灵活，但有一个缺点：没有存储多个场景所需的信息（例如玩家的分数或库存）的方法。
+
+可以通过一些变通办法来解决这个问题，但它们也有自己的局限性：
+
+- 您可以使用一个“主”场景来加载和卸载其他场景作为其子场景。但是，这意味着您不能再单独运行这些场景并期望它们正常工作。
+- 信息可以存储在 `user://` 中的磁盘上，然后由需要它的场景加载，但频繁保存和加载数据很麻烦，而且可能很慢。
+
+Singleton 模式是解决需要在场景之间存储持久信息的常见用例的有用工具。在我们的例子中，可以为多个 singleton 重用相同的场景或类，只要它们具有不同的名称。
+
+使用此概念，可以创建以下对象：
+
+- 始终加载，无论当前正在运行哪个场景。
+- 可以存储全局变量，如玩家信息。
+- 可以处理场景切换和场景转换之间的切换。
+- 像单例一样*操作*，因为 GDScript 在设计上不支持全局变量。
+
+自动加载节点和脚本可以为我们提供这些特性。
+
+> **注意：**
+>
+> Godot 不会按照单例设计模式使 Autoload 成为“真正的”单例。如果需要，用户仍然可以多次实例化它。
+
+> **提示：**
+>
+> 如果您正在创建一个自动加载作为编辑器插件的一部分，请考虑在启用插件时在项目设置中自动注册它。
+
+##### 自动加载
+
+可以创建“自动加载”以加载场景或从节点继承的脚本。
+
+**注意：**
+自动加载脚本时，将创建一个节点，并将脚本附加到该节点。在加载任何其他场景之前，该节点将被添加到根视口。
+
+要自动加载场景或脚本，请从菜单中选择“**项目 > 项目设置**”，然后切换到“**自动加载**”选项卡。
+
+在这里，您可以添加任意数量的场景或脚本。列表中的每个条目都需要一个名称，该名称被指定为节点的 `name` 属性。条目添加到全局场景树时的顺序可以使用上/下箭头键进行操作。与常规场景一样，引擎将按从上到下的顺序读取这些节点。
+
+这意味着任何节点都可以通过以下方式访问名为 “PlayerVariables” 的单例：
+
+```python
+var player_vars = get_node("/root/PlayerVariables")
+player_vars.health -= 10
+```
+
+如果选中 **Enable** 列（这是默认值），则可以在 GDScript 中直接访问 singleton，而不需要 `get_node()`：
+
+```python
+PlayerVariables.health -= 10
+```
+
+请注意，自动加载对象（脚本和/或场景）的访问方式与场景树中的任何其他节点一样。事实上，如果查看正在运行的场景树，您将看到自动加载的节点出现：
+
+> **警告：**
+>
+> 在运行时**不能**使用 `free()` 或 `queue_free()` 删除自动加载，否则引擎将崩溃。
+
+##### 自定义场景切换器
+
+本教程将演示使用自动加载构建场景切换器。对于基本场景切换，可以使用 SceneTree.change_scene_to_file() 方法（有关详细信息，请参见使用 SceneTree）。但是，如果在更改场景时需要更复杂的行为，此方法将提供更多功能。
+
+首先，从这里下载模板：singleton_autoload_starter.zip 并在 Godot 中打开它。
+该项目包含两个场景：`scene_1.scn` 和 `scene_2.tscn`。每个场景都包含一个显示场景名称的标签和一个连接了 `pressed()` 信号的按钮。当你运行这个项目时，它会在 `scene_1.scn` 中启动。但是，按下按钮不会有任何作用。
+
+###### 创建脚本
+
+打开**脚本**窗口，创建一个名为 `global.gd` 的新脚本。确保它继承自 `Node`：
+
+下一步是将此脚本添加到 autoLoad 列表中。从菜单中打开**“项目” > “项目设置”**，切换到**“自动加载”**选项卡，然后通过单击浏览按钮或键入其路径来选择脚本：`res://global.gd`.按 **Add** 将其添加到自动加载列表中：
+
+现在，每当我们在项目中运行任何场景时，都会加载此脚本。
+
+返回到脚本，它需要在 *_ready()* 函数中获取当前场景。当前场景（带按钮的场景）和 `global.gd` 都是 root 的子级，但自动加载的节点总是第一个。这意味着根的最后一个子对象始终是加载的场景。
+
+```python
+extends Node
+
+var current_scene = null
+
+func _ready():
+    var root = get_tree().root
+    current_scene = root.get_child(root.get_child_count() - 1)
+```
+
+现在我们需要一个改变场景的函数。此功能需要释放当前场景并将其替换为请求的场景。
+
+```python
+func goto_scene(path):
+    # This function will usually be called from a signal callback,
+    # or some other function in the current scene.
+    # Deleting the current scene at this point is
+    # a bad idea, because it may still be executing code.
+    # This will result in a crash or unexpected behavior.
+
+    # The solution is to defer the load to a later time, when
+    # we can be sure that no code from the current scene is running:
+
+    call_deferred("_deferred_goto_scene", path)
+
+
+func _deferred_goto_scene(path):
+    # It is now safe to remove the current scene
+    current_scene.free()
+
+    # Load the new scene.
+    var s = ResourceLoader.load(path)
+
+    # Instance the new scene.
+    current_scene = s.instantiate()
+
+    # Add it to the active scene, as child of root.
+    get_tree().root.add_child(current_scene)
+
+    # Optionally, to make it compatible with the SceneTree.change_scene_to_file() API.
+    get_tree().current_scene = current_scene
+```
+
+使用 Object.call_deferred()，第二个函数将仅在当前场景中的所有代码完成后运行。因此，当前场景仍在使用（即其代码仍在运行）时不会被删除。
+
+最后，我们需要填充两个场景中的空回调函数：
+
+```python
+# Add to 'Scene1.gd'.
+
+func _on_button_pressed():
+    Global.goto_scene("res://scene_2.tscn")
+```
+
+且
+
+```python
+# Add to 'Scene2.gd'.
+
+func _on_button_pressed():
+    Global.goto_scene("res://scene_1.tscn")
+```
+
+运行项目并测试是否可以通过按下按钮在场景之间切换。
+
+> **注意：**
+>
+> 当场景较小时，过渡是即时的。但是，如果场景更复杂，它们可能需要相当长的时间才能出现。要了解如何处理此问题，请参阅下一个教程：后台加载。
+>
+> 或者，如果加载时间相对较短（小于 3 秒左右），则可以在更改场景之前通过显示某种 2D 元素来显示“加载斑块”。然后，您可以在场景更改后隐藏它。这可以用于向玩家指示正在加载场景。
+
+#### 使用 SceneTree
+
+##### 简介
+
+在以前的教程中，所有内容都围绕着节点的概念展开。场景是节点的集合。一旦进入场景树，它们就会变为活动状态。
+
+##### 主回路（MainLoop）
+
+Godot 内部的工作方式如下。有一个 OS 类，它是唯一在开始时运行的实例。然后，加载所有驱动程序、服务器、脚本语言、场景系统等。
+
+初始化完成后，需要为操作系统提供一个 MainLoop 来运行。到目前为止，所有这些都是内部工作（如果您有兴趣了解内部工作原理，可以查看源代码中的 main/main.cpp 文件）。
+
+用户程序或游戏在 MainLoop 中启动。这个类有几个方法，用于初始化、空闲（帧同步回调）、固定（物理同步回调）和输入。同样，这是低水平的，当在 Godot 中制作游戏时，编写自己的 MainLoop 很少有意义。
+
+##### 场景树（SceneTree）
+
+解释 Godot 如何工作的方法之一是，它是一个位于低级别中间件之上的高级游戏引擎。
+
+场景系统是游戏引擎，操作系统和服务器是低级别的 API。
+
+场景系统为操作系统 SceneTree 提供了自己的主循环。这是在运行场景时自动实例化和设置的，不需要做任何额外的工作。
+
+知道这个类的存在很重要，因为它有几个重要的用途：
+
+- 它包含根 Viewport，当场景第一次打开成为场景树的一部分时，它会作为子场景添加到根 Viewport中（下一步将详细介绍）。
+- 它包含有关组的信息，并可以调用组中的所有节点或获取它们的列表。
+- 它包含一些全局状态功能，例如设置暂停模式或退出进程。
+
+当节点是场景树的一部分时，可以通过调用 Node.get_tree() 来获得场景树单例。
+
+##### 根视口
+
+根 Viewport 始终位于场景的顶部。从一个节点可以通过两种不同的方式获得：
+
+```python
+get_tree().root # Access via scene main loop.
+get_node("/root") # Access via absolute path.
+```
+
+此节点包含主视口。默认情况下，Viewport 的任何子节点都绘制在其中，因此所有节点的顶部始终是该类型的节点是有道理的，否则将看不到任何内容。
+
+虽然可以在场景中创建其他视口（用于分割屏幕效果等），但此视口是唯一一个从未由用户创建的视口。它是在 SceneTree 中自动创建的。
+
+##### 场景树
+
+当节点直接或间接连接到根视口时，它将成为*场景树*的一部分。
+
+这意味着，正如前面教程中所解释的，它将获得 `_enter_tree()` 和 `_ready()` 回调（以及 `_exit_tree()`）。
+
+当节点进入*场景树*时，它们将变为活动状态。他们可以访问处理、输入、显示 2D 和 3D 视觉效果、接收和发送通知、播放声音等所需的一切。当他们从*场景树*中删除时，他们将失去这些能力。
+
+##### 树顺序
+
+Godot 中的大多数节点操作，如绘制 2D、处理或获取通知，都是按树状顺序或自上而下进行的。例如，场景中的顶部节点首先调用其 `_ready()` 函数，然后它下面的节点调用其函数，然后是它下面的结点，依此类推。但是，节点的子节点将在其父节点之前被调用，也是按从上到下的顺序。因此，顶部节点的顶部子节点将首先调用其 `_ready()` 函数。
+
+这也可以使用 `process_priority` 节点属性来覆盖。编号较低的节点首先被调用。例如，优先级为“0、1、2、3”的节点将按该顺序（从左到右）调用。
+
+##### 通过进入场景树“变得活跃”
+
+1. 场景是从磁盘加载或通过脚本创建的。
+2. 该场景的根节点（只有一个根，还记得吗？）将作为“根”视口（来自 SceneTree）的子节点或其任何子节点添加。
+3. 新添加场景的每个节点都将按从上到下的顺序接收“enter_tree”通知（GDScript 中的 `_enter_tree()` 回调）。
+4. 当一个节点及其所有子节点都在活动场景中时，为了方便起见，提供了一个额外的通知“ready”（GDScript 中的 `_ready()` 回调）。
+5. 当一个场景（或其中的一部分）被移除时，他们会按照从下到上的顺序接收“退出场景”通知（GDScript 中的 `_exit_tree()` 回调）
+
+##### 更改当前场景
+
+加载场景后，可能需要将此场景更改为另一个场景。一种方法是使用 SceneTree.change_scene_to_file() 函数：
+
+```python
+func _my_level_was_completed():
+    get_tree().change_scene_to_file("res://levels/level2.tscn")
+```
+
+不使用文件路径，也可以使用现成的 PackedScene 资源，使用等效的函数 [SceneTree.change_scene_to_packed(PackedScene scene)](https://docs.godotengine.org/en/stable/classes/class_scenetree.html#class-scenetree-method-change-scene-to-packed)：
+
+```python
+var next_scene = preload("res://levels/level2.tscn")
+
+func _my_level_was_completed():
+    get_tree().change_scene_to_packed(next_scene)
+```
+
+这些是切换场景的快速而有用的方法，但缺点是游戏将暂停，直到加载并运行新场景。在游戏开发的某个阶段，最好创建带有进度条、动画指示器或线程（背景）加载的适当加载屏幕。这必须使用 Singleton（自动加载）和 Background 加载手动完成。
+
+#### 场景唯一节点
+
+##### 简介
+
+使用 `get_node()` 引用脚本中的节点有时可能很脆弱。如果将 UI 场景中的按钮从一个面板移动到另一个面板，则按钮的节点路径会更改，如果脚本使用带有硬编码节点路径的 `get_node()`，则脚本将无法再找到该按钮。
+
+在这种情况下，可以将节点转换为场景唯一节点，以避免每次更改节点的路径时都必须更新脚本。
+
+##### 创建和使用
+
+在场景树停靠中，在节点上单击鼠标右键，然后在关联菜单中选择“**作为唯一名称访问**”。
+
+选择该选项后，节点在场景树中的名称旁边将有一个百分比符号（%）：
+
+现在可以在脚本中使用该节点。例如，您可以通过 `get_node()` 方法调用引用它，方法是键入 % 符号，后跟节点名称：
+
+```python
+get_node("%RedButton").text = "Hello"
+%RedButton.text = "Hello" # Shorter syntax
+```
+
+##### 相同场景限制
+
+场景唯一节点只能由同一场景内的节点检索。要演示此限制，请考虑以下示例“**玩家**”场景，该场景实例化了“**剑**”场景：
+
+以下是 **Player** 脚本中 `get_node()` 调用的结果：
+
+- `get_node("%Eyes")` 返回 **Eyes** 节点。
+- `get_node("%Hilt")` 返回 `null`。
+
+以下是 **Blade** 脚本中 `get_node()` 调用的结果：
+
+- `get_node("%Eyes")` 返回 `null`。
+- `get_node("%Hilt")` 返回 **Hilt** 节点。
+
+如果脚本可以访问另一个场景中的节点，则可以在该节点上调用 `get_node()`，以从该节点的场景中获取场景唯一节点。这也适用于节点路径，避免了多次 `get_node()` 调用。以下是使用场景唯一节点从 **Player** 脚本中获取 **Hilt** 节点的两种方法：
+
+- `get_node("Hand/Sword").get_node("%Hilt")` 返回 **Hilt** 节点。
+- `get_node("Hand/Sword/%Hilt")` 也返回 **Hilt** 节点。
+
+场景唯一名称不仅适用于节点路径的末尾。它们可以在中间用于从一个节点导航到另一个节点。例如，“**剑**”节点在“**玩家**”场景中被标记为场景唯一节点，因此这是可能的：
+
+- `get_node("%Sword/%Hilt")` 返回 **Hilt** 节点。
+
+##### 备选方案
+
+场景唯一节点是导航场景的有用工具。然而，在某些情况下，其他技术可能会更好。
+
+“组”允许从任何其他节点定位一个节点（或一组多个节点），无论这两个节点位于哪个场景中。
+
+Singleton（自动加载）是一个始终加载的节点，无论场景如何，任何节点都可以直接访问该节点。当某些数据或功能在全局范围内共享时，这些功能非常有用。
+
+Node.find_child() 在不知道完整路径的情况下按名称查找节点。这似乎类似于场景唯一节点，但这种方法能够在嵌套场景中找到节点，并且不需要以任何方式在场景编辑器中标记节点。然而，这种方法是缓慢的。场景唯一节点由Godot缓存，检索速度很快，但每次调用该方法时，`find_child()` 都需要检查每个子代（每个子代、孙代等）。
