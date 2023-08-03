@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://cj7v1r6xwgcd4"]
+
+[ext_resource type="Script" path="res://scripts/capturable_base.gd" id="1_mee0a"]
+[ext_resource type="Texture2D" uid="uid://co0ivafep016u" path="res://assets/top_down_shooter/PNG/Tiles/tile_359.png" id="2_tskdc"]
+[ext_resource type="PackedScene" uid="uid://iesf8n20ul1b" path="res://scenes/team.tscn" id="3_lll4i"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_p427t"]
+radius = 158.079
+
+[node name="CapturableBase" type="Area2D"]
+position = Vector2(571, 338)
+script = ExtResource("1_mee0a")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_p427t")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tskdc")
+
+[node name="Team" parent="." instance=ExtResource("3_lll4i")]
+
+[node name="CaptureTimer" type="Timer" parent="."]
+wait_time = 5.0
+one_shot = true
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_exited" from="." to="." method="_on_body_exited"]
+[connection signal="timeout" from="CaptureTimer" to="." method="_on_capture_timer_timeout"]

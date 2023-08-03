@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://dd70ves4up5d8"]
+
+[ext_resource type="Script" path="res://scripts/ai.gd" id="1_yulys"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_nbyld"]
+radius = 300.0
+
+[node name="AI" type="Node2D"]
+script = ExtResource("1_yulys")
+
+[node name="DetectionZone" type="Area2D" parent="."]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone"]
+shape = SubResource("CircleShape2D_nbyld")
+
+[node name="PatrolTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="body_entered" from="DetectionZone" to="." method="_on_detection_zone_body_entered"]
+[connection signal="body_exited" from="DetectionZone" to="." method="_on_detection_zone_body_exited"]
+[connection signal="timeout" from="PatrolTimer" to="." method="_on_patrol_timer_timeout"]

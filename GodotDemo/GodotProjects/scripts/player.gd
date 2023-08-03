@@ -14,7 +14,6 @@ func _ready():
 
 func _physics_process(delta):
 	get_input()
-	shoot()
 	move_and_slide()
 
 
@@ -26,9 +25,15 @@ func get_input():
 #			.normalized() * speed
 
 
-func shoot():
-	if Input.is_action_just_pressed("shoot"):
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_released("shoot"):
 		weapon.shoot()
+	elif event.is_action_released("reload"):
+		reload()
+
+
+func reload():
+	weapon.start_reload()
 
 
 func get_team() -> Team.TeamName:

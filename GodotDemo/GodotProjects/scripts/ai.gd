@@ -59,6 +59,8 @@ func initialize(actor: CharacterBody2D, weapon: Weapon, team: Team.TeamName):
 	self.actor = actor
 	self.weapon = weapon
 	self.team = team
+	
+	weapon.weapon_out_of_ammo.connect(handle_reload)
 
 
 func set_state(new_state: State):
@@ -72,6 +74,11 @@ func set_state(new_state: State):
 
 	state = new_state
 	state_changed.emit(new_state)
+
+
+func handle_reload():
+	weapon.start_reload()
+
 
 func _on_detection_zone_body_entered(body: Node):
 	print("detected body entered!")

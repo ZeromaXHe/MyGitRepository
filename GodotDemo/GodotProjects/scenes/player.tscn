@@ -22,6 +22,7 @@ shape = SubResource("CapsuleShape2D_mndd7")
 [node name="Health" parent="." instance=ExtResource("5_d07sl")]
 
 [node name="Weapon" parent="." instance=ExtResource("4_2qbsl")]
-position = Vector2(24, 9)
+position = Vector2(15, 13)
 
 [node name="Team" parent="." instance=ExtResource("5_ywvu5")]
+team = 1
