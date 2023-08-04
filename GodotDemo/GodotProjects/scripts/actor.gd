@@ -1,5 +1,5 @@
 extends CharacterBody2D
-class_name Enemy
+class_name Actor
 
 @export var speed: int = 100
 
@@ -27,6 +27,10 @@ func rotate_toward(location: Vector2) -> float:
 
 func velocity_toward(location: Vector2):
 	velocity = global_position.direction_to(location) * speed
+
+
+func has_reached_position(location: Vector2) -> bool:
+	return global_position.distance_to(location) < 5
 
 
 func get_team() -> Team.TeamName:
