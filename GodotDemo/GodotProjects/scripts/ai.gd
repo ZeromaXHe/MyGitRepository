@@ -26,7 +26,7 @@ var patrol_location: Vector2 = Vector2.ZERO
 var patrol_location_reached: bool = false
 
 # 前进状态使用
-var next_base: Vector2 = Vector2.ZERO
+var next_base_position: Vector2 = Vector2.ZERO
 
 
 func _ready():
@@ -57,11 +57,11 @@ func _physics_process(_delta):
 			else:
 				print("engaged, but no weapon/target found")
 		State.ADVANCE:
-			if actor.has_reached_position(next_base):
+			if actor.has_reached_position(next_base_position):
 				set_state(State.PATROL)
 			else:
-				actor.velocity_toward(next_base)
-				actor.rotate_toward(next_base)
+				actor.velocity_toward(next_base_position)
+				actor.rotate_toward(next_base_position)
 				actor.move_and_slide()
 		_:
 			print("Error: a unexpected state")
@@ -84,7 +84,7 @@ func set_state(new_state: State):
 		patrol_timer.start()
 		patrol_location_reached = true
 	elif new_state == State.ADVANCE:
-		if actor.has_reached_position(next_base):
+		if actor.has_reached_position(next_base_position):
 			set_state(State.PATROL)
 
 	state = new_state

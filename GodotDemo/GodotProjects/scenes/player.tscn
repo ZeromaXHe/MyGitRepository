@@ -26,3 +26,5 @@ position = Vector2(15, 13)
 
 [node name="Team" parent="." instance=ExtResource("5_ywvu5")]
 team = 1
+
+[node name="CameraTransform" type="RemoteTransform2D" parent="."]

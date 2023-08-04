@@ -1,11 +1,12 @@
 extends Node
 
+const player = preload("res://scenes/player.tscn")
 
-@onready var capturable_base_manager = $CapturableBaseManager
-@onready var ally_ai = $AllyMapAI
-@onready var enemy_ai = $EnemyMapAI
-@onready var player: Player = $Player
+@onready var capturable_base_manager: CapturableBaseManager = $CapturableBaseManager
+@onready var ally_ai: MapAI = $AllyMapAI
+@onready var enemy_ai: MapAI = $EnemyMapAI
 @onready var bullet_manager: BulletManager = $BulletManager
+@onready var camera: Camera2D = $Camera2D
 
 
 func _ready():
@@ -13,7 +14,18 @@ func _ready():
 	randomize()
 	GlobalSignals.bullet_fired.connect(bullet_manager.handle_bullet_spawned)
 	
+	var ally_respawns = $AllyRespawnPoints
+	var enemy_respawns = $EnemyRespawnPoints
+	
 	var bases = capturable_base_manager.get_capturable_bases()
-	ally_ai.initialize(bases)
-	enemy_ai.initialize(bases)
+	ally_ai.initialize(bases, ally_respawns.get_children())
+	enemy_ai.initialize(bases, enemy_respawns.get_children())
+	
+	spawn_player()
 
+
+func spawn_player():
+	var player_instance: Player = player.instantiate()
+	add_child(player_instance)
+	player_instance.set_camera_transform(camera.get_path())
+	player_instance.died.connect(spawn_player)

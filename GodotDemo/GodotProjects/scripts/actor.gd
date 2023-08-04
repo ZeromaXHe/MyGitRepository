@@ -1,6 +1,10 @@
 extends CharacterBody2D
 class_name Actor
 
+
+signal died
+
+
 @export var speed: int = 100
 
 @onready var health: Health = $Health
@@ -41,4 +45,9 @@ func handle_hit(bullet: Bullet):
 	health.hp -= bullet.damage
 	print("enemy hit! ", health.hp)
 	if health.hp <= 0:
-		queue_free()
+		die()
+
+
+func die():
+	died.emit()
+	queue_free()

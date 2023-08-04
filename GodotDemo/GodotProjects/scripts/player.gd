@@ -1,11 +1,16 @@
 class_name Player
 extends CharacterBody2D
 
+
+signal died
+
+
 @export var speed: int = 300
 
 @onready var health: Health = $Health
 @onready var weapon: Weapon = $Weapon
 @onready var team: Team = $Team
+@onready var camera_transform: RemoteTransform2D = $CameraTransform
 
 
 func _ready():
@@ -32,6 +37,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		reload()
 
 
+func set_camera_transform(camera_path: NodePath):
+	camera_transform.remote_path = camera_path
+
+
 func reload():
 	weapon.start_reload()
 
@@ -43,3 +52,12 @@ func get_team() -> Team.TeamName:
 func handle_hit(bullet: Bullet):
 	health.hp -= bullet.damage
 	print("player hit! ", health.hp)
+	if health.hp <= 0:
+		die()
+
+
+func die():
+	print("player died!!!")
+	died.emit()
+	queue_free()
+
