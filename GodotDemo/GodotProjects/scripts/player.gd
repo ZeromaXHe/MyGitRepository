@@ -59,5 +59,6 @@ func handle_hit(bullet: Bullet):
 func die(bullet: Bullet):
 	print("player died!!!")
 	died.emit(bullet.shooter)
+	GlobalSignals.killed_info.emit(self, bullet.shooter)
 	queue_free()
 

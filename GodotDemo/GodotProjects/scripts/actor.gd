@@ -67,6 +67,7 @@ func handle_hit(bullet: Bullet):
 
 func die(bullet: Bullet):
 	died.emit(self, bullet.shooter)
+	GlobalSignals.killed_info.emit(self, bullet.shooter)
 	if (name_label_node2d != null):
 		name_label_node2d.queue_free()
 	queue_free()

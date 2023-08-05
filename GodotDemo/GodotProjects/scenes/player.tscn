@@ -28,3 +28,5 @@ position = Vector2(15, 13)
 side = 1
 
 [node name="CameraTransform" type="RemoteTransform2D" parent="."]
+update_rotation = false
+update_scale = false

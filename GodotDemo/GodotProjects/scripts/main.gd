@@ -7,6 +7,7 @@ const player = preload("res://scenes/player.tscn")
 @onready var enemy_ai: MapAI = $EnemyMapAI
 @onready var bullet_manager: BulletManager = $BulletManager
 @onready var camera: Camera2D = $Camera2D
+@onready var kill_info: RichTextLabel = $Camera2D/KillInfo
 @onready var name_labels_manager: NameLabelsManager = $GUI/NameLabelsManager
 
 func _ready():
@@ -22,6 +23,10 @@ func _ready():
 	enemy_ai.unit_spawned.connect(name_labels_manager.handle_unit_spawned)
 	ally_ai.initialize(bases, ally_respawns.get_children())
 	enemy_ai.initialize(bases, enemy_respawns.get_children())
+
+	# 清空 KillInfo 的内容
+	kill_info.text = ""
+	GlobalSignals.killed_info.connect(kill_info.handle_killed_info)
 	
 	spawn_player()
 

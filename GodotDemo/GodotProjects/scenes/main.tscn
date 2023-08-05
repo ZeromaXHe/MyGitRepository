@@ -1,7 +1,8 @@
-[gd_scene load_steps=12 format=3 uid="uid://d3gcnkeh4l36e"]
+[gd_scene load_steps=13 format=3 uid="uid://d3gcnkeh4l36e"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_2etsu"]
 [ext_resource type="Script" path="res://scripts/capturable_base_manager.gd" id="2_2c81g"]
+[ext_resource type="Script" path="res://scripts/kill_info.gd" id="2_bnki2"]
 [ext_resource type="Script" path="res://scripts/bullet_manager.gd" id="3_fdg2q"]
 [ext_resource type="PackedScene" uid="uid://85miqhtewjo7" path="res://scenes/enemy.tscn" id="4_eaets"]
 [ext_resource type="PackedScene" uid="uid://cuu4tbysrr5nv" path="res://scenes/ally.tscn" id="5_gi44o"]
@@ -561,10 +562,6 @@ sources/0 = SubResource("TileSetAtlasSource_psymo")
 [node name="Main" type="Node"]
 script = ExtResource("1_2etsu")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(519, 153)
-position_smoothing_enabled = true
-
 [node name="CapturableBaseManager" type="Node2D" parent="."]
 script = ExtResource("2_2c81g")
 
@@ -634,3 +631,20 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("9_06alu")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(519, 153)
+position_smoothing_enabled = true
+
+[node name="KillInfo" type="RichTextLabel" parent="Camera2D"]
+offset_left = 269.0
+offset_top = -315.0
+offset_right = 561.0
+offset_bottom = -196.0
+bbcode_enabled = true
+text = "[color=green]AllyBot1[/color] pistol kill [color=red]EnemyBot2[/color]
+[color=red]Bot3[/color] killed [color=green]Bot4[/color]
+[color=green]Bot1[/color] killed [color=red]Bot2[/color]
+[color=green]Bot1[/color] killed [color=red]Bot2[/color]
+[color=red]Bot3[/color] killed [color=green]Bot4[/color]"
+script = ExtResource("2_bnki2")
