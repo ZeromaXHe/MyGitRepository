@@ -75,6 +75,11 @@ func initialize(actor: CharacterBody2D, weapon: Weapon, team_side: Team.Side):
 	weapon.weapon_out_of_ammo.connect(handle_reload)
 
 
+func advance_to(target_base: CapturableBase):
+	next_base_position = target_base.global_position
+	set_state(State.ADVANCE)
+
+
 func set_state(new_state: State):
 	if new_state == state:
 		return

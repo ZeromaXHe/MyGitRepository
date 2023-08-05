@@ -29,3 +29,7 @@ position = Vector2(15, 13)
 
 [node name="Team" parent="." instance=ExtResource("6_qytbh")]
 side = 2
+
+[node name="NameLabelTransform" type="RemoteTransform2D" parent="."]
+update_rotation = false
+update_scale = false

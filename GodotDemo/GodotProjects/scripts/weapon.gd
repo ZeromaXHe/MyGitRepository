@@ -15,13 +15,16 @@ var team_side: Team.Side = -1
 var max_ammo: int = 10
 var current_ammo: int = max_ammo
 
+var holder = null
+
 
 func _ready() -> void:
 	muzzle_flash.hide()
 
 
-func initialize(team_side: Team.Side):
+func initialize(team_side: Team.Side, holder):
 	self.team_side = team_side
+	self.holder = holder
 
 
 func start_reload():
@@ -40,10 +43,14 @@ func shoot():
 		return
 
 	var bullet: Bullet = bullet_scene.instantiate()
+	bullet.shooter = holder
+	bullet.global_position = muzzle.global_position
 	# direction_to 不需要重复 normalized()
 	var direction: Vector2 = barrel.global_position \
 			.direction_to(muzzle.global_position)
-	GlobalSignals.bullet_fired.emit(bullet, team_side, muzzle.global_position, direction)
+	bullet.set_direction(direction)
+	bullet.team_side = team_side
+	GlobalSignals.bullet_fired.emit(bullet)
 
 	# 开启攻击冷却计时器
 	attack_cooldown.start()

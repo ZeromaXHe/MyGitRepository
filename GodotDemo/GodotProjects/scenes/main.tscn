@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://d3gcnkeh4l36e"]
+[gd_scene load_steps=12 format=3 uid="uid://d3gcnkeh4l36e"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_2etsu"]
 [ext_resource type="Script" path="res://scripts/capturable_base_manager.gd" id="2_2c81g"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://ejyelg0drrkc" path="res://scenes/map_ai.tscn" id="6_sp66p"]
 [ext_resource type="PackedScene" uid="uid://cj7v1r6xwgcd4" path="res://scenes/capturable_base.tscn" id="6_w1ort"]
 [ext_resource type="Texture2D" uid="uid://dk6x4qtsry04e" path="res://assets/top_down_shooter/Tilesheet/tilesheet_complete.png" id="8_gbds6"]
+[ext_resource type="Script" path="res://scripts/name_labels_manager.gd" id="9_06alu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_psymo"]
 texture = ExtResource("8_gbds6")
@@ -561,7 +562,7 @@ sources/0 = SubResource("TileSetAtlasSource_psymo")
 script = ExtResource("1_2etsu")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(-100, 466)
+position = Vector2(519, 153)
 position_smoothing_enabled = true
 
 [node name="CapturableBaseManager" type="Node2D" parent="."]
@@ -621,3 +622,15 @@ position = Vector2(77, 178)
 [node name="Ground" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_il0hw")
 format = 2
+
+[node name="GUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="NameLabelsManager" type="Control" parent="GUI"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("9_06alu")

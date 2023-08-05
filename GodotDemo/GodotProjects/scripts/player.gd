@@ -2,7 +2,7 @@ class_name Player
 extends CharacterBody2D
 
 
-signal died
+signal died(killer)
 
 
 @export var speed: int = 300
@@ -14,7 +14,7 @@ signal died
 
 
 func _ready():
-	weapon.initialize(team.side)
+	weapon.initialize(team.side, self)
 
 
 func _physics_process(delta):
@@ -53,11 +53,11 @@ func handle_hit(bullet: Bullet):
 	health.hp -= bullet.damage
 	print("player hit! ", health.hp)
 	if health.hp <= 0:
-		die()
+		die(bullet)
 
 
-func die():
+func die(bullet: Bullet):
 	print("player died!!!")
-	died.emit()
+	died.emit(bullet.shooter)
 	queue_free()
 

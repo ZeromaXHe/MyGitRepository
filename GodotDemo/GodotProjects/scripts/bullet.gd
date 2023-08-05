@@ -7,6 +7,7 @@ extends Area2D
 
 var direction := Vector2.ZERO
 var team_side: Team.Side = -1
+var shooter = null
 
 func _physics_process(delta):
 	if direction != Vector2.ZERO:

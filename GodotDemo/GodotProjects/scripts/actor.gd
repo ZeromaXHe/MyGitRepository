@@ -2,7 +2,7 @@ extends CharacterBody2D
 class_name Actor
 
 
-signal died
+signal died(actor: Actor, killer)
 
 
 @export var speed: int = 100
@@ -11,12 +11,29 @@ signal died
 @onready var ai: AI = $AI
 @onready var weapon: Weapon = $Weapon
 @onready var team: Team = $Team
+@onready var name_label_transform: RemoteTransform2D = $NameLabelTransform
+
+var spawn_idx: int = -1
+var name_label_node2d: Node2D = null
 
 
 func _ready():
 	ai.initialize(self, weapon, team.side)
-	weapon.initialize(team.side)
+	weapon.initialize(team.side, self)
 
+
+func set_name_label_node2d(name_label_node2d: Node2D):
+	self.name_label_node2d = name_label_node2d
+	self.name_label_transform.remote_path = name_label_node2d.get_path()
+
+
+func set_ai_advance_to(target_base: CapturableBase):
+	if target_base != null:
+		ai.advance_to(target_base)
+
+
+func set_actor_name(actor_name: String):
+	self.name = actor_name
 
 func rotate_toward(location: Vector2) -> float:
 	var angle_to_location = global_position \
@@ -43,11 +60,13 @@ func get_team() -> Team.Side:
 
 func handle_hit(bullet: Bullet):
 	health.hp -= bullet.damage
-	print("enemy hit! ", health.hp)
+	print("actor ", name, " hit! ", health.hp)
 	if health.hp <= 0:
-		die()
+		die(bullet)
 
 
-func die():
-	died.emit()
+func die(bullet: Bullet):
+	died.emit(self, bullet.shooter)
+	if (name_label_node2d != null):
+		name_label_node2d.queue_free()
 	queue_free()

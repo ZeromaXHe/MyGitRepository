@@ -12,7 +12,6 @@ height = 42.0
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_mu2a5")
-speed = null
 
 [node name="BodyImg" type="Sprite2D" parent="."]
 texture = ExtResource("2_tgrye")

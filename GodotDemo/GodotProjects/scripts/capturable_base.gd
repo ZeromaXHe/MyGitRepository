@@ -71,6 +71,8 @@ func get_team_with_majority() -> Team.Side:
 
 
 func set_team(new_team: Team.Side):
+	if (team.side == new_team):
+		return
 	team.side = new_team
 	base_captured.emit(new_team)
 	sprite_2d.modulate = get_color(new_team)
