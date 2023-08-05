@@ -7,7 +7,6 @@
 script = ExtResource("1_f7qel")
 
 [node name="Team" parent="." instance=ExtResource("2_6n0g7")]
-team = 1
 
 [node name="UnitContainer" type="Node2D" parent="."]
 

@@ -18,7 +18,7 @@ var state: State = -1:
 var actor: Actor = null
 var target: CharacterBody2D = null
 var weapon: Weapon = null
-var team: Team.TeamName = -1
+var team_side: Team.Side = -1
 
 # 巡逻状态使用
 var origin: Vector2 = Vector2.ZERO
@@ -67,10 +67,10 @@ func _physics_process(_delta):
 			print("Error: a unexpected state")
 
 
-func initialize(actor: CharacterBody2D, weapon: Weapon, team: Team.TeamName):
+func initialize(actor: CharacterBody2D, weapon: Weapon, team_side: Team.Side):
 	self.actor = actor
 	self.weapon = weapon
-	self.team = team
+	self.team_side = team_side
 	
 	weapon.weapon_out_of_ammo.connect(handle_reload)
 
@@ -97,7 +97,7 @@ func handle_reload():
 
 func _on_detection_zone_body_entered(body: Node):
 	print("detected body entered!")
-	if body.has_method("get_team") and body.get_team() != team:
+	if body.has_method("get_team") and body.get_team() != team_side:
 		set_state(State.ENGAGE)
 		target = body
 

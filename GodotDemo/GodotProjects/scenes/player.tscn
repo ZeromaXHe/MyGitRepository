@@ -12,6 +12,7 @@ height = 42.0
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_mu2a5")
+speed = null
 
 [node name="BodyImg" type="Sprite2D" parent="."]
 texture = ExtResource("2_tgrye")
@@ -25,6 +26,6 @@ shape = SubResource("CapsuleShape2D_mndd7")
 position = Vector2(15, 13)
 
 [node name="Team" parent="." instance=ExtResource("5_ywvu5")]
-team = 1
+side = 1
 
 [node name="CameraTransform" type="RemoteTransform2D" parent="."]

@@ -19,10 +19,14 @@ texture = ExtResource("2_tskdc")
 
 [node name="Team" parent="." instance=ExtResource("3_lll4i")]
 
-[node name="CaptureTimer" type="Timer" parent="."]
-wait_time = 5.0
-one_shot = true
+[node name="ProgressBar" type="ProgressBar" parent="."]
+offset_left = 61.0
+offset_top = -29.0
+offset_right = 68.0
+offset_bottom = -2.0
+scale = Vector2(2.22321, 2.15586)
+value = 50.0
+fill_mode = 2
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="body_exited" from="." to="." method="_on_body_exited"]
-[connection signal="timeout" from="CaptureTimer" to="." method="_on_capture_timer_timeout"]

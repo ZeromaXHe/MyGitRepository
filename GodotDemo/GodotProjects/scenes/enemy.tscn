@@ -28,4 +28,4 @@ position = Vector2(15, 13)
 [node name="AI" parent="." instance=ExtResource("5_sajmh")]
 
 [node name="Team" parent="." instance=ExtResource("6_qytbh")]
-team = 2
+side = 2

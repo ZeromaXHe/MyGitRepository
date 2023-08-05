@@ -7,7 +7,7 @@ enum BaseCaptureStartOrder {
 }
 
 @export var base_capture_start_order: BaseCaptureStartOrder
-@export var team_name: Team.TeamName
+@export var team_side: Team.Side
 @export var unit_scene: PackedScene = null
 @export var max_units_alive: int = 4
 
@@ -25,7 +25,7 @@ func initialize(capturable_bases: Array, respawn_points: Array):
 	if capturable_bases.size() == 0 or respawn_points.size() == 0 or unit_scene == null:
 		push_error("forgot to properly initialize map AI")
 		return
-	team.team = team_name
+	team.side = team_side
 	
 	self.respawn_points = respawn_points
 	for respawn in respawn_points:
@@ -38,7 +38,7 @@ func initialize(capturable_bases: Array, respawn_points: Array):
 	check_for_capturable_bases()
 
 
-func handle_base_captured(_new_team: Team.TeamName):
+func handle_base_captured(_new_team: Team.Side):
 	check_for_capturable_bases()
 
 
@@ -54,8 +54,8 @@ func get_next_capturable_base() -> CapturableBase:
 		list_of_bases = range(capturable_bases.size() - 1, -1, -1)
 	for i in list_of_bases:
 		var base: CapturableBase = capturable_bases[i]
-		if team.team != base.team.team:
-			print("Assigning team %d to capture base %d" % [team.team, i])
+		if team.side != base.team.side:
+			print("Assigning team %d to capture base %d" % [team.side, i])
 			return base
 	return null
 

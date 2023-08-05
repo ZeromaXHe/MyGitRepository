@@ -14,8 +14,8 @@ signal died
 
 
 func _ready():
-	ai.initialize(self, weapon, team.team)
-	weapon.initialize(team.team)
+	ai.initialize(self, weapon, team.side)
+	weapon.initialize(team.side)
 
 
 func rotate_toward(location: Vector2) -> float:
@@ -37,8 +37,8 @@ func has_reached_position(location: Vector2) -> bool:
 	return global_position.distance_to(location) < 5
 
 
-func get_team() -> Team.TeamName:
-	return team.team
+func get_team() -> Team.Side:
+	return team.side
 
 
 func handle_hit(bullet: Bullet):

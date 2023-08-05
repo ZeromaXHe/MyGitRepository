@@ -1,3 +1,3 @@
 extends Node
 
-signal bullet_fired(bullet: Bullet, team: Team.TeamName, posi, direction)
+signal bullet_fired(bullet: Bullet, team_side: Team.Side, posi, direction)

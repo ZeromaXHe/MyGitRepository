@@ -11,7 +11,7 @@ signal weapon_out_of_ammo
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var muzzle_flash: Sprite2D = $MuzzleFlash
 
-var team: Team.TeamName = -1
+var team_side: Team.Side = -1
 var max_ammo: int = 10
 var current_ammo: int = max_ammo
 
@@ -20,8 +20,8 @@ func _ready() -> void:
 	muzzle_flash.hide()
 
 
-func initialize(team: Team.TeamName):
-	self.team = team
+func initialize(team_side: Team.Side):
+	self.team_side = team_side
 
 
 func start_reload():
@@ -43,7 +43,7 @@ func shoot():
 	# direction_to 不需要重复 normalized()
 	var direction: Vector2 = barrel.global_position \
 			.direction_to(muzzle.global_position)
-	GlobalSignals.bullet_fired.emit(bullet, team, muzzle.global_position, direction)
+	GlobalSignals.bullet_fired.emit(bullet, team_side, muzzle.global_position, direction)
 
 	# 开启攻击冷却计时器
 	attack_cooldown.start()

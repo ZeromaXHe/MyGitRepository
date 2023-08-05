@@ -14,7 +14,7 @@ signal died
 
 
 func _ready():
-	weapon.initialize(team.team)
+	weapon.initialize(team.side)
 
 
 func _physics_process(delta):
@@ -45,8 +45,8 @@ func reload():
 	weapon.start_reload()
 
 
-func get_team() -> Team.TeamName:
-	return team.team
+func get_team() -> Team.Side:
+	return team.side
 
 
 func handle_hit(bullet: Bullet):
