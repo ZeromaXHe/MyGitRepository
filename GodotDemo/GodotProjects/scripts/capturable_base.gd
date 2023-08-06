@@ -53,7 +53,7 @@ func _process(delta: float) -> void:
 			captured_info_timer.start()
 	else:
 		# 抵抗占领方占优，扣减占领进度
-		occupy_progress -= delta;
+		occupy_progress -= delta * diff_abs;
 		if (occupy_progress < 0):
 			team_to_capture = majority_team
 			occupy_progress = -occupy_progress

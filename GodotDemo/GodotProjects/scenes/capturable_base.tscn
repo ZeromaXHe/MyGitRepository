@@ -33,6 +33,7 @@ vertical_alignment = 1
 
 [node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
 layout_mode = 2
+mouse_filter = 2
 value = 50.0
 
 [node name="CapturedInfo" type="RichTextLabel" parent="."]
