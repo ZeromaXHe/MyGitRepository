@@ -2,6 +2,7 @@ extends Node2D
 class_name Weapon
 
 signal weapon_out_of_ammo
+signal ammo_changed(new_ammo: int)
 
 @export var bullet_scene: PackedScene
 
@@ -13,7 +14,9 @@ signal weapon_out_of_ammo
 
 var team_side: Team.Side = -1
 var max_ammo: int = 10
-var current_ammo: int = max_ammo
+var current_ammo: int = max_ammo:
+	set = set_current_ammo 
+		
 
 var holder = null
 
@@ -34,6 +37,17 @@ func start_reload():
 
 func _end_reload():
 	current_ammo = max_ammo
+
+
+func set_current_ammo(ammo: int):
+	var actual_ammo = clamp(ammo, 0, max_ammo)
+	if (current_ammo == actual_ammo):
+		return
+	current_ammo = actual_ammo
+	ammo_changed.emit(actual_ammo)
+	if current_ammo == 0:
+		weapon_out_of_ammo.emit()
+
 
 
 func shoot():
@@ -57,6 +71,4 @@ func shoot():
 	# 播放枪口闪光动画
 	animation_player.play("muzzle_flash")
 	current_ammo -= 1
-	if current_ammo == 0:
-		weapon_out_of_ammo.emit()
 

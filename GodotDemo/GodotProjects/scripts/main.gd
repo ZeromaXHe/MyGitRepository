@@ -7,10 +7,9 @@ const player = preload("res://scenes/player.tscn")
 @onready var enemy_ai: MapAI = $EnemyMapAI
 @onready var bullet_manager: BulletManager = $BulletManager
 @onready var camera: Camera2D = $Camera2D
-# TODO: 居然可以拿到子场景的节点！这是一种不好的实现方式，和 GUI 场景严重耦合，之后修改
-@onready var kill_info: RichTextLabel = $GUI/Rows/TopRow/MarginContainer/KillInfo
 @onready var name_labels_manager: NameLabelsManager = $GUIManager/NameLabelsManager
 @onready var player_respawn_point: Node2D = $PlayerRespawnPoint
+@onready var gui: GUI = $GUI
 
 func _ready():
 	# 刷新随机种子
@@ -25,10 +24,6 @@ func _ready():
 	enemy_ai.unit_spawned.connect(name_labels_manager.handle_unit_spawned)
 	ally_ai.initialize(bases, ally_respawns.get_children())
 	enemy_ai.initialize(bases, enemy_respawns.get_children())
-
-	# 清空 KillInfo 的内容
-	kill_info.text = ""
-	GlobalSignals.killed_info.connect(kill_info.handle_killed_info)
 	
 	spawn_player()
 
@@ -39,6 +34,7 @@ func spawn_player():
 	add_child(player_instance)
 	player_instance.set_camera_transform(camera.get_path())
 	player_instance.died.connect(handle_player_death)
+	gui.set_player(player_instance)
 
 
 func handle_player_death(killer):

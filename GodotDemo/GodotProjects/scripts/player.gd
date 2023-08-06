@@ -14,6 +14,7 @@ signal died(killer)
 
 
 func _ready():
+	# FIXME: 这里命名生成有问题，估计有时执行的时候之前的引用还没释放，导致重名
 	name = "Player"
 	weapon.initialize(team.side, self)
 

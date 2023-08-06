@@ -47,6 +47,7 @@ func initialize_spawn_unit(spawn_location: Vector2, spawn_idx: int):
 	var unit_instance = unit_scene.instantiate() as Actor
 	unit_instance.global_position = spawn_location
 	unit_instance.died.connect(handle_unit_death)
+	# FIXME: 这里命名生成有问题，估计有时执行的时候之前的引用还没释放，导致重名
 	unit_instance.set_actor_name(get_actor_name_prefix(team.side) + "Bot" + str(spawn_idx))
 	unit_instance.spawn_idx = spawn_idx
 	unit_container.add_child(unit_instance)
