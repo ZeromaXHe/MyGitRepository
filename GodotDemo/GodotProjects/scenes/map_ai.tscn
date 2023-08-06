@@ -5,9 +5,6 @@
 
 [node name="MapAI" type="Node2D"]
 script = ExtResource("1_f7qel")
-base_capture_start_order = null
-team_side = null
-max_units_alive = null
 
 [node name="Team" parent="." instance=ExtResource("2_6n0g7")]
 

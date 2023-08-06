@@ -28,4 +28,4 @@ func _on_body_entered(body: Node):
 	if body.has_method("handle_hit"):
 		if body.has_method("get_team") and body.get_team() != team_side:
 			body.handle_hit(self)
-		queue_free()
+	queue_free()

@@ -9,6 +9,7 @@ const player = preload("res://scenes/player.tscn")
 @onready var camera: Camera2D = $Camera2D
 @onready var kill_info: RichTextLabel = $CanvasLayer/KillInfo
 @onready var name_labels_manager: NameLabelsManager = $GUI/NameLabelsManager
+@onready var player_respawn_point: Node2D = $PlayerRespawnPoint
 
 func _ready():
 	# 刷新随机种子
@@ -33,6 +34,7 @@ func _ready():
 
 func spawn_player():
 	var player_instance: Player = player.instantiate()
+	player_instance.global_position = player_respawn_point.global_position
 	player_instance.name = "Player"
 	add_child(player_instance)
 	player_instance.set_camera_transform(camera.get_path())
