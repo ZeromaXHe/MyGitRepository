@@ -12,6 +12,7 @@ enum State {
 @export var patrol_range: int = 200
 
 @onready var patrol_timer: Timer = $PatrolTimer
+@onready var detection_zone: Area2D = $DetectionZone
 
 var state: State = -1:
 	set = set_state
@@ -65,6 +66,14 @@ func _physics_process(_delta):
 				actor.move_and_slide()
 		_:
 			print("Error: a unexpected state")
+
+
+func disable_detection_zone():
+	detection_zone.disable_mode = CollisionObject2D.DISABLE_MODE_REMOVE
+
+
+func activate_detection_zone():
+	detection_zone.disable_mode = CollisionObject2D.DISABLE_MODE_KEEP_ACTIVE
 
 
 func initialize(actor: CharacterBody2D, weapon: Weapon, team_side: Team.Side):

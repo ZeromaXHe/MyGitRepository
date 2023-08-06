@@ -7,7 +7,7 @@ const player = preload("res://scenes/player.tscn")
 @onready var enemy_ai: MapAI = $EnemyMapAI
 @onready var bullet_manager: BulletManager = $BulletManager
 @onready var camera: Camera2D = $Camera2D
-@onready var kill_info: RichTextLabel = $Camera2D/KillInfo
+@onready var kill_info: RichTextLabel = $CanvasLayer/KillInfo
 @onready var name_labels_manager: NameLabelsManager = $GUI/NameLabelsManager
 
 func _ready():
@@ -33,6 +33,7 @@ func _ready():
 
 func spawn_player():
 	var player_instance: Player = player.instantiate()
+	player_instance.name = "Player"
 	add_child(player_instance)
 	player_instance.set_camera_transform(camera.get_path())
 	player_instance.died.connect(handle_player_death)

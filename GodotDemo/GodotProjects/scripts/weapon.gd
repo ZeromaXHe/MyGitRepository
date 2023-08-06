@@ -43,7 +43,7 @@ func shoot():
 		return
 
 	var bullet: Bullet = bullet_scene.instantiate()
-	bullet.shooter = holder
+	bullet.shooter_name = holder.name
 	bullet.global_position = muzzle.global_position
 	# direction_to 不需要重复 normalized()
 	var direction: Vector2 = barrel.global_position \

@@ -66,8 +66,16 @@ func handle_hit(bullet: Bullet):
 
 
 func die(bullet: Bullet):
-	died.emit(self, bullet.shooter)
-	GlobalSignals.killed_info.emit(self, bullet.shooter)
+	var killer_name = bullet.shooter_name
+	died.emit(self, killer_name)
+	GlobalSignals.killed_info.emit(self.team.side, self.name, \
+			bullet.team_side, killer_name)
 	if (name_label_node2d != null):
 		name_label_node2d.queue_free()
 	queue_free()
+#	# 为了解决实体仍然在基地范围导致的 bug
+#	global_position = Vector2(-100, -100)
+#	# 隐藏 Actor 以及关闭物理，而不是 queue_free()
+#	visible = false
+#	ai.disable_detection_zone()
+#	disable_mode = CollisionObject2D.DISABLE_MODE_REMOVE

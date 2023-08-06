@@ -632,19 +632,22 @@ offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("9_06alu")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(519, 153)
-position_smoothing_enabled = true
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[node name="KillInfo" type="RichTextLabel" parent="Camera2D"]
-offset_left = 269.0
-offset_top = -315.0
-offset_right = 561.0
-offset_bottom = -196.0
+[node name="KillInfo" type="RichTextLabel" parent="CanvasLayer"]
+offset_left = 837.0
+offset_top = 22.0
+offset_right = 1129.0
+offset_bottom = 141.0
 bbcode_enabled = true
 text = "[color=green]AllyBot1[/color] pistol kill [color=red]EnemyBot2[/color]
 [color=red]Bot3[/color] killed [color=green]Bot4[/color]
 [color=green]Bot1[/color] killed [color=red]Bot2[/color]
 [color=green]Bot1[/color] killed [color=red]Bot2[/color]
 [color=red]Bot3[/color] killed [color=green]Bot4[/color]"
+scroll_active = false
 script = ExtResource("2_bnki2")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(519, 153)
+position_smoothing_enabled = true
