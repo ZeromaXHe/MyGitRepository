@@ -7,8 +7,8 @@ const player = preload("res://scenes/player.tscn")
 @onready var enemy_ai: MapAI = $EnemyMapAI
 @onready var bullet_manager: BulletManager = $BulletManager
 @onready var camera: Camera2D = $Camera2D
-# 居然可以拿到子场景的节点！
-@onready var kill_info: RichTextLabel = $GUI/Rows/TopRow/KillInfo
+# TODO: 居然可以拿到子场景的节点！这是一种不好的实现方式，和 GUI 场景严重耦合，之后修改
+@onready var kill_info: RichTextLabel = $GUI/Rows/TopRow/MarginContainer/KillInfo
 @onready var name_labels_manager: NameLabelsManager = $GUIManager/NameLabelsManager
 @onready var player_respawn_point: Node2D = $PlayerRespawnPoint
 

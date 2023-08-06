@@ -15,7 +15,14 @@ grow_vertical = 2
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="KillInfo" type="RichTextLabel" parent="Rows/TopRow"]
+[node name="MarginContainer" type="MarginContainer" parent="Rows/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 850
+
+[node name="KillInfo" type="RichTextLabel" parent="Rows/TopRow/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 bbcode_enabled = true

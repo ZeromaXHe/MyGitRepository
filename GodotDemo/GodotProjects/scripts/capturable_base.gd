@@ -35,6 +35,12 @@ func _process(delta: float) -> void:
 	if majority_team == Team.Side.NEUTRAL:
 		return
 	var diff_abs = abs(player_unit_count - enemy_unit_count)
+	# 这里不判断的话，会在已占领的情况下重复显示占领信息
+	if majority_team == team_to_capture and occupy_progress == max_occupy_progress:
+		return
+	# 占领进度会发生改变，需要显示
+	if not v_box_container.visible:
+		v_box_container.visible = true
 	if majority_team == team_to_capture:
 		# 将要占领方占优，增加占领进度
 		occupy_progress = min(occupy_progress + delta * diff_abs, max_occupy_progress);
@@ -49,8 +55,6 @@ func _process(delta: float) -> void:
 		# 抵抗占领方占优，扣减占领进度
 		occupy_progress -= delta;
 		if (occupy_progress < 0):
-			if not v_box_container.visible:
-				v_box_container.visible = true
 			team_to_capture = majority_team
 			occupy_progress = -occupy_progress
 			progress_bar.modulate = get_color(majority_team)
