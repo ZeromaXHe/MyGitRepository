@@ -107,12 +107,12 @@ func _on_respawn_timer_timeout() -> void:
 		respawn_timer.start()
 
 
-func spawn_unit(spawn_location: Vector2, spawn_idx: int):
-	var unit: Actor = unit_list[spawn_idx]
-	unit.global_position = spawn_location
-	unit.visible = true
-	unit.disable_mode = CollisionObject2D.DISABLE_MODE_KEEP_ACTIVE
-	unit.ai.activate_detection_zone()
-	unit.set_ai_advance_to(target_base)
-	
-	unit_spawned.emit(unit)
+#func spawn_unit(spawn_location: Vector2, spawn_idx: int):
+#	var unit: Actor = unit_list[spawn_idx]
+#	unit.global_position = spawn_location
+#	unit.visible = true
+#	unit.disable_mode = CollisionObject2D.DISABLE_MODE_KEEP_ACTIVE
+#	unit.ai.activate_detection_zone()
+#	unit.set_ai_advance_to(target_base)
+#
+#	unit_spawned.emit(unit)
