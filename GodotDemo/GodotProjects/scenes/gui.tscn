@@ -1,0 +1,37 @@
+[gd_scene load_steps=2 format=3 uid="uid://b4p3jxjo4ufj5"]
+
+[ext_resource type="Script" path="res://scripts/kill_info.gd" id="1_cmmym"]
+
+[node name="GUI" type="CanvasLayer"]
+
+[node name="Rows" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="KillInfo" type="RichTextLabel" parent="Rows/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[color=green]AllyBot1[/color] pistol kill [color=red]EnemyBot2[/color]
+[color=red]Bot3[/color] killed [color=green]Bot4[/color]
+[color=green]Bot1[/color] killed [color=red]Bot2[/color]
+[color=green]Bot1[/color] killed [color=red]Bot2[/color]
+[color=red]Bot3[/color] killed [color=green]Bot4[/color]"
+scroll_active = false
+script = ExtResource("1_cmmym")
+
+[node name="MidRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="BottomRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+size_flags_vertical = 3

@@ -19,14 +19,34 @@ texture = ExtResource("2_tskdc")
 
 [node name="Team" parent="." instance=ExtResource("3_lll4i")]
 
-[node name="ProgressBar" type="ProgressBar" parent="."]
-offset_left = 61.0
-offset_top = -29.0
-offset_right = 68.0
-offset_bottom = -2.0
-scale = Vector2(2.22321, 2.15586)
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+offset_left = -83.0
+offset_top = -95.0
+offset_right = 85.0
+offset_bottom = -41.0
+
+[node name="NameLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "CapturableBase"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
+layout_mode = 2
 value = 50.0
-fill_mode = 2
+
+[node name="CapturedInfo" type="RichTextLabel" parent="."]
+visible = false
+offset_left = -122.0
+offset_top = 39.0
+offset_right = 123.0
+offset_bottom = 71.0
+bbcode_enabled = true
+text = "[center]Captured by [color=red]ENEMY team[/color]!!![/center]"
+
+[node name="CapturedInfoTimer" type="Timer" parent="."]
+one_shot = true
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="body_exited" from="." to="." method="_on_body_exited"]
+[connection signal="timeout" from="CapturedInfoTimer" to="." method="_on_captured_info_timer_timeout"]

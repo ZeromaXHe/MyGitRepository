@@ -7,8 +7,9 @@ const player = preload("res://scenes/player.tscn")
 @onready var enemy_ai: MapAI = $EnemyMapAI
 @onready var bullet_manager: BulletManager = $BulletManager
 @onready var camera: Camera2D = $Camera2D
-@onready var kill_info: RichTextLabel = $CanvasLayer/KillInfo
-@onready var name_labels_manager: NameLabelsManager = $GUI/NameLabelsManager
+# 居然可以拿到子场景的节点！
+@onready var kill_info: RichTextLabel = $GUI/Rows/TopRow/KillInfo
+@onready var name_labels_manager: NameLabelsManager = $GUIManager/NameLabelsManager
 @onready var player_respawn_point: Node2D = $PlayerRespawnPoint
 
 func _ready():
@@ -35,7 +36,6 @@ func _ready():
 func spawn_player():
 	var player_instance: Player = player.instantiate()
 	player_instance.global_position = player_respawn_point.global_position
-	player_instance.name = "Player"
 	add_child(player_instance)
 	player_instance.set_camera_transform(camera.get_path())
 	player_instance.died.connect(handle_player_death)

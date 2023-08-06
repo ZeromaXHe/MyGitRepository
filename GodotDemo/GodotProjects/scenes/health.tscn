@@ -4,3 +4,9 @@
 
 [node name="Health" type="Node"]
 script = ExtResource("1_lu5pt")
+
+[node name="RefillTimer" type="Timer" parent="."]
+wait_time = 5.0
+one_shot = true
+
+[connection signal="timeout" from="RefillTimer" to="." method="_on_refill_timer_timeout"]

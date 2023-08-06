@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_2etsu"]
 [ext_resource type="Script" path="res://scripts/capturable_base_manager.gd" id="2_2c81g"]
-[ext_resource type="Script" path="res://scripts/kill_info.gd" id="2_bnki2"]
 [ext_resource type="Script" path="res://scripts/bullet_manager.gd" id="3_fdg2q"]
 [ext_resource type="PackedScene" uid="uid://85miqhtewjo7" path="res://scenes/enemy.tscn" id="4_eaets"]
 [ext_resource type="PackedScene" uid="uid://cuu4tbysrr5nv" path="res://scenes/ally.tscn" id="5_gi44o"]
@@ -10,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://cj7v1r6xwgcd4" path="res://scenes/capturable_base.tscn" id="6_w1ort"]
 [ext_resource type="Texture2D" uid="uid://dk6x4qtsry04e" path="res://assets/top_down_shooter/Tilesheet/tilesheet_complete.png" id="8_gbds6"]
 [ext_resource type="Script" path="res://scripts/name_labels_manager.gd" id="9_06alu"]
+[ext_resource type="PackedScene" uid="uid://b4p3jxjo4ufj5" path="res://scenes/gui.tscn" id="10_gh2ev"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_psymo"]
 texture = ExtResource("8_gbds6")
@@ -612,33 +612,19 @@ position = Vector2(78, 49)
 [node name="EnemyRespawnPoint4" type="Node2D" parent="EnemyRespawnPoints"]
 position = Vector2(77, 178)
 
-[node name="GUI" type="Control" parent="."]
+[node name="GUIManager" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="NameLabelsManager" type="Control" parent="GUI"]
+[node name="NameLabelsManager" type="Control" parent="GUIManager"]
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("9_06alu")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="KillInfo" type="RichTextLabel" parent="CanvasLayer"]
-offset_left = 13.0
-offset_top = 16.0
-offset_right = 305.0
-offset_bottom = 135.0
-bbcode_enabled = true
-text = "[color=green]AllyBot1[/color] pistol kill [color=red]EnemyBot2[/color]
-[color=red]Bot3[/color] killed [color=green]Bot4[/color]
-[color=green]Bot1[/color] killed [color=red]Bot2[/color]
-[color=green]Bot1[/color] killed [color=red]Bot2[/color]
-[color=red]Bot3[/color] killed [color=green]Bot4[/color]"
-scroll_active = false
-script = ExtResource("2_bnki2")
+[node name="GUI" parent="." instance=ExtResource("10_gh2ev")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(641, 39)

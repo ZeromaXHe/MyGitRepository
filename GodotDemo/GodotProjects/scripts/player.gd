@@ -14,6 +14,7 @@ signal died(killer)
 
 
 func _ready():
+	name = "Player"
 	weapon.initialize(team.side, self)
 
 

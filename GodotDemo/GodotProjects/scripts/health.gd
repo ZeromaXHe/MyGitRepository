@@ -1,10 +1,30 @@
 extends Node
 class_name Health
 
-@export var max_health: int = 100
+@export var max_health: float = 100.0
+# 每秒回复多少血量
+@export var refill_rate: float = 50.0
 
-@onready var hp: int = max_health:
+@onready var hp: float = max_health:
 	set = set_health
+@onready var refill_timer: Timer = $RefillTimer
+
+var refill_enable = true
+
+
+func _process(delta: float) -> void:
+	if refill_enable and hp < max_health:
+		hp = clamp(hp + refill_rate * delta, 0.0, max_health)
+		print("refill hp:", hp)
+
 
 func set_health(new_hp):
+	if new_hp < hp:
+		refill_enable = false
+		refill_timer.start(refill_timer.wait_time)
+		
 	hp = clamp(new_hp, 0, max_health)
+
+
+func _on_refill_timer_timeout() -> void:
+	refill_enable = true
