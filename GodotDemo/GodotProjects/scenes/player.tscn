@@ -13,7 +13,6 @@ height = 42.0
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_0xj3r")
-player_control = true
 
 [node name="BodyImg" type="Sprite2D" parent="."]
 texture = ExtResource("2_tgrye")
@@ -22,6 +21,7 @@ texture = ExtResource("2_tgrye")
 shape = SubResource("CapsuleShape2D_mndd7")
 
 [node name="AI" parent="." instance=ExtResource("3_b233p")]
+player_control = true
 
 [node name="Health" parent="." instance=ExtResource("5_d07sl")]
 

@@ -3,12 +3,14 @@ class_name MapAI
 
 
 signal unit_spawned(actor: Actor)
-
+signal player_inited(player: Actor)
 
 enum BaseCaptureStartOrder {
 	FIRST,
 	LAST,
 }
+
+const player = preload("res://scenes/player.tscn")
 
 @export var base_capture_start_order: BaseCaptureStartOrder
 @export var team_side: Team.Side
@@ -22,10 +24,13 @@ enum BaseCaptureStartOrder {
 var target_base: CapturableBase = null
 var capturable_bases: Array = []
 var respawn_points: Array = []
-var spawn_idx_queue: Array[int] = []
-
+var respawn_idx: int = 0
+var respawn_queue: Array[Actor] = []
+var actor_map: Dictionary = {}
 
 func initialize(capturable_bases: Array, respawn_points: Array):
+	GlobalSignals.actor_killed.connect(handle_actor_killed)
+	
 	if capturable_bases.size() == 0 or respawn_points.size() == 0 or unit_scene == null:
 		push_error("forgot to properly initialize map AI")
 		return
@@ -34,7 +39,11 @@ func initialize(capturable_bases: Array, respawn_points: Array):
 	self.respawn_points = respawn_points
 	# 初始化单位
 	for i in range(respawn_points.size()):
-		initialize_spawn_unit(respawn_points[i].global_position, i)
+		# 我方单位的第一个重生点生成玩家
+		if i == 0 && team_side == Team.Side.PLAYER:
+			init_player()
+		else:
+			init_ai_unit()
 	self.capturable_bases = capturable_bases
 	
 	for base in capturable_bases:
@@ -43,18 +52,20 @@ func initialize(capturable_bases: Array, respawn_points: Array):
 	check_for_capturable_bases()
 
 
-func initialize_spawn_unit(spawn_location: Vector2, spawn_idx: int):
+func init_player():
+	var player_instance: Actor = player.instantiate()
+	player_instance.name = "Player"
+	actor_map[player_instance] = respawn_idx
+	respawn_unit(player_instance)
+
+	player_inited.emit(player_instance)
+
+
+func init_ai_unit():
 	var unit_instance = unit_scene.instantiate() as Actor
-	unit_instance.global_position = spawn_location
-	unit_instance.died.connect(handle_unit_death)
-	# FIXME: 这里命名生成有问题，估计有时执行的时候之前的引用还没释放，导致重名
-	unit_instance.set_actor_name(get_actor_name_prefix(team.side) + "Bot" + str(spawn_idx))
-	unit_instance.spawn_idx = spawn_idx
-	unit_container.add_child(unit_instance)
-	# _ready() 是在进入场景树时调用，所以必须 add_child() 之后才会初始化 actor 的 ai
-	unit_instance.set_ai_advance_to(target_base)
-	
-	unit_spawned.emit(unit_instance)
+	unit_instance.name = get_actor_name_prefix(team.side) + "Bot" + str(respawn_idx)
+	actor_map[unit_instance] = respawn_idx
+	respawn_unit(unit_instance)
 
 
 func get_actor_name_prefix(side: Team.Side) -> String:
@@ -94,16 +105,26 @@ func assign_next_capturable_base_to_units():
 		unit.set_ai_advance_to(target_base)
 
 
-func handle_unit_death(unit: Actor, killer):
-	spawn_idx_queue.push_back(unit.spawn_idx)
-	if respawn_timer.is_stopped():
-		respawn_timer.start()
+func handle_actor_killed(killed: Actor, killer: Actor):
+	if killed.team.side == team_side:
+		respawn_queue.push_back(killed)
+		if respawn_timer.is_stopped():
+			respawn_timer.start()
 
 
 func _on_respawn_timer_timeout() -> void:
-	var next_spawn_idx = spawn_idx_queue.pop_front()
-	var respawn = respawn_points[next_spawn_idx]
-	initialize_spawn_unit(respawn.global_position, next_spawn_idx)
-	if not spawn_idx_queue.is_empty():
+	var spawn_unit: Actor = respawn_queue.pop_front()
+	respawn_unit(spawn_unit)
+	if not respawn_queue.is_empty():
 		respawn_timer.start()
 
+
+func respawn_unit(unit_instance: Actor):
+	unit_container.add_child(unit_instance)
+	# _ready() 是在进入场景树时调用，所以必须 add_child() 之后才会初始化 actor 的 ai
+	unit_instance.respawn(respawn_points[respawn_idx], target_base)
+	unit_spawned.emit(unit_instance)
+	
+	# FIXME: 现在不会校验重生点是否有单位没走开
+	respawn_idx += 1
+	respawn_idx %= respawn_points.size()

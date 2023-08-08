@@ -2,11 +2,7 @@ extends CharacterBody2D
 class_name Actor
 
 
-signal died(actor: Actor, killer_name: String)
-
-
 @export var speed: int = 100
-@export var player_control: bool = false
 
 @onready var health: Health = $Health
 @onready var ai: AI = $AI
@@ -15,16 +11,20 @@ signal died(actor: Actor, killer_name: String)
 @onready var name_label_transform: RemoteTransform2D = $NameLabelTransform
 @onready var camera_transform: RemoteTransform2D = $CameraTransform
 
-var spawn_idx: int = -1
 var name_label_node2d: Node2D = null
 
 
 func _ready():
-	if player_control:
-		# FIXME: 这里命名生成有问题，估计有时执行的时候之前的引用还没释放，导致重名
-		name = "Player"
 	ai.initialize(self, weapon, team.side)
 	weapon.initialize(team.side, self)
+
+
+func respawn(respawn_point: Node2D, target_base: CapturableBase):
+	global_position = respawn_point.global_position
+	# 重置血量和弹药
+	health.hp = health.max_health
+	weapon.current_ammo = weapon.max_ammo
+	set_ai_advance_to(target_base)
 
 
 func set_camera_transform(camera_path: NodePath):
@@ -40,9 +40,6 @@ func set_ai_advance_to(target_base: CapturableBase):
 	if target_base != null:
 		ai.advance_to(target_base)
 
-
-func set_actor_name(actor_name: String):
-	self.name = actor_name
 
 func rotate_toward(location: Vector2) -> float:
 	var angle_to_location = global_position \
@@ -75,10 +72,10 @@ func handle_hit(bullet: Bullet):
 
 
 func die(bullet: Bullet):
-	var killer_name = bullet.shooter_name
-	died.emit(self, killer_name)
-	GlobalSignals.killed_info.emit(self.team.side, self.name, \
-			bullet.team_side, killer_name)
+	GlobalSignals.actor_killed.emit(self, bullet.shooter)
+	# 将 Actor 和对应的名字标签从父节点中移除，而不是 queue_free()
+	# 作为游荡于场景树之外的引用，略微感觉有点风险。
+	# 目前分别在 map_ai 的 actor_map 和 actor 的 name_label_node2d 保留引用
 	if (name_label_node2d != null):
-		name_label_node2d.queue_free()
-	queue_free()
+		name_label_node2d.get_parent().remove_child(name_label_node2d)
+	self.get_parent().remove_child(self)

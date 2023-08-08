@@ -10,6 +10,7 @@ enum State {
 }
 
 @export var patrol_range: int = 200
+@export var player_control: bool = false
 
 @onready var patrol_timer: Timer = $PatrolTimer
 @onready var detection_zone: Area2D = $DetectionZone
@@ -35,7 +36,7 @@ func _ready():
 
 
 func _physics_process(_delta):
-	if actor.player_control:
+	if player_control:
 		player_control_physics_process()
 	else:
 		ai_control_physics_process()
@@ -52,7 +53,7 @@ func get_input():
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if actor.player_control:
+	if player_control:
 		if event.is_action_released("shoot"):
 			weapon.shoot()
 		elif event.is_action_released("reload"):
@@ -99,11 +100,13 @@ func initialize(actor: CharacterBody2D, weapon: Weapon, team_side: Team.Side):
 	self.weapon = weapon
 	self.team_side = team_side
 
-	if not actor.player_control:
+	if not player_control:
 		weapon.weapon_out_of_ammo.connect(handle_reload)
 
 
 func advance_to(target_base: CapturableBase):
+	if player_control:
+		return
 	next_base_position = target_base.global_position
 	set_state(State.ADVANCE)
 
@@ -125,21 +128,20 @@ func set_state(new_state: State):
 
 
 func handle_reload():
-	if not actor.player_control:
+	if not player_control:
 		weapon.start_reload()
 
 
 func _on_detection_zone_body_entered(body: Node):
-	if actor.player_control:
+	if player_control:
 		return
-	print("detected body entered!")
 	if body.has_method("get_team") and body.get_team() != team_side:
 		set_state(State.ENGAGE)
 		target = body
 
 
 func _on_detection_zone_body_exited(body):
-	if actor.player_control:
+	if player_control:
 		return
 	if target and body == target:
 		set_state(State.ADVANCE)

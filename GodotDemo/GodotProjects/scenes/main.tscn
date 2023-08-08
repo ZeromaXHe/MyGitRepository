@@ -581,9 +581,6 @@ base_capture_start_order = 1
 team_side = 2
 unit_scene = ExtResource("4_eaets")
 
-[node name="PlayerRespawnPoint" type="Node2D" parent="."]
-position = Vector2(-66, 481)
-
 [node name="AllyRespawnPoints" type="Node2D" parent="."]
 position = Vector2(-179, 553)
 

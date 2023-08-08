@@ -13,7 +13,7 @@ var player: Actor = null
 func _ready() -> void:
 	# 清空 KillInfo 的内容
 	kill_info.text = ""
-	GlobalSignals.killed_info.connect(kill_info.handle_killed_info)
+	GlobalSignals.actor_killed.connect(kill_info.handle_actor_killed)
 	hp_bar.value = 100
 
 
