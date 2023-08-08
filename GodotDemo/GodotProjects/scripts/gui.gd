@@ -7,7 +7,7 @@ class_name GUI
 @onready var current_ammo: Label = $Rows/BottomRow/CurrentAmmo
 @onready var max_ammo: Label = $Rows/BottomRow/MaxAmmo
 
-
+var max_ammo_value: int
 var player: Actor = null
 
 func _ready() -> void:
@@ -21,11 +21,20 @@ func set_player(player: Actor):
 	self.player = player
 	
 	set_new_health_value(player.health.hp)
-	set_current_ammo(player.weapon.current_ammo)
-	set_max_ammo(player.weapon.max_ammo)
-	
+	set_weapon(player.weapon_manager.current_weapon)
 	player.health.changed.connect(set_new_health_value)
-	player.weapon.ammo_changed.connect(set_current_ammo)
+	if not player.weapon_manager.weapon_changed.is_connected(handle_weapon_changed):
+		player.weapon_manager.weapon_changed.connect(handle_weapon_changed)
+
+
+func handle_weapon_changed(old_weapon: Weapon, new_weapon: Weapon):
+	set_weapon(new_weapon)
+
+
+func set_weapon(weapon: Weapon):
+	set_max_ammo(weapon.max_ammo)
+	set_current_ammo(weapon.current_ammo)
+	weapon.ammo_changed.connect(set_current_ammo)
 
 
 func set_new_health_value(new_health: float):
@@ -49,9 +58,9 @@ func set_current_ammo(new_ammo: int):
 	# 根据剩余弹药量显示不同颜色
 	if new_ammo == 0:
 		current_ammo.modulate = Color.RED
-	elif new_ammo < 3:
+	elif new_ammo < 0.3 * max_ammo_value:
 		current_ammo.modulate = Color.ORANGE
-	elif new_ammo <= 5:
+	elif new_ammo <= 0.5 * max_ammo_value:
 		current_ammo.modulate = Color.YELLOW
 	else:
 		current_ammo.modulate = Color.WHITE
@@ -59,3 +68,4 @@ func set_current_ammo(new_ammo: int):
 
 func set_max_ammo(new_max_ammo: int):
 	max_ammo.text = str(new_max_ammo)
+	max_ammo_value = new_max_ammo

@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://c3f6foiqy7yel"]
+
+[ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="1_5qky3"]
+[ext_resource type="Texture2D" uid="uid://b84hemgghk2iv" path="res://assets/top_down_shooter/PNG/weapon_silencer.png" id="2_yr4ua"]
+
+[node name="SubMachineGun" instance=ExtResource("1_5qky3")]
+max_ammo = 30
+semi_auto = false
+
+[node name="Gun" parent="." index="0"]
+texture = ExtResource("2_yr4ua")
+offset = Vector2(9, 0)
+
+[node name="Muzzle" parent="." index="1"]
+position = Vector2(22, 0)
+
+[node name="AttackCooldown" parent="." index="2"]
+wait_time = 0.1
+
+[node name="MuzzleFlash" parent="." index="3"]
+position = Vector2(33, 0)

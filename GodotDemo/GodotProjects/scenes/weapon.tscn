@@ -1,8 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://x8xciy0vnhyb"]
+[gd_scene load_steps=7 format=3 uid="uid://x8xciy0vnhyb"]
 
 [ext_resource type="Script" path="res://scripts/weapon.gd" id="1_o20hf"]
 [ext_resource type="PackedScene" uid="uid://tv6rsn0qgay" path="res://scenes/bullet.tscn" id="2_3lt3n"]
-[ext_resource type="Texture2D" uid="uid://b2u7bjyw886p7" path="res://assets/top_down_shooter/PNG/weapon_gun.png" id="3_h1vs1"]
 [ext_resource type="Texture2D" uid="uid://b0g5qxc2y4ajr" path="res://assets/top_down_tank_redux/PNG/Default size/shotLarge.png" id="4_bmw0x"]
 
 [sub_resource type="Animation" id="Animation_u5e25"]
@@ -11,7 +10,7 @@ length = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Weapon/MuzzleFlash:scale")
+tracks/0/path = NodePath("Pistol/MuzzleFlash:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -23,7 +22,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("Weapon/MuzzleFlash:visible")
+tracks/1/path = NodePath("Pistol/MuzzleFlash:visible")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -38,7 +37,7 @@ resource_name = "reload"
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Weapon/Gun:rotation")
+tracks/0/path = NodePath("Pistol/Gun:rotation")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -50,7 +49,7 @@ tracks/0/keys = {
 tracks/1/type = "method"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("Weapon")
+tracks/1/path = NodePath("Pistol")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -73,7 +72,6 @@ script = ExtResource("1_o20hf")
 bullet_scene = ExtResource("2_3lt3n")
 
 [node name="Gun" type="Sprite2D" parent="."]
-texture = ExtResource("3_h1vs1")
 offset = Vector2(6, 0)
 
 [node name="Muzzle" type="Node2D" parent="."]

@@ -6,7 +6,7 @@ class_name Actor
 
 @onready var health: Health = $Health
 @onready var ai: AI = $AI
-@onready var weapon: Weapon = $Weapon
+@onready var weapon_manager: WeaponManager = $WeaponManager
 @onready var team: Team = $Team
 @onready var remote_transform: RemoteTransform2D = $RemoteTransform2D
 @onready var body_img: Sprite2D = $BodyImg
@@ -16,7 +16,40 @@ var name_label_node2d: Node2D = null
 
 func _ready():
 	ai.initialize(self)
-	weapon.initialize(self)
+	weapon_manager.initialize(self)
+
+
+
+func _physics_process(delta: float) -> void:
+	if not is_player():
+		return
+	# Player 控制逻辑
+	get_input()
+	move_and_slide()
+
+
+func get_input():
+	look_at(get_global_mouse_position())
+	velocity = Input.get_vector("left", "right", "up", "down") * speed
+	
+	if not weapon_manager.current_weapon.semi_auto and Input.is_action_pressed("shoot"):
+		# 全自动射击
+		weapon_manager.shoot()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_player():
+		return
+	
+	if event.is_action_released("shoot") and weapon_manager.current_weapon.semi_auto:
+		# 半自动射击
+		weapon_manager.shoot()
+	elif event.is_action_released("reload"):
+		weapon_manager.weapon.reload()
+	elif event.is_action_released("weapon_1"):
+		weapon_manager.switch_weapon(0)
+	elif event.is_action_released("weapon_2"):
+		weapon_manager.switch_weapon(1)
 
 
 func is_player() -> bool:
@@ -27,7 +60,7 @@ func respawn(respawn_point: Node2D, target_base: CapturableBase):
 	global_position = respawn_point.global_position
 	# 重置血量和弹药
 	health.hp = health.max_health
-	weapon.current_ammo = weapon.max_ammo
+	weapon_manager.reset_to_max_ammo()
 	set_ai_advance_to(target_base)
 
 

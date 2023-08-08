@@ -34,30 +34,8 @@ func _ready():
 
 func _physics_process(_delta):
 	if actor.is_player():
-		player_control_physics_process()
-	else:
-		ai_control_physics_process()
-
-
-func player_control_physics_process():
-	get_input()
-	actor.move_and_slide()
-
-
-func get_input():
-	actor.look_at(get_global_mouse_position())
-	actor.velocity = Input.get_vector("left", "right", "up", "down") * actor.speed
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if actor.is_player():
-		if event.is_action_released("shoot"):
-			actor.weapon.shoot()
-		elif event.is_action_released("reload"):
-			actor.weapon.reload()
-
-
-func ai_control_physics_process():
+		return
+	# ai 的物理循环逻辑
 	match state:
 		State.PATROL:
 			if not patrol_location_reached:
@@ -70,7 +48,7 @@ func ai_control_physics_process():
 					actor.velocity = Vector2.ZERO
 					patrol_timer.start()
 		State.ENGAGE:
-			if target != null and actor.weapon != null:
+			if target != null and actor.weapon_manager.current_weapon != null:
 				var angle_to_target = actor.rotate_toward(target.global_position)
 #				print("sin: ", sin(0.5 * (actor.rotation - angle_to_target)))
 				
@@ -78,7 +56,7 @@ func ai_control_physics_process():
 				# 所以这里用 sin(0.5x) 替代 x 来实现原教程类似的效果
 				# 使得目标进入一定角度时开枪
 				if abs(sin(0.5 * (actor.rotation - angle_to_target))) < 0.08:
-					actor.weapon.shoot()
+					actor.weapon_manager.shoot()
 			else:
 				print("engaged, but no weapon/target found")
 		State.ADVANCE:
@@ -94,10 +72,6 @@ func ai_control_physics_process():
 
 func initialize(actor: Actor):
 	self.actor = actor
-
-	if not actor.is_player():
-		# 如果是 AI，没子弹了立即换弹
-		actor.weapon.weapon_out_of_ammo.connect(actor.weapon.start_reload)
 
 
 func advance_to(target_base: CapturableBase):
