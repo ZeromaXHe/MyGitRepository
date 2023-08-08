@@ -29,7 +29,8 @@ func _ready():
 
 
 func spawn_player():
-	var player_instance: Player = player.instantiate()
+	var player_instance: Actor = player.instantiate()
+	player_instance.player_control = true
 	player_instance.global_position = player_respawn_point.global_position
 	add_child(player_instance)
 	player_instance.set_camera_transform(camera.get_path())

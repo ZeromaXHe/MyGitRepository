@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://boqbliqf408al"]
+[gd_scene load_steps=8 format=3 uid="uid://boqbliqf408al"]
 
-[ext_resource type="Script" path="res://scripts/player.gd" id="1_mu2a5"]
+[ext_resource type="Script" path="res://scripts/actor.gd" id="1_0xj3r"]
 [ext_resource type="Texture2D" uid="uid://c7wc44lmsxl26" path="res://assets/top_down_shooter/PNG/Soldier 1/soldier1_hold.png" id="2_tgrye"]
+[ext_resource type="PackedScene" uid="uid://dd70ves4up5d8" path="res://scenes/ai.tscn" id="3_b233p"]
 [ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="4_2qbsl"]
 [ext_resource type="PackedScene" uid="uid://cohfrt8h7aasg" path="res://scenes/health.tscn" id="5_d07sl"]
 [ext_resource type="PackedScene" uid="uid://iesf8n20ul1b" path="res://scenes/team.tscn" id="5_ywvu5"]
@@ -11,13 +12,16 @@ radius = 13.0
 height = 42.0
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
-script = ExtResource("1_mu2a5")
+script = ExtResource("1_0xj3r")
+player_control = true
 
 [node name="BodyImg" type="Sprite2D" parent="."]
 texture = ExtResource("2_tgrye")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_mndd7")
+
+[node name="AI" parent="." instance=ExtResource("3_b233p")]
 
 [node name="Health" parent="." instance=ExtResource("5_d07sl")]
 

@@ -2,24 +2,33 @@ extends CharacterBody2D
 class_name Actor
 
 
-signal died(actor: Actor, killer)
+signal died(actor: Actor, killer_name: String)
 
 
 @export var speed: int = 100
+@export var player_control: bool = false
 
 @onready var health: Health = $Health
 @onready var ai: AI = $AI
 @onready var weapon: Weapon = $Weapon
 @onready var team: Team = $Team
 @onready var name_label_transform: RemoteTransform2D = $NameLabelTransform
+@onready var camera_transform: RemoteTransform2D = $CameraTransform
 
 var spawn_idx: int = -1
 var name_label_node2d: Node2D = null
 
 
 func _ready():
+	if player_control:
+		# FIXME: 这里命名生成有问题，估计有时执行的时候之前的引用还没释放，导致重名
+		name = "Player"
 	ai.initialize(self, weapon, team.side)
 	weapon.initialize(team.side, self)
+
+
+func set_camera_transform(camera_path: NodePath):
+	camera_transform.remote_path = camera_path
 
 
 func set_name_label_node2d(name_label_node2d: Node2D):
@@ -60,7 +69,7 @@ func get_team() -> Team.Side:
 
 func handle_hit(bullet: Bullet):
 	health.hp -= bullet.damage
-	print("actor ", name, " hit! ", health.hp)
+	print(name, " hit! ", health.hp)
 	if health.hp <= 0:
 		die(bullet)
 
@@ -73,9 +82,3 @@ func die(bullet: Bullet):
 	if (name_label_node2d != null):
 		name_label_node2d.queue_free()
 	queue_free()
-#	# 为了解决实体仍然在基地范围导致的 bug
-#	global_position = Vector2(-100, -100)
-#	# 隐藏 Actor 以及关闭物理，而不是 queue_free()
-#	visible = false
-#	ai.disable_detection_zone()
-#	disable_mode = CollisionObject2D.DISABLE_MODE_REMOVE

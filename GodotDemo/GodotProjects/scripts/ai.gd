@@ -33,7 +33,33 @@ var next_base_position: Vector2 = Vector2.ZERO
 func _ready():
 	set_state(State.PATROL)
 
+
 func _physics_process(_delta):
+	if actor.player_control:
+		player_control_physics_process()
+	else:
+		ai_control_physics_process()
+
+
+func player_control_physics_process():
+	get_input()
+	actor.move_and_slide()
+
+
+func get_input():
+	actor.look_at(get_global_mouse_position())
+	actor.velocity = Input.get_vector("left", "right", "up", "down") * actor.speed
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if actor.player_control:
+		if event.is_action_released("shoot"):
+			weapon.shoot()
+		elif event.is_action_released("reload"):
+			weapon.reload()
+
+
+func ai_control_physics_process():
 	match state:
 		State.PATROL:
 			if not patrol_location_reached:
@@ -68,20 +94,13 @@ func _physics_process(_delta):
 			print("Error: a unexpected state")
 
 
-func disable_detection_zone():
-	detection_zone.disable_mode = CollisionObject2D.DISABLE_MODE_REMOVE
-
-
-func activate_detection_zone():
-	detection_zone.disable_mode = CollisionObject2D.DISABLE_MODE_KEEP_ACTIVE
-
-
 func initialize(actor: CharacterBody2D, weapon: Weapon, team_side: Team.Side):
 	self.actor = actor
 	self.weapon = weapon
 	self.team_side = team_side
-	
-	weapon.weapon_out_of_ammo.connect(handle_reload)
+
+	if not actor.player_control:
+		weapon.weapon_out_of_ammo.connect(handle_reload)
 
 
 func advance_to(target_base: CapturableBase):
@@ -106,10 +125,13 @@ func set_state(new_state: State):
 
 
 func handle_reload():
-	weapon.start_reload()
+	if not actor.player_control:
+		weapon.start_reload()
 
 
 func _on_detection_zone_body_entered(body: Node):
+	if actor.player_control:
+		return
 	print("detected body entered!")
 	if body.has_method("get_team") and body.get_team() != team_side:
 		set_state(State.ENGAGE)
@@ -117,6 +139,8 @@ func _on_detection_zone_body_entered(body: Node):
 
 
 func _on_detection_zone_body_exited(body):
+	if actor.player_control:
+		return
 	if target and body == target:
 		set_state(State.ADVANCE)
 		target = null
