@@ -1,0 +1,32 @@
+[gd_scene load_steps=7 format=3 uid="uid://d1cvpkf5rhomg"]
+
+[ext_resource type="Script" path="res://scripts/actor.gd" id="1_uderr"]
+[ext_resource type="PackedScene" uid="uid://dd70ves4up5d8" path="res://scenes/ai.tscn" id="3_qb8nq"]
+[ext_resource type="PackedScene" uid="uid://cohfrt8h7aasg" path="res://scenes/health.tscn" id="4_hikhf"]
+[ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="5_26hfo"]
+[ext_resource type="PackedScene" uid="uid://iesf8n20ul1b" path="res://scenes/team.tscn" id="6_huy6s"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mndd7"]
+radius = 13.0
+height = 42.0
+
+[node name="Actor" type="CharacterBody2D" groups=["player"]]
+script = ExtResource("1_uderr")
+
+[node name="BodyImg" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_mndd7")
+
+[node name="AI" parent="." instance=ExtResource("3_qb8nq")]
+
+[node name="Health" parent="." instance=ExtResource("4_hikhf")]
+
+[node name="Weapon" parent="." instance=ExtResource("5_26hfo")]
+position = Vector2(15, 13)
+
+[node name="Team" parent="." instance=ExtResource("6_huy6s")]
+
+[node name="RemoteTransform2D" type="RemoteTransform2D" parent="."]
+update_rotation = false
+update_scale = false

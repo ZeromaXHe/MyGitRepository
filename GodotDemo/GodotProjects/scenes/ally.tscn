@@ -1,35 +1,13 @@
-[gd_scene load_steps=8 format=3 uid="uid://cuu4tbysrr5nv"]
+[gd_scene load_steps=3 format=3 uid="uid://x7hj3iuxjcjm"]
 
-[ext_resource type="Script" path="res://scripts/actor.gd" id="1_174qu"]
+[ext_resource type="PackedScene" uid="uid://d1cvpkf5rhomg" path="res://scenes/actor.tscn" id="1_18lxb"]
 [ext_resource type="Texture2D" uid="uid://bke3jih5i35mr" path="res://assets/top_down_shooter/PNG/Woman Green/womanGreen_hold.png" id="2_u1smu"]
-[ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="3_e4b4j"]
-[ext_resource type="PackedScene" uid="uid://cohfrt8h7aasg" path="res://scenes/health.tscn" id="4_jjtml"]
-[ext_resource type="PackedScene" uid="uid://dd70ves4up5d8" path="res://scenes/ai.tscn" id="5_lgu5r"]
-[ext_resource type="PackedScene" uid="uid://iesf8n20ul1b" path="res://scenes/team.tscn" id="6_r3vll"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mndd7"]
-radius = 13.0
-height = 42.0
+[node name="Actor" instance=ExtResource("1_18lxb")]
 
-[node name="Ally" type="CharacterBody2D" groups=["enemy"]]
-script = ExtResource("1_174qu")
-
-[node name="BodyImg" type="Sprite2D" parent="."]
+[node name="BodyImg" parent="." index="0"]
 texture = ExtResource("2_u1smu")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CapsuleShape2D_mndd7")
-
-[node name="Weapon" parent="." instance=ExtResource("3_e4b4j")]
-position = Vector2(16, 12)
-
-[node name="Health" parent="." instance=ExtResource("4_jjtml")]
-
-[node name="AI" parent="." instance=ExtResource("5_lgu5r")]
-
-[node name="Team" parent="." instance=ExtResource("6_r3vll")]
+[node name="Team" parent="." index="5"]
 side = 1
-
-[node name="NameLabelTransform" type="RemoteTransform2D" parent="."]
-update_rotation = false
-update_scale = false
+character = 2

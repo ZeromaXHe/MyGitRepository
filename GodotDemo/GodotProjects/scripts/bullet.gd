@@ -6,7 +6,7 @@ extends Area2D
 @export var damage: int = 10
 
 var direction := Vector2.ZERO
-var team_side: Team.Side = -1
+var team: Team = null
 var shooter: Actor
 
 func _physics_process(delta):
@@ -26,6 +26,6 @@ func _on_kill_timer_timeout():
 
 func _on_body_entered(body: Node):
 	if body.has_method("handle_hit"):
-		if body.has_method("get_team") and body.get_team() != team_side:
+		if body.has_method("get_team_side") and body.get_team_side() != team.side:
 			body.handle_hit(self)
 	queue_free()

@@ -10,7 +10,6 @@ enum State {
 }
 
 @export var patrol_range: int = 200
-@export var player_control: bool = false
 
 @onready var patrol_timer: Timer = $PatrolTimer
 @onready var detection_zone: Area2D = $DetectionZone
@@ -19,8 +18,6 @@ var state: State = -1:
 	set = set_state
 var actor: Actor = null
 var target: CharacterBody2D = null
-var weapon: Weapon = null
-var team_side: Team.Side = -1
 
 # 巡逻状态使用
 var origin: Vector2 = Vector2.ZERO
@@ -36,7 +33,7 @@ func _ready():
 
 
 func _physics_process(_delta):
-	if player_control:
+	if actor.is_player():
 		player_control_physics_process()
 	else:
 		ai_control_physics_process()
@@ -53,11 +50,11 @@ func get_input():
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if player_control:
+	if actor.is_player():
 		if event.is_action_released("shoot"):
-			weapon.shoot()
+			actor.weapon.shoot()
 		elif event.is_action_released("reload"):
-			weapon.reload()
+			actor.weapon.reload()
 
 
 func ai_control_physics_process():
@@ -73,7 +70,7 @@ func ai_control_physics_process():
 					actor.velocity = Vector2.ZERO
 					patrol_timer.start()
 		State.ENGAGE:
-			if target != null and weapon != null:
+			if target != null and actor.weapon != null:
 				var angle_to_target = actor.rotate_toward(target.global_position)
 #				print("sin: ", sin(0.5 * (actor.rotation - angle_to_target)))
 				
@@ -81,7 +78,7 @@ func ai_control_physics_process():
 				# 所以这里用 sin(0.5x) 替代 x 来实现原教程类似的效果
 				# 使得目标进入一定角度时开枪
 				if abs(sin(0.5 * (actor.rotation - angle_to_target))) < 0.08:
-					weapon.shoot()
+					actor.weapon.shoot()
 			else:
 				print("engaged, but no weapon/target found")
 		State.ADVANCE:
@@ -95,17 +92,16 @@ func ai_control_physics_process():
 			print("Error: a unexpected state")
 
 
-func initialize(actor: CharacterBody2D, weapon: Weapon, team_side: Team.Side):
+func initialize(actor: Actor):
 	self.actor = actor
-	self.weapon = weapon
-	self.team_side = team_side
 
-	if not player_control:
-		weapon.weapon_out_of_ammo.connect(handle_reload)
+	if not actor.is_player():
+		# 如果是 AI，没子弹了立即换弹
+		actor.weapon.weapon_out_of_ammo.connect(actor.weapon.start_reload)
 
 
 func advance_to(target_base: CapturableBase):
-	if player_control:
+	if actor.is_player():
 		return
 	next_base_position = target_base.global_position
 	set_state(State.ADVANCE)
@@ -127,21 +123,16 @@ func set_state(new_state: State):
 	state_changed.emit(new_state)
 
 
-func handle_reload():
-	if not player_control:
-		weapon.start_reload()
-
-
 func _on_detection_zone_body_entered(body: Node):
-	if player_control:
+	if actor.is_player():
 		return
-	if body.has_method("get_team") and body.get_team() != team_side:
+	if body.has_method("get_team_side") and body.get_team_side() != actor.team.side:
 		set_state(State.ENGAGE)
 		target = body
 
 
 func _on_detection_zone_body_exited(body):
-	if player_control:
+	if actor.is_player():
 		return
 	if target and body == target:
 		set_state(State.ADVANCE)

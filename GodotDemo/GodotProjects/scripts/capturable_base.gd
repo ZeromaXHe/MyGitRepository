@@ -76,20 +76,20 @@ func get_captured_info_bbcode(side: Team.Side) -> String:
 
 
 func _on_body_entered(body: Node2D) -> void:
-	if body.has_method("get_team"):
-		var body_team = body.get_team()
-		if body_team == Team.Side.ENEMY:
+	if body.has_method("get_team_side"):
+		var body_team_side = body.get_team_side()
+		if body_team_side == Team.Side.ENEMY:
 			enemy_unit_count += 1
-		elif body_team == Team.Side.PLAYER:
+		elif body_team_side == Team.Side.PLAYER:
 			player_unit_count += 1
 
 
 func _on_body_exited(body: Node2D) -> void:
-	if body.has_method("get_team"):
-		var body_team = body.get_team()
-		if body_team == Team.Side.ENEMY:
+	if body.has_method("get_team_side"):
+		var body_team_side = body.get_team_side()
+		if body_team_side == Team.Side.ENEMY:
 			enemy_unit_count -= 1
-		elif body_team == Team.Side.PLAYER:
+		elif body_team_side == Team.Side.PLAYER:
 			player_unit_count -= 1
 
 

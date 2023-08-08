@@ -3,7 +3,7 @@ class_name NameLabelsManager
 
 func handle_unit_spawned(actor: Actor):
 	# 玩家不生成标签
-	if actor.ai.player_control:
+	if actor.is_player():
 		return
 	
 	print("name label manager handling ai unit inited:", actor.name)

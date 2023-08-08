@@ -7,8 +7,15 @@ enum Side {
 	ENEMY,
 }
 
-@export var side: Team.Side = Side.NEUTRAL
+enum Character {
+	NEUTRAL,
+	PLAYER,
+	ALLY,
+	ENEMY
+}
 
+@export var side: Team.Side = Side.NEUTRAL
+@export var character: Team.Character = Character.NEUTRAL
 
 func get_rival(side: Team.Side) -> Team.Side:
 	match (side):

@@ -8,15 +8,19 @@ class_name Actor
 @onready var ai: AI = $AI
 @onready var weapon: Weapon = $Weapon
 @onready var team: Team = $Team
-@onready var name_label_transform: RemoteTransform2D = $NameLabelTransform
-@onready var camera_transform: RemoteTransform2D = $CameraTransform
+@onready var remote_transform: RemoteTransform2D = $RemoteTransform2D
+@onready var body_img: Sprite2D = $BodyImg
 
 var name_label_node2d: Node2D = null
 
 
 func _ready():
-	ai.initialize(self, weapon, team.side)
-	weapon.initialize(team.side, self)
+	ai.initialize(self)
+	weapon.initialize(self)
+
+
+func is_player() -> bool:
+	return team.character == Team.Character.PLAYER
 
 
 func respawn(respawn_point: Node2D, target_base: CapturableBase):
@@ -28,12 +32,12 @@ func respawn(respawn_point: Node2D, target_base: CapturableBase):
 
 
 func set_camera_transform(camera_path: NodePath):
-	camera_transform.remote_path = camera_path
+	remote_transform.remote_path = camera_path
 
 
 func set_name_label_node2d(name_label_node2d: Node2D):
 	self.name_label_node2d = name_label_node2d
-	self.name_label_transform.remote_path = name_label_node2d.get_path()
+	self.remote_transform.remote_path = name_label_node2d.get_path()
 
 
 func set_ai_advance_to(target_base: CapturableBase):
@@ -60,7 +64,7 @@ func has_reached_position(location: Vector2) -> bool:
 	return global_position.distance_to(location) < 5
 
 
-func get_team() -> Team.Side:
+func get_team_side() -> Team.Side:
 	return team.side
 
 

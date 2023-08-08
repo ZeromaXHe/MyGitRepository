@@ -7,17 +7,13 @@ signal ammo_changed(new_ammo: int)
 @export var bullet_scene: PackedScene
 
 @onready var muzzle: Node2D = $Muzzle
-@onready var barrel: Node2D = $Barrel
 @onready var attack_cooldown: Timer = $AttackCooldown
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var muzzle_flash: Sprite2D = $MuzzleFlash
 
-var team_side: Team.Side = -1
 var max_ammo: int = 10
 var current_ammo: int = max_ammo:
 	set = set_current_ammo 
-		
-
 var holder: Actor = null
 
 
@@ -25,8 +21,7 @@ func _ready() -> void:
 	muzzle_flash.hide()
 
 
-func initialize(team_side: Team.Side, holder):
-	self.team_side = team_side
+func initialize(holder: Actor):
 	self.holder = holder
 
 
@@ -60,10 +55,9 @@ func shoot():
 	bullet.shooter = holder
 	bullet.global_position = muzzle.global_position
 	# direction_to 不需要重复 normalized()
-	var direction: Vector2 = barrel.global_position \
-			.direction_to(muzzle.global_position)
+	var direction: Vector2 = global_position.direction_to(muzzle.global_position)
 	bullet.set_direction(direction)
-	bullet.team_side = team_side
+	bullet.team = holder.team
 	GlobalSignals.bullet_fired.emit(bullet)
 
 	# 开启攻击冷却计时器
