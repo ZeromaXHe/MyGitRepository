@@ -45,7 +45,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# 半自动射击
 		weapon_manager.shoot()
 	elif event.is_action_released("reload"):
-		weapon_manager.weapon.reload()
+		weapon_manager.reload()
 	elif event.is_action_released("weapon_1"):
 		weapon_manager.switch_weapon(0)
 	elif event.is_action_released("weapon_2"):

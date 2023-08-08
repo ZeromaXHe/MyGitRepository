@@ -8,6 +8,6 @@
 [node name="BodyImg" parent="." index="0"]
 texture = ExtResource("2_v2r1y")
 
-[node name="Team" parent="." index="5"]
+[node name="Team" parent="." index="4"]
 side = 2
 character = 3

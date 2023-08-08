@@ -1,13 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://co0nv158p25vk"]
+[gd_scene load_steps=2 format=3 uid="uid://co0nv158p25vk"]
 
 [ext_resource type="PackedScene" uid="uid://d1cvpkf5rhomg" path="res://scenes/actor.tscn" id="1_68kxu"]
-[ext_resource type="Texture2D" uid="uid://c7wc44lmsxl26" path="res://assets/top_down_shooter/PNG/Soldier 1/soldier1_hold.png" id="2_tgrye"]
 
 [node name="Actor" instance=ExtResource("1_68kxu")]
 
-[node name="BodyImg" parent="." index="0"]
-texture = ExtResource("2_tgrye")
-
-[node name="Team" parent="." index="5"]
+[node name="Team" parent="." index="4"]
 side = 1
 character = 1

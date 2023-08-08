@@ -6,7 +6,7 @@
 bg_color = Color(0.27451, 0.27451, 0.27451, 1)
 
 [node name="GameOverScreen" type="CanvasLayer"]
-process_mode = 2
+process_mode = 3
 script = ExtResource("1_tebdh")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]

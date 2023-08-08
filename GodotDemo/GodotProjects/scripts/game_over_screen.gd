@@ -1,8 +1,6 @@
 extends CanvasLayer
 class_name GameOverScreen
 
-const main_scene: PackedScene = preload("res://scenes/main.tscn")
-
 @onready var title: Label = $PanelContainer/MarginContainer/Rows/Title
 
 
@@ -17,7 +15,7 @@ func set_title(win: bool):
 
 func _on_restart_button_pressed() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_packed(main_scene)
+	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
 func _on_quit_button_pressed() -> void:

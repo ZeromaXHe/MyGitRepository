@@ -18,4 +18,6 @@ position = Vector2(22, 0)
 wait_time = 0.1
 
 [node name="MuzzleFlash" parent="." index="3"]
+visible = true
 position = Vector2(33, 0)
+scale = Vector2(1, 1)
