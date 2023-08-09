@@ -1,13 +1,56 @@
-[gd_scene load_steps=3 format=3 uid="uid://cf2xw2qj0dnix"]
+[gd_scene load_steps=6 format=3 uid="uid://cf2xw2qj0dnix"]
 
 [ext_resource type="Script" path="res://scripts/game_over_screen.gd" id="1_tebdh"]
 [ext_resource type="StyleBox" uid="uid://c1ildl1pxktc5" path="res://styles/menu_style.tres" id="2_otm4h"]
+
+[sub_resource type="Animation" id="Animation_lmm45"]
+resource_name = "fade"
+length = 2.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Overlay:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("PanelContainer:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wrt5o"]
+_data = {
+"fade": SubResource("Animation_lmm45")
+}
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gi41l"]
+bg_color = Color(0, 0, 0, 1)
 
 [node name="GameOverScreen" type="CanvasLayer"]
 process_mode = 3
 script = ExtResource("1_tebdh")
 
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+autoplay = "fade"
+libraries = {
+"": SubResource("AnimationLibrary_wrt5o")
+}
+
 [node name="PanelContainer" type="PanelContainer" parent="."]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -56,6 +99,16 @@ text = " Main menu "
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Quit"
+
+[node name="Overlay" type="PanelContainer" parent="."]
+modulate = Color(1, 1, 1, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gi41l")
 
 [connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/RestartButton" to="." method="_on_restart_button_pressed"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
