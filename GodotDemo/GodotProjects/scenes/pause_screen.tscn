@@ -1,0 +1,72 @@
+[gd_scene load_steps=4 format=3 uid="uid://du2y6ydm5rm31"]
+
+[ext_resource type="Script" path="res://scripts/pause_screen.gd" id="1_2nwn8"]
+[ext_resource type="StyleBox" uid="uid://c1ildl1pxktc5" path="res://styles/menu_style.tres" id="1_33x0f"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w01fd"]
+bg_color = Color(0, 0, 0, 0.25098)
+
+[node name="PauseScreen" type="CanvasLayer"]
+process_mode = 3
+layer = 2
+script = ExtResource("1_2nwn8")
+
+[node name="Overlay" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_w01fd")
+
+[node name="PauseMenuContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="PauseMenuContainer"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("1_33x0f")
+
+[node name="MarginContainer" type="MarginContainer" parent="PauseMenuContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Rows" type="VBoxContainer" parent="PauseMenuContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="PauseTitle" type="Label" parent="PauseMenuContainer/PanelContainer/MarginContainer/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Paused"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PauseMenuContainer/PanelContainer/MarginContainer/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ContinueButton" type="Button" parent="PauseMenuContainer/PanelContainer/MarginContainer/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = " Continue "
+
+[node name="MainMenuButton" type="Button" parent="PauseMenuContainer/PanelContainer/MarginContainer/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = " Main menu "
+
+[node name="QuitButton" type="Button" parent="PauseMenuContainer/PanelContainer/MarginContainer/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Quit"
+
+[connection signal="pressed" from="PauseMenuContainer/PanelContainer/MarginContainer/Rows/ContinueButton" to="." method="_on_continue_button_pressed"]
+[connection signal="pressed" from="PauseMenuContainer/PanelContainer/MarginContainer/Rows/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
+[connection signal="pressed" from="PauseMenuContainer/PanelContainer/MarginContainer/Rows/QuitButton" to="." method="_on_quit_button_pressed"]

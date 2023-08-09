@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="MyGodotDemo"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/main_menu_screen.tscn"
 config/features=PackedStringArray("4.1", "Forward Plus")
 config/icon="res://assets/icon.svg"
 
@@ -59,5 +59,10 @@ weapon_1={
 weapon_2={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":50,"physical_keycode":0,"key_label":0,"unicode":50,"echo":false,"script":null)
+]
+}
+pause={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194305,"physical_keycode":0,"key_label":0,"unicode":0,"echo":false,"script":null)
 ]
 }

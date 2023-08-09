@@ -2,6 +2,7 @@ extends Node
 
 
 const game_over_scene: PackedScene = preload("res://scenes/game_over_screen.tscn")
+const pause_scene: PackedScene = preload("res://scenes/pause_screen.tscn")
 
 @onready var capturable_base_manager: CapturableBaseManager = $CapturableBaseManager
 @onready var ally_ai: MapAI = $AllyMapAI
@@ -46,4 +47,9 @@ func handle_player_lose():
 	var game_over: GameOverScreen = game_over_scene.instantiate() as GameOverScreen
 	add_child(game_over)
 	game_over.set_title(false)
-	get_tree().paused = true
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") and not get_tree().paused:
+		var pause_menu = pause_scene.instantiate()
+		add_child(pause_menu)
