@@ -11,6 +11,8 @@ const pause_scene: PackedScene = preload("res://scenes/pause_screen.tscn")
 @onready var camera: Camera2D = $Camera2D
 @onready var name_labels_manager: NameLabelsManager = $GUIManager/NameLabelsManager
 @onready var gui: GUI = $GUI
+@onready var ground: TileMap = $Ground
+
 
 func _ready():
 	# 刷新随机种子
@@ -29,6 +31,8 @@ func _ready():
 	enemy_ai.unit_spawned.connect(name_labels_manager.handle_unit_spawned)
 	ally_ai.initialize(bases, ally_respawns.get_children())
 	enemy_ai.initialize(bases, enemy_respawns.get_children())
+	
+	ground.get_navigation_map(0)
 
 
 func handle_player_inited(player_instance: Player):

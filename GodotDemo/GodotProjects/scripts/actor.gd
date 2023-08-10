@@ -40,7 +40,8 @@ func set_name_label_node2d(name_label_node2d: Node2D):
 
 func set_ai_advance_to(target_base: CapturableBase):
 	if target_base != null and ai != null:
-		ai.advance_to(target_base)
+		# 不要等待方法执行，防止被阻塞
+		ai.advance_to.call_deferred(target_base)
 
 
 func rotate_toward(location: Vector2) -> float:
@@ -54,8 +55,9 @@ func rotate_toward(location: Vector2) -> float:
 	return angle_to_location
 
 
-func velocity_toward(location: Vector2):
+func velocity_toward(location: Vector2) -> Vector2:
 	velocity = global_position.direction_to(location) * speed
+	return velocity
 
 
 func has_reached_position(location: Vector2) -> bool:
