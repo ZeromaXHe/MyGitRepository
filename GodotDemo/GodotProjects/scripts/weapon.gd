@@ -1,3 +1,4 @@
+@tool
 extends Node2D
 class_name Weapon
 
@@ -17,10 +18,24 @@ var current_ammo: int = max_ammo:
 	set = set_current_ammo
 
 
+func _get_configuration_warnings() -> PackedStringArray:
+	# 在代码开头加上 @tool 才可以生效
+	var result: PackedStringArray = []
+	if animation_player == null:
+		result.append("Weapon 实现类下必须拥有一个名为 AnimationPlayer 的动画播放器节点")
+	else:
+		if not animation_player.has_animation("reload"):
+			result.append("AnimationPlayer 必须具有 reload 动画")
+		if not animation_player.has_animation("muzzle_flash"):
+			result.append("AnimationPlayer 必须具有 muzzle_falsh 动画")
+	return result
+
+
 func _ready() -> void:
-	muzzle_flash.hide()
-	# 不加的话赋值不正确，不知道什么原因
-	current_ammo = max_ammo
+	if not Engine.is_editor_hint():
+		muzzle_flash.hide()
+		# 不加的话赋值不正确，不知道什么原因
+		current_ammo = max_ammo
 
 
 func start_reload():
@@ -63,4 +78,3 @@ func shoot(holder: Actor):
 	# 播放枪口闪光动画
 	animation_player.play("muzzle_flash")
 	current_ammo -= 1
-

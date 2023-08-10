@@ -3,7 +3,7 @@ class_name MapAI
 
 
 signal unit_spawned(actor: Actor)
-signal player_inited(player: Actor)
+signal player_inited(player: Player)
 
 enum BaseCaptureStartOrder {
 	FIRST,
@@ -53,7 +53,7 @@ func initialize(capturable_bases: Array, respawn_points: Array):
 
 
 func init_player():
-	var player_instance: Actor = player.instantiate()
+	var player_instance: Player = player.instantiate()
 	player_instance.name = "Player"
 	actor_map[player_instance] = respawn_idx
 	respawn_unit(player_instance)

@@ -31,7 +31,7 @@ func _ready():
 	enemy_ai.initialize(bases, enemy_respawns.get_children())
 
 
-func handle_player_inited(player_instance: Actor):
+func handle_player_inited(player_instance: Player):
 	player_instance.set_camera_transform(camera.get_path())
 	gui.set_player(player_instance)
 

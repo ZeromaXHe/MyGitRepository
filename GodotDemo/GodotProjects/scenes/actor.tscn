@@ -1,8 +1,7 @@
-[gd_scene load_steps=10 format=3 uid="uid://d1cvpkf5rhomg"]
+[gd_scene load_steps=9 format=3 uid="uid://d1cvpkf5rhomg"]
 
 [ext_resource type="Script" path="res://scripts/actor.gd" id="1_uderr"]
 [ext_resource type="Texture2D" uid="uid://c7wc44lmsxl26" path="res://assets/top_down_shooter/PNG/Soldier 1/soldier1_hold.png" id="2_c74jg"]
-[ext_resource type="PackedScene" uid="uid://dd70ves4up5d8" path="res://scenes/ai.tscn" id="3_qb8nq"]
 [ext_resource type="PackedScene" uid="uid://cohfrt8h7aasg" path="res://scenes/health.tscn" id="4_hikhf"]
 [ext_resource type="PackedScene" uid="uid://csey2ttus5i7" path="res://scenes/pistol.tscn" id="5_175d1"]
 [ext_resource type="Script" path="res://scripts/weapon_manager.gd" id="6_fcivx"]
@@ -22,13 +21,11 @@ texture = ExtResource("2_c74jg")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_mndd7")
 
-[node name="AI" parent="." instance=ExtResource("3_qb8nq")]
-
 [node name="Health" parent="." instance=ExtResource("4_hikhf")]
 
 [node name="Team" parent="." instance=ExtResource("6_huy6s")]
 
-[node name="RemoteTransform2D" type="RemoteTransform2D" parent="."]
+[node name="ActorUiRmtTxfm2D" type="RemoteTransform2D" parent="."]
 update_rotation = false
 update_scale = false
 

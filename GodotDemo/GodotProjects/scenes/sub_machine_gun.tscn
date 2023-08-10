@@ -1,7 +1,70 @@
-[gd_scene load_steps=3 format=3 uid="uid://c3f6foiqy7yel"]
+[gd_scene load_steps=6 format=3 uid="uid://c3f6foiqy7yel"]
 
 [ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="1_5qky3"]
 [ext_resource type="Texture2D" uid="uid://b84hemgghk2iv" path="res://assets/top_down_shooter/PNG/weapon_silencer.png" id="2_yr4ua"]
+
+[sub_resource type="Animation" id="Animation_bwqlb"]
+resource_name = "reload"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Gun:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.0, -1.5708, 0.0]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_end_reload"
+}]
+}
+
+[sub_resource type="Animation" id="Animation_j44oc"]
+resource_name = "muzzle_flash"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MuzzleFlash:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(0.3, 1.2)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MuzzleFlash:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_0ck0v"]
+_data = {
+"muzzle_flash": SubResource("Animation_j44oc"),
+"reload": SubResource("Animation_bwqlb")
+}
 
 [node name="SubMachineGun" instance=ExtResource("1_5qky3")]
 max_ammo = 30
@@ -18,6 +81,9 @@ position = Vector2(22, 0)
 wait_time = 0.1
 
 [node name="MuzzleFlash" parent="." index="3"]
-visible = true
 position = Vector2(33, 0)
-scale = Vector2(1, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="4"]
+libraries = {
+"": SubResource("AnimationLibrary_0ck0v")
+}

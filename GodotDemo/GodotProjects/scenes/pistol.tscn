@@ -1,9 +1,81 @@
-[gd_scene load_steps=3 format=3 uid="uid://csey2ttus5i7"]
+[gd_scene load_steps=6 format=3 uid="uid://csey2ttus5i7"]
 
 [ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="1_1k88s"]
 [ext_resource type="Texture2D" uid="uid://b2u7bjyw886p7" path="res://assets/top_down_shooter/PNG/weapon_gun.png" id="2_ckjke"]
+
+[sub_resource type="Animation" id="Animation_l7xh5"]
+resource_name = "reload"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Gun:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.0, -1.5708, 0.0]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_end_reload"
+}]
+}
+
+[sub_resource type="Animation" id="Animation_1uvsr"]
+resource_name = "muzzle_flash"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MuzzleFlash:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MuzzleFlash:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(0.3, 1.2)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_kc0ws"]
+_data = {
+"muzzle_flash": SubResource("Animation_1uvsr"),
+"reload": SubResource("Animation_l7xh5")
+}
 
 [node name="Pistol" instance=ExtResource("1_1k88s")]
 
 [node name="Gun" parent="." index="0"]
 texture = ExtResource("2_ckjke")
+
+[node name="MuzzleFlash" parent="." index="3"]
+visible = true
+scale = Vector2(1, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="4"]
+libraries = {
+"": SubResource("AnimationLibrary_kc0ws")
+}

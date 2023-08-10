@@ -234,10 +234,10 @@ vertices = PackedVector2Array(-17.5, -16, -18, -32, 16, -32, 15.5, -17, -15.5, 1
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3, 4), PackedInt32Array(3, 5, 6, 7, 4), PackedInt32Array(0, 4, 8, 9)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(-18, -32, -17.5, -16, -32, -16, -32, 17, -15.5, 17, -15.5, 32, 32, 32, 32, -17, 15.5, -17, 16, -32)])
 
-[sub_resource type="NavigationPolygon" id="NavigationPolygon_a20s3"]
-vertices = PackedVector2Array(17, 32, -16.5, 32, -15.5, 17, 16, 16, -32, 16.5, -32, -17, -17, -16.5, -17, -32, 32, -32, 32, 15.5)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(2, 4, 5, 6, 3), PackedInt32Array(6, 7, 8, 9, 3)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(-17, -32, -17, -16.5, -32, -17, -32, 16.5, -15.5, 17, -16.5, 32, 17, 32, 16, 16, 32, 15.5, 32, -32)])
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_s06jb"]
+vertices = PackedVector2Array(-17.5, 16, -32, 16.5, -32, -16.5, -17.5, -17, -17, -32, 32, -32, 32, 16.5, 17, 17, 15.5, 32, -17, 32)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(3, 4, 5, 6, 7, 0), PackedInt32Array(0, 7, 8, 9)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-17, -32, -17.5, -17, -32, -16.5, -32, 16.5, -17.5, 16, -17, 32, 15.5, 32, 17, 17, 32, 16.5, 32, -32)])
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_43dk3"]
 texture = ExtResource("1_krhho")
@@ -532,7 +532,7 @@ texture_region_size = Vector2i(64, 64)
 9:9/0/terrains_peering_bit/left_side = 0
 9:9/0/terrains_peering_bit/top_side = 0
 9:9/0/terrains_peering_bit/top_right_corner = 0
-9:9/0/navigation_layer_0/polygon = SubResource("NavigationPolygon_a20s3")
+9:9/0/navigation_layer_0/polygon = SubResource("NavigationPolygon_s06jb")
 10:9/0 = 0
 10:9/0/terrain_set = 0
 10:9/0/terrain = 0

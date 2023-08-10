@@ -33,8 +33,6 @@ func _ready():
 
 
 func _physics_process(_delta):
-	if actor.is_player():
-		return
 	# ai 的物理循环逻辑
 	match state:
 		State.PATROL:
@@ -75,8 +73,6 @@ func initialize(actor: Actor):
 
 
 func advance_to(target_base: CapturableBase):
-	if actor.is_player():
-		return
 	next_base_position = target_base.global_position
 	set_state(State.ADVANCE)
 
@@ -98,16 +94,12 @@ func set_state(new_state: State):
 
 
 func _on_detection_zone_body_entered(body: Node):
-	if actor.is_player():
-		return
 	if body.has_method("get_team_side") and body.get_team_side() != actor.team.side:
 		set_state(State.ENGAGE)
 		target = body
 
 
 func _on_detection_zone_body_exited(body):
-	if actor.is_player():
-		return
 	if target and body == target:
 		set_state(State.ADVANCE)
 		target = null

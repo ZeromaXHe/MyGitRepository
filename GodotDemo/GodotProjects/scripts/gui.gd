@@ -8,7 +8,7 @@ class_name GUI
 @onready var max_ammo: Label = $Rows/BottomRow/MaxAmmo
 
 var max_ammo_value: int
-var player: Actor = null
+var player: Player = null
 
 func _ready() -> void:
 	# 清空 KillInfo 的内容
@@ -17,7 +17,7 @@ func _ready() -> void:
 	hp_bar.value = 100
 
 
-func set_player(player: Actor):
+func set_player(player: Player):
 	self.player = player
 	
 	set_new_health_value(player.health.hp)
