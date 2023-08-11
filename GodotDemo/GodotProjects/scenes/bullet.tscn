@@ -23,5 +23,10 @@ shape = SubResource("RectangleShape2D_t1abh")
 one_shot = true
 autostart = true
 
+[node name="RayCast2D" type="RayCast2D" parent="."]
+position = Vector2(-10, 0)
+enabled = false
+target_position = Vector2(20, 0)
+
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="timeout" from="KillTimer" to="." method="_on_kill_timer_timeout"]

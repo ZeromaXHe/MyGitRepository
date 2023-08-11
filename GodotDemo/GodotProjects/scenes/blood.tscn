@@ -1,0 +1,43 @@
+[gd_scene load_steps=5 format=3 uid="uid://dw3abm67lqe6k"]
+
+[ext_resource type="Texture2D" uid="uid://hfd6utc6wnpq" path="res://assets/splat_pack/PNG/Default (256px)/splat34.png" id="1_4ssug"]
+[ext_resource type="Script" path="res://scripts/blood.gd" id="1_jaqco"]
+
+[sub_resource type="Gradient" id="Gradient_g5dec"]
+colors = PackedColorArray(1, 0, 0, 1, 0.682353, 0, 0, 1)
+
+[sub_resource type="Gradient" id="Gradient_ymhl1"]
+colors = PackedColorArray(1, 0, 0, 1, 0.682353, 0, 0, 1)
+
+[node name="Blood" type="Node2D"]
+script = ExtResource("1_jaqco")
+
+[node name="BloodParticles" type="CPUParticles2D" parent="."]
+amount = 5
+lifetime = 0.5
+explosiveness = 1.0
+fixed_fps = 30
+draw_order = 1
+texture = ExtResource("1_4ssug")
+spread = 19.55
+gravity = Vector2(0, 0)
+initial_velocity_min = 50.0
+initial_velocity_max = 200.0
+scale_amount_min = 0.05
+scale_amount_max = 0.15
+color = Color(1, 0, 0, 1)
+color_ramp = SubResource("Gradient_g5dec")
+color_initial_ramp = SubResource("Gradient_ymhl1")
+
+[node name="FreezeBloodTimer" type="Timer" parent="BloodParticles"]
+wait_time = 0.45
+one_shot = true
+autostart = true
+
+[node name="FadeOutTimer" type="Timer" parent="."]
+wait_time = 5.0
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="BloodParticles/FreezeBloodTimer" to="." method="_on_freeze_blood_timer_timeout"]
+[connection signal="timeout" from="FadeOutTimer" to="." method="_on_fade_out_timer_timeout"]

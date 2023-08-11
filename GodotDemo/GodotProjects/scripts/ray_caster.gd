@@ -17,7 +17,7 @@ func _ready() -> void:
 	ray_cast.target_position = Vector2(ray_range, 0)
 
 
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
 	if ray_cast.is_colliding():
 		# 这里切记不能修改根节点的 scale，不然会影响这里的距离判断…… 一开始我就是拿 Img 做根节点，缩小图片导致 bug
 		line.set_point_position(1, Vector2.RIGHT * \
