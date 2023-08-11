@@ -9,9 +9,10 @@ class_name GUI
 @onready var base_a_label: Label = $BaseALabel
 @onready var base_b_label: Label = $BaseBLabel
 @onready var base_c_label: Label = $BaseCLabel
-@onready var aim_mark: Sprite2D = $AimMark
-@onready var hit_mark: Sprite2D = $HitMark
+@onready var aim_mark: TextureRect = $AimMark
+@onready var hit_mark: TextureRect = $HitMark
 @onready var hit_mark_hide_timer: Timer = $HitMark/HitMarkHideTimer
+@onready var mini_map: MiniMap = $Rows/TopRow/SubViewportContainer/SubViewport/MiniMap
 
 var max_ammo_value: int
 var player: Player = null
@@ -38,7 +39,8 @@ func _process(_delta: float) -> void:
 	if base_c_label.visible:
 		base_c_label.position = calc_base_label_position(base_c)
 	
-	aim_mark.global_position = aim_mark.get_global_mouse_position()
+	# TextureRect 居然还要自己减 pivot_offset？
+	aim_mark.global_position = aim_mark.get_global_mouse_position() - aim_mark.pivot_offset
 
 
 func handle_actor_killed(killed: Actor, killer: Actor):
@@ -47,12 +49,25 @@ func handle_actor_killed(killed: Actor, killer: Actor):
 		show_player_hit_mark(true)
 	
 	kill_info.handle_actor_killed(killed, killer)
+	mini_map.delete_actor_icon(killed)
+
+
+func handle_unit_spawned(actor: Actor):
+	mini_map.create_actor_icon(actor)
+
+
+func player_fired():
+	# scale 是 Vector2，写成 float 也不报错…… Godot 这个隐藏错误的特性真是让人头大，我还是喜欢尽早暴露异常
+	var tween = get_tree().create_tween()
+	tween.tween_property(aim_mark, "scale", Vector2(1.5, 1.5), 0.05)
+	tween.tween_property(aim_mark, "scale", Vector2.ONE, 0.05)
 
 
 func show_player_hit_mark(kill: bool):
 	# DisplayServer.mouse_get_position() 结果是 Vector2i，而且是屏幕坐标不是窗口坐标！
-	hit_mark.global_position = hit_mark.get_global_mouse_position()
-	hit_mark.modulate = Color(0.941176, 0.501961, 0.501961, 0.7) if kill else Color(1, 1, 1, 0.7)
+	hit_mark.global_position = hit_mark.get_global_mouse_position() - hit_mark.pivot_offset
+	hit_mark.modulate = Color(Color.RED, 0.7) if kill else Color(Color.WHITE, 0.7)
+	hit_mark.scale = Vector2(1.5, 1.5) if kill else Vector2.ONE
 	hit_mark.show()
 	hit_mark_hide_timer.start()
 
@@ -92,6 +107,8 @@ func bind_bases(bases: Array):
 		cap_base.exited_screen.connect(handle_base_exited_screen)
 		cap_base.entered_screen.connect(handle_base_entered_screen)
 		cap_base.base_captured.connect(handle_base_captured)
+		
+		mini_map.create_base_icon(cap_base)
 
 
 func handle_base_exited_screen(base: CapturableBase):

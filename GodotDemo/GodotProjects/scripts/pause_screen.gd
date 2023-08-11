@@ -3,6 +3,8 @@ extends CanvasLayer
 
 func _ready() -> void:
 	get_tree().paused = true
+	# 显示鼠标
+	DisplayServer.mouse_set_mode(DisplayServer.MOUSE_MODE_VISIBLE)
 
 
 func _on_continue_button_pressed() -> void:

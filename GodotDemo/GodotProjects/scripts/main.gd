@@ -20,6 +20,8 @@ const spark_scene: PackedScene = preload("res://scenes/spark.tscn")
 func _ready():
 	# 刷新随机种子
 	randomize()
+	# 隐藏鼠标
+	DisplayServer.mouse_set_mode(DisplayServer.MOUSE_MODE_HIDDEN)
 	
 	GlobalSignals.bullet_fired.connect(handle_bullet_fired)
 	GlobalSignals.bullet_hit_actor.connect(handle_bullet_hit_actor)
@@ -33,9 +35,9 @@ func _ready():
 	capturable_base_manager.player_lost_all_bases.connect(handle_player_lose)
 	
 	# 初始化地图 AI
-	ally_ai.unit_spawned.connect(name_labels_manager.handle_unit_spawned)
+	ally_ai.unit_spawned.connect(handle_unit_spawned)
 	ally_ai.player_inited.connect(handle_player_inited)
-	enemy_ai.unit_spawned.connect(name_labels_manager.handle_unit_spawned)
+	enemy_ai.unit_spawned.connect(handle_unit_spawned)
 	ally_ai.initialize(bases, ally_respawns.get_children())
 	enemy_ai.initialize(bases, enemy_respawns.get_children())
 	
@@ -43,11 +45,19 @@ func _ready():
 	gui.bind_bases(bases)
 
 
+func handle_unit_spawned(actor: Actor):
+	# 生成名字标签
+	name_labels_manager.handle_unit_spawned(actor)
+	# 生成小地图角色图标
+	gui.handle_unit_spawned(actor)
+
+
 func handle_bullet_fired(bullet: Bullet):
 	bullet_manager.handle_bullet_spawned(bullet)
 	# 玩家开枪时震动镜头
 	if bullet.shooter.is_player():
 		camera.shake_camera(30)
+		gui.player_fired()
 
 
 func handle_bullet_hit_actor(actor: Actor, shooter: Actor, bullet_global_rotation: float, bullet_global_position: Vector2):
@@ -90,6 +100,7 @@ func handle_player_lose():
 
 
 func game_over(win: bool):
+	# 释放没播放完的粒子效果
 	particles.queue_free()
 	var game_over: GameOverScreen = game_over_scene.instantiate() as GameOverScreen
 	add_child(game_over)

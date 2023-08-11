@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://b4p3jxjo4ufj5"]
+[gd_scene load_steps=8 format=3 uid="uid://b4p3jxjo4ufj5"]
 
 [ext_resource type="Script" path="res://scripts/kill_info.gd" id="1_cmmym"]
 [ext_resource type="Script" path="res://scripts/gui.gd" id="1_rug4d"]
 [ext_resource type="Texture2D" uid="uid://cecm3bqtanb5x" path="res://assets/crosshair_pack/PNG/Outline/crosshair086.png" id="3_5b1lr"]
+[ext_resource type="PackedScene" uid="uid://dp0kp8hwx64tu" path="res://scenes/mini_map.tscn" id="3_q2fbp"]
 [ext_resource type="Texture2D" uid="uid://jxtmigml6awr" path="res://assets/crosshair_pack/PNG/Outline/crosshair066.png" id="4_jxgh3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qiq25"]
@@ -88,6 +89,7 @@ size_flags_vertical = 3
 [node name="MarginContainer" type="MarginContainer" parent="Rows/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
 theme_override_constants/margin_left = 50
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
@@ -104,6 +106,18 @@ text = "[color=green]AllyBot1[/color] pistol kill [color=red]EnemyBot2[/color]
 [color=red]Bot3[/color] killed [color=green]Bot4[/color]"
 scroll_active = false
 script = ExtResource("1_cmmym")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Rows/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Rows/TopRow/SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(287, 128)
+render_target_update_mode = 4
+
+[node name="MiniMap" parent="Rows/TopRow/SubViewportContainer/SubViewport" instance=ExtResource("3_q2fbp")]
 
 [node name="MidRow" type="HBoxContainer" parent="Rows"]
 layout_mode = 2
@@ -179,15 +193,25 @@ theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 30
 text = "10"
 
-[node name="HitMark" type="Sprite2D" parent="."]
+[node name="HitMark" type="TextureRect" parent="."]
+offset_left = -36.0
+offset_top = -36.0
+offset_right = 36.0
+offset_bottom = 36.0
+pivot_offset = Vector2(36, 36)
 texture = ExtResource("3_5b1lr")
 
 [node name="HitMarkHideTimer" type="Timer" parent="HitMark"]
 wait_time = 0.2
 one_shot = true
 
-[node name="AimMark" type="Sprite2D" parent="."]
+[node name="AimMark" type="TextureRect" parent="."]
 modulate = Color(1, 1, 1, 0.498039)
+offset_left = -36.0
+offset_top = -36.0
+offset_right = 36.0
+offset_bottom = 36.0
+pivot_offset = Vector2(36, 36)
 texture = ExtResource("4_jxgh3")
 
 [connection signal="timeout" from="HitMark/HitMarkHideTimer" to="." method="_on_hit_mark_hide_timer_timeout"]
