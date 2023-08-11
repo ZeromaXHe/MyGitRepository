@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://d2jd02hvsort0"]
+
+[ext_resource type="Texture2D" uid="uid://b2u7bjyw886p7" path="res://assets/top_down_shooter/PNG/weapon_gun.png" id="1_wxtcm"]
+[ext_resource type="Script" path="res://scripts/ray_caster.gd" id="2_wpo7e"]
+
+[sub_resource type="Gradient" id="Gradient_3oib7"]
+offsets = PackedFloat32Array(0, 0.818713, 1)
+colors = PackedColorArray(0.870588, 0.184314, 0.239216, 1, 0.870588, 0.184314, 0.239216, 1, 0.870588, 0.184314, 0.239216, 0.313726)
+
+[node name="RayCaster" type="Node2D"]
+script = ExtResource("2_wpo7e")
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(600, 0)
+hit_from_inside = true
+
+[node name="Line2D" type="Line2D" parent="."]
+points = PackedVector2Array(-3.8147e-06, 0, 600, 0)
+width = 2.0
+default_color = Color(0.870588, 0.184314, 0.239216, 1)
+gradient = SubResource("Gradient_3oib7")
+
+[node name="Img" type="Sprite2D" parent="."]
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("1_wxtcm")
+offset = Vector2(-9, 0)

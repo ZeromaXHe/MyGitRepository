@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://c3f6foiqy7yel"]
+[gd_scene load_steps=7 format=3 uid="uid://c3f6foiqy7yel"]
 
 [ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="1_5qky3"]
 [ext_resource type="Texture2D" uid="uid://b84hemgghk2iv" path="res://assets/top_down_shooter/PNG/weapon_silencer.png" id="2_yr4ua"]
+[ext_resource type="PackedScene" uid="uid://d2jd02hvsort0" path="res://scenes/ray_caster.tscn" id="3_200qu"]
 
 [sub_resource type="Animation" id="Animation_j44oc"]
 resource_name = "muzzle_flash"
@@ -73,6 +74,9 @@ semi_auto = false
 [node name="Gun" parent="." index="0"]
 texture = ExtResource("2_yr4ua")
 offset = Vector2(9, 0)
+
+[node name="RayCaster" parent="Gun" index="0" instance=ExtResource("3_200qu")]
+position = Vector2(8, 6)
 
 [node name="Muzzle" parent="." index="1"]
 position = Vector2(22, 0)
