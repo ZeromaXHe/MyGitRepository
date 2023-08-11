@@ -48,6 +48,10 @@ text = "[center]Captured by [color=red]ENEMY team[/color]!!![/center]"
 [node name="CapturedInfoTimer" type="Timer" parent="."]
 one_shot = true
 
+[node name="OutScreenNotifier" type="VisibleOnScreenNotifier2D" parent="."]
+
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="body_exited" from="." to="." method="_on_body_exited"]
 [connection signal="timeout" from="CapturedInfoTimer" to="." method="_on_captured_info_timer_timeout"]
+[connection signal="screen_entered" from="OutScreenNotifier" to="." method="_on_out_screen_notifier_screen_entered"]
+[connection signal="screen_exited" from="OutScreenNotifier" to="." method="_on_out_screen_notifier_screen_exited"]

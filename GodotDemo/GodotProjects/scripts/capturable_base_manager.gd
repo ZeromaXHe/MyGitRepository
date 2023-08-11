@@ -14,7 +14,7 @@ func _ready() -> void:
 		(base as CapturableBase).base_captured.connect(handle_base_captured)
 
 
-func handle_base_captured(_new_team: Team.Side):
+func handle_base_captured(_input_base: CapturableBase):
 	var player_base_count = 0
 	var enemy_base_count = 0
 	for base in capturable_bases:

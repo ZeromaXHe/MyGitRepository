@@ -943,12 +943,15 @@ script = ExtResource("2_2c81g")
 
 [node name="CapturableBase" parent="CapturableBaseManager" instance=ExtResource("6_w1ort")]
 position = Vector2(226, 470)
+point_code = "A"
 
 [node name="CapturableBase2" parent="CapturableBaseManager" instance=ExtResource("6_w1ort")]
 position = Vector2(400, -181)
+point_code = "B"
 
 [node name="CapturableBase3" parent="CapturableBaseManager" instance=ExtResource("6_w1ort")]
 position = Vector2(935, 266)
+point_code = "C"
 
 [node name="BulletManager" type="Node2D" parent="."]
 script = ExtResource("3_fdg2q")

@@ -1,11 +1,14 @@
 extends Area2D
 class_name CapturableBase
 
-signal base_captured(new_team: Team.Side)
+signal base_captured(base: CapturableBase)
+signal exited_screen(base: CapturableBase)
+signal entered_screen(base: CapturableBase)
 
 @export var neutral_color: Color = Color(1, 1, 1)
 @export var player_color: Color = Color(0, 1, 0)
 @export var enemy_color: Color = Color(0, 0.5, 1)
+@export var point_code: String
 
 @onready var team: Team = $Team
 @onready var sprite_2d: Sprite2D = $Sprite2D
@@ -14,6 +17,7 @@ signal base_captured(new_team: Team.Side)
 @onready var name_label: Label = $VBoxContainer/NameLabel
 @onready var captured_info: RichTextLabel = $CapturedInfo
 @onready var captured_info_timer: Timer = $CapturedInfoTimer
+@onready var out_screen_notifier: VisibleOnScreenNotifier2D = $OutScreenNotifier
 
 var player_unit_count: int = 0
 var enemy_unit_count: int = 0
@@ -106,7 +110,7 @@ func set_team(new_team: Team.Side):
 	if (team.side == new_team):
 		return
 	team.side = new_team
-	base_captured.emit(new_team)
+	base_captured.emit(self)
 	sprite_2d.modulate = get_color(new_team)
 
 
@@ -118,3 +122,11 @@ func get_color(team_side: Team.Side) -> Color:
 			return player_color
 		_:
 			return neutral_color
+
+
+func _on_out_screen_notifier_screen_exited() -> void:
+	exited_screen.emit(self)
+
+
+func _on_out_screen_notifier_screen_entered() -> void:
+	entered_screen.emit(self)

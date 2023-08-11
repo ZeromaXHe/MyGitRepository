@@ -78,7 +78,7 @@ func get_actor_name_prefix(side: Team.Side) -> String:
 			return "Npc"
 
 
-func handle_base_captured(_new_team: Team.Side):
+func handle_base_captured(base: CapturableBase):
 	check_for_capturable_bases()
 
 

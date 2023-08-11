@@ -31,11 +31,15 @@ func _ready():
 	capturable_base_manager.player_captured_all_bases.connect(handle_player_win)
 	capturable_base_manager.player_lost_all_bases.connect(handle_player_lose)
 	
+	# 初始化地图 AI
 	ally_ai.unit_spawned.connect(name_labels_manager.handle_unit_spawned)
 	ally_ai.player_inited.connect(handle_player_inited)
 	enemy_ai.unit_spawned.connect(name_labels_manager.handle_unit_spawned)
 	ally_ai.initialize(bases, ally_respawns.get_children())
 	enemy_ai.initialize(bases, enemy_respawns.get_children())
+	
+	# 绑定 GUI 上的基地信息
+	gui.bind_bases(bases)
 
 
 func handle_bullet_hit_actor(global_rotation: float, global_position: Vector2):
