@@ -21,6 +21,14 @@ func handle_unit_spawned(actor: Actor):
 		# FIXME: 这里坐标写死了，需要看看有没有更好的实现方式
 		name_label.position = Vector2(-32, -50)
 		name_label.text = actor.name
+		# 描边配置
+		name_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		name_label.add_theme_constant_override("outline_size", 3)
+		# 阴影配置
+		name_label.add_theme_color_override("font_shadow_color", Color.DIM_GRAY)
+		name_label.add_theme_constant_override("shadow_offset_x", 3)
+		name_label.add_theme_constant_override("shadow_offset_y", 3)
+		name_label.add_theme_constant_override("shadow_outline_size", 2)
 		name_label.modulate = get_name_label_color(actor.team.side)
 		# FIXME: 锚点貌似得在 UI Container 节点中生效，应该用 pivot。但 pivot 获取不到正确的 size
 		name_label.set_anchors_preset(Control.PRESET_CENTER)	
