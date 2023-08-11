@@ -9,6 +9,9 @@ class_name GUI
 @onready var base_a_label: Label = $BaseALabel
 @onready var base_b_label: Label = $BaseBLabel
 @onready var base_c_label: Label = $BaseCLabel
+@onready var aim_mark: Sprite2D = $AimMark
+@onready var hit_mark: Sprite2D = $HitMark
+@onready var hit_mark_hide_timer: Timer = $HitMark/HitMarkHideTimer
 
 var max_ammo_value: int
 var player: Player = null
@@ -21,17 +24,41 @@ var base_c: CapturableBase = null
 func _ready() -> void:
 	# 清空 KillInfo 的内容
 	kill_info.text = ""
-	GlobalSignals.actor_killed.connect(kill_info.handle_actor_killed)
+	GlobalSignals.actor_killed.connect(handle_actor_killed)
 	hp_bar.value = 100
+	hit_mark.hide()
+	aim_mark.show()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if base_a_label.visible:
 		base_a_label.position = calc_base_label_position(base_a)
 	if base_b_label.visible:
 		base_b_label.position = calc_base_label_position(base_b)
 	if base_c_label.visible:
 		base_c_label.position = calc_base_label_position(base_c)
+	
+	aim_mark.global_position = aim_mark.get_global_mouse_position()
+
+
+func handle_actor_killed(killed: Actor, killer: Actor):
+	if killer.is_player():
+		# 显示玩家击杀标志
+		show_player_hit_mark(true)
+	
+	kill_info.handle_actor_killed(killed, killer)
+
+
+func show_player_hit_mark(kill: bool):
+	# DisplayServer.mouse_get_position() 结果是 Vector2i，而且是屏幕坐标不是窗口坐标！
+	hit_mark.global_position = hit_mark.get_global_mouse_position()
+	hit_mark.modulate = Color(0.941176, 0.501961, 0.501961, 0.7) if kill else Color(1, 1, 1, 0.7)
+	hit_mark.show()
+	hit_mark_hide_timer.start()
+
+
+func _on_hit_mark_hide_timer_timeout() -> void:
+	hit_mark.hide()
 
 
 func calc_base_label_position(base: CapturableBase) -> Vector2:
@@ -85,24 +112,24 @@ func handle_base_captured(base: CapturableBase):
 			base_c_label.modulate = base.get_color(base.team.side)
 
 
-func update_base_label_visible(base: CapturableBase, visible: bool):
+func update_base_label_visible(base: CapturableBase, new_visible: bool):
 	match (base.point_code):
 		"A":
-			base_a_label.visible = visible
+			base_a_label.visible = new_visible
 		"B":
-			base_b_label.visible = visible
+			base_b_label.visible = new_visible
 		"C":
-			base_c_label.visible = visible
+			base_c_label.visible = new_visible
 
 
-func set_player(player: Player):
-	self.player = player
+func set_player(new_player: Player):
+	self.player = new_player
 	
-	set_new_health_value(player.health.hp)
-	set_weapon(player.weapon_manager.current_weapon)
-	player.health.changed.connect(set_new_health_value)
-	if not player.weapon_manager.weapon_changed.is_connected(handle_weapon_changed):
-		player.weapon_manager.weapon_changed.connect(handle_weapon_changed)
+	set_new_health_value(new_player.health.hp)
+	set_weapon(new_player.weapon_manager.current_weapon)
+	new_player.health.changed.connect(set_new_health_value)
+	if not new_player.weapon_manager.weapon_changed.is_connected(handle_weapon_changed):
+		new_player.weapon_manager.weapon_changed.connect(handle_weapon_changed)
 
 
 func handle_weapon_changed(_old_weapon: Weapon, new_weapon: Weapon):

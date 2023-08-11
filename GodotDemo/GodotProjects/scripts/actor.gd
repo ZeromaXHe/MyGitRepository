@@ -2,7 +2,7 @@ extends CharacterBody2D
 class_name Actor
 
 
-@export var speed: int = 100
+@export var speed: int = 200
 
 @onready var health: Health = $Health
 @onready var ai: AI = $AI
@@ -71,7 +71,7 @@ func get_team_side() -> Team.Side:
 func handle_hit(bullet: Bullet):
 	health.hp -= bullet.damage
 	print(name, " hit! ", health.hp)
-	GlobalSignals.bullet_hit_actor.emit(self, global_rotation, global_position)
+	GlobalSignals.bullet_hit_actor.emit(self, bullet.shooter, bullet.global_rotation, bullet.global_position)
 	if health.hp <= 0:
 		die(bullet)
 

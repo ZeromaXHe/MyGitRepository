@@ -2,7 +2,7 @@ class_name Bullet
 extends Area2D
 
 
-@export var speed: int = 10
+@export var speed: int = 2000
 @export var damage: int = 10
 
 @onready var ray_cast: RayCast2D = $RayCast2D
@@ -13,7 +13,7 @@ var shooter: Actor
 
 func _physics_process(delta):
 	if direction != Vector2.ZERO:
-		global_position += direction * speed
+		global_position += direction * speed * delta
 		global_rotation = direction.angle()
 
 

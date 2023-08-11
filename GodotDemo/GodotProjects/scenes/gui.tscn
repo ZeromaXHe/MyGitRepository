@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://b4p3jxjo4ufj5"]
+[gd_scene load_steps=7 format=3 uid="uid://b4p3jxjo4ufj5"]
 
 [ext_resource type="Script" path="res://scripts/kill_info.gd" id="1_cmmym"]
 [ext_resource type="Script" path="res://scripts/gui.gd" id="1_rug4d"]
+[ext_resource type="Texture2D" uid="uid://cecm3bqtanb5x" path="res://assets/crosshair_pack/PNG/Outline/crosshair086.png" id="3_5b1lr"]
+[ext_resource type="Texture2D" uid="uid://jxtmigml6awr" path="res://assets/crosshair_pack/PNG/Outline/crosshair066.png" id="4_jxgh3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qiq25"]
 bg_color = Color(0.180392, 0.180392, 0.180392, 1)
@@ -176,3 +178,16 @@ theme_override_colors/font_outline_color = Color(0.152941, 0.152941, 0.152941, 1
 theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 30
 text = "10"
+
+[node name="HitMark" type="Sprite2D" parent="."]
+texture = ExtResource("3_5b1lr")
+
+[node name="HitMarkHideTimer" type="Timer" parent="HitMark"]
+wait_time = 0.2
+one_shot = true
+
+[node name="AimMark" type="Sprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.498039)
+texture = ExtResource("4_jxgh3")
+
+[connection signal="timeout" from="HitMark/HitMarkHideTimer" to="." method="_on_hit_mark_hide_timer_timeout"]

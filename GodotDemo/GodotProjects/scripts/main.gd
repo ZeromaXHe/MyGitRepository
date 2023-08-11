@@ -20,7 +20,8 @@ const spark_scene: PackedScene = preload("res://scenes/spark.tscn")
 func _ready():
 	# 刷新随机种子
 	randomize()
-	GlobalSignals.bullet_fired.connect(bullet_manager.handle_bullet_spawned)
+	
+	GlobalSignals.bullet_fired.connect(handle_bullet_fired)
 	GlobalSignals.bullet_hit_actor.connect(handle_bullet_hit_actor)
 	GlobalSignals.bullet_hit_something.connect(handle_bullet_hit_something)
 	
@@ -42,18 +43,32 @@ func _ready():
 	gui.bind_bases(bases)
 
 
-func handle_bullet_hit_actor(actor: Actor, global_rotation: float, global_position: Vector2):
+func handle_bullet_fired(bullet: Bullet):
+	bullet_manager.handle_bullet_spawned(bullet)
+	# 玩家开枪时震动镜头
+	if bullet.shooter.is_player():
+		camera.shake_camera(30)
+
+
+func handle_bullet_hit_actor(actor: Actor, shooter: Actor, bullet_global_rotation: float, bullet_global_position: Vector2):
+	# 击中角色时产生流血效果
 	var blood = blood_scene.instantiate()
-	blood.global_position = global_position
-	blood.global_rotation = global_rotation
+	blood.global_position = bullet_global_position
+	blood.global_rotation = bullet_global_rotation
 	# TODO: 后续使用对象池优化
 	particles.add_child(blood)
 	
+	# 玩家受击时震动镜头
 	if actor.is_player():
 		camera.shake_camera(120)
+	
+	# 玩家命中敌人，显示击中标志
+	if shooter.is_player():
+		gui.show_player_hit_mark(false)
 
 
 func handle_bullet_hit_something(global_rotation: float, global_position: Vector2):
+	# 击中其他物品时产生弹片火花效果
 	var spark = spark_scene.instantiate()
 	spark.global_position = global_position
 	spark.global_rotation = global_rotation
@@ -83,6 +98,7 @@ func game_over(win: bool):
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 暂停菜单
 	if event.is_action_pressed("pause") and not get_tree().paused:
 		var pause_menu = pause_scene.instantiate()
 		add_child(pause_menu)
