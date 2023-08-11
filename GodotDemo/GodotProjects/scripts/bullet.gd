@@ -28,11 +28,10 @@ func _on_kill_timer_timeout():
 
 func _on_body_entered(body: Node):
 	if body.has_method("handle_hit"):
-		GlobalSignals.bullet_hit_actor.emit(global_rotation, global_position)
 		if body.has_method("get_team_side") and body.get_team_side() != team.side:
 			body.handle_hit(self)
 	else:
-		# 使用 RayCast2D 计算反射角
+		# 击中其他物体，使用 RayCast2D 计算反射角
 		ray_cast.enabled = true
 		# 强制 ray_cast 在本物理帧中计算
 		ray_cast.force_raycast_update()

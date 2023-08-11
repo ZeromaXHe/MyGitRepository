@@ -1,4 +1,4 @@
-[gd_scene load_steps=65 format=3 uid="uid://d3gcnkeh4l36e"]
+[gd_scene load_steps=66 format=3 uid="uid://d3gcnkeh4l36e"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_2etsu"]
 [ext_resource type="Script" path="res://scripts/capturable_base_manager.gd" id="2_2c81g"]
@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://dk6x4qtsry04e" path="res://assets/top_down_shooter/Tilesheet/tilesheet_complete.png" id="8_gbds6"]
 [ext_resource type="Script" path="res://scripts/name_labels_manager.gd" id="9_06alu"]
 [ext_resource type="PackedScene" uid="uid://b4p3jxjo4ufj5" path="res://scenes/gui.tscn" id="10_gh2ev"]
+[ext_resource type="Script" path="res://scripts/camera.gd" id="11_ijrao"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_ujr8j"]
 vertices = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
@@ -1009,6 +1010,13 @@ script = ExtResource("9_06alu")
 
 [node name="GUI" parent="." instance=ExtResource("10_gh2ev")]
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(641, 39)
-position_smoothing_enabled = true
+[node name="Camera" type="Node2D" parent="."]
+script = ExtResource("11_ijrao")
+
+[node name="CameraShakeTimer" type="Timer" parent="Camera"]
+wait_time = 0.2
+one_shot = true
+
+[node name="Camera2D" type="Camera2D" parent="Camera"]
+
+[connection signal="timeout" from="Camera/CameraShakeTimer" to="Camera" method="_on_camera_shake_timer_timeout"]

@@ -10,7 +10,7 @@ const spark_scene: PackedScene = preload("res://scenes/spark.tscn")
 @onready var ally_ai: MapAI = $AllyMapAI
 @onready var enemy_ai: MapAI = $EnemyMapAI
 @onready var bullet_manager: BulletManager = $BulletManager
-@onready var camera: Camera2D = $Camera2D
+@onready var camera: Camera = $Camera
 @onready var name_labels_manager: NameLabelsManager = $GUIManager/NameLabelsManager
 @onready var gui: GUI = $GUI
 @onready var ground: TileMap = $Ground
@@ -42,12 +42,15 @@ func _ready():
 	gui.bind_bases(bases)
 
 
-func handle_bullet_hit_actor(global_rotation: float, global_position: Vector2):
+func handle_bullet_hit_actor(actor: Actor, global_rotation: float, global_position: Vector2):
 	var blood = blood_scene.instantiate()
 	blood.global_position = global_position
 	blood.global_rotation = global_rotation
 	# TODO: 后续使用对象池优化
 	particles.add_child(blood)
+	
+	if actor.is_player():
+		camera.shake_camera(120)
 
 
 func handle_bullet_hit_something(global_rotation: float, global_position: Vector2):

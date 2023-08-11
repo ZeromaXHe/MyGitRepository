@@ -71,6 +71,7 @@ func get_team_side() -> Team.Side:
 func handle_hit(bullet: Bullet):
 	health.hp -= bullet.damage
 	print(name, " hit! ", health.hp)
+	GlobalSignals.bullet_hit_actor.emit(self, global_rotation, global_position)
 	if health.hp <= 0:
 		die(bullet)
 
