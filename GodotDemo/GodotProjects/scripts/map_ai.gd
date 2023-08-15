@@ -5,14 +5,8 @@ class_name MapAI
 signal unit_spawned(actor: Actor)
 signal player_inited(player: Player)
 
-enum BaseCaptureStartOrder {
-	FIRST,
-	LAST,
-}
-
 const player = preload("res://scenes/player.tscn")
 
-@export var base_capture_start_order: BaseCaptureStartOrder
 @export var team_side: Team.Side
 @export var unit_scene: PackedScene = null
 @export var max_units_alive: int = 4
@@ -21,7 +15,6 @@ const player = preload("res://scenes/player.tscn")
 @onready var unit_container = $UnitContainer
 @onready var respawn_timer: Timer = $RespawnTimer
 
-var target_base: CapturableBase = null
 var capturable_bases: Array = []
 var respawn_points: Array = []
 var respawn_idx: int = 0
@@ -37,6 +30,7 @@ func initialize(capturable_bases: Array, respawn_points: Array):
 	team.side = team_side
 	
 	self.respawn_points = respawn_points
+	self.capturable_bases = capturable_bases
 	# 初始化单位
 	for i in range(respawn_points.size()):
 		# 我方单位的第一个重生点生成玩家
@@ -44,12 +38,9 @@ func initialize(capturable_bases: Array, respawn_points: Array):
 			init_player()
 		else:
 			init_ai_unit()
-	self.capturable_bases = capturable_bases
 	
 	for base in capturable_bases:
 		(base as CapturableBase).base_captured.connect(handle_base_captured)
-	
-	check_for_capturable_bases()
 
 
 func init_player():
@@ -66,6 +57,9 @@ func init_ai_unit():
 	unit_instance.name = get_actor_name_prefix(team.side) + "Bot" + str(respawn_idx)
 	actor_map[unit_instance] = respawn_idx
 	respawn_unit(unit_instance)
+	# TODO: 现在这个初始化逻辑乱得跟坨什么样的，得看下 Godot 的类型生命周期考虑一下如何重构
+	# 目前 respawn_unit 的时候 ai 设置前进状态会失败(还没有 bases)，靠这里配置 bases 的时候再触发一次
+	unit_instance.set_unit_bases(capturable_bases)
 
 
 func get_actor_name_prefix(side: Team.Side) -> String:
@@ -79,30 +73,12 @@ func get_actor_name_prefix(side: Team.Side) -> String:
 
 
 func handle_base_captured(base: CapturableBase):
-	check_for_capturable_bases()
+	notify_base_captured_to_units(base)
 
 
-func check_for_capturable_bases():
-	target_base = get_next_capturable_base()
-	if target_base != null:
-		assign_next_capturable_base_to_units()
-
-
-func get_next_capturable_base() -> CapturableBase:
-	var list_of_bases = range(capturable_bases.size())
-	if base_capture_start_order == BaseCaptureStartOrder.LAST:
-		list_of_bases = range(capturable_bases.size() - 1, -1, -1)
-	for i in list_of_bases:
-		var base: CapturableBase = capturable_bases[i]
-		if team.side != base.team.side:
-			print("Assigning team %d to capture base %d" % [team.side, i])
-			return base
-	return null
-
-
-func assign_next_capturable_base_to_units():
+func notify_base_captured_to_units(base: CapturableBase):
 	for unit in unit_container.get_children():
-		unit.set_ai_advance_to(target_base)
+		unit.handle_base_captured(base)
 
 
 func handle_actor_killed(killed: Actor, killer: Actor):
@@ -121,8 +97,7 @@ func _on_respawn_timer_timeout() -> void:
 
 func respawn_unit(unit_instance: Actor):
 	unit_container.add_child(unit_instance)
-	# _ready() 是在进入场景树时调用，所以必须 add_child() 之后才会初始化 actor 的 ai
-	unit_instance.respawn(respawn_points[respawn_idx], target_base)
+	unit_instance.respawn(respawn_points[respawn_idx])
 	unit_spawned.emit(unit_instance)
 	
 	# FIXME: 现在不会校验重生点是否有单位没走开

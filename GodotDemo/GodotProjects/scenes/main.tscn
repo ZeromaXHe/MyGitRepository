@@ -962,7 +962,6 @@ team_side = 1
 unit_scene = ExtResource("5_gi44o")
 
 [node name="EnemyMapAI" parent="." instance=ExtResource("6_sp66p")]
-base_capture_start_order = 1
 team_side = 2
 unit_scene = ExtResource("4_eaets")
 

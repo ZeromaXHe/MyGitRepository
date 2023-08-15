@@ -10,6 +10,7 @@ class_name Actor
 @onready var team: Team = $Team
 @onready var actor_ui_rmt_txfm: RemoteTransform2D = $ActorUiRmtTxfm2D
 @onready var body_img: Sprite2D = $BodyImg
+@onready var target_shoot_ray: RayCast2D = $TargetShootRay
 
 var name_label_node2d: Node2D = null
 
@@ -25,12 +26,33 @@ func is_player() -> bool:
 	return team.character == Team.Character.PLAYER
 
 
-func respawn(respawn_point: Node2D, target_base: CapturableBase):
+func can_shoot(target: Actor) -> bool:
+	return true
+#	target_shoot_ray.enabled = true
+#	# target_position 是局部坐标？
+#	target_shoot_ray.target_position = target.global_position - global_position
+#	target_shoot_ray.force_raycast_update()
+#	# 目前 Actor 半径大概在 25 左右，如果碰撞点在范围外，说明中间有碰撞体
+#	# FIXME: 之后应该用枪口射线去判断才对
+#	var result = target_shoot_ray.get_collision_point().distance_to(target.global_position) < 30
+#	target_shoot_ray.enabled = false
+#	return result
+
+
+func respawn(respawn_point: Node2D):
 	global_position = respawn_point.global_position
 	# 重置血量和弹药
 	health.hp = health.max_health
 	weapon_manager.reset_to_max_ammo()
-	set_ai_advance_to(target_base)
+	if ai != null:
+		# 刷新目标敌人
+		ai.refresh_targets()
+		# 先考虑前进
+		ai.set_state(AI.State.ADVANCE)
+
+
+func set_unit_bases(capturable_bases: Array):
+	ai.init_bases(capturable_bases)
 
 
 func set_name_label_node2d(name_label_node2d: Node2D):
@@ -38,10 +60,9 @@ func set_name_label_node2d(name_label_node2d: Node2D):
 	self.actor_ui_rmt_txfm.remote_path = name_label_node2d.get_path()
 
 
-func set_ai_advance_to(target_base: CapturableBase):
-	if target_base != null and ai != null:
-		# 不要等待方法执行，防止被阻塞
-		ai.advance_to.call_deferred(target_base)
+func handle_base_captured(base: CapturableBase):
+	if ai != null:
+		ai.handle_base_captured(base)
 
 
 func rotate_toward(location: Vector2) -> float:
