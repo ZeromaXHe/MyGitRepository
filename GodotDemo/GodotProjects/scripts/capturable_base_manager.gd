@@ -12,6 +12,8 @@ func _ready() -> void:
 	capturable_bases = get_children()
 	for base in capturable_bases:
 		(base as CapturableBase).base_captured.connect(handle_base_captured)
+	
+	GlobalMediator.capturable_base_manager = self
 
 
 func handle_base_captured(_input_base: CapturableBase):

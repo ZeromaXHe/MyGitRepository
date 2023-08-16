@@ -1,5 +1,5 @@
 extends Node2D
-class_name MapAI
+class_name TeamManager
 
 
 signal unit_spawned(actor: Actor)
@@ -9,38 +9,34 @@ const player = preload("res://scenes/player.tscn")
 
 @export var team_side: Team.Side
 @export var unit_scene: PackedScene = null
-@export var max_units_alive: int = 4
 
-@onready var team: Team = $Team
 @onready var unit_container = $UnitContainer
 @onready var respawn_timer: Timer = $RespawnTimer
+@onready var respawn_manager: Node2D = $RespawnManager
 
-var capturable_bases: Array = []
-var respawn_points: Array = []
 var respawn_idx: int = 0
 var respawn_queue: Array[Actor] = []
 var actor_map: Dictionary = {}
 
-func initialize(capturable_bases: Array, respawn_points: Array):
+func _ready() -> void:
 	GlobalSignals.actor_killed.connect(handle_actor_killed)
 	
-	if capturable_bases.size() == 0 or respawn_points.size() == 0 or unit_scene == null:
-		push_error("forgot to properly initialize map AI")
+	if unit_scene == null:
+		push_error("forgot to properly initialize team manager")
 		return
-	team.side = team_side
 	
-	self.respawn_points = respawn_points
-	self.capturable_bases = capturable_bases
+	for base in GlobalMediator.capturable_base_manager.capturable_bases:
+		(base as CapturableBase).base_captured.connect(handle_base_captured)
+
+
+func init_units() -> void:
 	# 初始化单位
-	for i in range(respawn_points.size()):
+	for i in range(respawn_manager.get_children().size()):
 		# 我方单位的第一个重生点生成玩家
 		if i == 0 && team_side == Team.Side.PLAYER:
 			init_player()
 		else:
 			init_ai_unit()
-	
-	for base in capturable_bases:
-		(base as CapturableBase).base_captured.connect(handle_base_captured)
 
 
 func init_player():
@@ -54,12 +50,9 @@ func init_player():
 
 func init_ai_unit():
 	var unit_instance = unit_scene.instantiate() as Actor
-	unit_instance.name = get_actor_name_prefix(team.side) + "Bot" + str(respawn_idx)
+	unit_instance.name = get_actor_name_prefix(team_side) + "Bot" + str(respawn_idx)
 	actor_map[unit_instance] = respawn_idx
 	respawn_unit(unit_instance)
-	# TODO: 现在这个初始化逻辑乱得跟坨什么样的，得看下 Godot 的类型生命周期考虑一下如何重构
-	# 目前 respawn_unit 的时候 ai 设置前进状态会失败(还没有 bases)，靠这里配置 bases 的时候再触发一次
-	unit_instance.set_unit_bases(capturable_bases)
 
 
 func get_actor_name_prefix(side: Team.Side) -> String:
@@ -97,9 +90,9 @@ func _on_respawn_timer_timeout() -> void:
 
 func respawn_unit(unit_instance: Actor):
 	unit_container.add_child(unit_instance)
-	unit_instance.respawn(respawn_points[respawn_idx])
+	unit_instance.respawn(respawn_manager.get_children()[respawn_idx])
 	unit_spawned.emit(unit_instance)
 	
 	# FIXME: 现在不会校验重生点是否有单位没走开
 	respawn_idx += 1
-	respawn_idx %= respawn_points.size()
+	respawn_idx %= respawn_manager.get_children().size()

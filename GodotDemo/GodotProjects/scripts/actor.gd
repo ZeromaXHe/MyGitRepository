@@ -42,10 +42,6 @@ func respawn(respawn_point: Node2D):
 	weapon_manager.reset_to_max_ammo()
 
 
-func set_unit_bases(capturable_bases: Array):
-	ai.init_bases(capturable_bases)
-
-
 func set_name_label_node2d(name_label_node2d: Node2D):
 	self.name_label_node2d = name_label_node2d
 	self.actor_ui_rmt_txfm.remote_path = name_label_node2d.get_path()

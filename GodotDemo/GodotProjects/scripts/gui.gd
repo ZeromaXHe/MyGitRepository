@@ -23,12 +23,16 @@ var base_c: CapturableBase = null
 
 
 func _ready() -> void:
+	GlobalMediator.gui = self
 	# 清空 KillInfo 的内容
 	kill_info.text = ""
 	GlobalSignals.actor_killed.connect(handle_actor_killed)
 	hp_bar.value = 100
 	hit_mark.hide()
 	aim_mark.show()
+	
+	# 基地方位标签相关绑定
+	bind_bases()
 
 
 func _process(_delta: float) -> void:
@@ -53,6 +57,7 @@ func handle_actor_killed(killed: Actor, killer: Actor):
 
 
 func handle_unit_spawned(actor: Actor):
+	# 小地图创建角色图标
 	mini_map.create_actor_icon(actor)
 
 
@@ -90,9 +95,9 @@ func calc_base_label_position(base: CapturableBase) -> Vector2:
 		return window_size / 2 + player_to_base_dir / abs(player_to_base_dir.y) * (window_size.y / 2 - 50) 
 	
 
-func bind_bases(bases: Array):
+func bind_bases():
 	# TODO: 目前绑定的代码写得太死了。先实现功能，之后优化
-	for base in bases:
+	for base in GlobalMediator.capturable_base_manager.capturable_bases:
 		var cap_base = base as CapturableBase
 		match (cap_base.point_code):
 			"A":

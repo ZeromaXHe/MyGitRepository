@@ -13,8 +13,8 @@ func update_state(ai: AI) -> bool:
 	if ai.actor.health.hp == 0:
 		ai.set_ai_state(AI.AI_STATE_DEAD)
 		return true
-	# bases 初始化好就转为前进状态
-	if ai.bases.size() > 0:
+	# 初始化好就转为前进状态
+	if ai.is_node_ready():
 		ai.set_ai_state(AI.AI_STATE_ADVANCE)
 		return true
 	return false

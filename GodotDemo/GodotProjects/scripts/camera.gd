@@ -1,11 +1,16 @@
 extends Node2D
-class_name Camera
+class_name CameraManager
 
 @onready var camera_shake_timer: Timer = $CameraShakeTimer
 @onready var camera: Camera2D = $Camera2D
 
 var camera_shaking = false
 var shake_intensity = 0
+
+
+func _ready() -> void:
+	GlobalMediator.camera_manager = self
+
 
 func _process(delta: float) -> void:
 	camera.zoom = lerp(camera.zoom, Vector2(1, 1), 0.3)

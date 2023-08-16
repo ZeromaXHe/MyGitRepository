@@ -18,6 +18,7 @@ config/icon="res://assets/icon.svg"
 [autoload]
 
 GlobalSignals="*res://scripts/global_signals.gd"
+GlobalMediator="*res://scripts/global_mediator.gd"
 
 [input]
 

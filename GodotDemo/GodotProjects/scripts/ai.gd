@@ -25,7 +25,6 @@ var ai_state: AiState = AI_STATE_IDLE:
 var origin: Vector2 = Vector2.ZERO
 
 # 前进状态使用
-var bases: Array = []
 var advancing_base_idx: int = -1
 
 
@@ -34,7 +33,7 @@ func _ready():
 	navigation_agent.path_desired_distance = 5.0
 	navigation_agent.target_desired_distance = 10.0
 	# 空闲时候调用，防止阻塞 _ready()
-	actor_setup.call_deferred()
+	navigation_setup.call_deferred()
 
 
 func _physics_process(_delta):
@@ -46,17 +45,13 @@ func _physics_process(_delta):
 		ai_state.control_actor(self)
 
 
-func actor_setup():
+func navigation_setup():
 	# 等待第一个物理帧，使得 NavigationServer 可以同步.
 	await get_tree().physics_frame
-
+	# 这时 actor 才不为空
 	navigation_agent.max_speed = actor.speed
 	# 现在导航地图不是空了，设置移动目标（初始化时先原地不动）
 	set_navigation_target(actor.global_position)
-
-
-func init_bases(new_bases: Array):
-	bases.append_array(new_bases)
 
 
 func set_navigation_target(navigation_target: Vector2):
@@ -83,21 +78,32 @@ func initialize(actor: Actor):
 
 
 func handle_base_captured(base: CapturableBase):
+	if actor.health.hp == 0:
+		return
+	
+	# 如果 AI 正在巡逻（现在逻辑里其实就是之前在占点），且点位已经被友军占领，继续前进
+	if ai_state == AI_STATE_PATROL \
+			and get_bases()[advancing_base_idx].team.side == actor.team.side:
+		set_ai_state(AI_STATE_ADVANCE)
 	# 如果 AI 当前正在前往的基地已经被友方占领，选择一个新的基地作为目标
-	if actor.health.hp > 0 and ai_state == AI_STATE_ADVANCE \
-			and bases[advancing_base_idx] == base \
+	elif ai_state == AI_STATE_ADVANCE and get_bases()[advancing_base_idx] == base \
 			and base.team.side == actor.team.side:
 		choose_new_advancing_base()
 
 
+func get_bases() -> Array:
+	return GlobalMediator.capturable_base_manager.capturable_bases
+
+
 func choose_new_advancing_base():
-	var target_bases = bases.filter(func(b): return b.team.side != actor.team.side)
+	var target_bases = get_bases().filter(func(b): return b.team.side != actor.team.side)
 #	print(actor.name, " choose advance, bases: ", bases.size(), " target_bases: ", target_bases.size())
 	# 没有可供占领的基地了，开始巡逻
 	if target_bases.size() == 0:
 		set_ai_state(AI_STATE_PATROL)
 	else:
 		# 按距离排序
+		# TODO: 之后估计需要改成按实际导航距离来排序
 		target_bases.sort_custom(func(a, b): actor.global_position.distance_to(a.global_position) < \
 				actor.global_position.distance_to(b.global_position))
 		# 默认找最近的基地作为目标
@@ -105,7 +111,7 @@ func choose_new_advancing_base():
 		if target_bases.size() > 1 and randf_range(0, 1) < 0.3:
 			# 40% 的概率去其他基地点找点乐子
 			target_base = target_bases[randi_range(1, target_bases.size() - 1)]
-		advancing_base_idx = bases.find(target_base)
+		advancing_base_idx = get_bases().find(target_base)
 		# 防止第一次初始化的时候阻塞
 		advance_to.call_deferred(target_base.global_position)
 
