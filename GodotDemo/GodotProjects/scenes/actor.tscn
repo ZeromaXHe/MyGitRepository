@@ -37,7 +37,3 @@ script = ExtResource("6_fcivx")
 
 [node name="Pistol" parent="WeaponManager" instance=ExtResource("5_175d1")]
 visible = false
-
-[node name="TargetShootRay" type="RayCast2D" parent="."]
-enabled = false
-target_position = Vector2(100, 0)

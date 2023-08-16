@@ -10,7 +10,6 @@ class_name Actor
 @onready var team: Team = $Team
 @onready var actor_ui_rmt_txfm: RemoteTransform2D = $ActorUiRmtTxfm2D
 @onready var body_img: Sprite2D = $BodyImg
-@onready var target_shoot_ray: RayCast2D = $TargetShootRay
 
 var name_label_node2d: Node2D = null
 
@@ -27,16 +26,13 @@ func is_player() -> bool:
 
 
 func can_shoot(target: Actor) -> bool:
-	return true
-#	target_shoot_ray.enabled = true
-#	# target_position 是局部坐标？
-#	target_shoot_ray.target_position = target.global_position - global_position
-#	target_shoot_ray.force_raycast_update()
-#	# 目前 Actor 半径大概在 25 左右，如果碰撞点在范围外，说明中间有碰撞体
-#	# FIXME: 之后应该用枪口射线去判断才对
-#	var result = target_shoot_ray.get_collision_point().distance_to(target.global_position) < 30
-#	target_shoot_ray.enabled = false
-#	return result
+	var space_state = get_world_2d().direct_space_state
+	# 使用全局坐标
+	var query = PhysicsRayQueryParameters2D.create(global_position, target.global_position)
+	var result = space_state.intersect_ray(query)
+	# 目前 Actor 半径大概在 25 左右，如果碰撞点在范围外，说明中间有碰撞体
+	# FIXME: 之后应该用枪口射线去判断才对
+	return not result.is_empty() and result.position.distance_to(target.global_position) < 30
 
 
 func respawn(respawn_point: Node2D):

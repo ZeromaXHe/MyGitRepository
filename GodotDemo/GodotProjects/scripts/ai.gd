@@ -166,7 +166,23 @@ func _on_detection_zone_body_exited(body):
 func _on_patrol_timer_timeout():
 	var random_x = randi_range(-patrol_range, patrol_range)
 	var random_y = randi_range(-patrol_range, patrol_range)
-	set_navigation_target(Vector2(random_x, random_y) + origin)
+	var dest = Vector2(random_x, random_y) + origin
+	
+	while not directly_reachable(dest):
+		random_x = randi_range(-patrol_range, patrol_range)
+		random_y = randi_range(-patrol_range, patrol_range)
+		dest = Vector2(random_x, random_y) + origin
+		
+	set_navigation_target(dest)
+
+
+func directly_reachable(dest: Vector2):
+	var space_state = get_world_2d().direct_space_state
+	# 使用全局坐标
+	var query = PhysicsRayQueryParameters2D.create(global_position, dest)
+	var result = space_state.intersect_ray(query)
+	# 判断是否可以直接到达目的地
+	return result.is_empty()
 
 
 func _on_navigation_agent_2d_velocity_computed(safe_velocity: Vector2) -> void:
