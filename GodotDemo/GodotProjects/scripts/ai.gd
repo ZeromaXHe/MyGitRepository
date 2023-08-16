@@ -1,13 +1,6 @@
 extends Node2D
 class_name AI
 
-enum State {
-	IDLE,
-	PATROL,
-	ENGAGE,
-	ADVANCE,
-	CAPTURING,
-}
 
 @export var patrol_range: int = 200
 
@@ -15,10 +8,18 @@ enum State {
 @onready var detection_zone: Area2D = $DetectionZone
 @onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
 
-var state: State = State.IDLE:
-	set = set_state
 var actor: Actor = null
 var targets: Array[Actor] = []
+
+# 基于类继承关系的状态模式实现状态机
+static var AI_STATE_ADVANCE: AiStateAdvance = AiStateAdvance.new()
+static var AI_STATE_ENGAGE: AiStateEngage = AiStateEngage.new()
+static var AI_STATE_IDLE: AiStateIdle = AiStateIdle.new()
+static var AI_STATE_PATROL: AiStatePatrol = AiStatePatrol.new()
+static var AI_STATE_DEAD: AiStateDead = AiStateDead.new()
+
+var ai_state: AiState = AI_STATE_IDLE:
+	set = set_ai_state
 
 # 巡逻状态使用
 var origin: Vector2 = Vector2.ZERO
@@ -29,13 +30,20 @@ var advancing_base_idx: int = -1
 
 
 func _ready():
-	set_state(State.PATROL)
-	
 	# 导航相关的配置
 	navigation_agent.path_desired_distance = 5.0
 	navigation_agent.target_desired_distance = 10.0
 	# 空闲时候调用，防止阻塞 _ready()
 	actor_setup.call_deferred()
+
+
+func _physics_process(_delta):
+	# AI 角色死亡时不进行处理
+	if actor.health.hp == 0:
+		return
+
+	if not ai_state.update_state(self):
+		ai_state.control_actor(self)
 
 
 func actor_setup():
@@ -49,7 +57,6 @@ func actor_setup():
 
 func init_bases(new_bases: Array):
 	bases.append_array(new_bases)
-	set_state(State.ADVANCE)
 
 
 func set_navigation_target(navigation_target: Vector2):
@@ -62,73 +69,13 @@ func refresh_targets():
 		_on_detection_zone_body_entered(body)
 
 
-func _physics_process(_delta):
-	# AI 角色死亡时不进行处理
-	if actor.health.hp == 0:
-		return
-	if state != State.ENGAGE and targets.size() > 0:
-		for target in targets:
-			if actor.can_shoot(target):
-				set_state(State.ENGAGE)
-				return
-	match state:
-		State.PATROL:
-			if not navigation_agent.is_navigation_finished():
-				navigation_move()
-			else:
-				actor.velocity = Vector2.ZERO
-			
-			if patrol_timer.is_stopped():
-				# 防止重复启动巡逻计时器
-				patrol_timer.start()
-		State.ENGAGE:
-			if targets.size() > 0:
-				engage_targets()
-			else:
-				printerr("engaged, but no target found")
-				set_state(State.ADVANCE)
-		State.ADVANCE:
-			if navigation_agent.is_navigation_finished():
-				set_state(State.PATROL)
-			else:
-				navigation_move()
-		_:
-			printerr("Error: a unexpected state")
-
-
-func engage_targets():
-	while targets.size() > 0 and targets[0].health.hp == 0:
-		targets.pop_front()
+func exist_shootable_target() -> bool:
 	if targets.size() == 0:
-		# 所有敌人均被击杀，继续前进
-		set_state(State.ADVANCE)
-		return
+		return false
 	for target in targets:
-		if not actor.can_shoot(target):
-			continue
-		var angle_to_target = actor.rotate_toward(target.global_position)
-		# print("sin: ", sin(0.5 * (actor.rotation - angle_to_target)))
-		
-		# lerp_angle 貌似会让 actor.rotation 超过上限 PI 和下限 -PI
-		# 所以这里用 sin(0.5x) 替代 x 来实现原教程类似的效果
-		# 使得目标进入一定角度时开枪
-		if abs(sin(0.5 * (actor.rotation - angle_to_target))) < 0.08:
-			actor.weapon_manager.shoot()
-		return
-	# 走到这里的逻辑，那说明没有找到可以射击的目标，那就继续前进
-	print(actor.name, " has no shootable target")
-	set_state(State.ADVANCE)
-
-
-func navigation_move():
-	var next_position: Vector2 = navigation_agent.get_next_path_position()
-	actor.rotate_toward(next_position)
-	if navigation_agent.avoidance_enabled:
-		navigation_agent.set_velocity(actor.velocity_toward(next_position))
-	else:
-		actor.velocity_toward(next_position)
-		# 4.1 中的 move_and_slide 不需要传参了，直接根据 velocity 移动
-		actor.move_and_slide()
+		if actor.can_shoot(target):
+			return true
+	return false
 
 
 func initialize(actor: Actor):
@@ -137,7 +84,7 @@ func initialize(actor: Actor):
 
 func handle_base_captured(base: CapturableBase):
 	# 如果 AI 当前正在前往的基地已经被友方占领，选择一个新的基地作为目标
-	if actor.health.hp > 0 and state == State.ADVANCE \
+	if actor.health.hp > 0 and ai_state == AI_STATE_ADVANCE \
 			and bases[advancing_base_idx] == base \
 			and base.team.side == actor.team.side:
 		choose_new_advancing_base()
@@ -145,10 +92,10 @@ func handle_base_captured(base: CapturableBase):
 
 func choose_new_advancing_base():
 	var target_bases = bases.filter(func(b): return b.team.side != actor.team.side)
-	print(actor.name, " choose advance, bases: ", bases.size(), " target_bases: ", target_bases.size())
+#	print(actor.name, " choose advance, bases: ", bases.size(), " target_bases: ", target_bases.size())
 	# 没有可供占领的基地了，开始巡逻
 	if target_bases.size() == 0:
-		set_state(State.PATROL)
+		set_ai_state(AI_STATE_PATROL)
 	else:
 		# 按距离排序
 		target_bases.sort_custom(func(a, b): actor.global_position.distance_to(a.global_position) < \
@@ -173,11 +120,11 @@ func advance_to(global_posi: Vector2):
 	set_navigation_target(global_posi)
 
 
-func set_state(new_state: State):
-	if new_state == state:
+func set_ai_state(new_ai_state: AiState):
+	if new_ai_state == ai_state:
 		return
 
-	if new_state == State.PATROL:
+	if new_ai_state == AI_STATE_PATROL:
 		patrol_timer.start()
 		if origin != global_position:
 			set_navigation_target(global_position)
@@ -185,10 +132,17 @@ func set_state(new_state: State):
 	else:
 		patrol_timer.stop()
 	
-	# 因为 choose_new_advancing_base() 中可能改变状态，所以这里先设值
-	state = new_state
+	if ai_state == AI_STATE_DEAD:
+		# 刷新目标敌人
+		refresh_targets()
 	
-	if new_state == State.ADVANCE:
+	if new_ai_state == AI_STATE_DEAD:
+		targets.clear()
+	
+	# 因为 choose_new_advancing_base() 中可能改变状态，所以这里先设值
+	ai_state = new_ai_state
+	
+	if new_ai_state == AI_STATE_ADVANCE:
 		choose_new_advancing_base()
 
 
@@ -197,8 +151,6 @@ func _on_detection_zone_body_entered(body: Node):
 		var shootable = actor.can_shoot(body)
 		print(actor.name, " find a target, shootable: ", shootable)
 		targets.append(body as Actor)
-		if shootable:
-			set_state(State.ENGAGE)
 
 
 func _on_detection_zone_body_exited(body):
@@ -209,8 +161,6 @@ func _on_detection_zone_body_exited(body):
 		printerr(actor.name, " target not in array, but exited zone")
 		return
 	targets.remove_at(idx)
-	if targets.size() == 0:
-		set_state(State.ADVANCE)
 
 
 func _on_patrol_timer_timeout():

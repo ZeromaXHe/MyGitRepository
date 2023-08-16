@@ -44,11 +44,6 @@ func respawn(respawn_point: Node2D):
 	# 重置血量和弹药
 	health.hp = health.max_health
 	weapon_manager.reset_to_max_ammo()
-	if ai != null:
-		# 刷新目标敌人
-		ai.refresh_targets()
-		# 先考虑前进
-		ai.set_state(AI.State.ADVANCE)
 
 
 func set_unit_bases(capturable_bases: Array):
