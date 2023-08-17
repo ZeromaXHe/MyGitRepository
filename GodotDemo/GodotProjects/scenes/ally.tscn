@@ -1,13 +1,18 @@
-[gd_scene load_steps=4 format=3 uid="uid://x7hj3iuxjcjm"]
+[gd_scene load_steps=5 format=3 uid="uid://x7hj3iuxjcjm"]
 
 [ext_resource type="PackedScene" uid="uid://d1cvpkf5rhomg" path="res://scenes/actor.tscn" id="1_18lxb"]
 [ext_resource type="Texture2D" uid="uid://bke3jih5i35mr" path="res://assets/top_down_shooter/PNG/Woman Green/womanGreen_hold.png" id="2_u1smu"]
+[ext_resource type="Texture2D" uid="uid://dvaw452i01plp" path="res://styles/actor_light_texture.tres" id="3_8hkuv"]
 [ext_resource type="PackedScene" uid="uid://dd70ves4up5d8" path="res://scenes/ai.tscn" id="3_uevcm"]
 
 [node name="Ally" instance=ExtResource("1_18lxb")]
 
 [node name="BodyImg" parent="." index="0"]
 texture = ExtResource("2_u1smu")
+
+[node name="PointLight2D" type="PointLight2D" parent="BodyImg" index="0"]
+shadow_enabled = true
+texture = ExtResource("3_8hkuv")
 
 [node name="AI" parent="." index="3" instance=ExtResource("3_uevcm")]
 
