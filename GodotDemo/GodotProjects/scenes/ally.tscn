@@ -11,6 +11,7 @@
 texture = ExtResource("2_u1smu")
 
 [node name="PointLight2D" type="PointLight2D" parent="BodyImg" index="0"]
+visible = false
 shadow_enabled = true
 texture = ExtResource("3_8hkuv")
 

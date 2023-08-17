@@ -1,0 +1,100 @@
+[gd_scene load_steps=3 format=3 uid="uid://rakjeioskdtd"]
+
+[ext_resource type="Script" path="res://scripts/option_menu_screen.gd" id="1_sm1at"]
+[ext_resource type="StyleBox" uid="uid://c1ildl1pxktc5" path="res://styles/menu_style.tres" id="2_7s10o"]
+
+[node name="OptionMenuScreen" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_sm1at")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("2_7s10o")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="Rows" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 60
+
+[node name="Title" type="Label" parent="PanelContainer/MarginContainer/Rows"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 64
+text = " Option "
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="PanelContainer/MarginContainer/Rows"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/Rows/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="NightBattleCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "If enabled, the game will start at night time, player and allies will use NVG to see limited area near them. Enemy will lurk in the dark, so be careful"
+theme_override_constants/h_separation = 20
+theme_override_font_sizes/font_size = 20
+text = "Night battle"
+
+[node name="FriendlyFireDamageCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "If enabled, allies' bullets can also hurt you, and of course, yours will hurt them."
+theme_override_constants/h_separation = 20
+theme_override_font_sizes/font_size = 20
+text = "Friendly-fire damage"
+
+[node name="PlayerInvincibleCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "If enabled, player will not be hurt"
+theme_override_constants/h_separation = 20
+theme_override_font_sizes/font_size = 20
+text = "Player invincible"
+
+[node name="AIDontShootCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "If enabled, AI will not shoot in the game."
+theme_override_constants/h_separation = 20
+theme_override_font_sizes/font_size = 20
+text = "AI don't shoot"
+
+[node name="NavigationDebugCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "If enabled, the game will show navigation obstacles and polygons, and also enable navigation agents' debug mode."
+theme_override_constants/h_separation = 20
+theme_override_font_sizes/font_size = 20
+text = "Navigation debug mode"
+
+[node name="MainMenuButton" type="Button" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = "  Main menu  "
+
+[node name="QuitButton" type="Button" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+text = " Quit "
+
+[connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/NightBattleCheckBox" to="." method="_on_night_battle_check_box_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/FriendlyFireDamageCheckBox" to="." method="_on_friendly_fire_damage_check_box_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/PlayerInvincibleCheckBox" to="." method="_on_player_invincible_check_box_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/AIDontShootCheckBox" to="." method="_on_ai_dont_shoot_check_box_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/NavigationDebugCheckBox" to="." method="_on_navigation_debug_check_box_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

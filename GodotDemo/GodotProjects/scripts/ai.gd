@@ -32,6 +32,10 @@ func _ready():
 	# 导航相关的配置
 	navigation_agent.path_desired_distance = 5.0
 	navigation_agent.target_desired_distance = 10.0
+	
+	if GlobalMediator.navigation_debug:
+		navigation_agent.debug_enabled = true
+	
 	# 空闲时候调用，防止阻塞 _ready()
 	navigation_setup.call_deferred()
 

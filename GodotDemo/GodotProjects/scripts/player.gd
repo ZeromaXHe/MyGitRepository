@@ -34,3 +34,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func set_camera_transform(camera_path: NodePath):
 	camera_rmt_txfm.remote_path = camera_path
+
+
+func handle_hit(bullet: Bullet):
+	if GlobalMediator.player_invincible:
+		print("player is invincible now")
+		return
+	super.handle_hit(bullet)

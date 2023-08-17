@@ -2,6 +2,8 @@ extends CharacterBody2D
 class_name Actor
 
 
+const night_battle_actor_material: Material = preload("res://styles/night_battle_actor_matrial.tres")
+
 @export var speed: int = 200
 
 @onready var health: Health = $Health
@@ -19,6 +21,12 @@ func _ready():
 	if ai != null:
 		ai.initialize(self)
 	weapon_manager.initialize(self)
+	
+	if GlobalMediator.night_battle:
+		var light: PointLight2D = $BodyImg/PointLight2D
+		if light != null:
+			light.visible = true
+		body_img.material = night_battle_actor_material
 
 
 func is_player() -> bool:
@@ -26,6 +34,8 @@ func is_player() -> bool:
 
 
 func can_shoot(target: Actor) -> bool:
+	if GlobalMediator.ai_dont_shoot:
+		return false
 	var space_state = get_world_2d().direct_space_state
 	# 使用全局坐标
 	var query = PhysicsRayQueryParameters2D.create(global_position, target.global_position)

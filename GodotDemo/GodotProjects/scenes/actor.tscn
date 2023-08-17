@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://d1cvpkf5rhomg"]
+[gd_scene load_steps=9 format=3 uid="uid://d1cvpkf5rhomg"]
 
 [ext_resource type="Script" path="res://scripts/actor.gd" id="1_uderr"]
 [ext_resource type="Texture2D" uid="uid://c7wc44lmsxl26" path="res://assets/top_down_shooter/PNG/Soldier 1/soldier1_hold.png" id="2_c74jg"]
@@ -8,9 +8,6 @@
 [ext_resource type="PackedScene" uid="uid://iesf8n20ul1b" path="res://scenes/team.tscn" id="6_huy6s"]
 [ext_resource type="PackedScene" uid="uid://c3f6foiqy7yel" path="res://scenes/sub_machine_gun.tscn" id="7_pcoye"]
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_g4s8b"]
-light_mode = 2
-
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mndd7"]
 radius = 13.0
 height = 42.0
@@ -19,7 +16,6 @@ height = 42.0
 script = ExtResource("1_uderr")
 
 [node name="BodyImg" type="Sprite2D" parent="."]
-material = SubResource("CanvasItemMaterial_g4s8b")
 texture = ExtResource("2_c74jg")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

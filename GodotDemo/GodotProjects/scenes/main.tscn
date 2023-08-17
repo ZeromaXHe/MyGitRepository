@@ -1064,7 +1064,8 @@ one_shot = true
 
 [node name="Camera2D" type="Camera2D" parent="CameraManager"]
 
-[node name="CanvasModulate" type="CanvasModulate" parent="."]
+[node name="NightCanvasModulate" type="CanvasModulate" parent="."]
+visible = false
 color = Color(0.101961, 0.101961, 0.101961, 1)
 
 [connection signal="timeout" from="CameraManager/CameraShakeTimer" to="CameraManager" method="_on_camera_shake_timer_timeout"]

@@ -28,7 +28,8 @@ func _on_kill_timer_timeout():
 
 func _on_body_entered(body: Node):
 	if body.has_method("handle_hit"):
-		if body.has_method("get_team_side") and body.get_team_side() != team.side:
+		if GlobalMediator.friendly_fire_damage or \
+				(body.has_method("get_team_side") and body.get_team_side() != team.side):
 			body.handle_hit(self)
 	else:
 		# 击中其他物体，使用 RayCast2D 计算反射角

@@ -8,6 +8,7 @@
 script = ExtResource("2_pdway")
 
 [node name="PointLight2D" type="PointLight2D" parent="BodyImg" index="0"]
+visible = false
 shadow_enabled = true
 texture = ExtResource("3_lyo1h")
 

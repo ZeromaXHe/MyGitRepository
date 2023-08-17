@@ -13,6 +13,7 @@ const pause_scene: PackedScene = preload("res://scenes/pause_screen.tscn")
 @onready var ground: TileMap = $Ground
 @onready var particle_manager: ParticleManager = $ParticleManager
 @onready var name_labels_manager: NameLabelsManager = $NameLabelsManager
+@onready var night_canvas_modulate: CanvasModulate = $NightCanvasModulate
 
 
 func _ready():
@@ -35,6 +36,11 @@ func _ready():
 	
 	ally_team_manager.init_units()
 	enemy_team_manager.init_units()
+	
+	if GlobalMediator.navigation_debug:
+		ground.navigation_visibility_mode = TileMap.VISIBILITY_MODE_FORCE_SHOW
+	if GlobalMediator.night_battle:
+		night_canvas_modulate.visible = true
 
 
 func handle_unit_spawned(actor: Actor):
@@ -77,7 +83,7 @@ func handle_player_lose():
 func game_over(win: bool):
 	# 释放没播放完的粒子效果
 	particle_manager.clear()
-
+	
 	var game_over: GameOverScreen = game_over_scene.instantiate() as GameOverScreen
 	add_child(game_over)
 	game_over.set_title(win)
