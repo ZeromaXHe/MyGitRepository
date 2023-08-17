@@ -14,6 +14,7 @@ const pause_scene: PackedScene = preload("res://scenes/pause_screen.tscn")
 @onready var particle_manager: ParticleManager = $ParticleManager
 @onready var name_labels_manager: NameLabelsManager = $NameLabelsManager
 @onready var night_canvas_modulate: CanvasModulate = $NightCanvasModulate
+@onready var score_board: ScoreBoard = $ScoreBoard
 
 
 func _ready():
@@ -32,15 +33,19 @@ func _ready():
 	# 初始化地图 AI
 	ally_team_manager.unit_spawned.connect(handle_unit_spawned)
 	ally_team_manager.player_inited.connect(handle_player_inited)
+	ally_team_manager.ai_unit_inited.connect(handle_ai_unit_inited)
 	enemy_team_manager.unit_spawned.connect(handle_unit_spawned)
+	enemy_team_manager.ai_unit_inited.connect(handle_ai_unit_inited)
 	
 	ally_team_manager.init_units()
 	enemy_team_manager.init_units()
 	
 	if GlobalMediator.navigation_debug:
 		ground.navigation_visibility_mode = TileMap.VISIBILITY_MODE_FORCE_SHOW
-	if GlobalMediator.night_battle:
-		night_canvas_modulate.visible = true
+	
+	night_canvas_modulate.visible = GlobalMediator.night_battle
+	
+	score_board.visible = false
 
 
 func handle_unit_spawned(actor: Actor):
@@ -70,6 +75,11 @@ func handle_bullet_hit_actor(actor: Actor, shooter: Actor, bullet_global_rotatio
 func handle_player_inited(player_instance: Player):
 	player_instance.set_camera_transform(camera_manager.get_path())
 	gui.set_player(player_instance)
+	score_board.handle_actor_inited(player_instance)
+
+
+func handle_ai_unit_inited(ai_unit: Actor):
+	score_board.handle_actor_inited(ai_unit)
 
 
 func handle_player_win():
@@ -95,3 +105,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and not get_tree().paused:
 		var pause_menu = pause_scene.instantiate()
 		add_child(pause_menu)
+	# 积分板
+	if event.is_action_pressed("score_board"):
+		score_board.visible = true
+	elif event.is_action_released("score_board"):
+		score_board.visible = false
+

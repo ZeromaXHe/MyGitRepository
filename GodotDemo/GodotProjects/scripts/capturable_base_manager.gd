@@ -16,7 +16,7 @@ func _ready() -> void:
 	GlobalMediator.capturable_base_manager = self
 
 
-func handle_base_captured(_input_base: CapturableBase):
+func handle_base_captured(_input_base: CapturableBase, _actors: Array[Actor]):
 	var player_base_count = 0
 	var enemy_base_count = 0
 	for base in capturable_bases:

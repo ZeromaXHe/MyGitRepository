@@ -1,0 +1,472 @@
+[gd_scene load_steps=3 format=3 uid="uid://bb4hsstx23aju"]
+
+[ext_resource type="Script" path="res://scripts/score_board.gd" id="1_wckwi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4wnoo"]
+bg_color = Color(0, 0, 0, 0.207843)
+
+[node name="ScoreBoard" type="CanvasLayer"]
+script = ExtResource("1_wckwi")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_4wnoo")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="PlayerVBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerTeamTitle" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PanelContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=green]PLAYER TEAM[/color][/center]"
+fit_content = true
+
+[node name="PlayerStatContainer" type="GridContainer" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 9
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "Actor name"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="KillLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "Kill"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator2" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="DeadLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "Dead"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator3" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="CaptureLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "Capture"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator4" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="ScoreLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "Score"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name1" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=green]Player[/color][/center]"
+fit_content = true
+
+[node name="VSeparator5" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Kill1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator6" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Dead1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator7" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Capture1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator8" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Score1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name2" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=green]AllyBot1[/color][/center]"
+fit_content = true
+
+[node name="VSeparator9" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Kill2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator10" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Dead2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator11" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Capture2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator12" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Score2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name3" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=green]AllyBot2[/color][/center]"
+fit_content = true
+
+[node name="VSeparator13" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Kill3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator14" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Dead3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator15" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Capture3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator16" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Score3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name4" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=green]AllyBot3[/color][/center]"
+fit_content = true
+
+[node name="VSeparator17" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Kill4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator18" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Dead4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator19" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Capture4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator20" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+
+[node name="Score4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="EnemyVBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer"]
+layout_mode = 2
+
+[node name="EnemyTeamTitle" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/PanelContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=red]ENEMY TEAM[/color][/center]"
+fit_content = true
+
+[node name="EnemyStatContainer" type="GridContainer" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer"]
+layout_mode = 2
+columns = 9
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "Actor name"
+
+[node name="VSeparator" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="KillLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "Kill"
+
+[node name="VSeparator2" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="DeadLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "Dead"
+
+[node name="VSeparator3" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="CaptureLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "Capture"
+
+[node name="VSeparator4" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="ScoreLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "Score"
+
+[node name="Name1" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=red]EnemyBot1[/color][/center]"
+fit_content = true
+
+[node name="VSeparator5" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Kill1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator6" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Dead1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator7" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Capture1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator8" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Score1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name2" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=red]EnemyBot2[/color][/center]"
+fit_content = true
+
+[node name="VSeparator9" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Kill2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator10" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Dead2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator11" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Capture2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator12" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Score2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name3" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=red]EnemyBot3[/color][/center]"
+fit_content = true
+
+[node name="VSeparator13" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Kill3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator14" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Dead3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator15" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Capture3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator16" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Score3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name4" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=red]EnemyBot4[/color][/center]"
+fit_content = true
+
+[node name="VSeparator17" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Kill4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator18" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Dead4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator19" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Capture4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator20" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+
+[node name="Score4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]

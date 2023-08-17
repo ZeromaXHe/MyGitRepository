@@ -4,6 +4,7 @@ class_name TeamManager
 
 signal unit_spawned(actor: Actor)
 signal player_inited(player: Player)
+signal ai_unit_inited(actor: Actor)
 
 const player = preload("res://scenes/player.tscn")
 
@@ -53,6 +54,8 @@ func init_ai_unit():
 	unit_instance.name = get_actor_name_prefix(team_side) + "Bot" + str(respawn_idx)
 	actor_map[unit_instance] = respawn_idx
 	respawn_unit(unit_instance)
+	
+	ai_unit_inited.emit(unit_instance)
 
 
 func get_actor_name_prefix(side: Team.Side) -> String:

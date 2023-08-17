@@ -52,7 +52,7 @@ func create_base_icon(base: CapturableBase):
 	add_child(icon)
 
 
-func handle_base_captured(base: CapturableBase):
+func handle_base_captured(base: CapturableBase, _actors: Array[Actor]):
 	base_icon_map[base].modulate = get_base_icon_color(base)
 
 

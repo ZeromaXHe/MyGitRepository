@@ -44,7 +44,9 @@ theme_override_constants/separation = 30
 
 [node name="NightBattleCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer"]
 layout_mode = 2
-tooltip_text = "If enabled, the game will start at night time, player and allies will use NVG to see limited area near them. Enemy will lurk in the dark, so be careful"
+tooltip_text = "If enabled, the game will start at night time.
+Player and allies will use NVG to see limited area near them. 
+Enemy will lurk in the dark, so be careful."
 theme_override_constants/h_separation = 20
 theme_override_font_sizes/font_size = 20
 text = "Night battle"

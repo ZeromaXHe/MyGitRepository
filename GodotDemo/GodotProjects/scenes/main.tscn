@@ -1,4 +1,4 @@
-[gd_scene load_steps=79 format=3 uid="uid://d3gcnkeh4l36e"]
+[gd_scene load_steps=80 format=3 uid="uid://d3gcnkeh4l36e"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_2etsu"]
 [ext_resource type="Script" path="res://scripts/capturable_base_manager.gd" id="2_2c81g"]
@@ -6,12 +6,13 @@
 [ext_resource type="Script" path="res://scripts/particle_manager.gd" id="3_wynpc"]
 [ext_resource type="PackedScene" uid="uid://prnpx64ldh62" path="res://scenes/enemy.tscn" id="4_eaets"]
 [ext_resource type="PackedScene" uid="uid://x7hj3iuxjcjm" path="res://scenes/ally.tscn" id="5_gi44o"]
-[ext_resource type="PackedScene" uid="uid://ejyelg0drrkc" path="res://scenes/map_ai.tscn" id="6_sp66p"]
+[ext_resource type="PackedScene" uid="uid://ejyelg0drrkc" path="res://scenes/team_manager.tscn" id="6_sp66p"]
 [ext_resource type="PackedScene" uid="uid://cj7v1r6xwgcd4" path="res://scenes/capturable_base.tscn" id="6_w1ort"]
 [ext_resource type="Texture2D" uid="uid://dk6x4qtsry04e" path="res://assets/top_down_shooter/Tilesheet/tilesheet_complete.png" id="8_gbds6"]
 [ext_resource type="Script" path="res://scripts/name_labels_manager.gd" id="9_06alu"]
 [ext_resource type="PackedScene" uid="uid://b4p3jxjo4ufj5" path="res://scenes/gui.tscn" id="10_gh2ev"]
 [ext_resource type="Script" path="res://scripts/camera.gd" id="11_ijrao"]
+[ext_resource type="PackedScene" uid="uid://bb4hsstx23aju" path="res://scenes/score_board.tscn" id="13_dwt11"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_ujr8j"]
 vertices = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
@@ -1067,5 +1068,8 @@ one_shot = true
 [node name="NightCanvasModulate" type="CanvasModulate" parent="."]
 visible = false
 color = Color(0.101961, 0.101961, 0.101961, 1)
+
+[node name="ScoreBoard" parent="." instance=ExtResource("13_dwt11")]
+visible = false
 
 [connection signal="timeout" from="CameraManager/CameraShakeTimer" to="CameraManager" method="_on_camera_shake_timer_timeout"]

@@ -124,7 +124,7 @@ func handle_base_entered_screen(base: CapturableBase):
 	update_base_label_visible(base, false)
 
 
-func handle_base_captured(base: CapturableBase):
+func handle_base_captured(base: CapturableBase, _actors: Array[Actor]):
 	match (base.point_code):
 		"A":
 			base_a_label.modulate = base.get_color(base.team.side)

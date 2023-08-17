@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/team_manager.gd" id="1_npx2t"]
 
-[node name="MapAI" type="Node2D"]
+[node name="TeamManager" type="Node2D"]
 script = ExtResource("1_npx2t")
 
 [node name="UnitContainer" type="Node2D" parent="."]

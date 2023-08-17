@@ -1,7 +1,7 @@
 extends Area2D
 class_name CapturableBase
 
-signal base_captured(base: CapturableBase)
+signal base_captured(base: CapturableBase, actors: Array[Actor])
 signal exited_screen(base: CapturableBase)
 signal entered_screen(base: CapturableBase)
 
@@ -110,7 +110,11 @@ func set_team(new_team: Team.Side):
 	if (team.side == new_team):
 		return
 	team.side = new_team
-	base_captured.emit(self)
+	var actors: Array[Actor] = []
+	for body in get_overlapping_bodies():
+		if body is Actor and body.get_team_side() == new_team:
+			actors.append(body as Actor)
+	base_captured.emit(self, actors)
 	sprite_2d.modulate = get_color(new_team)
 
 
