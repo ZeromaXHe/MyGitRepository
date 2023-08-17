@@ -12,3 +12,4 @@ var friendly_fire_damage: bool = false
 var player_invincible: bool = false
 var ai_dont_shoot: bool = false
 var navigation_debug: bool = false
+

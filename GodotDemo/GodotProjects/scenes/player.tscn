@@ -17,3 +17,4 @@ side = 1
 character = 1
 
 [node name="CameraRmtTxfm2D" type="RemoteTransform2D" parent="." index="6"]
+update_scale = false
