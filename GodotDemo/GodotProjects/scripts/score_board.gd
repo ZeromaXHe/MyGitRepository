@@ -66,7 +66,9 @@ func update_score_board():
 
 func sort_score_info(a: ScoreInfo, b: ScoreInfo):
 	# 分数高且先到达该分数的排前面
-	return a.score > b.score or a.timestamp < b.timestamp
+	if a.score == b.score:
+		return a.timestamp < b.timestamp
+	return a.score > b.score
 
 
 func update_row(row: BoardLabelRow, score_info: ScoreInfo, player_team: bool):
