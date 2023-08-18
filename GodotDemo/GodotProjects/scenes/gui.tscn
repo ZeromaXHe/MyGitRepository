@@ -114,7 +114,7 @@ stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="Rows/TopRow/SubViewportContainer"]
 handle_input_locally = false
-size = Vector2i(2, 2)
+size = Vector2i(287, 128)
 render_target_update_mode = 4
 
 [node name="MiniMap" parent="Rows/TopRow/SubViewportContainer/SubViewport" instance=ExtResource("3_q2fbp")]

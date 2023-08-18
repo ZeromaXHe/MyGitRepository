@@ -77,7 +77,7 @@ func notify_base_captured_to_units(base: CapturableBase):
 		unit.handle_base_captured(base)
 
 
-func handle_actor_killed(killed: Actor, killer: Actor):
+func handle_actor_killed(killed: Actor, killer: Actor, _weapon: Weapon):
 	if killed.team.side == team_side:
 		respawn_queue.push_back(killed)
 		if respawn_timer.is_stopped():

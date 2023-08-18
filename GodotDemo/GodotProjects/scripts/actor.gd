@@ -95,7 +95,7 @@ func handle_hit(bullet: Bullet):
 
 
 func die(bullet: Bullet):
-	GlobalSignals.actor_killed.emit(self, bullet.shooter)
+	GlobalSignals.actor_killed.emit(self, bullet.shooter, bullet.from_weapon)
 	# 将 Actor 和对应的名字标签从父节点中移除，而不是 queue_free()
 	# 作为游荡于场景树之外的引用，略微感觉有点风险。
 	# 目前分别在 map_ai 的 actor_map 和 actor 的 name_label_node2d 保留引用

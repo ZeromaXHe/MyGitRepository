@@ -47,12 +47,12 @@ func _process(_delta: float) -> void:
 	aim_mark.global_position = aim_mark.get_global_mouse_position() - aim_mark.pivot_offset
 
 
-func handle_actor_killed(killed: Actor, killer: Actor):
+func handle_actor_killed(killed: Actor, killer: Actor, weapon: Weapon):
 	if killer.is_player():
 		# 显示玩家击杀标志
 		show_player_hit_mark(true)
 	
-	kill_info.handle_actor_killed(killed, killer)
+	kill_info.handle_actor_killed(killed, killer, weapon)
 	mini_map.delete_actor_icon(killed)
 
 

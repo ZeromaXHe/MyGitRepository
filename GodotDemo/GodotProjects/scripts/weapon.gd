@@ -66,6 +66,7 @@ func shoot(holder: Actor):
 
 	var bullet: Bullet = bullet_scene.instantiate()
 	bullet.shooter = holder
+	bullet.from_weapon = self
 	bullet.global_position = muzzle.global_position
 	# direction_to 不需要重复 normalized()
 	var direction: Vector2 = global_position.direction_to(muzzle.global_position)

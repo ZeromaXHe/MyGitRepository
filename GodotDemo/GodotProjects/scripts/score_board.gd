@@ -105,7 +105,10 @@ func handle_actor_inited(actor: Actor):
 		update_score_board()
 
 
-func handle_actor_killed(killed: Actor, killer: Actor):
+func handle_actor_killed(killed: Actor, killer: Actor, _weapon: Weapon):
+	# 友军误杀，暂时不列入统计（按道理应该统计下来扣分的）
+	if killer.team.side == killed.team.side:
+		return
 	name_to_score_info_dict[killed.name].dead += 1
 	name_to_score_info_dict[killer.name].kill += 1
 	recalc_score(name_to_score_info_dict[killed.name])

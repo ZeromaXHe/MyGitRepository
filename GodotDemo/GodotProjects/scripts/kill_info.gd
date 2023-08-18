@@ -3,11 +3,12 @@ extends RichTextLabel
 
 var info_queue: Array[String] = []
 
-func handle_actor_killed(killed: Actor, killer: Actor):
+func handle_actor_killed(killed: Actor, killer: Actor, weapon: Weapon):
 	while info_queue.size() >= 5:
 		info_queue.pop_front()
-	info_queue.push_back(get_color_bbcode(killer.team.side) + killer.name + "[/color] pistol kill " \
-			+ get_color_bbcode(killed.team.side) + killed.name + "[/color]")
+	info_queue.push_back(get_color_bbcode(killer.team.side) + killer.name \
+			+ "[/color] " + weapon.name + " kill " + get_color_bbcode(killed.team.side) \
+			+ killed.name + "[/color]")
 	# 刷新显示内容
 	text = ""
 	for s in info_queue:

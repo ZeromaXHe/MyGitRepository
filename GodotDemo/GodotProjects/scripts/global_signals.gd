@@ -2,7 +2,7 @@ extends Node
 
 signal bullet_fired(bullet: Bullet)
 
-signal actor_killed(killed: Actor, killer: Actor)
+signal actor_killed(killed: Actor, killer: Actor, weapon: Weapon)
 
 signal bullet_hit_actor(actor: Actor, shooter: Actor,\
 		bullet_global_rotation: float, bullet_global_position: Vector2)

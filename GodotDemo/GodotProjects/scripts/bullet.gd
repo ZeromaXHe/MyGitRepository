@@ -10,6 +10,7 @@ extends Area2D
 var direction := Vector2.ZERO
 var team: Team = null
 var shooter: Actor
+var from_weapon: Weapon
 
 func _physics_process(delta):
 	if direction != Vector2.ZERO:
