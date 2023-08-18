@@ -81,7 +81,7 @@ func initialize(actor: Actor):
 	self.actor = actor
 
 
-func handle_base_captured(base: CapturableBase):
+func handle_base_captured(base: CapturableBase, _actors: Array[Actor]):
 	if actor.health.hp == 0:
 		return
 	

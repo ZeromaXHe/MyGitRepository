@@ -68,13 +68,9 @@ func get_actor_name_prefix(side: Team.Side) -> String:
 			return "Npc"
 
 
-func handle_base_captured(base: CapturableBase):
-	notify_base_captured_to_units(base)
-
-
-func notify_base_captured_to_units(base: CapturableBase):
+func handle_base_captured(base: CapturableBase, actors: Array[Actor]):
 	for unit in unit_container.get_children():
-		unit.handle_base_captured(base)
+		unit.handle_base_captured(base, actors)
 
 
 func handle_actor_killed(killed: Actor, killer: Actor, _weapon: Weapon):

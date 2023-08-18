@@ -57,9 +57,9 @@ func set_name_label_node2d(name_label_node2d: Node2D):
 	self.actor_ui_rmt_txfm.remote_path = name_label_node2d.get_path()
 
 
-func handle_base_captured(base: CapturableBase):
+func handle_base_captured(base: CapturableBase, actors: Array[Actor]):
 	if ai != null:
-		ai.handle_base_captured(base)
+		ai.handle_base_captured(base, actors)
 
 
 func rotate_toward(location: Vector2) -> float:
