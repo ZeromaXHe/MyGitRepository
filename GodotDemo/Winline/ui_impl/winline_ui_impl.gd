@@ -1,7 +1,7 @@
 extends CanvasLayer
-class_name Winline
+class_name WinlineUiImpl
 
-const ball_scene: PackedScene = preload("res://ball_button.tscn")
+const ball_scene: PackedScene = preload("res://ui_impl/ball_button.tscn")
 
 @onready var grid_container: GridContainer = $HBoxContainer/GridContainer
 # 偷懒，懒得用数组了
@@ -221,3 +221,15 @@ func add_next_come_3_balls():
 	empty_posi_arr.pop_back().modulate = next_ball3.modulate
 	# 刷新三个即将出现的球的颜色
 	init_next_coming_3_balls()
+
+
+func _on_main_menu_btn_pressed() -> void:
+	get_tree().change_scene_to_file("res://menu.tscn")
+
+
+func _on_exit_btn_pressed() -> void:
+	get_tree().quit()
+
+
+func _on_restart_btn_pressed() -> void:
+	get_tree().change_scene_to_file("res://ui_impl/winline_ui_impl.tscn")

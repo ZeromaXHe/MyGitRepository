@@ -1,0 +1,143 @@
+[gd_scene load_steps=11 format=3 uid="uid://beutwtmidf67c"]
+
+[ext_resource type="Script" path="res://tile_map_impl/win_line_tile_map_impl.gd" id="1_47kvh"]
+[ext_resource type="Texture2D" uid="uid://b41av1v3nhokt" path="res://ball.tres" id="2_j7uq0"]
+[ext_resource type="Texture2D" uid="uid://dy70m670p8e11" path="res://slot.tres" id="3_g58ed"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mucrc"]
+texture = ExtResource("2_j7uq0")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_d0a6h"]
+vertices = PackedVector2Array(-16, -32, 16, -32, 16, -16, -16, -16, 32, -16, 32, 16, 16, 16, -16, 16, 16, 32, -16, 32, -32, 16, -32, -16)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(2, 4, 5, 6), PackedInt32Array(3, 2, 6, 7), PackedInt32Array(6, 8, 9, 7), PackedInt32Array(3, 7, 10, 11)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-16, -32, -16, -16, -32, -16, -32, 16, -16, 16, -16, 32, 16, 32, 16, 16, 32, 16, 32, -16, 16, -16, 16, -32)])
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bigdi"]
+texture = ExtResource("3_g58ed")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:0/0/navigation_layer_0/polygon = SubResource("NavigationPolygon_d0a6h")
+
+[sub_resource type="Gradient" id="Gradient_j6cw0"]
+colors = PackedColorArray(0.160784, 0.160784, 0.160784, 1, 0.160784, 0.160784, 0.160784, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_u4nyk"]
+gradient = SubResource("Gradient_j6cw0")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kppb3"]
+resource_name = "border"
+texture = SubResource("GradientTexture2D_u4nyk")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_jq5o6"]
+tile_size = Vector2i(64, 64)
+navigation_layer_0/layers = 1
+sources/1 = SubResource("TileSetAtlasSource_mucrc")
+sources/2 = SubResource("TileSetAtlasSource_bigdi")
+sources/3 = SubResource("TileSetAtlasSource_kppb3")
+
+[node name="WinLineTileMapImpl" type="Node2D"]
+script = ExtResource("1_47kvh")
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = SubResource("TileSet_jq5o6")
+navigation_visibility_mode = 1
+format = 2
+layer_0/tile_data = PackedInt32Array(0, 2, 0, 65536, 2, 0, 131072, 2, 0, 196608, 2, 0, 262144, 2, 0, 327680, 2, 0, 393216, 2, 0, 458752, 2, 0, 524288, 2, 0, 1, 2, 0, 65537, 2, 0, 131073, 2, 0, 196609, 2, 0, 262145, 2, 0, 327681, 2, 0, 393217, 2, 0, 458753, 2, 0, 524289, 2, 0, 2, 2, 0, 65538, 2, 0, 131074, 2, 0, 196610, 2, 0, 262146, 2, 0, 327682, 2, 0, 393218, 2, 0, 458754, 2, 0, 524290, 2, 0, 3, 2, 0, 65539, 2, 0, 131075, 2, 0, 196611, 2, 0, 262147, 2, 0, 327683, 2, 0, 393219, 2, 0, 458755, 2, 0, 524291, 2, 0, 4, 2, 0, 65540, 2, 0, 131076, 2, 0, 196612, 2, 0, 262148, 2, 0, 327684, 2, 0, 393220, 2, 0, 458756, 2, 0, 524292, 2, 0, 5, 2, 0, 65541, 2, 0, 131077, 2, 0, 196613, 2, 0, 262149, 2, 0, 327685, 2, 0, 393221, 2, 0, 458757, 2, 0, 524293, 2, 0, 6, 2, 0, 65542, 2, 0, 131078, 2, 0, 196614, 2, 0, 262150, 2, 0, 327686, 2, 0, 393222, 2, 0, 458758, 2, 0, 524294, 2, 0, 7, 2, 0, 65543, 2, 0, 131079, 2, 0, 196615, 2, 0, 262151, 2, 0, 327687, 2, 0, 393223, 2, 0, 458759, 2, 0, 524295, 2, 0, 8, 2, 0, 65544, 2, 0, 131080, 2, 0, 196616, 2, 0, 262152, 2, 0, 327688, 2, 0, 393224, 2, 0, 458760, 2, 0, 524296, 2, 0)
+
+[node name="Balls" type="Node2D" parent="."]
+
+[node name="GUI" type="CanvasLayer" parent="."]
+
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="GUI/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+
+[node name="Note" type="Label" parent="GUI/HBoxContainer/CenterContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0.607843, 0.607843, 0.607843, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 64
+text = "Game Over!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NextComingLabel" type="Label" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Next:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NextBall1" type="TextureRect" parent="GUI/HBoxContainer/VBoxContainer/CenterContainer"]
+layout_mode = 2
+texture = ExtResource("2_j7uq0")
+
+[node name="CenterContainer2" type="CenterContainer" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NextBall2" type="TextureRect" parent="GUI/HBoxContainer/VBoxContainer/CenterContainer2"]
+layout_mode = 2
+texture = ExtResource("2_j7uq0")
+
+[node name="CenterContainer3" type="CenterContainer" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NextBall3" type="TextureRect" parent="GUI/HBoxContainer/VBoxContainer/CenterContainer3"]
+layout_mode = 2
+texture = ExtResource("2_j7uq0")
+
+[node name="ScoreTitle" type="Label" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Score:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Score" type="Label" parent="GUI/HBoxContainer/VBoxContainer"]
+modulate = Color(1, 1, 0, 1)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RestartBtn" type="Button" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Restart"
+
+[node name="MainMenuBtn" type="Button" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Menu"
+
+[node name="ExitBtn" type="Button" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Exit"
+
+[node name="BallArriveTimer" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
+
+[connection signal="pressed" from="GUI/HBoxContainer/VBoxContainer/RestartBtn" to="." method="_on_restart_btn_pressed"]
+[connection signal="pressed" from="GUI/HBoxContainer/VBoxContainer/MainMenuBtn" to="." method="_on_main_menu_btn_pressed"]
+[connection signal="pressed" from="GUI/HBoxContainer/VBoxContainer/ExitBtn" to="." method="_on_exit_btn_pressed"]

@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://1ce1w3vymhvk"]
+
+[ext_resource type="Texture2D" uid="uid://b41av1v3nhokt" path="res://ball.tres" id="1_imro8"]
+[ext_resource type="Script" path="res://tile_map_impl/ball_character_body.gd" id="1_y2aus"]
+[ext_resource type="Texture2D" uid="uid://dj7rjgx2exhm0" path="res://tile_map_impl/chosen_frame.tres" id="3_0x1s6"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_yivc3"]
+radius = 26.0
+
+[node name="Ball" type="CharacterBody2D"]
+script = ExtResource("1_y2aus")
+
+[node name="Img" type="Sprite2D" parent="."]
+texture = ExtResource("1_imro8")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_yivc3")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+path_postprocessing = 1
+debug_enabled = true
+
+[node name="ChosenImg" type="Sprite2D" parent="."]
+visible = false
+texture = ExtResource("3_0x1s6")
+
+[connection signal="navigation_finished" from="NavigationAgent2D" to="." method="_on_navigation_agent_2d_navigation_finished"]

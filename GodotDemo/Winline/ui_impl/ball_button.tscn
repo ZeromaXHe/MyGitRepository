@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bambfgablvq4f"]
 
-[ext_resource type="Texture2D" uid="uid://b41av1v3nhokt" path="res://ball.tres" id="1_yk3rs"]
-[ext_resource type="Script" path="res://ball_button.gd" id="2_0gb8p"]
+[ext_resource type="Texture2D" uid="uid://b41av1v3nhokt" path="res://ball.tres" id="1_n3v77"]
+[ext_resource type="Script" path="res://ui_impl/ball_button.gd" id="2_5rc2m"]
 
 [node name="BallButton" type="Button"]
 anchors_preset = 15
@@ -11,9 +11,9 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-icon = ExtResource("1_yk3rs")
+icon = ExtResource("1_n3v77")
 icon_alignment = 1
 expand_icon = true
-script = ExtResource("2_0gb8p")
+script = ExtResource("2_5rc2m")
 
 [connection signal="pressed" from="." to="." method="_on_pressed"]
