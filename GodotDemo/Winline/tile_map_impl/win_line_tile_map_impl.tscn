@@ -44,7 +44,6 @@ script = ExtResource("1_47kvh")
 
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_jq5o6")
-navigation_visibility_mode = 1
 format = 2
 layer_0/tile_data = PackedInt32Array(0, 2, 0, 65536, 2, 0, 131072, 2, 0, 196608, 2, 0, 262144, 2, 0, 327680, 2, 0, 393216, 2, 0, 458752, 2, 0, 524288, 2, 0, 1, 2, 0, 65537, 2, 0, 131073, 2, 0, 196609, 2, 0, 262145, 2, 0, 327681, 2, 0, 393217, 2, 0, 458753, 2, 0, 524289, 2, 0, 2, 2, 0, 65538, 2, 0, 131074, 2, 0, 196610, 2, 0, 262146, 2, 0, 327682, 2, 0, 393218, 2, 0, 458754, 2, 0, 524290, 2, 0, 3, 2, 0, 65539, 2, 0, 131075, 2, 0, 196611, 2, 0, 262147, 2, 0, 327683, 2, 0, 393219, 2, 0, 458755, 2, 0, 524291, 2, 0, 4, 2, 0, 65540, 2, 0, 131076, 2, 0, 196612, 2, 0, 262148, 2, 0, 327684, 2, 0, 393220, 2, 0, 458756, 2, 0, 524292, 2, 0, 5, 2, 0, 65541, 2, 0, 131077, 2, 0, 196613, 2, 0, 262149, 2, 0, 327685, 2, 0, 393221, 2, 0, 458757, 2, 0, 524293, 2, 0, 6, 2, 0, 65542, 2, 0, 131078, 2, 0, 196614, 2, 0, 262150, 2, 0, 327686, 2, 0, 393222, 2, 0, 458758, 2, 0, 524294, 2, 0, 7, 2, 0, 65543, 2, 0, 131079, 2, 0, 196615, 2, 0, 262151, 2, 0, 327687, 2, 0, 393223, 2, 0, 458759, 2, 0, 524295, 2, 0, 8, 2, 0, 65544, 2, 0, 131080, 2, 0, 196616, 2, 0, 262152, 2, 0, 327688, 2, 0, 393224, 2, 0, 458760, 2, 0, 524296, 2, 0)
 
@@ -122,6 +121,10 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="EmptyDebugBtn" type="CheckButton" parent="GUI/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Empty debug"
+
 [node name="RestartBtn" type="Button" parent="GUI/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "Restart"
@@ -138,6 +141,12 @@ text = "Exit"
 wait_time = 0.2
 one_shot = true
 
+[node name="EmptyDebugTimer" type="Timer" parent="."]
+
+[node name="EmptyDebugViews" type="Node2D" parent="."]
+
+[connection signal="toggled" from="GUI/HBoxContainer/VBoxContainer/EmptyDebugBtn" to="." method="_on_empty_debug_btn_toggled"]
 [connection signal="pressed" from="GUI/HBoxContainer/VBoxContainer/RestartBtn" to="." method="_on_restart_btn_pressed"]
 [connection signal="pressed" from="GUI/HBoxContainer/VBoxContainer/MainMenuBtn" to="." method="_on_main_menu_btn_pressed"]
 [connection signal="pressed" from="GUI/HBoxContainer/VBoxContainer/ExitBtn" to="." method="_on_exit_btn_pressed"]
+[connection signal="timeout" from="EmptyDebugTimer" to="." method="_on_empty_debug_timer_timeout"]

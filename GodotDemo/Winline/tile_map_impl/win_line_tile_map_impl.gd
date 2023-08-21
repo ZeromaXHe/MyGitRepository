@@ -3,6 +3,7 @@ class_name WinLineTileMapImpl
 
 
 const ball_body_scene: PackedScene = preload("res://tile_map_impl/ball_character_body.tscn")
+const empty_view_scene: PackedScene = preload("res://tile_map_impl/empty_view.tscn")
 
 @onready var tile_map: TileMap = $TileMap
 # 偷懒，懒得用数组了
@@ -15,6 +16,10 @@ const ball_body_scene: PackedScene = preload("res://tile_map_impl/ball_character
 @onready var balls: Node2D = $Balls
 # 用于在球到达后等待一段时间
 @onready var ball_arrive_timer: Timer = $BallArriveTimer
+# 用于调试空位数组的相关组件
+@onready var empty_debug_timer: Timer = $EmptyDebugTimer
+@onready var empty_debug_btn: CheckButton = $GUI/HBoxContainer/VBoxContainer/EmptyDebugBtn
+@onready var empty_debug_views: Node2D = $EmptyDebugViews
 
 # 存储
 var ball_grid: Array = []
@@ -78,6 +83,7 @@ func init_start_5_balls():
 			y = randi_range(0, 8)
 		ball_grid[x][y].modulate = color_arr[randi_range(0, 6)]
 		
+		empty_posi_arr.erase(ball_grid[x][y])
 		init_ball_on_tile_map(x, y)
 
 
@@ -99,10 +105,10 @@ func ball_idx_to_global_position(x: int, y: int) -> Vector2:
 
 ## 全局坐标转 ball_grid 索引
 func global_position_to_ball_idx(global_posi: Vector2) -> Vector2i:
-	var x: int = (global_posi.x as int) / 64
+	var x: int = global_posi.x / 64
 	if x < 0 or x >= 9:
 		return Vector2i(-1, -1)
-	var y: int = (global_posi.y as int) / 64
+	var y: int = global_posi.y / 64
 	if y < 0 or y >= 9:
 		return Vector2i(-1, -1)
 	return Vector2i(x, y)
@@ -142,6 +148,7 @@ func handle_mouse_clicked(mouse_posi: Vector2):
 			print("当前点击空位置[", clicked.x, ", ", clicked.y, "]无效，因为没有选择要移动的球")
 			return
 		
+		ball_grid[chosen_position.x][chosen_position.y].instance.chosen_img.visible = false
 		move_ball_to_empty(ball_grid[chosen_position.x][chosen_position.y], clicked)
 		# 重置选择位置
 		chosen_position = Vector2i(-1, -1)
@@ -169,18 +176,12 @@ func move_ball_to_empty(ball: Ball, empty: Ball):
 	
 	# 将球所在的 TileMap 置为 slot，不然后面球会因为自己脚下的位置不是空位而无法移动
 	tile_map.set_cell(0, Vector2i(ball.x, ball.y), 2, Vector2i(0, 0))
-	ball.instance.chosen_img.visible = false
 	moving_ball = true
 	async_move_ball_empty.call_deferred(ball, empty)
 
 
 ## 异步执行球移动的过程，待球移动到指定位置，执行收尾逻辑
 func async_move_ball_empty(ball: Ball, empty: Ball):
-	
-	# TODO: 数组查找效率比较低，这里简单实现功能
-	empty_posi_arr.remove_at(empty_posi_arr.find(empty))
-	empty_posi_arr.append(ball)
-	
 	# 命令球向空位移动
 	ball.instance.move_to(ball_idx_to_global_position(empty.x, empty.y))
 	print("等待球移动完成")
@@ -191,6 +192,10 @@ func async_move_ball_empty(ball: Ball, empty: Ball):
 	# 再等待一段时间，不然会有 bug，会被新生成的球挤住
 	ball_arrive_timer.start()
 	await ball_arrive_timer.timeout
+	
+	# TODO: 数组查找效率比较低，这里简单实现功能
+	empty_posi_arr.erase(empty)
+	empty_posi_arr.append(ball)
 	
 	# 移动球后，改 ball_grid 中存储的颜色和实例
 	empty.modulate = ball.modulate
@@ -272,7 +277,7 @@ func count_connect(ball: Ball) -> Array[bool]:
 			qy += dy
 			if dx != 0 and dy == 0:
 				row_count += 1
-			elif dy == 0 and dy != 0:
+			elif dx == 0 and dy != 0:
 				col_count += 1
 			elif dx + dy == 0:
 				slash_count += 1
@@ -344,43 +349,48 @@ func clear_empty(ball: Ball, any_connect: Array[bool]) -> void:
 
 func reset_ball_to_slot_and_score(x: int, y: int):
 	ball_grid[x][y].instance.queue_free()
-	ball_grid[x][y].modulate == Color.BLACK
+	ball_grid[x][y].modulate = Color.BLACK
 	# 将球所在的 TileMap 置为 slot
 	tile_map.set_cell(0, Vector2i(x, y), 2, Vector2i(0, 0))
 	# 每个球加一分
 	score_point += 1
+	# 增加空位
+	empty_posi_arr.append(ball_grid[x][y])
 
 
 ## 将下面 3 个球加入棋盘
 func add_next_come_3_balls():
-	if empty_posi_arr.size() < 3:
-		print("空余位置不够生成 3 个新球，你输了！！！")
-		game_over = true
-		note_label.visible = true
-		return
-	
 	empty_posi_arr.shuffle()
 	
-	var next: Ball = empty_posi_arr.pop_back()
-	next.modulate = next_ball1.modulate
-	init_ball_on_tile_map(next.x, next.y)
+	var next: Ball
+	if empty_posi_arr.size() > 0:
+		next = empty_posi_arr.pop_back()
+		if next.instance != null:
+			printerr("wtf")
+		next.modulate = next_ball1.modulate
+		init_ball_on_tile_map(next.x, next.y)
 	
-	next = empty_posi_arr.pop_back()
-	next.modulate = next_ball2.modulate
-	init_ball_on_tile_map(next.x, next.y)
+	if empty_posi_arr.size() > 0:
+		next = empty_posi_arr.pop_back()
+		if next.instance != null:
+			printerr("wtf")
+		next.modulate = next_ball2.modulate
+		init_ball_on_tile_map(next.x, next.y)
 	
-	next = empty_posi_arr.pop_back()
-	next.modulate = next_ball3.modulate
-	init_ball_on_tile_map(next.x, next.y)
-	
-	# 刷新三个即将出现的球的颜色
-	init_next_coming_3_balls()
+	if empty_posi_arr.size() > 0:
+		next = empty_posi_arr.pop_back()
+		if next.instance != null:
+			printerr("wtf")
+		next.modulate = next_ball3.modulate
+		init_ball_on_tile_map(next.x, next.y)
 	
 	if empty_posi_arr.size() == 0:
 		print("空余位置数量为 0，你输了！！！")
 		game_over = true
 		note_label.visible = true
-		return
+	else:
+		# 刷新三个即将出现的球的颜色
+		init_next_coming_3_balls()
 
 
 func _on_restart_btn_pressed() -> void:
@@ -393,3 +403,24 @@ func _on_main_menu_btn_pressed() -> void:
 
 func _on_exit_btn_pressed() -> void:
 	get_tree().quit()
+
+
+func _on_empty_debug_timer_timeout() -> void:
+	for child in empty_debug_views.get_children():
+		child.queue_free()
+	for empty in empty_posi_arr:
+		var empty_view = empty_view_scene.instantiate()
+		empty_debug_views.add_child(empty_view)
+		empty_view.global_position = ball_idx_to_global_position(empty.x, empty.y)
+
+
+func _on_empty_debug_btn_toggled(button_pressed: bool) -> void:
+	if button_pressed:
+		empty_debug_timer.start()
+		# 首先就直接绘制一次
+		_on_empty_debug_timer_timeout()
+	else:
+		empty_debug_timer.stop()
+		for child in empty_debug_views.get_children():
+			child.queue_free()
+		

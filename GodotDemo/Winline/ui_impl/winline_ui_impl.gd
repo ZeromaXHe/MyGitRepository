@@ -211,8 +211,8 @@ func clear_empty(visited: Array, x: int, y: int, color: Color) -> void:
 
 ## 将下面 3 个球加入棋盘
 func add_next_come_3_balls():
-	if empty_posi_arr.size() < 3:
-		print("空余位置少于 3，你输了！！！")
+	if empty_posi_arr.size() <= 3:
+		print("空余位置数量少于等于 3，你输了！！！")
 		game_over = true
 		return
 	empty_posi_arr.shuffle()
