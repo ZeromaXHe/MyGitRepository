@@ -1,12 +1,14 @@
-[gd_scene load_steps=7 format=3 uid="uid://c3f6foiqy7yel"]
+[gd_scene load_steps=9 format=3 uid="uid://c3f6foiqy7yel"]
 
 [ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon.tscn" id="1_5qky3"]
 [ext_resource type="Texture2D" uid="uid://b84hemgghk2iv" path="res://assets/top_down_shooter/PNG/weapon_silencer.png" id="2_yr4ua"]
 [ext_resource type="PackedScene" uid="uid://d2jd02hvsort0" path="res://scenes/ray_caster.tscn" id="3_200qu"]
+[ext_resource type="AudioStream" uid="uid://dqgex21lpbwdh" path="res://audio/open_game_art/shots/cg1.wav" id="4_l368u"]
+[ext_resource type="AudioStream" uid="uid://bgpsjbs8vib2e" path="res://audio/open_game_art/assaultriflereload1.wav" id="5_51ihy"]
 
 [sub_resource type="Animation" id="Animation_j44oc"]
 resource_name = "muzzle_flash"
-length = 0.1
+length = 0.42
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -31,9 +33,25 @@ tracks/1/keys = {
 "update": 1,
 "values": [true, false]
 }
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioStreamPlayer2D")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.15,
+"start_offset": 0.0,
+"stream": ExtResource("4_l368u")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
 
 [sub_resource type="Animation" id="Animation_bwqlb"]
 resource_name = "reload"
+step = 0.01
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -60,6 +78,37 @@ tracks/1/keys = {
 "method": &"_end_reload"
 }]
 }
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioStreamPlayer2D")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 1.2,
+"start_offset": 0.1,
+"stream": ExtResource("5_51ihy")
+}, {
+"end_offset": 0.14,
+"start_offset": 1.02,
+"stream": ExtResource("5_51ihy")
+}],
+"times": PackedFloat32Array(0, 0.6)
+}
+tracks/2/use_blend = true
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("MuzzleFlash:visible")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_0ck0v"]
 _data = {
@@ -85,9 +134,14 @@ position = Vector2(22, 0)
 wait_time = 0.1
 
 [node name="MuzzleFlash" parent="." index="3"]
+visible = true
 position = Vector2(33, 0)
+scale = Vector2(1, 1)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." index="4"]
 libraries = {
 "": SubResource("AnimationLibrary_0ck0v")
 }
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." index="5"]
+max_distance = 500.0

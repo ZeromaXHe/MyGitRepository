@@ -14,6 +14,8 @@ signal ammo_changed(new_ammo: int)
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var muzzle_flash: Sprite2D = $MuzzleFlash
 
+var reloading: bool = false
+
 var current_ammo: int = max_ammo:
 	set = set_current_ammo
 
@@ -39,12 +41,18 @@ func _ready() -> void:
 
 
 func start_reload():
+	if reloading:
+		return
 	print("reloading!")
+	animation_player.stop()
 	animation_player.play("reload")
+	
+	reloading = true
 
 
 func _end_reload():
 	current_ammo = max_ammo
+	reloading = false
 
 
 func set_current_ammo(ammo: int):
@@ -59,8 +67,8 @@ func set_current_ammo(ammo: int):
 
 
 func shoot(holder: Actor):
-	# 子弹不足/冷却时间中/没有子弹实例
-	if current_ammo <= 0 or not attack_cooldown.is_stopped() or bullet_scene == null:
+	# 正在装弹/子弹不足/冷却时间中/没有子弹实例
+	if reloading or current_ammo <= 0 or not attack_cooldown.is_stopped() or bullet_scene == null:
 #		print("attack_cooldown.is_stopped():" + str(attack_cooldown.is_stopped()))
 		return
 
@@ -77,5 +85,6 @@ func shoot(holder: Actor):
 	# 开启攻击冷却计时器
 	attack_cooldown.start()
 	# 播放枪口闪光动画
+	animation_player.stop()
 	animation_player.play("muzzle_flash")
 	current_ammo -= 1
