@@ -157,6 +157,8 @@ func handle_mouse_clicked(mouse_posi: Vector2):
 		clicked.instance.chosen_img.visible = false
 		chosen_position = Vector2i(-1, -1)
 	else:
+		if chosen_position != Vector2i(-1, -1):
+			ball_grid[chosen_position.x][chosen_position.y].instance.chosen_img.visible = false
 		chosen_position = Vector2i(clicked.x, clicked.y)
 		clicked.instance.chosen_img.visible = true
 
