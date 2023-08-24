@@ -2,7 +2,9 @@ extends CanvasLayer
 class_name GameOverScreen
 
 @onready var title: Label = $PanelContainer/MarginContainer/Rows/Title
+@onready var anim_player: AnimationPlayer = $AnimationPlayer
 
+var gameover_voice_anim_name: String = "game_win"
 
 func _ready() -> void:
 	get_tree().paused = true
@@ -17,6 +19,15 @@ func set_title(win: bool):
 	else:
 		title.text = "YOU LOSE!"
 		title.modulate = Color.RED
+	
+	# 游戏结束语音
+	if not win:
+		gameover_voice_anim_name = "game_lose"
+
+
+func play_gameover_voice():
+	# 必须在 fade 动画后播放，不然会导致 fade 动画显示不出来
+	anim_player.play(gameover_voice_anim_name)
 
 
 func _on_restart_button_pressed() -> void:

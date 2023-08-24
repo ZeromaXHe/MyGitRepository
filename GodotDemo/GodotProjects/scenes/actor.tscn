@@ -37,3 +37,6 @@ script = ExtResource("6_fcivx")
 
 [node name="Pistol" parent="WeaponManager" instance=ExtResource("5_175d1")]
 visible = false
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+max_distance = 500.0

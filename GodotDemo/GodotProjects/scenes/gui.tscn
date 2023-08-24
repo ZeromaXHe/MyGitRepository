@@ -114,7 +114,7 @@ stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="Rows/TopRow/SubViewportContainer"]
 handle_input_locally = false
-size = Vector2i(2, 2)
+size = Vector2i(287, 128)
 render_target_update_mode = 4
 
 [node name="MiniMap" parent="Rows/TopRow/SubViewportContainer/SubViewport" instance=ExtResource("3_q2fbp")]
@@ -123,6 +123,30 @@ render_target_update_mode = 4
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 3.0
+
+[node name="CenterContainer" type="CenterContainer" parent="Rows/MidRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+
+[node name="ChatBoxContainer" type="VBoxContainer" parent="Rows/MidRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ChatDisplayLabel" type="RichTextLabel" parent="Rows/MidRow/ChatBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 10.0
+mouse_filter = 1
+bbcode_enabled = true
+text = "[color=red]EnemyBot1[/color]: Go, go, go! Move to next base!
+[color=green]AllyBot2[/color]: Engaging!"
+scroll_following = true
+
+[node name="ChatInputLine" type="LineEdit" parent="Rows/MidRow/ChatBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "chat here"
 
 [node name="BottomRow" type="HBoxContainer" parent="Rows"]
 layout_mode = 2
@@ -214,4 +238,5 @@ offset_bottom = 36.0
 pivot_offset = Vector2(36, 36)
 texture = ExtResource("4_jxgh3")
 
+[connection signal="text_submitted" from="Rows/MidRow/ChatBoxContainer/ChatInputLine" to="." method="_on_chat_input_line_text_submitted"]
 [connection signal="timeout" from="HitMark/HitMarkHideTimer" to="." method="_on_hit_mark_hide_timer_timeout"]

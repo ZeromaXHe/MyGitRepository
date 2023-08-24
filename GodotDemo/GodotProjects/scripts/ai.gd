@@ -1,6 +1,54 @@
 extends Node2D
 class_name AI
 
+# 参战音效
+const male_engage_sounds: Array[AudioStream] = [ \
+		preload("res://audio/kenney_voiceover_pack/Male/war_call_for_backup.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Male/war_cover_me.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Male/war_suppressing_fire.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Male/war_target_engaged.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Male/war_watch_my_back.ogg"), \
+		]
+const female_engage_sounds: Array[AudioStream] = [ \
+		preload("res://audio/kenney_voiceover_pack/Female/war_call_for_backup.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Female/war_cover_me.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Female/war_supressing_fire.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Female/war_target_engaged.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Female/war_watch_my_back.ogg"), \
+		]
+const engage_chats: Array[String] = [ \
+		"Call for backup!", \
+		"Cover me!", \
+		"Supressing fire!", \
+		"Target engaged!", \
+		"Watch my back!", \
+		]
+# 前进音效
+const male_advance_sounds: Array[AudioStream] = [ \
+		preload("res://audio/kenney_voiceover_pack/Male/war_go_go_go.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Male/go.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Male/hurry_up.ogg"), \
+		]
+const female_advance_sounds: Array[AudioStream] = [ \
+		preload("res://audio/kenney_voiceover_pack/Female/war_go_go_go.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Female/go.ogg"), \
+		preload("res://audio/kenney_voiceover_pack/Female/hurry_up.ogg"), \
+		]
+const advance_chats: Array[String] = [ \
+		"Go, go, go.", \
+		"Go.", \
+		"Hurry up.", \
+		]
+# 巡逻音效
+const male_patrol_sounds: Array[AudioStream] = [ \
+		preload("res://audio/kenney_voiceover_pack/Male/hold.ogg"), \
+		]
+const female_patrol_sounds: Array[AudioStream] = [ \
+		preload("res://audio/kenney_voiceover_pack/Female/war_hold.ogg"), \
+		]
+const patrol_chats: Array[String] = [ \
+		"Hold.", \
+		]
 
 @export var patrol_range: int = 200
 
@@ -154,6 +202,20 @@ func set_ai_state(new_ai_state: AiState):
 	
 	if new_ai_state == AI_STATE_ADVANCE:
 		choose_new_advancing_base()
+	
+	match ai_state:
+		AI_STATE_ADVANCE:
+			var voices = female_advance_sounds if actor.team.character == Team.Character.ALLY else male_advance_sounds
+			var idx = randi_range(0, voices.size() - 1)
+			actor.voice_and_chat(voices[idx], advance_chats[idx])
+		AI_STATE_PATROL:
+			var voices = female_patrol_sounds if actor.team.character == Team.Character.ALLY else male_patrol_sounds
+			var idx = randi_range(0, voices.size() - 1)
+			actor.voice_and_chat(voices[idx], patrol_chats[idx])
+		AI_STATE_ENGAGE:
+			var voices = female_engage_sounds if actor.team.character == Team.Character.ALLY else male_engage_sounds
+			var idx = randi_range(0, voices.size() - 1)
+			actor.voice_and_chat(voices[idx], engage_chats[idx])
 
 
 func _on_detection_zone_body_entered(body: Node):

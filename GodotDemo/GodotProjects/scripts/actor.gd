@@ -3,6 +3,15 @@ class_name Actor
 
 
 const night_battle_actor_material: Material = preload("res://styles/night_battle_actor_matrial.tres")
+# 受伤音效
+const hit_sounds: Array[AudioStream] = [ \
+		preload("res://audio/open_game_art/5Hit_Sounds/hit1.ogg"), \
+		preload("res://audio/open_game_art/5Hit_Sounds/hit2.ogg"), \
+		preload("res://audio/open_game_art/5Hit_Sounds/hit3.ogg"), \
+		preload("res://audio/open_game_art/5Hit_Sounds/hit4.ogg"), \
+		preload("res://audio/open_game_art/5Hit_Sounds/hit5.ogg"), \
+		]
+const die_sound: AudioStream = preload("res://audio/open_game_art/5Hit_Sounds/die1.ogg")
 
 @export var speed: int = 200
 
@@ -12,6 +21,7 @@ const night_battle_actor_material: Material = preload("res://styles/night_battle
 @onready var team: Team = $Team
 @onready var actor_ui_rmt_txfm: RemoteTransform2D = $ActorUiRmtTxfm2D
 @onready var body_img: Sprite2D = $BodyImg
+@onready var audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
 var name_label_node2d: Node2D = null
 
@@ -91,7 +101,12 @@ func handle_hit(bullet: Bullet):
 	print(name, " hit! ", health.hp)
 	GlobalSignals.bullet_hit_actor.emit(self, bullet.shooter, bullet.global_rotation, bullet.global_position)
 	if health.hp <= 0:
+		audio_player.stream = die_sound
+		audio_player.play()
 		die(bullet)
+	else:
+		audio_player.stream = hit_sounds[randi_range(0, hit_sounds.size() - 1)]
+		audio_player.play()
 
 
 func die(bullet: Bullet):
@@ -102,3 +117,9 @@ func die(bullet: Bullet):
 	if (name_label_node2d != null):
 		name_label_node2d.get_parent().remove_child(name_label_node2d)
 	self.get_parent().remove_child(self)
+
+
+func voice_and_chat(voice: AudioStream, chat: String):
+	audio_player.stream = voice
+	audio_player.play()
+	GlobalSignals.chat_info_sended.emit(name, team.character, chat)

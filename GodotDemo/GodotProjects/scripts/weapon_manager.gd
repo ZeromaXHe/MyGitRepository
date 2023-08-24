@@ -3,6 +3,10 @@ class_name WeaponManager
 
 signal weapon_changed(old_weapon: Weapon, new_weapon: Weapon)
 
+# 换弹音效
+const female_reload_sound: AudioStream = preload("res://audio/kenney_voiceover_pack/Female/war_reloading.ogg")
+const male_reload_sound: AudioStream = preload("res://audio/kenney_voiceover_pack/Male/war_reloading.ogg")
+
 @onready var current_weapon: Weapon = $Pistol
 
 var weapons: Array = []
@@ -43,4 +47,6 @@ func shoot():
 
 
 func reload():
+	var voice = female_reload_sound if holder.team.character == Team.Character.ALLY else male_reload_sound
+	holder.voice_and_chat(voice, "Reloading!")
 	current_weapon.start_reload()

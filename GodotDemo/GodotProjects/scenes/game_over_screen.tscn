@@ -1,7 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://cf2xw2qj0dnix"]
+[gd_scene load_steps=13 format=3 uid="uid://cf2xw2qj0dnix"]
 
 [ext_resource type="Script" path="res://scripts/game_over_screen.gd" id="1_tebdh"]
 [ext_resource type="StyleBox" uid="uid://c1ildl1pxktc5" path="res://styles/menu_style.tres" id="2_otm4h"]
+[ext_resource type="AudioStream" uid="uid://dqfata1054ydf" path="res://audio/kenney_voiceover_pack/Female/game_over.ogg" id="2_y4lm4"]
+[ext_resource type="AudioStream" uid="uid://ynto1hhi8562" path="res://audio/kenney_voiceover_pack/Female/congratulations.ogg" id="3_enxfi"]
+[ext_resource type="AudioStream" uid="uid://dypy0nfu3hamk" path="res://audio/kenney_voiceover_pack/Female/you_win.ogg" id="4_siy40"]
+[ext_resource type="AudioStream" uid="uid://j6styup6bkq6" path="res://audio/kenney_voiceover_pack/Male/game_over.ogg" id="5_70krl"]
+[ext_resource type="AudioStream" uid="uid://ydu3yw5ul2ih" path="res://audio/kenney_voiceover_pack/Male/you_lose.ogg" id="6_8l7ex"]
 
 [sub_resource type="Animation" id="Animation_lmm45"]
 resource_name = "fade"
@@ -30,10 +35,76 @@ tracks/1/keys = {
 "update": 1,
 "values": [false, true]
 }
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(2),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"play_gameover_voice"
+}]
+}
+
+[sub_resource type="Animation" id="Animation_j0vhv"]
+resource_name = "game_win"
+length = 3.5
+tracks/0/type = "audio"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AudioStreamPlayer")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("2_y4lm4")
+}, {
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("3_enxfi")
+}, {
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("4_siy40")
+}],
+"times": PackedFloat32Array(0, 1.3, 2.6)
+}
+tracks/0/use_blend = true
+
+[sub_resource type="Animation" id="Animation_8n3bo"]
+resource_name = "game_lose"
+length = 2.75
+tracks/0/type = "audio"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AudioStreamPlayer")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("5_70krl")
+}, {
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("6_8l7ex")
+}],
+"times": PackedFloat32Array(0, 1.4)
+}
+tracks/0/use_blend = true
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_wrt5o"]
 _data = {
-"fade": SubResource("Animation_lmm45")
+"fade": SubResource("Animation_lmm45"),
+"game_lose": SubResource("Animation_8n3bo"),
+"game_win": SubResource("Animation_j0vhv")
 }
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gi41l"]
@@ -109,6 +180,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_gi41l")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 
 [connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/RestartButton" to="." method="_on_restart_button_pressed"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/Rows/CenterContainer/VBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]

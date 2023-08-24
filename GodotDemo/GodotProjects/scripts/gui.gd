@@ -13,6 +13,8 @@ class_name GUI
 @onready var hit_mark: TextureRect = $HitMark
 @onready var hit_mark_hide_timer: Timer = $HitMark/HitMarkHideTimer
 @onready var mini_map: MiniMap = $Rows/TopRow/SubViewportContainer/SubViewport/MiniMap
+@onready var chat_display: RichTextLabel = $Rows/MidRow/ChatBoxContainer/ChatDisplayLabel
+@onready var chat_input_line: LineEdit = $Rows/MidRow/ChatBoxContainer/ChatInputLine
 
 var max_ammo_value: int
 var player: Player = null
@@ -24,6 +26,8 @@ var base_c: CapturableBase = null
 
 func _ready() -> void:
 	GlobalMediator.gui = self
+	# 清空聊天框的内容
+	chat_display.text = ""
 	# 清空 KillInfo 的内容
 	kill_info.text = ""
 	GlobalSignals.actor_killed.connect(handle_actor_killed)
@@ -33,6 +37,29 @@ func _ready() -> void:
 	
 	# 基地方位标签相关绑定
 	bind_bases()
+	
+	GlobalSignals.chat_info_sended.connect(handle_chat_info_sended)
+
+
+func handle_chat_info_sended(chater_name: String, team_character: Team.Character, text: String):
+	var chater_color: String
+	match team_character:
+		Team.Character.PLAYER:
+			chater_color = "blue"
+		Team.Character.ALLY:
+			chater_color = "green"
+		Team.Character.ENEMY:
+			chater_color = "red"
+		_:
+			chater_color = "white"
+	chat_display.append_text("[color=" + chater_color + "]" + chater_name + "[/color]:" + text + "\n")
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# FIXME: 现在左键点击输入框没反应，估计可能是键盘事件被开火的时候吃掉了。
+	# 所以现在只能按回车聊天
+	if event.is_action_released("chat") and not chat_input_line.has_focus():
+		chat_input_line.grab_focus()
 
 
 func _process(_delta: float) -> void:
@@ -196,3 +223,8 @@ func set_current_ammo(new_ammo: int):
 func set_max_ammo(new_max_ammo: int):
 	max_ammo.text = str(new_max_ammo)
 	max_ammo_value = new_max_ammo
+
+
+func _on_chat_input_line_text_submitted(new_text: String) -> void:
+	GlobalSignals.chat_info_sended.emit("Player", Team.Character.PLAYER, new_text)
+	chat_input_line.release_focus()
