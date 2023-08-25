@@ -11,14 +11,14 @@ config_version=5
 [application]
 
 config/name="MyGodotDemo"
-run/main_scene="res://scenes/main_menu_screen.tscn"
+run/main_scene="res://scenes/screen/main_menu_screen.tscn"
 config/features=PackedStringArray("4.1", "Forward Plus")
 config/icon="res://assets/icon.svg"
 
 [autoload]
 
-GlobalSignals="*res://scripts/global_signals.gd"
-GlobalMediator="*res://scripts/global_mediator.gd"
+GlobalSignals="*res://scenes/global_signals.gd"
+GlobalMediator="*res://scenes/global_mediator.gd"
 
 [input]
 

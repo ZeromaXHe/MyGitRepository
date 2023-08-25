@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://co0nv158p25vk"]
+
+[ext_resource type="PackedScene" uid="uid://d1cvpkf5rhomg" path="res://scenes/actor/actor.tscn" id="1_68kxu"]
+[ext_resource type="Script" path="res://scenes/actor/player.gd" id="2_pdway"]
+[ext_resource type="Texture2D" uid="uid://dvaw452i01plp" path="res://styles/actor_light_texture.tres" id="3_lyo1h"]
+
+[node name="Player" instance=ExtResource("1_68kxu")]
+script = ExtResource("2_pdway")
+
+[node name="PointLight2D" type="PointLight2D" parent="BodyImg" index="0"]
+visible = false
+shadow_enabled = true
+texture = ExtResource("3_lyo1h")
+
+[node name="Team" parent="." index="3"]
+side = 1
+character = 1
+
+[node name="CameraRmtTxfm2D" type="RemoteTransform2D" parent="." index="6"]
+update_scale = false
+
+[node name="AudioListener2D" type="AudioListener2D" parent="." index="7"]
+current = true

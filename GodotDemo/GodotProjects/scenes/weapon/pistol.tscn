@@ -1,0 +1,135 @@
+[gd_scene load_steps=9 format=3 uid="uid://csey2ttus5i7"]
+
+[ext_resource type="PackedScene" uid="uid://x8xciy0vnhyb" path="res://scenes/weapon/weapon.tscn" id="1_7x1cp"]
+[ext_resource type="Texture2D" uid="uid://b2u7bjyw886p7" path="res://assets/top_down_shooter/PNG/weapon_gun.png" id="2_1pvjv"]
+[ext_resource type="PackedScene" uid="uid://d2jd02hvsort0" path="res://scenes/weapon/ray_caster.tscn" id="3_ra6wn"]
+[ext_resource type="AudioStream" uid="uid://b4kau8p5g6g5r" path="res://audio/open_game_art/shots/pistol.wav" id="4_pd0dh"]
+[ext_resource type="AudioStream" uid="uid://dsronu64gs6ls" path="res://audio/open_game_art/reload.wav" id="5_p8oof"]
+
+[sub_resource type="Animation" id="Animation_1uvsr"]
+resource_name = "muzzle_flash"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MuzzleFlash:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MuzzleFlash:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(0.3, 1.2)]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioStreamPlayer2D")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.4,
+"start_offset": 0.0,
+"stream": ExtResource("4_pd0dh")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
+
+[sub_resource type="Animation" id="Animation_l7xh5"]
+resource_name = "reload"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Gun:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.0, -1.5708, 0.0]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_end_reload"
+}]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioStreamPlayer2D")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 1.45,
+"start_offset": 0.05,
+"stream": ExtResource("5_p8oof")
+}, {
+"end_offset": 0.25,
+"start_offset": 0.55,
+"stream": ExtResource("5_p8oof")
+}],
+"times": PackedFloat32Array(0, 0.2)
+}
+tracks/2/use_blend = true
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("MuzzleFlash:visible")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_kc0ws"]
+_data = {
+"muzzle_flash": SubResource("Animation_1uvsr"),
+"reload": SubResource("Animation_l7xh5")
+}
+
+[node name="Pistol" instance=ExtResource("1_7x1cp")]
+
+[node name="Gun" parent="." index="0"]
+texture = ExtResource("2_1pvjv")
+
+[node name="RayCaster" parent="Gun" index="0" instance=ExtResource("3_ra6wn")]
+position = Vector2(10, 6)
+
+[node name="MuzzleFlash" parent="." index="3"]
+scale = Vector2(1, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="4"]
+libraries = {
+"": SubResource("AnimationLibrary_kc0ws")
+}
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." index="5"]
+max_distance = 500.0

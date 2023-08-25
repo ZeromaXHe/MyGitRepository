@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://x8xciy0vnhyb"]
+
+[ext_resource type="Script" path="res://scenes/weapon/weapon.gd" id="1_a5pev"]
+[ext_resource type="PackedScene" uid="uid://tv6rsn0qgay" path="res://scenes/weapon/bullet.tscn" id="2_avx3t"]
+[ext_resource type="Texture2D" uid="uid://b0g5qxc2y4ajr" path="res://assets/top_down_tank_redux/PNG/Default size/shotLarge.png" id="3_0cket"]
+
+[node name="Weapon" type="Node2D"]
+script = ExtResource("1_a5pev")
+bullet_scene = ExtResource("2_avx3t")
+
+[node name="Gun" type="Sprite2D" parent="."]
+offset = Vector2(6, 0)
+
+[node name="Muzzle" type="Node2D" parent="."]
+position = Vector2(20, 0)
+
+[node name="AttackCooldown" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
+
+[node name="MuzzleFlash" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(29, 0)
+rotation = -1.57079
+scale = Vector2(0.3, 1.2)
+texture = ExtResource("3_0cket")

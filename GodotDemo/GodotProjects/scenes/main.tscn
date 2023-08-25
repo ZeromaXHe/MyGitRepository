@@ -1,18 +1,18 @@
 [gd_scene load_steps=80 format=3 uid="uid://d3gcnkeh4l36e"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_2etsu"]
-[ext_resource type="Script" path="res://scripts/capturable_base_manager.gd" id="2_2c81g"]
-[ext_resource type="Script" path="res://scripts/bullet_manager.gd" id="3_fdg2q"]
-[ext_resource type="Script" path="res://scripts/particle_manager.gd" id="3_wynpc"]
-[ext_resource type="PackedScene" uid="uid://prnpx64ldh62" path="res://scenes/enemy.tscn" id="4_eaets"]
-[ext_resource type="PackedScene" uid="uid://x7hj3iuxjcjm" path="res://scenes/ally.tscn" id="5_gi44o"]
+[ext_resource type="Script" path="res://scenes/main.gd" id="1_o4sq5"]
+[ext_resource type="Script" path="res://scenes/capturable_base_manager.gd" id="2_2c81g"]
+[ext_resource type="Script" path="res://scenes/weapon/bullet_manager.gd" id="3_fdg2q"]
+[ext_resource type="Script" path="res://scenes/particle_manager.gd" id="3_wynpc"]
 [ext_resource type="PackedScene" uid="uid://ejyelg0drrkc" path="res://scenes/team_manager.tscn" id="6_sp66p"]
 [ext_resource type="PackedScene" uid="uid://cj7v1r6xwgcd4" path="res://scenes/capturable_base.tscn" id="6_w1ort"]
 [ext_resource type="Texture2D" uid="uid://dk6x4qtsry04e" path="res://assets/top_down_shooter/Tilesheet/tilesheet_complete.png" id="8_gbds6"]
-[ext_resource type="Script" path="res://scripts/name_labels_manager.gd" id="9_06alu"]
-[ext_resource type="PackedScene" uid="uid://b4p3jxjo4ufj5" path="res://scenes/gui.tscn" id="10_gh2ev"]
-[ext_resource type="Script" path="res://scripts/camera.gd" id="11_ijrao"]
-[ext_resource type="PackedScene" uid="uid://bb4hsstx23aju" path="res://scenes/score_board.tscn" id="13_dwt11"]
+[ext_resource type="PackedScene" uid="uid://x7hj3iuxjcjm" path="res://scenes/actor/ally.tscn" id="8_hcd08"]
+[ext_resource type="PackedScene" uid="uid://prnpx64ldh62" path="res://scenes/actor/enemy.tscn" id="9_piv8q"]
+[ext_resource type="PackedScene" uid="uid://b4p3jxjo4ufj5" path="res://scenes/gui/gui.tscn" id="10_gh2ev"]
+[ext_resource type="Script" path="res://scenes/name_labels_manager.gd" id="10_v6ho3"]
+[ext_resource type="Script" path="res://scenes/camera.gd" id="11_ijrao"]
+[ext_resource type="PackedScene" uid="uid://bb4hsstx23aju" path="res://scenes/gui/score_board.tscn" id="13_dwt11"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_ujr8j"]
 vertices = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
@@ -981,7 +981,7 @@ navigation_layer_0/layers = 1
 sources/0 = SubResource("TileSetAtlasSource_psymo")
 
 [node name="Main" type="Node"]
-script = ExtResource("1_2etsu")
+script = ExtResource("1_o4sq5")
 
 [node name="Ground" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_il0hw")
@@ -1011,7 +1011,7 @@ script = ExtResource("3_fdg2q")
 
 [node name="AllyTeamManager" parent="." instance=ExtResource("6_sp66p")]
 team_side = 1
-unit_scene = ExtResource("5_gi44o")
+unit_scene = ExtResource("8_hcd08")
 
 [node name="RespawnManager" type="Node2D" parent="AllyTeamManager"]
 position = Vector2(-179, 553)
@@ -1030,7 +1030,7 @@ position = Vector2(-81, 170)
 
 [node name="EnemyTeamManager" parent="." instance=ExtResource("6_sp66p")]
 team_side = 2
-unit_scene = ExtResource("4_eaets")
+unit_scene = ExtResource("9_piv8q")
 
 [node name="RespawnManager" type="Node2D" parent="EnemyTeamManager"]
 position = Vector2(1342, 257)
@@ -1052,7 +1052,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
-script = ExtResource("9_06alu")
+script = ExtResource("10_v6ho3")
 
 [node name="GUI" parent="." instance=ExtResource("10_gh2ev")]
 

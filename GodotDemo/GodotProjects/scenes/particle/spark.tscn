@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://b0hefb582d5qm"]
+
+[ext_resource type="Script" path="res://scenes/particle/spark.gd" id="1_lidoa"]
+[ext_resource type="Texture2D" uid="uid://duljlvo0vp73m" path="res://assets/top_down_tank_redux/PNG/Default size/shotThin.png" id="1_rlu1q"]
+
+[sub_resource type="Gradient" id="Gradient_n6ey2"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.415686)
+
+[sub_resource type="Gradient" id="Gradient_v404g"]
+colors = PackedColorArray(0.41598, 0.41598, 0.41598, 1, 1, 1, 1, 1)
+
+[node name="Spark" type="Node2D"]
+script = ExtResource("1_lidoa")
+
+[node name="SparkParticles" type="CPUParticles2D" parent="."]
+emitting = false
+lifetime = 0.2
+one_shot = true
+explosiveness = 1.0
+fixed_fps = 30
+draw_order = 1
+texture = ExtResource("1_rlu1q")
+spread = 15.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 100.0
+initial_velocity_max = 300.0
+angle_min = -100.0
+angle_max = -80.0
+scale_amount_min = 0.05
+scale_amount_max = 0.15
+color_ramp = SubResource("Gradient_n6ey2")
+color_initial_ramp = SubResource("Gradient_v404g")
+
+[node name="DeleteTimer" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
+
+[connection signal="timeout" from="DeleteTimer" to="." method="_on_delete_timer_timeout"]

@@ -1,0 +1,195 @@
+[gd_scene load_steps=8 format=3 uid="uid://b4p3jxjo4ufj5"]
+
+[ext_resource type="Script" path="res://scenes/gui/kill_info.gd" id="1_cmmym"]
+[ext_resource type="Script" path="res://scenes/gui/gui.gd" id="1_rug4d"]
+[ext_resource type="Texture2D" uid="uid://cecm3bqtanb5x" path="res://assets/crosshair_pack/PNG/Outline/crosshair086.png" id="3_5b1lr"]
+[ext_resource type="PackedScene" uid="uid://dp0kp8hwx64tu" path="res://scenes/gui/mini_map.tscn" id="3_q2fbp"]
+[ext_resource type="Texture2D" uid="uid://jxtmigml6awr" path="res://assets/crosshair_pack/PNG/Outline/crosshair066.png" id="4_jxgh3"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qiq25"]
+bg_color = Color(0.180392, 0.180392, 0.180392, 1)
+border_width_top = 1
+border_width_right = 2
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_waomj"]
+bg_color = Color(0.705882, 0.254902, 0.254902, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_bottom = 1
+
+[node name="GUI" type="CanvasLayer"]
+script = ExtResource("1_rug4d")
+
+[node name="BaseLabels" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Rows" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="Rows/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+
+[node name="KillInfo" type="RichTextLabel" parent="Rows/TopRow/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+bbcode_enabled = true
+text = "[color=green]AllyBot1[/color] pistol kill [color=red]EnemyBot2[/color]
+[color=red]Bot3[/color] killed [color=green]Bot4[/color]
+[color=green]Bot1[/color] killed [color=red]Bot2[/color]
+[color=green]Bot1[/color] killed [color=red]Bot2[/color]
+[color=red]Bot3[/color] killed [color=green]Bot4[/color]"
+scroll_active = false
+script = ExtResource("1_cmmym")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Rows/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Rows/TopRow/SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(287, 128)
+render_target_update_mode = 4
+
+[node name="MiniMap" parent="Rows/TopRow/SubViewportContainer/SubViewport" instance=ExtResource("3_q2fbp")]
+
+[node name="MidRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="CenterContainer" type="CenterContainer" parent="Rows/MidRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+
+[node name="ChatBoxContainer" type="VBoxContainer" parent="Rows/MidRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ChatDisplayLabel" type="RichTextLabel" parent="Rows/MidRow/ChatBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 10.0
+mouse_filter = 1
+bbcode_enabled = true
+text = "[color=red]EnemyBot1[/color]: Go, go, go! Move to next base!
+[color=green]AllyBot2[/color]: Engaging!"
+scroll_following = true
+
+[node name="ChatInputLine" type="LineEdit" parent="Rows/MidRow/ChatBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "chat here"
+clear_button_enabled = true
+
+[node name="BottomRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerHpLabel" type="Label" parent="Rows/BottomRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "    player HP:"
+
+[node name="MarginContainer" type="MarginContainer" parent="Rows/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 50
+
+[node name="HpBar" type="ProgressBar" parent="Rows/BottomRow/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_qiq25")
+theme_override_styles/fill = SubResource("StyleBoxFlat_waomj")
+value = 50.0
+
+[node name="VSeparator" type="VSeparator" parent="Rows/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="AmmoLabel" type="Label" parent="Rows/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "player ammo:"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="CurrentAmmo" type="Label" parent="Rows/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.4
+theme_override_colors/font_outline_color = Color(0.152941, 0.152941, 0.152941, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 30
+text = "3"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Seperator" type="Label" parent="Rows/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.2
+theme_override_colors/font_outline_color = Color(0.152941, 0.152941, 0.152941, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 30
+text = "/"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MaxAmmo" type="Label" parent="Rows/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_outline_color = Color(0.152941, 0.152941, 0.152941, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 30
+text = "10"
+
+[node name="HitMark" type="TextureRect" parent="."]
+offset_left = -36.0
+offset_top = -36.0
+offset_right = 36.0
+offset_bottom = 36.0
+pivot_offset = Vector2(36, 36)
+texture = ExtResource("3_5b1lr")
+
+[node name="HitMarkHideTimer" type="Timer" parent="HitMark"]
+wait_time = 0.2
+one_shot = true
+
+[node name="AimMark" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.498039)
+offset_left = -36.0
+offset_top = -36.0
+offset_right = 36.0
+offset_bottom = 36.0
+pivot_offset = Vector2(36, 36)
+texture = ExtResource("4_jxgh3")
+
+[connection signal="text_submitted" from="Rows/MidRow/ChatBoxContainer/ChatInputLine" to="." method="_on_chat_input_line_text_submitted"]
+[connection signal="timeout" from="HitMark/HitMarkHideTimer" to="." method="_on_hit_mark_hide_timer_timeout"]

@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3 uid="uid://dp0kp8hwx64tu"]
+
+[ext_resource type="Script" path="res://scenes/gui/mini_map.gd" id="1_cy5v7"]
+[ext_resource type="Texture2D" uid="uid://bpbyokcakyxsf" path="res://assets/simple_space/PNG/Retina/ship_E.png" id="1_u41vq"]
+
+[sub_resource type="Gradient" id="Gradient_iat7e"]
+offsets = PackedFloat32Array(0)
+colors = PackedColorArray(0.260506, 0.260506, 0.260506, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_d6tfn"]
+gradient = SubResource("Gradient_iat7e")
+width = 2750
+height = 1750
+
+[node name="MiniMap" type="Node2D"]
+script = ExtResource("1_cy5v7")
+
+[node name="Ground" type="Sprite2D" parent="."]
+position = Vector2(609, 136)
+texture = SubResource("GradientTexture2D_d6tfn")
+
+[node name="MapCamera" type="Camera2D" parent="."]
+position = Vector2(559, 317)
+rotation = 1.5708
+zoom = Vector2(0.1, 0.1)
+
+[node name="PlayerIcon" type="Sprite2D" parent="."]
+modulate = Color(0.321569, 0.827451, 0.384314, 0.803922)
+position = Vector2(559, 317)
+rotation = 1.5708
+texture = ExtResource("1_u41vq")
+
+[node name="RemoteTransform2D" type="RemoteTransform2D" parent="PlayerIcon"]
+remote_path = NodePath("../../MapCamera")

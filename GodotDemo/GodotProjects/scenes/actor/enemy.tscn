@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://prnpx64ldh62"]
+
+[ext_resource type="PackedScene" uid="uid://d1cvpkf5rhomg" path="res://scenes/actor/actor.tscn" id="1_a6xq1"]
+[ext_resource type="Texture2D" uid="uid://dyb4jamce3we7" path="res://assets/top_down_shooter/PNG/Survivor 1/survivor1_hold.png" id="2_v2r1y"]
+[ext_resource type="PackedScene" uid="uid://dd70ves4up5d8" path="res://scenes/ai.tscn" id="3_2byif"]
+
+[node name="Actor" instance=ExtResource("1_a6xq1")]
+
+[node name="BodyImg" parent="." index="0"]
+texture = ExtResource("2_v2r1y")
+
+[node name="AI" parent="." index="3" instance=ExtResource("3_2byif")]
+
+[node name="Team" parent="." index="4"]
+side = 2
+character = 3
