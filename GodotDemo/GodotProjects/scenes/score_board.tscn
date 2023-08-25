@@ -82,174 +82,6 @@ text = "Score"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name1" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=green]Player[/color][/center]"
-fit_content = true
-
-[node name="VSeparator5" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Kill1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator6" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Dead1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator7" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Capture1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator8" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Score1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Name2" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=green]AllyBot1[/color][/center]"
-fit_content = true
-
-[node name="VSeparator9" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Kill2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator10" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Dead2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator11" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Capture2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator12" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Score2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Name3" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=green]AllyBot2[/color][/center]"
-fit_content = true
-
-[node name="VSeparator13" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Kill3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator14" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Dead3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator15" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Capture3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator16" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Score3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Name4" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=green]AllyBot3[/color][/center]"
-fit_content = true
-
-[node name="VSeparator17" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Kill4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator18" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Dead4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator19" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Capture4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator20" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-
-[node name="Score4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/PlayerVBoxContainer/PlayerStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="VSeparator" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer"]
 layout_mode = 2
 
@@ -272,6 +104,8 @@ columns = 9
 [node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
 text = "Actor name"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="VSeparator" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
@@ -279,6 +113,8 @@ layout_mode = 2
 [node name="KillLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
 text = "Kill"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="VSeparator2" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
@@ -286,6 +122,8 @@ layout_mode = 2
 [node name="DeadLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
 text = "Dead"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="VSeparator3" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
@@ -293,6 +131,8 @@ layout_mode = 2
 [node name="CaptureLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
 text = "Capture"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="VSeparator4" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
@@ -300,172 +140,6 @@ layout_mode = 2
 [node name="ScoreLabel" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
 layout_mode = 2
 text = "Score"
-
-[node name="Name1" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=red]EnemyBot1[/color][/center]"
-fit_content = true
-
-[node name="VSeparator5" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Kill1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator6" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Dead1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator7" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Capture1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator8" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Score1" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Name2" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=red]EnemyBot2[/color][/center]"
-fit_content = true
-
-[node name="VSeparator9" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Kill2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator10" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Dead2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator11" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Capture2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator12" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Score2" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Name3" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=red]EnemyBot3[/color][/center]"
-fit_content = true
-
-[node name="VSeparator13" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Kill3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator14" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Dead3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator15" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Capture3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator16" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Score3" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Name4" type="RichTextLabel" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "[center][color=red]EnemyBot4[/color][/center]"
-fit_content = true
-
-[node name="VSeparator17" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Kill4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator18" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Dead4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator19" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Capture4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="VSeparator20" type="VSeparator" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-
-[node name="Score4" type="Label" parent="CenterContainer/PanelContainer/HBoxContainer/EnemyVBoxContainer/EnemyStatContainer"]
-layout_mode = 2
-text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
