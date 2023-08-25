@@ -58,8 +58,11 @@ func handle_chat_info_sended(chater_name: String, team_character: Team.Character
 func _unhandled_input(event: InputEvent) -> void:
 	# FIXME: 现在左键点击输入框没反应，估计可能是键盘事件被开火的时候吃掉了。
 	# 所以现在只能按回车聊天
-	if event.is_action_released("chat") and not chat_input_line.has_focus():
-		chat_input_line.grab_focus()
+	if event.is_action_pressed("chat"):
+		if chat_input_line.has_focus():
+			chat_input_line.release_focus()
+		else:
+			chat_input_line.grab_focus()
 
 
 func _process(_delta: float) -> void:
@@ -227,4 +230,5 @@ func set_max_ammo(new_max_ammo: int):
 
 func _on_chat_input_line_text_submitted(new_text: String) -> void:
 	GlobalSignals.chat_info_sended.emit("Player", Team.Character.PLAYER, new_text)
+	chat_input_line.clear()
 	chat_input_line.release_focus()

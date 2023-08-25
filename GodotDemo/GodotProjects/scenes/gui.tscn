@@ -147,6 +147,7 @@ scroll_following = true
 layout_mode = 2
 size_flags_vertical = 3
 placeholder_text = "chat here"
+clear_button_enabled = true
 
 [node name="BottomRow" type="HBoxContainer" parent="Rows"]
 layout_mode = 2
