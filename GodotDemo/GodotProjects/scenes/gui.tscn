@@ -21,59 +21,11 @@ border_width_bottom = 1
 [node name="GUI" type="CanvasLayer"]
 script = ExtResource("1_rug4d")
 
-[node name="BaseALabel" type="Label" parent="."]
-offset_left = 29.0
-offset_top = 288.0
-offset_right = 79.0
-offset_bottom = 358.0
-pivot_offset = Vector2(25, 35)
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0.309804, 0.309804, 0.309804, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/outline_size = 3
-theme_override_constants/shadow_outline_size = 1
-theme_override_font_sizes/font_size = 48
-text = "A"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="BaseBLabel" type="Label" parent="."]
-offset_left = 29.0
-offset_top = 365.0
-offset_right = 79.0
-offset_bottom = 435.0
-pivot_offset = Vector2(25, 35)
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0.309804, 0.309804, 0.309804, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/outline_size = 3
-theme_override_constants/shadow_outline_size = 1
-theme_override_font_sizes/font_size = 48
-text = "B"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="BaseCLabel" type="Label" parent="."]
-offset_left = 28.0
-offset_top = 443.0
-offset_right = 78.0
-offset_bottom = 513.0
-pivot_offset = Vector2(25, 35)
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0.309804, 0.309804, 0.309804, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/outline_size = 3
-theme_override_constants/shadow_outline_size = 1
-theme_override_font_sizes/font_size = 48
-text = "C"
-horizontal_alignment = 1
-vertical_alignment = 1
+[node name="BaseLabels" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 
 [node name="Rows" type="VBoxContainer" parent="."]
 anchors_preset = 15

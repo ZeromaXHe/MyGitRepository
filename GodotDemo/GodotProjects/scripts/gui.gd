@@ -1,27 +1,24 @@
 extends CanvasLayer
 class_name GUI
 
+@export var base_label_scene: PackedScene = preload("res://scenes/base_label.tscn")
 
 @onready var kill_info: RichTextLabel = $Rows/TopRow/MarginContainer/KillInfo
 @onready var hp_bar: ProgressBar = $Rows/BottomRow/MarginContainer/HpBar
 @onready var current_ammo: Label = $Rows/BottomRow/CurrentAmmo
 @onready var max_ammo: Label = $Rows/BottomRow/MaxAmmo
-@onready var base_a_label: Label = $BaseALabel
-@onready var base_b_label: Label = $BaseBLabel
-@onready var base_c_label: Label = $BaseCLabel
 @onready var aim_mark: TextureRect = $AimMark
 @onready var hit_mark: TextureRect = $HitMark
 @onready var hit_mark_hide_timer: Timer = $HitMark/HitMarkHideTimer
 @onready var mini_map: MiniMap = $Rows/TopRow/SubViewportContainer/SubViewport/MiniMap
 @onready var chat_display: RichTextLabel = $Rows/MidRow/ChatBoxContainer/ChatDisplayLabel
 @onready var chat_input_line: LineEdit = $Rows/MidRow/ChatBoxContainer/ChatInputLine
+@onready var base_labels: Control = $BaseLabels
 
 var max_ammo_value: int
 var player: Player = null
 
-var base_a: CapturableBase = null
-var base_b: CapturableBase = null
-var base_c: CapturableBase = null
+var base_to_label_dict: Dictionary = {}
 
 
 func _ready() -> void:
@@ -66,13 +63,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(_delta: float) -> void:
-	if base_a_label.visible:
-		base_a_label.position = calc_base_label_position(base_a)
-	if base_b_label.visible:
-		base_b_label.position = calc_base_label_position(base_b)
-	if base_c_label.visible:
-		base_c_label.position = calc_base_label_position(base_c)
+	# 更新基地方位指示的位置
+	for base in base_to_label_dict:
+		var label = base_to_label_dict[base]
+		if label.visible:
+			label.position = calc_base_label_position(base)
 	
+	# 更新准星位置
 	# TextureRect 居然还要自己减 pivot_offset？
 	aim_mark.global_position = aim_mark.get_global_mouse_position() - aim_mark.pivot_offset
 
@@ -126,19 +123,19 @@ func calc_base_label_position(base: CapturableBase) -> Vector2:
 	
 
 func bind_bases():
-	# TODO: 目前绑定的代码写得太死了。先实现功能，之后优化
+	var ascii_buffer: PackedByteArray = "A".to_ascii_buffer()
 	for base in GlobalMediator.capturable_base_manager.capturable_bases:
 		var cap_base = base as CapturableBase
-		match (cap_base.point_code):
-			"A":
-				base_a = cap_base
-				base_a_label.visible = not cap_base.out_screen_notifier.is_on_screen()
-			"B":
-				base_b = cap_base
-				base_b_label.visible = not cap_base.out_screen_notifier.is_on_screen()
-			"C":
-				base_c = cap_base
-				base_c_label.visible = not cap_base.out_screen_notifier.is_on_screen()
+		# 初始化基地方位指示标签
+		var label: Label = base_label_scene.instantiate()
+		# GdScript 想实现 char + 1 的效果是真的麻烦
+		label.text = ascii_buffer.get_string_from_ascii()
+		cap_base.point_code = label.text
+		ascii_buffer[0] += 1
+		base_to_label_dict[cap_base] = label
+		label.visible = not cap_base.out_screen_notifier.is_on_screen()
+		base_labels.add_child(label)
+		# 连接基地信号
 		cap_base.exited_screen.connect(handle_base_exited_screen)
 		cap_base.entered_screen.connect(handle_base_entered_screen)
 		cap_base.base_captured.connect(handle_base_captured)
@@ -155,23 +152,13 @@ func handle_base_entered_screen(base: CapturableBase):
 
 
 func handle_base_captured(base: CapturableBase, _actors: Array[Actor]):
-	match (base.point_code):
-		"A":
-			base_a_label.modulate = base.get_color(base.team.side)
-		"B":
-			base_b_label.modulate = base.get_color(base.team.side)
-		"C":
-			base_c_label.modulate = base.get_color(base.team.side)
+	var label = base_to_label_dict[base]
+	label.modulate = base.get_color(base.team.side)
 
 
 func update_base_label_visible(base: CapturableBase, new_visible: bool):
-	match (base.point_code):
-		"A":
-			base_a_label.visible = new_visible
-		"B":
-			base_b_label.visible = new_visible
-		"C":
-			base_c_label.visible = new_visible
+	var label = base_to_label_dict[base]
+	label.visible = new_visible
 
 
 func set_player(new_player: Player):
