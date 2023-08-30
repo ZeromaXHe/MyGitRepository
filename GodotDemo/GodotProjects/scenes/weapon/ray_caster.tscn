@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://d2jd02hvsort0"]
 
 [ext_resource type="Texture2D" uid="uid://b2u7bjyw886p7" path="res://assets/top_down_shooter/PNG/weapon_gun.png" id="1_wxtcm"]
-[ext_resource type="Script" path="res://scripts/ray_caster.gd" id="2_wpo7e"]
+[ext_resource type="Script" path="res://scenes/weapon/ray_caster.gd" id="2_wpo7e"]
 
 [sub_resource type="Gradient" id="Gradient_3oib7"]
 offsets = PackedFloat32Array(0, 0.818713, 1)
