@@ -1,0 +1,274 @@
+[gd_scene load_steps=2 format=3 uid="uid://diquwbtlwad8p"]
+
+[ext_resource type="Script" path="res://scenes/menu/main_menu.gd" id="1_4qca4"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_4qca4")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="AuthorLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "ZeromaX's"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Civ 6 Copy"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer/CenterContainer"]
+layout_mode = 2
+
+[node name="MainVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="SinglePlayerButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "现在创建一个新游戏，或继续当前的游戏。"
+text = "单人模式"
+alignment = 0
+
+[node name="MultiplayerButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "全新多人游戏模式现已可玩！
+
+可在此处设置或加入云端、互联网、局域网和热座游戏。"
+text = "多人模式"
+alignment = 0
+
+[node name="OptionButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "设置图像、声音、快捷键，以及更多内容。"
+text = "游戏选项"
+alignment = 0
+
+[node name="AdditionalButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "《Civ6Copy》的额外内容"
+text = "额外内容"
+alignment = 0
+
+[node name="TutorialButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "完全新手，或需要复习一下？我们在此提供帮助！"
+text = "教程"
+alignment = 0
+
+[node name="BenchmarkButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "您的硬件配置效果如何？"
+text = "测试程序"
+alignment = 0
+
+[node name="MapEditorButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "“地图生成器”编辑器。"
+text = "地图生成器"
+alignment = 0
+
+[node name="ExitButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox"]
+layout_mode = 2
+tooltip_text = "完全退出游戏。"
+text = "退回到桌面"
+alignment = 0
+
+[node name="SinglePlayerVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+alignment = 1
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/SinglePlayerVBox"]
+layout_mode = 2
+tooltip_text = "继续您玩的最后一场游戏。"
+text = "继续游戏"
+alignment = 0
+
+[node name="LoadButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/SinglePlayerVBox"]
+layout_mode = 2
+tooltip_text = "加载上次保存的游戏。"
+text = "加载游戏"
+alignment = 0
+
+[node name="StartButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/SinglePlayerVBox"]
+layout_mode = 2
+tooltip_text = "使用随机领袖在一张小型大陆地图上开始游戏。"
+text = "开始游戏"
+alignment = 0
+
+[node name="ScenarioButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/SinglePlayerVBox"]
+layout_mode = 2
+tooltip_text = "进行情景游戏，在特定规则、领袖和目标下获得独特游戏体验。"
+text = "情景"
+alignment = 0
+
+[node name="CreateButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/SinglePlayerVBox"]
+layout_mode = 2
+tooltip_text = "由您设置和创建一个新游戏。"
+text = "创建游戏"
+alignment = 0
+
+[node name="MultiplayerVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+alignment = 1
+
+[node name="CloudButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+tooltip_text = "云端游戏是异步进行的多人游戏，游戏进度保存在云端，所有玩家共享。进行此游戏需要有效连接到文明服务器。"
+text = "云端游戏"
+alignment = 0
+
+[node name="InternetButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+tooltip_text = "在互联网上开始一场多人游戏。"
+text = "互联网"
+alignment = 0
+
+[node name="CrossPlatformButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+tooltip_text = "全新多人模式：通过互联网与其他平台的用户进行多人游戏。"
+text = "互联网（跨平台PC游戏）"
+alignment = 0
+
+[node name="LANButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+tooltip_text = "在局域网上开始一场多人游戏。"
+text = "局域网"
+alignment = 0
+
+[node name="HotSeatButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+tooltip_text = "以玩家轮流使用该电脑的方式开始一场多人游戏。"
+text = "热座模式"
+alignment = 0
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+
+[node name="RedStormButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+tooltip_text = "自动寻找并加入“红死风暴”游戏。
+
+“红死风暴”是《Civ6Copy》的大逃杀模式。玩家将扮演幸存者，争夺逃离垂死星球的最后船票。"
+theme_override_colors/font_color = Color(0.752941, 0.164706, 0.2, 1)
+text = "开始“红死风暴”（大逃杀）"
+alignment = 0
+
+[node name="PirateEraButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MultiplayerVBox"]
+layout_mode = 2
+tooltip_text = "自动寻找并加入“大海盗时代”游戏。
+
+在海盗黄金时代中纵横四海。"
+theme_override_colors/font_color = Color(0.722656, 0.605469, 0.984375, 1)
+text = "开始“大海盗时代”"
+alignment = 0
+
+[node name="AdditionalVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="ModButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/AdditionalVBox"]
+layout_mode = 2
+tooltip_text = "扩展和补强《文明VI》的修改和下载内容。"
+text = "模组"
+alignment = 0
+
+[node name="HallOfFameButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/AdditionalVBox"]
+layout_mode = 2
+tooltip_text = "您的游戏技术能否经得起时间的考验？"
+text = "名人堂"
+alignment = 0
+
+[node name="CreditsButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/AdditionalVBox"]
+layout_mode = 2
+tooltip_text = "所有为《Civ6Copy》做出贡献的人。"
+text = "制作人员名单"
+alignment = 0
+
+[node name="BenchmarkVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="GraphicPerformanceButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/BenchmarkVBox"]
+layout_mode = 2
+tooltip_text = "测试电脑的图像显示性能。"
+text = "图像性能"
+alignment = 0
+
+[node name="AIPerformanceButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/BenchmarkVBox"]
+layout_mode = 2
+tooltip_text = "测试电脑的AI与回合处理性能。"
+text = "AI性能"
+alignment = 0
+
+[node name="GSGraphicsPerformanceButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/BenchmarkVBox"]
+layout_mode = 2
+tooltip_text = "高基准，用于测试电脑的图像显示性能。"
+text = "《风云变幻》图像性能"
+alignment = 0
+
+[node name="GSAIPerformanceButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/BenchmarkVBox"]
+layout_mode = 2
+tooltip_text = "高基准，用于测试电脑的 AI 与回合处理性能。"
+text = "《风云变幻》AI性能"
+alignment = 0
+
+[node name="MapEditorVBox" type="VBoxContainer" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="NewButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MapEditorVBox"]
+layout_mode = 2
+tooltip_text = "新建空白或已构建的地图生成器地图，以便编辑。"
+text = "新地图"
+alignment = 0
+
+[node name="LoadButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MapEditorVBox"]
+layout_mode = 2
+tooltip_text = "加载一个之前保存的地图生成器地图。"
+text = "加载地图"
+alignment = 0
+
+[node name="InputButton" type="Button" parent="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MapEditorVBox"]
+layout_mode = 2
+tooltip_text = "将一个正确构建的.TMX地图文件从单元格文件转换为地图生成器地图。"
+text = "从编辑器导入地图"
+alignment = 0
+
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/SinglePlayerButton" to="." method="_on_single_player_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/MultiplayerButton" to="." method="_on_multiplayer_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/OptionButton" to="." method="_on_option_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/AdditionalButton" to="." method="_on_additional_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/TutorialButton" to="." method="_on_tutorial_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/BenchmarkButton" to="." method="_on_benchmark_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/MapEditorButton" to="." method="_on_map_editor_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/ExitButton" to="." method="_on_exit_button_pressed"]
