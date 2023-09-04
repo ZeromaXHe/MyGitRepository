@@ -1,0 +1,557 @@
+[gd_scene load_steps=39 format=3 uid="uid://dfpeq8ikcp1wc"]
+
+[ext_resource type="Texture2D" uid="uid://btmpkdbgm3hs2" path="res://assets/icon_park/实验_experiment.svg" id="1_0g47u"]
+[ext_resource type="Texture2D" uid="uid://dkia1xx5vuk4x" path="res://assets/icon_park/音乐_music-one.svg" id="2_wa2tf"]
+[ext_resource type="Texture2D" uid="uid://drjeomv13ps30" path="res://assets/icon_park/鸽子_pigeon.svg" id="3_iasj3"]
+[ext_resource type="Texture2D" uid="uid://8eptkp2y1hdr" path="res://assets/icon_park/理财_financing.svg" id="4_m8wj3"]
+[ext_resource type="Texture2D" uid="uid://bmc8jjvgijhou" path="res://assets/icon_park/奖杯_trophy.svg" id="5_v11p0"]
+[ext_resource type="Texture2D" uid="uid://b6w72q7hdc1pw" path="res://assets/icon_park/兑换1_exchange-one.svg" id="6_12pvb"]
+[ext_resource type="Texture2D" uid="uid://ohlgqatk4nat" path="res://assets/icon_park/帮助_help.svg" id="7_lrsjr"]
+[ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="8_fvvrv"]
+[ext_resource type="Texture2D" uid="uid://duwxecohirtpr" path="res://assets/icon_park/镜子2_mirror-two.svg" id="9_11lm6"]
+[ext_resource type="Texture2D" uid="uid://61demjx51mfs" path="res://assets/icon_park/圆形连接_six-circular-connection.svg" id="9_bd2lx"]
+[ext_resource type="Texture2D" uid="uid://x3lg83lirlhc" path="res://assets/icon_park/地图_map-draw.svg" id="10_bdjt4"]
+[ext_resource type="Texture2D" uid="uid://0m7bwjefi2yj" path="res://assets/icon_park/书籍-打开_book-open.svg" id="10_fp2fi"]
+[ext_resource type="Texture2D" uid="uid://dg0xrcmgglcw8" path="res://assets/icon_park/整形科_plastic-surgery.svg" id="11_7cfki"]
+[ext_resource type="Texture2D" uid="uid://cnld60u7rpxkv" path="res://assets/icon_park/本地_local-two.svg" id="11_chx2f"]
+[ext_resource type="Texture2D" uid="uid://bwrtwad4y7ct1" path="res://assets/icon_park/搜索_search.svg" id="12_efpiw"]
+[ext_resource type="Texture2D" uid="uid://bg06k4k4ewyru" path="res://assets/icon_park/大风_heavy-wind.svg" id="12_qkrnx"]
+[ext_resource type="Texture2D" uid="uid://cwdk6g3kghm5v" path="res://assets/icon_park/世界_world.svg" id="13_23sag"]
+[ext_resource type="Texture2D" uid="uid://d13bfbh0jdh58" path="res://assets/icon_park/编辑撰写_writing-fluently.svg" id="13_q852u"]
+[ext_resource type="Texture2D" uid="uid://b1di533muewx2" path="res://assets/icon_park/全屏播放_full-screen-play.svg" id="14_iwx8h"]
+[ext_resource type="Texture2D" uid="uid://ctt7s3eprkwmc" path="res://assets/icon_park/历史记录_history.svg" id="14_xd11r"]
+[ext_resource type="Texture2D" uid="uid://dwjtbkeorddo6" path="res://assets/icon_park/排行榜_ranking.svg" id="15_1mjtj"]
+[ext_resource type="Texture2D" uid="uid://dnxhccmly6rmr" path="res://assets/icon_park/注意_attention.svg" id="15_ifuob"]
+[ext_resource type="Texture2D" uid="uid://81jchr7jfvj2" path="res://assets/icon_park/城市_city.svg" id="15_mo757"]
+[ext_resource type="Texture2D" uid="uid://bv4018bitw6lp" path="res://assets/icon_park/移动_move-one.svg" id="16_a1ijb"]
+[ext_resource type="Texture2D" uid="uid://bo3js64jh1014" path="res://assets/icon_park/夜晚模式_dark-mode.svg" id="16_y7cb5"]
+[ext_resource type="Texture2D" uid="uid://d2em5ph4336s3" path="res://assets/icon_park/分析_analysis.svg" id="17_gl51h"]
+[ext_resource type="Texture2D" uid="uid://6xgc8c08sapv" path="res://assets/icon_park/下一步_next.svg" id="17_ueq3g"]
+[ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="18_6wc45"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_38obw"]
+bg_color = Color(0, 0.00784314, 0.537255, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v3py8"]
+bg_color = Color(0.435294, 0.00392157, 0.435294, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5cv5u"]
+bg_color = Color(0.294118, 0.294118, 0.294118, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cjx7x"]
+bg_color = Color(0.490196, 0.490196, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_an877"]
+bg_color = Color(0.521569, 0.243137, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ymy8"]
+bg_color = Color(1, 1, 1, 0)
+
+[sub_resource type="Gradient" id="Gradient_wp4d0"]
+offsets = PackedFloat32Array(0, 0.509677, 0.567742)
+colors = PackedColorArray(0.286275, 0.501961, 1, 1, 0.286275, 0.501961, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_iilym"]
+gradient = SubResource("Gradient_wp4d0")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_mvnas"]
+offsets = PackedFloat32Array(0, 0.509677, 0.567742)
+colors = PackedColorArray(1, 0.501961, 1, 1, 1, 0.501961, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_kxv56"]
+gradient = SubResource("Gradient_mvnas")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[node name="GameGUI" type="CanvasLayer"]
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TopLeftHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="SciMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="SciPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_38obw")
+
+[node name="SciHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel/SciHBox"]
+modulate = Color(0, 0.4, 1, 1)
+layout_mode = 2
+texture = ExtResource("1_0g47u")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel/SciHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel/SciHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CultureMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="CulPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_v3py8")
+
+[node name="CulHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel/CulHBox"]
+modulate = Color(0.745098, 0.4, 1, 1)
+layout_mode = 2
+texture = ExtResource("2_wa2tf")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel/CulHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel/CulHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReligionMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="RegionPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_5cv5u")
+
+[node name="RegionHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+modulate = Color(0.713726, 0.713726, 0.713726, 1)
+layout_mode = 2
+texture = ExtResource("3_iasj3")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GoldMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="GoldPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_cjx7x")
+
+[node name="GoldHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel/GoldHBox"]
+modulate = Color(0.839216, 0.839216, 0, 1)
+layout_mode = 2
+texture = ExtResource("4_m8wj3")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel/GoldHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel/GoldHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DiplomacyMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="DiplomacyPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_an877")
+
+[node name="DiplomacyHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel/DiplomacyHBox"]
+modulate = Color(1, 0.396078, 0, 1)
+layout_mode = 2
+texture = ExtResource("5_v11p0")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel/DiplomacyHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel/DiplomacyHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GovMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="GovPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_1ymy8")
+
+[node name="GovHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr/GovPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr/GovPanel/GovHBox"]
+layout_mode = 2
+texture = ExtResource("6_12pvb")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr/GovPanel/GovHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TopRightHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel"]
+layout_mode = 2
+size_flags_horizontal = 8
+alignment = 2
+
+[node name="TurnAndYearLabel" type="Label" parent="VBoxContainer/TopPanel/TopRightHBox"]
+layout_mode = 2
+text = "回合 1/500
+公元前4000年"
+
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/TopPanel/TopRightHBox"]
+layout_mode = 2
+
+[node name="TimeLabel" type="Label" parent="VBoxContainer/TopPanel/TopRightHBox"]
+layout_mode = 2
+text = "11:30 AM"
+
+[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/TopPanel/TopRightHBox"]
+layout_mode = 2
+
+[node name="CivPediaButton" type="Button" parent="VBoxContainer/TopPanel/TopRightHBox"]
+layout_mode = 2
+icon = ExtResource("7_lrsjr")
+
+[node name="MenuButton" type="Button" parent="VBoxContainer/TopPanel/TopRightHBox"]
+layout_mode = 2
+icon = ExtResource("8_fvvrv")
+
+[node name="MidMargin" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MidTopLeftPanel" type="PanelContainer" parent="VBoxContainer/MidMargin"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="MidTopLeftVBox" type="VBoxContainer" parent="VBoxContainer/MidMargin/MidTopLeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="ButtonHBox" type="HBoxContainer" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox"]
+layout_mode = 2
+
+[node name="SciTreeButton" type="Button" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("9_bd2lx")
+
+[node name="CulTreeButton" type="Button" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("10_fp2fi")
+
+[node name="GreatPersonButton" type="Button" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("11_7cfki")
+
+[node name="WeatherButton" type="Button" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("12_qkrnx")
+
+[node name="GovernerButton" type="Button" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("13_q852u")
+
+[node name="HistoryButton" type="Button" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("14_xd11r")
+
+[node name="SciTreeHBox" type="HBoxContainer" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TechImg" type="TextureRect" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/SciTreeHBox"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_iilym")
+
+[node name="SciTreeVBox" type="VBoxContainer" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/SciTreeHBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/SciTreeHBox/SciTreeVBox"]
+layout_mode = 2
+text = "选择研究"
+
+[node name="CulTreeHBox" type="HBoxContainer" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="CultureImg" type="TextureRect" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/CulTreeHBox"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_kxv56")
+
+[node name="CulTreeVBox" type="VBoxContainer" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/CulTreeHBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/MidMargin/MidTopLeftPanel/MidTopLeftVBox/CulTreeHBox/CulTreeVBox"]
+layout_mode = 2
+text = "法典"
+
+[node name="MidTopRightPanel" type="PanelContainer" parent="VBoxContainer/MidMargin"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+
+[node name="ButtonHBox" type="HBoxContainer" parent="VBoxContainer/MidMargin/MidTopRightPanel"]
+layout_mode = 2
+
+[node name="RankButton" type="Button" parent="VBoxContainer/MidMargin/MidTopRightPanel/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("15_1mjtj")
+
+[node name="EraButton" type="Button" parent="VBoxContainer/MidMargin/MidTopRightPanel/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("16_y7cb5")
+
+[node name="ReportButton" type="Button" parent="VBoxContainer/MidMargin/MidTopRightPanel/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("17_gl51h")
+
+[node name="DownMargin" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MiniMapPanel" type="PanelContainer" parent="VBoxContainer/DownMargin"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="MiniMapVBox" type="VBoxContainer" parent="VBoxContainer/DownMargin/MiniMapPanel"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+alignment = 2
+
+[node name="MiniMapBtnHBox" type="HBoxContainer" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox"]
+layout_mode = 2
+
+[node name="FilterButton" type="Button" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
+layout_mode = 2
+icon = ExtResource("9_11lm6")
+
+[node name="OptionButton" type="Button" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
+layout_mode = 2
+icon = ExtResource("10_bdjt4")
+
+[node name="PinButton" type="Button" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
+layout_mode = 2
+icon = ExtResource("11_chx2f")
+
+[node name="SearchButton" type="Button" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
+layout_mode = 2
+icon = ExtResource("12_efpiw")
+
+[node name="StrategyViewButton" type="Button" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
+layout_mode = 2
+icon = ExtResource("13_23sag")
+
+[node name="FullScreenButton" type="Button" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
+layout_mode = 2
+icon = ExtResource("14_iwx8h")
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="SubViewport" type="SubViewport" parent="VBoxContainer/DownMargin/MiniMapPanel/MiniMapVBox/MarginContainer/SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(288, 162)
+render_target_update_mode = 4
+
+[node name="RightDownHBox" type="HBoxContainer" parent="VBoxContainer/DownMargin"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+alignment = 2
+
+[node name="InfoPanel" type="PanelContainer" parent="VBoxContainer/DownMargin/RightDownHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+
+[node name="InfoVBox" type="VBoxContainer" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel"]
+layout_mode = 2
+alignment = 2
+
+[node name="ButtonHBox" type="HBoxContainer" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="CityButton" type="Button" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("15_mo757")
+
+[node name="MoveButton" type="Button" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("16_a1ijb")
+
+[node name="SkipButton" type="Button" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("17_ueq3g")
+
+[node name="SleepButton" type="Button" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("18_6wc45")
+
+[node name="DetailHBox" type="HBoxContainer" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="HpBar" type="ProgressBar" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox"]
+custom_minimum_size = Vector2(10, 100)
+layout_mode = 2
+value = 80.0
+
+[node name="DetailVBox" type="VBoxContainer" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox/DetailVBox"]
+layout_mode = 2
+text = "开拓者"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MoveLabel" type="Label" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox/DetailVBox"]
+layout_mode = 2
+text = "2/2 移动"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TurnPanel" type="PanelContainer" parent="VBoxContainer/DownMargin/RightDownHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+
+[node name="TurnVBox" type="VBoxContainer" parent="VBoxContainer/DownMargin/RightDownHBox/TurnPanel"]
+layout_mode = 2
+
+[node name="TurnLabel" type="Label" parent="VBoxContainer/DownMargin/RightDownHBox/TurnPanel/TurnVBox"]
+layout_mode = 2
+text = "单位需要命令"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/DownMargin/RightDownHBox/TurnPanel/TurnVBox"]
+layout_mode = 2
+
+[node name="GoldProgress" type="ProgressBar" parent="VBoxContainer/DownMargin/RightDownHBox/TurnPanel/TurnVBox/HBoxContainer"]
+custom_minimum_size = Vector2(10, 100)
+layout_mode = 2
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="TurnButton" type="Button" parent="VBoxContainer/DownMargin/RightDownHBox/TurnPanel/TurnVBox/HBoxContainer"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+icon = ExtResource("15_ifuob")
+icon_alignment = 1
+expand_icon = true
+
+[node name="EraProgress" type="ProgressBar" parent="VBoxContainer/DownMargin/RightDownHBox/TurnPanel/TurnVBox/HBoxContainer"]
+custom_minimum_size = Vector2(10, 100)
+layout_mode = 2
+max_value = 8.0
+value = 4.0
+fill_mode = 2
+show_percentage = false
