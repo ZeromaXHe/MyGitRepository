@@ -36,8 +36,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		position += (_previous_position - event.position)
 		# 限制镜头移动范围
-		var diff_x = zoom.x * get_viewport().size.x / 2
-		var diff_y = zoom.y * get_viewport().size.y / 2
+		var diff_x = get_viewport().size.x / zoom.x / 2
+		var diff_y = get_viewport().size.y / zoom.y / 2
 		# 直接对 Vector2 而不分别对 x、y 进行 clamp() 的话，貌似会 bug。
 		# 因为 Vector2 的大小判断逻辑是 x 处于范围内的话，就不会处理 y 了。
 		position.x = clamp(position.x, -1500 + diff_x, 1500 - diff_x)
