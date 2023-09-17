@@ -1,0 +1,449 @@
+[gd_scene load_steps=4 format=3 uid="uid://cw4d6w6b4mr0o"]
+
+[ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="1_gwgln"]
+[ext_resource type="Texture2D" uid="uid://x3lg83lirlhc" path="res://assets/icon_park/地图_map-draw.svg" id="2_05a4t"]
+[ext_resource type="Texture2D" uid="uid://b1di533muewx2" path="res://assets/icon_park/全屏播放_full-screen-play.svg" id="3_8b823"]
+
+[node name="MapEditorGUI" type="CanvasLayer"]
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LeftTopPanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/LeftTopPanelContainer"]
+layout_mode = 2
+
+[node name="DetailTextButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "地图详情与文本"
+text = "详情和文本"
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="TerrainButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+tooltip_text = "地形
+热键：1"
+text = "地形"
+
+[node name="LandscapeButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+tooltip_text = "地貌
+热键：2"
+text = "地貌"
+
+[node name="WonderButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+tooltip_text = "奇观
+热键：3"
+text = "奇观"
+
+[node name="ContinentButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+tooltip_text = "大陆
+热键：4"
+text = "大陆"
+
+[node name="RiverButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "河流"
+
+[node name="CliffButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+tooltip_text = "悬崖
+热键：6"
+text = "悬崖"
+
+[node name="ResourceButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+tooltip_text = "资源
+热键：7"
+text = "资源"
+
+[node name="VillageButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+tooltip_text = "部落村庄
+热键：8"
+text = "村庄"
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="AdvanceButton" type="Button" parent="MarginContainer/LeftTopPanelContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "切换至高级模式"
+text = "高级"
+
+[node name="RightTopPanelContainer" type="PanelContainer" parent="MarginContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+
+[node name="RtVBoxContainer" type="VBoxContainer" parent="MarginContainer/RightTopPanelContainer"]
+layout_mode = 2
+
+[node name="TitleVBoxContainer" type="VBoxContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/MarginContainer"]
+layout_mode = 2
+text = "地图编辑器"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+tooltip_text = "开启游戏内菜单"
+icon = ExtResource("1_gwgln")
+
+[node name="GuideLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "点击左键放置，点击右键移除，按住右键拖动绘制。按下 CTRL + Z 组合键取消放置，按下 CTRL + Y 组合键恢复。"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="InfoLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer"]
+layout_mode = 2
+text = "欢迎使用地图编辑器！"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TabContainer" type="TabContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer"]
+layout_mode = 2
+
+[node name="放置" type="VBoxContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer"]
+layout_mode = 2
+
+[node name="PlaceLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
+layout_mode = 2
+text = "放置格位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
+layout_mode = 2
+
+[node name="ClearResourceButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
+layout_mode = 2
+tooltip_text = "从地图中移除所有资源"
+text = "清除资源"
+
+[node name="SeparateResourceButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
+layout_mode = 2
+tooltip_text = "清除地图上的所有资源并生成新资源（将耗时数秒）"
+text = "分散资源"
+
+[node name="EditGridContainer" type="GridContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
+layout_mode = 2
+columns = 2
+
+[node name="SmallButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "选择小笔刷（1个格位）"
+text = "小笔刷"
+
+[node name="CancelButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "点击取消上一操作"
+text = "取消"
+
+[node name="MidButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "选择中笔刷（7个格位）"
+text = "中笔刷"
+
+[node name="RestoreButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "点击恢复已取消的上一操作"
+text = "恢复"
+
+[node name="BigButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "选择大笔刷（19个格位）"
+text = "大笔刷"
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="TerrainGridContainer" type="GridContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer"]
+layout_mode = 2
+columns = 7
+
+[node name="GrassButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "草原"
+text = "草原"
+
+[node name="GrassHillButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "草原（丘陵）"
+text = "草丘"
+
+[node name="GrassMountainButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "草原（山脉）"
+text = "草山"
+
+[node name="PlainButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "平原"
+text = "平原"
+
+[node name="PlainHillButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "平原（丘陵）"
+text = "平丘"
+
+[node name="PlainMountainButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "平原（山脉）"
+text = "平山"
+
+[node name="DesertButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "沙漠"
+text = "沙漠"
+
+[node name="DesertHillButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "沙漠（丘陵）"
+text = "沙丘"
+
+[node name="DesertMountainButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "沙漠（山脉）"
+text = "沙山"
+
+[node name="TundraButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "冻土"
+text = "冻土"
+
+[node name="TundraHillButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "冻土（丘陵）"
+text = "冻丘"
+
+[node name="TundraMountainButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "冻土（山脉）"
+text = "冻山"
+
+[node name="SnowButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "雪地"
+text = "雪地"
+
+[node name="SnowHillButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "雪地（丘陵）"
+text = "雪丘"
+
+[node name="SnowMountainButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "雪地（山脉）"
+text = "雪山"
+
+[node name="ShoreButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "海岸与湖泊"
+text = "浅水"
+
+[node name="OceanButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"]
+layout_mode = 2
+tooltip_text = "海洋"
+text = "海洋"
+
+[node name="格位" type="VBoxContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="GridLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位"]
+layout_mode = 2
+text = "格位选择器"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位"]
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位"]
+layout_mode = 2
+columns = 2
+
+[node name="ChosenLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "已选格位："
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CoordLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "无"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TerrainLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+text = "地形"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TerrainOptionButton" type="OptionButton" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+disabled = true
+item_count = 17
+selected = 0
+popup/item_0/text = "草原"
+popup/item_0/id = 0
+popup/item_1/text = "草原（丘陵）"
+popup/item_1/id = 1
+popup/item_2/text = "草原（山脉）"
+popup/item_2/id = 2
+popup/item_3/text = "平原"
+popup/item_3/id = 3
+popup/item_4/text = "平原（丘陵）"
+popup/item_4/id = 4
+popup/item_5/text = "平原（山脉）"
+popup/item_5/id = 5
+popup/item_6/text = "沙漠"
+popup/item_6/id = 6
+popup/item_7/text = "沙漠（丘陵）"
+popup/item_7/id = 7
+popup/item_8/text = "沙漠（山脉）"
+popup/item_8/id = 8
+popup/item_9/text = "冻土"
+popup/item_9/id = 9
+popup/item_10/text = "冻土（丘陵）"
+popup/item_10/id = 10
+popup/item_11/text = "冻土（山脉）"
+popup/item_11/id = 11
+popup/item_12/text = "雪地"
+popup/item_12/id = 12
+popup/item_13/text = "雪地（丘陵）"
+popup/item_13/id = 13
+popup/item_14/text = "雪地（山脉）"
+popup/item_14/id = 14
+popup/item_15/text = "海岸与湖泊"
+popup/item_15/id = 15
+popup/item_16/text = "海洋"
+popup/item_16/id = 16
+
+[node name="LandscapeLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+text = "特征"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LandscapeOptionButton" type="OptionButton" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+disabled = true
+item_count = 1
+selected = 0
+popup/item_0/text = "无地貌"
+popup/item_0/id = 0
+
+[node name="ResourceLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+text = "资源"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ResourceOptionButton" type="OptionButton" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+disabled = true
+item_count = 1
+selected = 0
+popup/item_0/text = "无资源"
+popup/item_0/id = 0
+
+[node name="ResourceCountLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+text = "资源数量"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ResourceCountLineEdit" type="LineEdit" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+editable = false
+
+[node name="RotationLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+text = "地貌旋转"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="RotationOptionButton" type="OptionButton" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
+layout_mode = 2
+disabled = true
+item_count = 1
+selected = 0
+popup/item_0/text = "自动匹配"
+popup/item_0/id = 0
+
+[node name="LeftDownPanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/LeftDownPanelContainer"]
+layout_mode = 2
+
+[node name="ButtonHBoxContainer" type="HBoxContainer" parent="MarginContainer/LeftDownPanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="OptionButton" type="Button" parent="MarginContainer/LeftDownPanelContainer/VBoxContainer/ButtonHBoxContainer"]
+layout_mode = 2
+tooltip_text = "地图选项"
+icon = ExtResource("2_05a4t")
+
+[node name="FullscreenButton" type="Button" parent="MarginContainer/LeftDownPanelContainer/VBoxContainer/ButtonHBoxContainer"]
+layout_mode = 2
+tooltip_text = "显示全屏地图"
+icon = ExtResource("3_8b823")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/LeftDownPanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="MarginContainer/LeftDownPanelContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="SubViewport" type="SubViewport" parent="MarginContainer/LeftDownPanelContainer/VBoxContainer/MarginContainer/SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(288, 162)
+render_target_update_mode = 4

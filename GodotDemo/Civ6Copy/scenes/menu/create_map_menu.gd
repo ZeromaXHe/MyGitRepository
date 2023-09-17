@@ -15,7 +15,14 @@ func _ready() -> void:
 
 ## 按下返回按钮
 func _on_back_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")
+	if main_vbox.visible:
+		# 在主界面
+		get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")
+	else:
+		# 在高级选项界面
+		main_vbox.visible = true
+		advanced_option_button.visible = true
+		advanced_option_vbox.visible = false
 
 
 ## 按下高级选项按钮

@@ -46,6 +46,7 @@ layout_mode = 2
 [node name="DefaultButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 0
+tooltip_text = "将所有参数恢复到默认值。"
 text = "恢复默认设置"
 
 [node name="CreateMapTitle" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
@@ -78,6 +79,7 @@ vertical_alignment = 1
 
 [node name="RuleOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
 layout_mode = 2
+tooltip_text = "这是标准《Civ 6 Copy》游戏。"
 alignment = 1
 item_count = 1
 selected = 0
@@ -102,6 +104,7 @@ vertical_alignment = 1
 
 [node name="SizeOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
 layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
 alignment = 1
 item_count = 1
 selected = 0
@@ -144,6 +147,7 @@ vertical_alignment = 1
 
 [node name="RuleOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+tooltip_text = "这是标准《Civ 6 Copy》游戏。"
 item_count = 1
 selected = 0
 popup/item_0/text = "标准的规则"
@@ -167,6 +171,7 @@ vertical_alignment = 1
 
 [node name="SizeOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
 item_count = 1
 selected = 0
 popup/item_0/text = "决斗"
@@ -180,6 +185,7 @@ vertical_alignment = 1
 
 [node name="ResourceOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+tooltip_text = "带有标准资源的地图。"
 item_count = 1
 selected = 0
 popup/item_0/text = "标准"
@@ -193,6 +199,7 @@ vertical_alignment = 1
 
 [node name="SpawnOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+tooltip_text = "标准启动位置。"
 item_count = 1
 selected = 0
 popup/item_0/text = "标准"
