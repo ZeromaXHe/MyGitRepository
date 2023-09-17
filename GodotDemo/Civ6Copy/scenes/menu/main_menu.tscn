@@ -302,3 +302,4 @@ alignment = 0
 [connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/BenchmarkButton" to="." method="_on_benchmark_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/MapEditorButton" to="." method="_on_map_editor_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MainVBox/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/CenterContainer/HBoxContainer/MapEditorVBox/NewButton" to="." method="_on_new_button_pressed"]

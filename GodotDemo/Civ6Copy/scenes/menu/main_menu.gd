@@ -1,5 +1,6 @@
-extends Control
 class_name MainMenu
+extends Control
+
 
 # 当前选择的按钮
 var current_button: Button = null
@@ -98,3 +99,8 @@ func _on_benchmark_button_pressed() -> void:
 
 func _on_map_editor_button_pressed() -> void:
 	main_button_pressed(map_editor_button)
+
+
+## 点击地图编辑器的新地图按钮
+func _on_new_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/menu/create_map_menu.tscn")

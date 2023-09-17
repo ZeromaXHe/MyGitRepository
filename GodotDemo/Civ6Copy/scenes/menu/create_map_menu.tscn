@@ -1,0 +1,243 @@
+[gd_scene load_steps=2 format=3 uid="uid://ws5la286dpvv"]
+
+[ext_resource type="Script" path="res://scenes/menu/create_map_menu.gd" id="1_ei4x3"]
+
+[node name="CreateMap" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ei4x3")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="AuthorLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "ZeromaX's"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Civ 6 Copy"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="DefaultButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "恢复默认设置"
+
+[node name="CreateMapTitle" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "创建地图"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "返回"
+
+[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_right = 100
+
+[node name="MainVBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
+layout_mode = 2
+
+[node name="RuleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+text = "选择规则集"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RuleOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+alignment = 1
+item_count = 1
+selected = 0
+popup/item_0/text = "标准的规则"
+popup/item_0/id = 0
+
+[node name="TypeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+text = "选择地图类型"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TypeButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+text = "空白类型"
+
+[node name="SizeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+text = "选择地图尺寸"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SizeOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+alignment = 1
+item_count = 1
+selected = 0
+popup/item_0/text = "决斗"
+popup/item_0/id = 0
+
+[node name="ModeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+text = "游戏模式"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
+layout_mode = 2
+text = "无可用游戏模式"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AdvancedOptionVBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
+visible = false
+layout_mode = 2
+
+[node name="OptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer"]
+layout_mode = 2
+text = "选项"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OptionsGridContainer" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 2
+
+[node name="RuleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "规则"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="RuleOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+item_count = 1
+selected = 0
+popup/item_0/text = "标准的规则"
+popup/item_0/id = 0
+
+[node name="TypeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "地图"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TypeButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "空白地图"
+
+[node name="SizeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "地图尺寸"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SizeOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+item_count = 1
+selected = 0
+popup/item_0/text = "决斗"
+popup/item_0/id = 0
+
+[node name="ResourceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "资源"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ResourceOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+item_count = 1
+selected = 0
+popup/item_0/text = "标准"
+popup/item_0/id = 0
+
+[node name="SpawnLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "启动位置"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SpawnOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+item_count = 1
+selected = 0
+popup/item_0/text = "标准"
+popup/item_0/id = 0
+
+[node name="AdvanceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer"]
+layout_mode = 2
+text = "高级选项"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer"]
+layout_mode = 2
+
+[node name="WrapWorldCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "世界包覆"
+alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "地图随机种子"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="AdvancedOptionsButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "高级设置"
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="CreateButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer"]
+layout_mode = 2
+text = "生成"
+
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MarginContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionsButton" to="." method="_on_advanced_options_button_pressed"]
