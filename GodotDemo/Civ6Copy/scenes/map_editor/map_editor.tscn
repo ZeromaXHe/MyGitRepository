@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://5sn1yevebujw"]
+
+[ext_resource type="Script" path="res://scenes/map_editor/map_editor.gd" id="1_brqnu"]
+[ext_resource type="TileSet" uid="uid://bde1bs78up61k" path="res://tile_set/tile_set.tres" id="1_xpdht"]
+[ext_resource type="Script" path="res://scripts/camera_manager.gd" id="3_0wudy"]
+[ext_resource type="PackedScene" uid="uid://cw4d6w6b4mr0o" path="res://scenes/gui/map_editor_gui.tscn" id="4_1r2w3"]
+
+[node name="MapEditor" type="Node2D"]
+script = ExtResource("1_brqnu")
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = ExtResource("1_xpdht")
+format = 2
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("3_0wudy")
+
+[node name="MapEditorGUI" parent="." instance=ExtResource("4_1r2w3")]

@@ -1,10 +1,12 @@
-[gd_scene load_steps=4 format=3 uid="uid://cw4d6w6b4mr0o"]
+[gd_scene load_steps=5 format=3 uid="uid://cw4d6w6b4mr0o"]
 
 [ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="1_gwgln"]
+[ext_resource type="Script" path="res://scenes/gui/map_editor_gui.gd" id="1_lwefg"]
 [ext_resource type="Texture2D" uid="uid://x3lg83lirlhc" path="res://assets/icon_park/地图_map-draw.svg" id="2_05a4t"]
 [ext_resource type="Texture2D" uid="uid://b1di533muewx2" path="res://assets/icon_park/全屏播放_full-screen-play.svg" id="3_8b823"]
 
 [node name="MapEditorGUI" type="CanvasLayer"]
+script = ExtResource("1_lwefg")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
