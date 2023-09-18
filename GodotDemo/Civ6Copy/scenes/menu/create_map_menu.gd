@@ -30,3 +30,7 @@ func _on_advanced_options_button_pressed() -> void:
 	main_vbox.visible = false
 	advanced_option_button.visible = false
 	advanced_option_vbox.visible = true
+
+
+func _on_create_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/map_editor/map_editor.tscn")

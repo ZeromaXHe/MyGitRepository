@@ -248,3 +248,4 @@ text = "生成"
 
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MarginContainer/BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionsButton" to="." method="_on_advanced_options_button_pressed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/CreateButton" to="." method="_on_create_button_pressed"]

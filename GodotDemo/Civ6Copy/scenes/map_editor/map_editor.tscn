@@ -11,6 +11,14 @@ script = ExtResource("1_brqnu")
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource("1_xpdht")
 format = 2
+layer_0/name = "地图层"
+layer_1/name = "选择区域层"
+layer_1/enabled = true
+layer_1/modulate = Color(0, 0.784314, 0, 1)
+layer_1/y_sort_enabled = false
+layer_1/y_sort_origin = 0
+layer_1/z_index = 0
+layer_1/tile_data = PackedInt32Array()
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("3_0wudy")
