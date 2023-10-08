@@ -163,7 +163,7 @@ func paint_map(map_coord: Vector2i) -> void:
 	var step: PaintStep = PaintStep.new()
 	for coord in inside:
 		# 超出地图范围的不处理
-		if coord.x < 0 and coord.x >= size.x and coord.y < 0 and coord.y >= size.y:
+		if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
 			continue
 		paint_tile(coord, step, gui.terrain_type)
 	# 围绕陆地地块绘制浅海
@@ -171,7 +171,7 @@ func paint_map(map_coord: Vector2i) -> void:
 		var out_ring: Array[Vector2i] = get_surrounding_cells(map_coord, dist + 1, false)
 		for coord in out_ring:
 			# 超出地图范围的不处理
-			if coord.x < 0 and coord.x >= size.x and coord.y < 0 and coord.y >= size.y:
+			if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
 				continue
 			# 仅深海需要改为浅海
 			if tile_map.get_cell_source_id(0, coord) != 2:
