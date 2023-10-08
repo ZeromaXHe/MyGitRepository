@@ -139,17 +139,7 @@ func paint_new_green_chosen_area(map_coord: Vector2i, renew: bool = false) -> vo
 		# 擦除原图块
 		tile_map.set_cell(1, coord)
 	
-	var dist: int
-	match gui.painter_size:
-		MapEditorGUI.PainterSize.SMALL:
-			dist = 0
-		MapEditorGUI.PainterSize.MID:
-			dist = 1
-		MapEditorGUI.PainterSize.BIG:
-			dist = 2
-		_:
-			printerr("unknown painter size")
-			return
+	var dist: int = gui.get_painter_size_dist()
 	var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
 	for coord in new_inside:
 		# 新增新图块
@@ -166,17 +156,7 @@ func paint_map(map_coord: Vector2i) -> void:
 	if not _terrain_type_to_tile_dict.has(gui.terrain_type):
 		printerr("can't paint unknown tile!")
 		return
-	var dist: int
-	match gui.painter_size:
-		MapEditorGUI.PainterSize.SMALL:
-			dist = 0
-		MapEditorGUI.PainterSize.MID:
-			dist = 1
-		MapEditorGUI.PainterSize.BIG:
-			dist = 2
-		_:
-			printerr("unknown painter size")
-			return
+	var dist: int = gui.get_painter_size_dist()
 	# 地图大小
 	var size: Vector2i = size_dict[_map_size]
 	var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)

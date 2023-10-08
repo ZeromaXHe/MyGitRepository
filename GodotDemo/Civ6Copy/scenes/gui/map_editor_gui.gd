@@ -178,6 +178,19 @@ func handle_painter_size_group_pressed(button: BaseButton) -> void:
 			printerr("wrong button in painter size group")
 
 
+func get_painter_size_dist() -> int:
+	match painter_size:
+		PainterSize.SMALL:
+			return 0
+		PainterSize.MID:
+			return 1
+		PainterSize.BIG:
+			return 2
+		_:
+			printerr("unknown painter size")
+			return -1
+
+
 func get_rt_tab_status() -> TabStatus:
 	if rt_tab.current_tab == 0:
 		return TabStatus.PLACE
