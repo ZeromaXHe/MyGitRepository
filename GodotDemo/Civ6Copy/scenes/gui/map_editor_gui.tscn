@@ -191,6 +191,7 @@ text = "小笔刷"
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "点击取消上一操作"
+disabled = true
 text = "取消"
 
 [node name="MidButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer"]
@@ -205,6 +206,7 @@ text = "中笔刷"
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "点击恢复已取消的上一操作"
+disabled = true
 text = "恢复"
 
 [node name="BigButton" type="Button" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer"]
@@ -511,3 +513,6 @@ layout_mode = 2
 handle_input_locally = false
 size = Vector2i(288, 162)
 render_target_update_mode = 4
+
+[connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/CancelButton" to="." method="_on_cancel_button_pressed"]
+[connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/RestoreButton" to="." method="_on_restore_button_pressed"]

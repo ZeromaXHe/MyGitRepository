@@ -2,6 +2,9 @@ class_name MapEditorGUI
 extends CanvasLayer
 
 
+signal restore_btn_pressed
+signal cancel_btn_pressed
+
 enum TabStatus {
 	PLACE,
 	GRID,
@@ -66,6 +69,9 @@ var painter_size_group: ButtonGroup = null
 @onready var small_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/SmallButton"
 @onready var mid_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/MidButton"
 @onready var big_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/BigButton"
+# 恢复和取消按钮
+@onready var restore_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/RestoreButton"
+@onready var cancel_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/CancelButton"
 # 右边放置地形时的按钮
 @onready var grass_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/GrassButton"
 @onready var grass_hill_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/GrassHillButton"
@@ -93,6 +99,9 @@ func _ready() -> void:
 	terrain_type_group.pressed.connect(handle_terrain_type_group_pressed)
 	painter_size_group = small_button.button_group
 	painter_size_group.pressed.connect(handle_painter_size_group_pressed)
+	
+	restore_button.disabled = true
+	cancel_button.disabled = true
 
 
 func handle_place_mode_group_pressed(button: BaseButton) -> void:
@@ -179,3 +188,18 @@ func get_rt_tab_status() -> TabStatus:
 func set_info_label_text(text: String) -> void:
 	info_label.text = text
 
+
+func set_restore_button_disable(b: bool) -> void:
+	restore_button.disabled = b
+
+
+func set_cancel_button_disable(b: bool) -> void:
+	cancel_button.disabled = b
+
+
+func _on_restore_button_pressed() -> void:
+	restore_btn_pressed.emit()
+
+
+func _on_cancel_button_pressed() -> void:
+	cancel_btn_pressed.emit()
