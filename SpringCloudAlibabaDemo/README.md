@@ -6,6 +6,8 @@
 
 [Nacos 快速开始文档](https://nacos.io/zh-cn/docs/quick-start.html)
 
+[Sentinel 控制台 GitHub Wiki](https://github.com/alibaba/Sentinel/wiki/%E6%8E%A7%E5%88%B6%E5%8F%B0)
+
 # 流程记录
 
 ## Nacos
@@ -32,9 +34,13 @@ Nacos 安装版本 2.2.3
 
 `startup.cmd -m standalone`
 
+## Sentinel
+
+Sentinel 版本 1.8.6
+
 # 过程中碰到的问题
 
-## Nacos 生产消费测试相关
+## Nacos Discovery 服务发现测试相关
 
 官方文档里面的 `@Autowired private LoadBalancerClient loadBalancerClient;` 根本就注入不进去，参考下面的文章引入 `spring-cloud-loadbalancer` 依赖才解决。
 
@@ -46,7 +52,7 @@ IDEA properties 默认 ISO-8859-1 编码，中文麻烦
 
 “3.5 如何开启权重路由”里面第一行的 ribbon 相关的配置貌似都没了，文档不知道是不是又没更新…… 吐了，官方文档写的和坨大便一样……
 
-## Config 配置测试相关
+## Nacos Config 配置管理测试相关
 
 properties 配置 Map 和 List：
 
@@ -77,3 +83,30 @@ properties 配置 Map 和 List：
     <artifactId>spring-cloud-starter-bootstrap</artifactId>
 </dependency>
 ```
+
+## Sentinel 测试相关
+
+使用命令启动 Sentinel 控制台：
+
+```shell
+java -Dserver.port=8080 -Dcsp.sentinel.dashboard.server=localhost:8080 -Dproject.name=sentinel-dashboard -jar sentinel-dashboard.jar
+```
+
+如果使用 PowerShell 执行，会报错误：`错误: 找不到或无法加载主类 .port=8080`
+
+需要改为：
+
+```shell
+java '-Dserver.port=8080' '-Dcsp.sentinel.dashboard.server=localhost:8080' '-Dproject.name=sentinel-dashboard' -jar sentinel-dashboard.jar
+```
+
+参见[spring cloud alibaba 笔记 (四)服务熔断 集成sentinel](https://blog.csdn.net/z357904947/article/details/110230892)
+
+控制台的默认账号密码都是 sentinel。（Spring Cloud Alibaba 文档里没有，得去 Sentinel 控制台文档查）
+
+用户可以通过如下参数进行配置：
+
+- `-Dsentinel.dashboard.auth.username=sentinel` 用于指定控制台的登录用户名为 sentinel； 
+- `-Dsentinel.dashboard.auth.password=123456` 用于指定控制台的登录密码为 123456；如果省略这两个参数，默认用户和密码均为 sentinel； 
+- `-Dserver.servlet.session.timeout=7200` 用于指定 Spring Boot 服务端 session 的过期时间，如 7200 表示 7200 秒；60m 表示 60 分钟，默认为 30 分钟；
+

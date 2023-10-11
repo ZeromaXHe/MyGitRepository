@@ -21,7 +21,7 @@ public class NacosProviderDemoApplication {
         for (int i = 0; i < 100; i++) {
             String testConfigName = applicationContext.getEnvironment().getProperty("test.config.name");
             String testConfigEnv = applicationContext.getEnvironment().getProperty("test.config.env");
-            System.err.println("testConfigName: " + testConfigName + ", env: " + testConfigEnv);
+            System.err.println("[" + i + "] testConfigName: " + testConfigName + ", env: " + testConfigEnv);
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
