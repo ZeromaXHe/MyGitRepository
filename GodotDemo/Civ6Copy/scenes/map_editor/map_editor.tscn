@@ -1,12 +1,64 @@
-[gd_scene load_steps=5 format=3 uid="uid://5sn1yevebujw"]
+[gd_scene load_steps=18 format=3 uid="uid://5sn1yevebujw"]
 
 [ext_resource type="Script" path="res://scenes/map_editor/map_editor.gd" id="1_brqnu"]
 [ext_resource type="TileSet" uid="uid://bde1bs78up61k" path="res://tile_set/tile_set.tres" id="1_xpdht"]
+[ext_resource type="Texture2D" uid="uid://bcwumo55m1lm5" path="res://assets/self_made_svg/cliff_backslash.svg" id="2_w6d2p"]
 [ext_resource type="Script" path="res://scripts/camera_manager.gd" id="3_0wudy"]
+[ext_resource type="Texture2D" uid="uid://c5jlgggtsk414" path="res://assets/self_made_svg/cliff_slash.svg" id="3_64cht"]
 [ext_resource type="PackedScene" uid="uid://cw4d6w6b4mr0o" path="res://scenes/gui/map_editor_gui.tscn" id="4_1r2w3"]
+[ext_resource type="Texture2D" uid="uid://dxcuvpq0aldgy" path="res://assets/self_made_svg/cliff_vertical.svg" id="4_hbyls"]
+[ext_resource type="Texture2D" uid="uid://b1cebhwjqcjwb" path="res://assets/self_made_svg/river_backslash.svg" id="5_wnpqe"]
+[ext_resource type="Texture2D" uid="uid://pdppvsw5nos7" path="res://assets/self_made_svg/river_slash.svg" id="6_nv7ao"]
+[ext_resource type="Texture2D" uid="uid://b0deqkyaa0n3w" path="res://assets/self_made_svg/river_vertical.svg" id="7_6v4w8"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0iwd8"]
+texture = ExtResource("2_w6d2p")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_na0dc"]
+texture = ExtResource("3_64cht")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tv16t"]
+texture = ExtResource("4_hbyls")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_but7u"]
+texture = ExtResource("5_wnpqe")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ubhj0"]
+texture = ExtResource("6_nv7ao")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_liv2s"]
+texture = ExtResource("7_6v4w8")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_itrfv"]
+tile_shape = 3
+tile_size = Vector2i(61, 71)
+sources/0 = SubResource("TileSetAtlasSource_0iwd8")
+sources/1 = SubResource("TileSetAtlasSource_na0dc")
+sources/2 = SubResource("TileSetAtlasSource_tv16t")
+sources/3 = SubResource("TileSetAtlasSource_but7u")
+sources/4 = SubResource("TileSetAtlasSource_ubhj0")
+sources/5 = SubResource("TileSetAtlasSource_liv2s")
 
 [node name="MapEditor" type="Node2D"]
 script = ExtResource("1_brqnu")
+
+[node name="BorderTileMap" type="TileMap" parent="."]
+position = Vector2(0, -18)
+tile_set = SubResource("TileSet_itrfv")
+format = 2
+layer_0/tile_data = PackedInt32Array(1, 0, 0, 0, 4, 0, 131071, 5, 0, 131072, 3, 0, 2, 1, 0, 65537, 5, 0, 262145, 3, 0, 131073, 4, 0, 131074, 3, 0, 131075, 1, 0, 131076, 3, 0, 131077, 1, 0, 131078, 3, 0, 5, 3, 0, 4, 1, 0, 3, 3, 0)
 
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource("1_xpdht")
@@ -14,7 +66,7 @@ format = 2
 layer_0/name = "地图层"
 layer_1/name = "选择区域层"
 layer_1/enabled = true
-layer_1/modulate = Color(0, 0.784314, 0, 1)
+layer_1/modulate = Color(1, 1, 1, 1)
 layer_1/y_sort_enabled = false
 layer_1/y_sort_origin = 0
 layer_1/z_index = 0

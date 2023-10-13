@@ -49,6 +49,7 @@ var _map_tile_info: Array = []
 var _before_step_stack: Array[PaintStep] = []
 var _after_step_stack: Array[PaintStep] = []
 
+@onready var border_tile_map: TileMap = $TileMap
 @onready var tile_map: TileMap = $TileMap
 @onready var camera: CameraManager = $Camera2D
 @onready var gui: MapEditorGUI = $MapEditorGUI
@@ -143,9 +144,7 @@ func paint_new_green_chosen_area(map_coord: Vector2i, renew: bool = false) -> vo
 	var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
 	for coord in new_inside:
 		# 新增新图块
-		tile_map.set_cell(1, coord,
-				tile_map.get_cell_source_id(0, coord),
-				tile_map.get_cell_atlas_coords(0, coord))
+		tile_map.set_cell(1, coord, 4, Vector2i(0, 0))
 	
 	_mouse_hover_tile_coord = map_coord
 
