@@ -12,6 +12,23 @@ enum MapSize {
 	DUAL, # 决斗
 }
 
+enum BorderDirection {
+	LEFT_TOP,
+	RIGHT_TOP,
+	LEFT,
+	CENTER,
+	RIGHT,
+	LEFT_DOWN,
+	RIGHT_DOWN,
+}
+
+enum BorderType {
+	SLASH,
+	BACK_SLASH,
+	CENTER,
+	VERTICAL,
+}
+
 # 地图尺寸和格子数的映射字典
 const size_dict: Dictionary = {
 	0: Vector2i(44, 26),
@@ -62,6 +79,10 @@ func _ready() -> void:
 	initialize_camera(MapSize.DUAL)
 	gui.restore_btn_pressed.connect(handle_restore)
 	gui.cancel_btn_pressed.connect(handle_cancel)
+	
+	testGetBorderType()
+	print("-------------")
+	testGetTileCoordDirectedBorder()
 
 
 func _process(delta: float) -> void:
@@ -257,6 +278,130 @@ func initialize_camera(map_size: MapSize) -> void:
 	camera.set_min_y(0)
 	# 摄像头默认居中
 	camera.global_position = Vector2(max_x / 2, max_y / 2)
+
+
+##
+# 六边形	左上角	右上角	左		中		右		左下角	右下角
+# (0,0)	(0,0)	(1,0)	(-1,1)	(0,1)	(1,1)	(0,2)	(1,2)
+# (0,1)	(1,2)	(2,2)	(0,3)	(1,3)	(2,3)	(1,4)	(2,4)
+# (1,0)	(2,0)	(3,0)	(1,1)	(2,1)	(3,1)	(2,2)	(3,2)
+# (1,1)	(3,2)	(4,2)	(2,3)	(3,3)	(4,3)	(3,4)	(4,4)
+# (0,2)	(0,4)	(1,4)	(-1,5)	(0,5)	(1,5)	(0,6)	(1,6)
+##
+func getBorderType(border_coord: Vector2i) -> BorderType:
+	if border_coord.y % 2 == 0:
+		if border_coord.x % 2 == border_coord.y / 2 % 2:
+			return BorderType.SLASH
+		else:
+			return BorderType.BACK_SLASH
+	elif border_coord.x % 2 == border_coord.y / 2 % 2:
+		return BorderType.CENTER
+	else:
+		return BorderType.VERTICAL
+
+
+# 测试 getBorderType() 方法
+func testGetBorderType() -> void:
+	print("slash ", Vector2i(0, 0), " is ", getBorderType(Vector2i(0, 0)))
+	print("slash ", Vector2i(1, 2), " is ", getBorderType(Vector2i(1, 2)))
+	print("back slash ", Vector2i(1, 0), " is ", getBorderType(Vector2i(1, 0)))
+	print("back slash ", Vector2i(2, 2), " is ", getBorderType(Vector2i(2, 2)))
+	print("center ", Vector2i(0, 1), " is ", getBorderType(Vector2i(0, 1)))
+	print("center ", Vector2i(1, 3), " is ", getBorderType(Vector2i(1, 3)))
+	print("vertical ", Vector2i(-1, 1), " is ", getBorderType(Vector2i(-1, 1)))
+	print("vertical ", Vector2i(1, 1), " is ", getBorderType(Vector2i(1, 1)))
+	print("vertical ", Vector2i(0, 3), " is ", getBorderType(Vector2i(0, 3)))
+	print("vertical ", Vector2i(2, 3), " is ", getBorderType(Vector2i(2, 3)))
+
+
+##
+# 	边界		相邻地块
+#	back_slash
+#	(6,2)	(3,0), (2,1)
+#	(4,2)	(2,0), (1,1)
+#	(3,4)	(1,1), (1,2)
+#	(5,4)	(2,1), (2,2)
+#	slash
+#	(1,2)	(0,0), (0,1)
+#	(3,2)	(1,0), (1,1)
+#	(2,4)	(0,1), (1,2)
+#	(4,4)	(1,1), (2,2)
+#	vertical
+#	(1,1)	(0,0), (1,0)
+#	(3,1)	(1,0), (2,0)
+#	(2,3)	(0,1), (1,1)
+#	(4,3)	(1,1), (2,1)
+#	(1,5)	(0,2), (1,2)
+##
+func getNeighborTileOfBorder(border_coord: Vector2i) -> Array[Vector2i]:
+	match getBorderType(border_coord):
+		BorderType.CENTER:
+			return [border_coord / 2]
+		BorderType.VERTICAL:
+			return [Vector2i(border_coord.x / 2 + border_coord.x % 2 - 1, border_coord.y / 2),
+					Vector2i(border_coord.x / 2 + border_coord.x % 2, border_coord.y / 2)]
+		BorderType.SLASH:
+			return [Vector2i(border_coord.x / 2 - 1 + border_coord.x % 2, border_coord.y / 2 - 1),
+					Vector2i(border_coord.x / 2, border_coord.y / 2)]
+		BorderType.BACK_SLASH:
+			return [Vector2i(border_coord.x / 2, border_coord.y / 2 - 1),
+					Vector2i(border_coord.x / 2 - 1 + border_coord.x % 2, border_coord.y / 2)]
+		_:
+			printerr("getNeighborTileOfBorder | unknown border type")
+			return []
+
+
+func getAllTileBorder(tile_coord: Vector2i, include_center: bool) -> Array[Vector2i]:
+	var result = [
+			getTileCoordDirectedBorder(tile_coord, BorderDirection.LEFT_TOP),
+			getTileCoordDirectedBorder(tile_coord, BorderDirection.RIGHT_TOP),
+			getTileCoordDirectedBorder(tile_coord, BorderDirection.LEFT),
+			getTileCoordDirectedBorder(tile_coord, BorderDirection.RIGHT),
+			getTileCoordDirectedBorder(tile_coord, BorderDirection.LEFT_DOWN),
+			getTileCoordDirectedBorder(tile_coord, BorderDirection.RIGHT_DOWN),
+	]
+	if include_center:
+		result.append(getTileCoordDirectedBorder(tile_coord, BorderDirection.CENTER))
+	return result
+
+
+# 获取地块在指定方向的边界地块
+func getTileCoordDirectedBorder(tile_coord: Vector2i, direction: BorderDirection) -> Vector2i:
+	match direction:
+		BorderDirection.LEFT_TOP:
+			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2, 2 * tile_coord.y)
+		BorderDirection.RIGHT_TOP:
+			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2 + 1, 2 * tile_coord.y)
+		BorderDirection.LEFT:
+			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2 - 1, 2 * tile_coord.y + 1)
+		BorderDirection.CENTER:
+			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2, 2 * tile_coord.y + 1)
+		BorderDirection.RIGHT:
+			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2 + 1, 2 * tile_coord.y + 1)
+		BorderDirection.LEFT_DOWN:
+			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2, 2 * tile_coord.y + 2)
+		BorderDirection.RIGHT_DOWN:
+			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2 + 1, 2 * tile_coord.y + 2)
+		_:
+			printerr("getTileCoordDirectedBorder | direction not supported")
+			return Vector2i(-1, -1)
+
+
+func testGetTileCoordDirectedBorder() -> void:
+	print("hexagon ", Vector2i(0, 0), "'s left top is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.LEFT_TOP)) # (0,0)
+	print("hexagon ", Vector2i(0, 0), "'s right top is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.RIGHT_TOP)) # (1,0)
+	print("hexagon ", Vector2i(0, 0), "'s left is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.LEFT)) # (-1,1)
+	print("hexagon ", Vector2i(0, 0), "'s center is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.CENTER)) # (0,1)
+	print("hexagon ", Vector2i(0, 0), "'s right is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.RIGHT)) # (1,1)
+	print("hexagon ", Vector2i(0, 0), "'s left down is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.LEFT_DOWN)) # (0,2)
+	print("hexagon ", Vector2i(0, 0), "'s right down is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.RIGHT_DOWN)) # (1,2)
+	print("hexagon ", Vector2i(0, 1), "'s left top is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.LEFT_TOP)) # (1,2)
+	print("hexagon ", Vector2i(0, 1), "'s right top is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.RIGHT_TOP)) # (2,2)
+	print("hexagon ", Vector2i(0, 1), "'s left is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.LEFT)) # (0,3)
+	print("hexagon ", Vector2i(0, 1), "'s center is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.CENTER)) # (1,3)
+	print("hexagon ", Vector2i(0, 1), "'s right is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.RIGHT)) # (2,3)
+	print("hexagon ", Vector2i(0, 1), "'s left down is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.LEFT_DOWN)) # (1,4)
+	print("hexagon ", Vector2i(0, 1), "'s right down is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.RIGHT_DOWN)) # (2,4)
 
 
 class MapTileCell:

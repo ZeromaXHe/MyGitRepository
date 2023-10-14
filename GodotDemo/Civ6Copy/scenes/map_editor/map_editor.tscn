@@ -54,12 +54,6 @@ sources/5 = SubResource("TileSetAtlasSource_liv2s")
 [node name="MapEditor" type="Node2D"]
 script = ExtResource("1_brqnu")
 
-[node name="BorderTileMap" type="TileMap" parent="."]
-position = Vector2(0, -18)
-tile_set = SubResource("TileSet_itrfv")
-format = 2
-layer_0/tile_data = PackedInt32Array(1, 0, 0, 0, 4, 0, 131071, 5, 0, 131072, 3, 0, 2, 1, 0, 65537, 5, 0, 262145, 3, 0, 131073, 4, 0, 131074, 3, 0, 131075, 1, 0, 131076, 3, 0, 131077, 1, 0, 131078, 3, 0, 5, 3, 0, 4, 1, 0, 3, 3, 0)
-
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource("1_xpdht")
 format = 2
@@ -71,6 +65,12 @@ layer_1/y_sort_enabled = false
 layer_1/y_sort_origin = 0
 layer_1/z_index = 0
 layer_1/tile_data = PackedInt32Array()
+
+[node name="BorderTileMap" type="TileMap" parent="."]
+position = Vector2(0, -18)
+tile_set = SubResource("TileSet_itrfv")
+format = 2
+layer_0/tile_data = PackedInt32Array(1, 0, 0, 0, 4, 0, 131071, 5, 0, 131072, 3, 0, 2, 1, 0, 65537, 5, 0, 262145, 3, 0, 131073, 4, 0, 131074, 3, 0, 131075, 1, 0, 131076, 3, 0, 131077, 1, 0, 131078, 3, 0, 5, 3, 0, 4, 1, 0, 3, 3, 0, 196608, 2, 0, 196610, 2, 0, 393215, 2, 0, 327681, 2, 0, 327683, 2, 0, 327685, 2, 0, 196612, 2, 0, 196614, 2, 0, 65541, 2, 0, 65539, 2, 0, 262146, 4, 0, 262148, 4, 0, 262150, 4, 0, 393217, 1, 0, 393219, 1, 0, 393221, 1, 0, 6, 1, 0, 131079, 1, 0, 262147, 0, 0, 393220, 0, 0, 393216, 0, 0, 393218, 3, 0, 262149, 3, 0, 262151, 3, 0, 7, 3, 0, 131080, 3, 0, 327687, 5, 0, 65543, 5, 0, 196616, 5, 0, 458756, 5, 0, 458754, 5, 0, 458752, 5, 0, 262144, 4, 0)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("3_0wudy")
