@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://sdil5287wggl"]
+
+[node name="TerrainLandscapeIntroductionPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+text = "简介"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="Content" type="Label" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 12
+text = "格位地表上所呈现的地形或植被被称为地貌。（例如草原格位上可能会有树林或沼泽的地貌特征。）地貌除可影响格位的产出之外，还可影响单位进入该格位时所消耗的“移动力”（MP）。同时地貌可为占据格位的单位提供防御上的战斗加成或减益。"
+autowrap_mode = 3

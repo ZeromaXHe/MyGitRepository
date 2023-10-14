@@ -1,0 +1,233 @@
+[gd_scene load_steps=4 format=3 uid="uid://6rscixmykdb1"]
+
+[ext_resource type="Script" path="res://scenes/gui/panel/wiki_panel.gd" id="1_rhyfl"]
+[ext_resource type="ButtonGroup" uid="uid://d2vfjykfdnuoq" path="res://scenes/gui/wiki_button_group.tres" id="1_wupj1"]
+[ext_resource type="PackedScene" uid="uid://bebsw57fm7qow" path="res://scenes/gui/panel/wiki_pages/terrain_landscape_grass_page.tscn" id="3_r1yh8"]
+
+[node name="WikiPanelContainer" type="PanelContainer"]
+script = ExtResource("1_rhyfl")
+
+[node name="MainVBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TitleHBoxContainer" type="HBoxContainer" parent="MainVBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainVBoxContainer/TitleHBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "文明百科"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="MainVBoxContainer/TitleHBoxContainer"]
+layout_mode = 2
+text = "X"
+
+[node name="BtnHBoxContainer" type="HBoxContainer" parent="MainVBoxContainer"]
+layout_mode = 2
+
+[node name="ConceptButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "概念"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_pressed = true
+button_group = ExtResource("1_wupj1")
+text = "概念"
+
+[node name="CultureLeaderButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "文明/领袖"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "文明/
+领袖"
+
+[node name="CityStateButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "城邦"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "城邦"
+
+[node name="RegionButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "区域"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "区域"
+
+[node name="BuildingButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "建筑"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "建筑"
+
+[node name="WonderProjectButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "奇观和项目"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "奇观
+和项目"
+
+[node name="UnitButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "单位"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "单位"
+
+[node name="PowerUpButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "单位强化"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "单位
+强化"
+
+[node name="GreatPersonButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "伟人"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "伟人"
+
+[node name="TechnologyButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "科技"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "科技"
+
+[node name="MunicipalityButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "市政"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "市政"
+
+[node name="PolicyButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "政体和政策"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "政体
+和政策"
+
+[node name="ReligonButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "宗教"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "宗教"
+
+[node name="TerrainLandscapeButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "地形和地貌"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "地形
+和地貌"
+
+[node name="ResourceButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "资源"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "资源"
+
+[node name="FacilityRouteButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "改良设施和路线"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "改良设施
+和路线"
+
+[node name="GovernerButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "建筑"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "总督"
+
+[node name="HistoricalTimeButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
+layout_mode = 2
+tooltip_text = "历史时刻"
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("1_wupj1")
+text = "历史
+时刻"
+
+[node name="MainHBoxContainer" type="HBoxContainer" parent="MainVBoxContainer"]
+layout_mode = 2
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="MainVBoxContainer/MainHBoxContainer"]
+layout_mode = 2
+
+[node name="SearchLineEdit" type="LineEdit" parent="MainVBoxContainer/MainHBoxContainer/LeftVBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+placeholder_text = "搜索……"
+
+[node name="LeftScrollContainer" type="ScrollContainer" parent="MainVBoxContainer/MainHBoxContainer/LeftVBoxContainer"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+
+[node name="LeftTree" type="Tree" parent="MainVBoxContainer/MainHBoxContainer/LeftVBoxContainer/LeftScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 12
+hide_root = true
+
+[node name="RightVBoxContainer" type="VBoxContainer" parent="MainVBoxContainer/MainHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GuideHBoxContainer" type="HBoxContainer" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+
+[node name="PreviousButton" type="Button" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/GuideHBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "<-"
+
+[node name="HistoryScrollContainer" type="ScrollContainer" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/GuideHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NextButton" type="Button" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/GuideHBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "->"
+
+[node name="RightScrollContainer" type="ScrollContainer" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TerrainLandscapeGrassPageVBox" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/RightScrollContainer" instance=ExtResource("3_r1yh8")]
+visible = false
+layout_mode = 2

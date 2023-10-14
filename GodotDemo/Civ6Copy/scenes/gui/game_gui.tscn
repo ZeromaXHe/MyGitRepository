@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=40 format=3 uid="uid://dfpeq8ikcp1wc"]
 
 [ext_resource type="Texture2D" uid="uid://btmpkdbgm3hs2" path="res://assets/icon_park/实验_experiment.svg" id="1_0g47u"]
 [ext_resource type="Texture2D" uid="uid://dkia1xx5vuk4x" path="res://assets/icon_park/音乐_music-one.svg" id="2_wa2tf"]
@@ -28,6 +28,7 @@
 [ext_resource type="Texture2D" uid="uid://d2em5ph4336s3" path="res://assets/icon_park/分析_analysis.svg" id="17_gl51h"]
 [ext_resource type="Texture2D" uid="uid://6xgc8c08sapv" path="res://assets/icon_park/下一步_next.svg" id="17_ueq3g"]
 [ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="18_6wc45"]
+[ext_resource type="PackedScene" uid="uid://6rscixmykdb1" path="res://scenes/gui/panel/wiki_panel.tscn" id="29_dio20"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_38obw"]
 bg_color = Color(0, 0.00784314, 0.537255, 1)
@@ -555,3 +556,13 @@ max_value = 8.0
 value = 4.0
 fill_mode = 2
 show_percentage = false
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="WikiPanelContainer" parent="CenterContainer" instance=ExtResource("29_dio20")]
+layout_mode = 2

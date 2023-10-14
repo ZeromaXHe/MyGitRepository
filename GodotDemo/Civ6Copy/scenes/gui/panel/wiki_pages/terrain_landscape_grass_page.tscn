@@ -1,0 +1,98 @@
+[gd_scene format=3 uid="uid://bebsw57fm7qow"]
+
+[node name="TerrainLandscapeGrassPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+text = "草原"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="HistoryBackgroundLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+text = "历史背景"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="Content" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 12
+text = "草原上有丰富肥沃的土壤，曾是很多城市的中心。它能提供食物与对外扩张而言必需的开放边界。不幸的是，蛮族也意识到了它的好，因此几个世纪以来，草原上的血迹随处可见。"
+autowrap_mode = 3
+
+[node name="VSeparator" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="RightVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FeatureLabel" type="Label" parent="HBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+text = "特点"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+
+[node name="PointLabel" type="Label" parent="HBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 12
+text = "+2 食物"
+autowrap_mode = 3
+
+[node name="HSeparator2" type="HSeparator" parent="HBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+
+[node name="EffectResourceLabel" type="Label" parent="HBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 12
+text = "有效资源：
+茶叶
+大理石
+大米
+蜂蜜
+柑橘
+橄榄
+咖啡
+历史古迹
+马
+棉花
+牛
+葡萄酒
+石头
+硝石
+烟草
+铀
+玉
+玉米"
+autowrap_mode = 3
