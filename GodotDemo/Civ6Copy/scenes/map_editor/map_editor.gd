@@ -34,10 +34,14 @@ const size_dict: Dictionary = {
 	0: Vector2i(44, 26),
 }
 
+const NULL_COORD := Vector2i(-10000, -10000)
+
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
 # 鼠标悬浮的图块坐标
-var _mouse_hover_tile_coord := Vector2i(-1, -1)
+var _mouse_hover_tile_coord := NULL_COORD
+# 鼠标悬浮的边界坐标
+var _mouse_hover_border_coord := NULL_COORD
 # 地块类型到 TileSet 信息映射
 var _terrain_type_to_tile_dict : Dictionary = {
 	MapEditorGUI.TerrainType.GRASS: MapTileCell.new(0, Vector2i(5, 1)),
@@ -66,7 +70,7 @@ var _map_tile_info: Array = []
 var _before_step_stack: Array[PaintStep] = []
 var _after_step_stack: Array[PaintStep] = []
 
-@onready var border_tile_map: TileMap = $TileMap
+@onready var border_tile_map: TileMap = $BorderTileMap
 @onready var tile_map: TileMap = $TileMap
 @onready var camera: CameraManager = $Camera2D
 @onready var gui: MapEditorGUI = $MapEditorGUI
@@ -80,14 +84,13 @@ func _ready() -> void:
 	gui.restore_btn_pressed.connect(handle_restore)
 	gui.cancel_btn_pressed.connect(handle_cancel)
 	
-	testGetBorderType()
+	test_get_border_type()
 	print("-------------")
-	testGetTileCoordDirectedBorder()
+	test_get_tile_coord_directed_border()
 
 
 func _process(delta: float) -> void:
-	var map_coord: Vector2i = tile_map.local_to_map(tile_map.to_local(get_global_mouse_position()))
-	paint_new_green_chosen_area(map_coord)
+	paint_new_green_chosen_area()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -104,9 +107,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				camera.end_drag()
 				if camera.to_local(get_global_mouse_position()).distance_to(_from_camera_position) < 20:
-					var map_coord: Vector2i = tile_map.local_to_map(tile_map.to_local(get_global_mouse_position()))
-					gui.set_info_label_text("选中 (" + str(map_coord.x) + "，" + str(map_coord.y) + ")")
-					paint_map(map_coord)
+					paint_map()
 	elif event is InputEventMouseMotion:
 		# 拖拽镜头过程中
 		get_viewport().set_input_as_handled()
@@ -149,66 +150,121 @@ func handle_cancel() -> void:
 	gui.set_restore_button_disable(false)
 
 
-func paint_new_green_chosen_area(map_coord: Vector2i, renew: bool = false) -> void:
+func get_border_coord() -> Vector2i:
+	return border_tile_map.local_to_map(border_tile_map.to_local(get_global_mouse_position()))
+
+
+func get_map_coord() -> Vector2i:
+	return tile_map.local_to_map(tile_map.to_local(get_global_mouse_position()))
+
+
+func paint_new_green_chosen_area(renew: bool = false) -> void:
+	var map_coord: Vector2i = get_map_coord()
+	var border_coord: Vector2i = get_border_coord()
 	# 只在放置模式下绘制鼠标悬浮地块
 	if gui.get_rt_tab_status() != MapEditorGUI.TabStatus.PLACE:
 		return
-	if not renew and map_coord == _mouse_hover_tile_coord:
+	if not renew and (map_coord == _mouse_hover_tile_coord or border_coord == _mouse_hover_border_coord):
 		return
 	# 按最大笔刷的范围擦除原来图块
-	var old_inside: Array[Vector2i] = get_surrounding_cells(_mouse_hover_tile_coord, 2, true)
-	for coord in old_inside:
-		# 擦除原图块
-		tile_map.set_cell(1, coord)
+	if _mouse_hover_tile_coord != NULL_COORD:
+		var old_inside: Array[Vector2i] = get_surrounding_cells(_mouse_hover_tile_coord, 2, true)
+		for coord in old_inside:
+			# 擦除原图块
+			tile_map.set_cell(1, coord)
+	# 清理之前的边界图块
+	if _mouse_hover_border_coord != NULL_COORD:
+		border_tile_map.set_cell(1, _mouse_hover_border_coord)
 	
-	var dist: int = gui.get_painter_size_dist()
-	var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
-	for coord in new_inside:
-		# 新增新图块
-		tile_map.set_cell(1, coord, 4, Vector2i(0, 0))
-	
-	_mouse_hover_tile_coord = map_coord
+	if gui.place_mode == MapEditorGUI.PlaceMode.CLIFF or gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
+		match get_border_type(border_coord):
+			BorderType.VERTICAL:
+				border_tile_map.set_cell(1, border_coord, 8, Vector2i(0, 0))
+			BorderType.SLASH:
+				border_tile_map.set_cell(1, border_coord, 7, Vector2i(0, 0))
+			BorderType.BACK_SLASH:
+				border_tile_map.set_cell(1, border_coord, 6, Vector2i(0, 0))
+		
+		_mouse_hover_border_coord = border_coord
+		_mouse_hover_tile_coord = NULL_COORD
+	else:
+		var dist: int = gui.get_painter_size_dist()
+		var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
+		for coord in new_inside:
+			# 新增新图块
+			tile_map.set_cell(1, coord, 4, Vector2i(0, 0))
+		
+		_mouse_hover_tile_coord = map_coord
+		_mouse_hover_border_coord = NULL_COORD
 
 
-func paint_map(map_coord: Vector2i) -> void:
-	if gui.place_mode != MapEditorGUI.PlaceMode.TERRAIN:
-		return
-	if not _terrain_type_to_tile_dict.has(gui.terrain_type):
-		printerr("can't paint unknown tile!")
-		return
-	var dist: int = gui.get_painter_size_dist()
-	# 地图大小
-	var size: Vector2i = size_dict[_map_size]
-	var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
-	var step: PaintStep = PaintStep.new()
-	for coord in inside:
-		# 超出地图范围的不处理
-		if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
-			continue
-		paint_tile(coord, step, gui.terrain_type)
-	# 围绕陆地地块绘制浅海
-	if gui.terrain_type != MapEditorGUI.TerrainType.SHORE and gui.terrain_type != MapEditorGUI.TerrainType.OCEAN:
-		var out_ring: Array[Vector2i] = get_surrounding_cells(map_coord, dist + 1, false)
-		for coord in out_ring:
+func paint_map() -> void:
+	if gui.place_mode == MapEditorGUI.PlaceMode.TERRAIN:
+		var map_coord: Vector2i = get_map_coord()
+		if not _terrain_type_to_tile_dict.has(gui.terrain_type):
+			printerr("can't paint unknown tile!")
+			return
+		var dist: int = gui.get_painter_size_dist()
+		# 地图大小
+		var size: Vector2i = size_dict[_map_size]
+		var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
+		var step: PaintStep = PaintStep.new()
+		for coord in inside:
 			# 超出地图范围的不处理
 			if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
 				continue
-			# 仅深海需要改为浅海
-			if tile_map.get_cell_source_id(0, coord) != 2:
-				continue
-			paint_tile(coord, step, MapEditorGUI.TerrainType.SHORE)
-	
-	_before_step_stack.push_back(step)
-	# 最多只记录 30 个历史操作
-	if _before_step_stack.size() > 30:
-		_before_step_stack.pop_front()
-	gui.set_cancel_button_disable(false)
-	# 每次操作后也就意味着不能向后恢复了
-	_after_step_stack.clear()
-	gui.set_restore_button_disable(true)
-	
-	# 强制重绘选择区域
-	paint_new_green_chosen_area(map_coord, true)
+			paint_tile(coord, step, gui.terrain_type)
+		# 围绕陆地地块绘制浅海
+		if gui.terrain_type != MapEditorGUI.TerrainType.SHORE and gui.terrain_type != MapEditorGUI.TerrainType.OCEAN:
+			var out_ring: Array[Vector2i] = get_surrounding_cells(map_coord, dist + 1, false)
+			for coord in out_ring:
+				# 超出地图范围的不处理
+				if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
+					continue
+				# 仅深海需要改为浅海
+				if tile_map.get_cell_source_id(0, coord) != 2:
+					continue
+				paint_tile(coord, step, MapEditorGUI.TerrainType.SHORE)
+		
+		_before_step_stack.push_back(step)
+		# 最多只记录 30 个历史操作
+		if _before_step_stack.size() > 30:
+			_before_step_stack.pop_front()
+		gui.set_cancel_button_disable(false)
+		# 每次操作后也就意味着不能向后恢复了
+		_after_step_stack.clear()
+		gui.set_restore_button_disable(true)
+		
+		# 强制重绘选择区域
+		paint_new_green_chosen_area(true)
+	elif gui.place_mode == MapEditorGUI.PlaceMode.CLIFF:
+		# TODO: 操作恢复和取消，右键消除，判断是否可以放置的逻辑
+		var border_coord: Vector2i = get_border_coord()
+		match get_border_type(border_coord):
+			BorderType.CENTER:
+				return
+			BorderType.BACK_SLASH:
+				border_tile_map.set_cell(0, border_coord, 0, Vector2i.ZERO)
+			BorderType.SLASH:
+				border_tile_map.set_cell(0, border_coord, 1, Vector2i.ZERO)
+			BorderType.VERTICAL:
+				border_tile_map.set_cell(0, border_coord, 2, Vector2i.ZERO)
+		# 强制重绘选择区域
+		paint_new_green_chosen_area(true)
+	elif gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
+		# TODO: 操作恢复和取消，右键消除，判断是否可以放置的逻辑
+		var border_coord: Vector2i = get_border_coord()
+		match get_border_type(border_coord):
+			BorderType.CENTER:
+				return
+			BorderType.BACK_SLASH:
+				border_tile_map.set_cell(0, border_coord, 3, Vector2i.ZERO)
+			BorderType.SLASH:
+				border_tile_map.set_cell(0, border_coord, 4, Vector2i.ZERO)
+			BorderType.VERTICAL:
+				border_tile_map.set_cell(0, border_coord, 5, Vector2i.ZERO)
+		# 强制重绘选择区域
+		paint_new_green_chosen_area(true)
 
 
 func paint_tile(coord: Vector2i, step: PaintStep, terrain_type: MapEditorGUI.TerrainType):
@@ -288,7 +344,7 @@ func initialize_camera(map_size: MapSize) -> void:
 # (1,1)	(3,2)	(4,2)	(2,3)	(3,3)	(4,3)	(3,4)	(4,4)
 # (0,2)	(0,4)	(1,4)	(-1,5)	(0,5)	(1,5)	(0,6)	(1,6)
 ##
-func getBorderType(border_coord: Vector2i) -> BorderType:
+func get_border_type(border_coord: Vector2i) -> BorderType:
 	if border_coord.y % 2 == 0:
 		if border_coord.x % 2 == border_coord.y / 2 % 2:
 			return BorderType.SLASH
@@ -301,17 +357,17 @@ func getBorderType(border_coord: Vector2i) -> BorderType:
 
 
 # 测试 getBorderType() 方法
-func testGetBorderType() -> void:
-	print("slash ", Vector2i(0, 0), " is ", getBorderType(Vector2i(0, 0)))
-	print("slash ", Vector2i(1, 2), " is ", getBorderType(Vector2i(1, 2)))
-	print("back slash ", Vector2i(1, 0), " is ", getBorderType(Vector2i(1, 0)))
-	print("back slash ", Vector2i(2, 2), " is ", getBorderType(Vector2i(2, 2)))
-	print("center ", Vector2i(0, 1), " is ", getBorderType(Vector2i(0, 1)))
-	print("center ", Vector2i(1, 3), " is ", getBorderType(Vector2i(1, 3)))
-	print("vertical ", Vector2i(-1, 1), " is ", getBorderType(Vector2i(-1, 1)))
-	print("vertical ", Vector2i(1, 1), " is ", getBorderType(Vector2i(1, 1)))
-	print("vertical ", Vector2i(0, 3), " is ", getBorderType(Vector2i(0, 3)))
-	print("vertical ", Vector2i(2, 3), " is ", getBorderType(Vector2i(2, 3)))
+func test_get_border_type() -> void:
+	print("slash ", Vector2i(0, 0), " is ", get_border_type(Vector2i(0, 0)))
+	print("slash ", Vector2i(1, 2), " is ", get_border_type(Vector2i(1, 2)))
+	print("back slash ", Vector2i(1, 0), " is ", get_border_type(Vector2i(1, 0)))
+	print("back slash ", Vector2i(2, 2), " is ", get_border_type(Vector2i(2, 2)))
+	print("center ", Vector2i(0, 1), " is ", get_border_type(Vector2i(0, 1)))
+	print("center ", Vector2i(1, 3), " is ", get_border_type(Vector2i(1, 3)))
+	print("vertical ", Vector2i(-1, 1), " is ", get_border_type(Vector2i(-1, 1)))
+	print("vertical ", Vector2i(1, 1), " is ", get_border_type(Vector2i(1, 1)))
+	print("vertical ", Vector2i(0, 3), " is ", get_border_type(Vector2i(0, 3)))
+	print("vertical ", Vector2i(2, 3), " is ", get_border_type(Vector2i(2, 3)))
 
 
 ##
@@ -333,40 +389,76 @@ func testGetBorderType() -> void:
 #	(4,3)	(1,1), (2,1)
 #	(1,5)	(0,2), (1,2)
 ##
-func getNeighborTileOfBorder(border_coord: Vector2i) -> Array[Vector2i]:
-	match getBorderType(border_coord):
+func get_neighbor_tile_of_border(border_coord: Vector2i) -> Array[Vector2i]:
+	match get_border_type(border_coord):
 		BorderType.CENTER:
 			return [border_coord / 2]
 		BorderType.VERTICAL:
-			return [Vector2i(border_coord.x / 2 + border_coord.x % 2 - 1, border_coord.y / 2),
-					Vector2i(border_coord.x / 2 + border_coord.x % 2, border_coord.y / 2)]
+			return [Vector2i((border_coord.x - 1) / 2, border_coord.y / 2),
+					Vector2i((border_coord.x + 1) / 2, border_coord.y / 2)]
 		BorderType.SLASH:
-			return [Vector2i(border_coord.x / 2 - 1 + border_coord.x % 2, border_coord.y / 2 - 1),
+			return [Vector2i((border_coord.x - 1) / 2, border_coord.y / 2 - 1),
 					Vector2i(border_coord.x / 2, border_coord.y / 2)]
 		BorderType.BACK_SLASH:
 			return [Vector2i(border_coord.x / 2, border_coord.y / 2 - 1),
-					Vector2i(border_coord.x / 2 - 1 + border_coord.x % 2, border_coord.y / 2)]
+					Vector2i((border_coord.x - 1) / 2, border_coord.y / 2)]
 		_:
 			printerr("getNeighborTileOfBorder | unknown border type")
 			return []
 
 
-func getAllTileBorder(tile_coord: Vector2i, include_center: bool) -> Array[Vector2i]:
+##
+# 	边界		末端地块
+#	back_slash
+#	(6,2)	(2,0), (3,1)
+#	(4,2)	(1,0), (2,1)
+#	(3,4)	(0,1), (2,2)
+#	(5,4)	(1,1), (3,2)
+#	slash
+#	(1,2)	(1,0), (-1,1)
+#	(3,2)	(2,0), (0,1)
+#	(2,4)	(1,1), (0,2)
+#	(4,4)	(2,1), (1,2)
+#	vertical
+#	(1,1)	(0,-1), (0,1)
+#	(3,1)	(1,-1), (1,1)
+#	(2,3)	(1,0), (1,2)
+#	(4,3)	(2,0), (2,2)
+#	(1,5)	(0,1), (0,3)
+#	(3,5)	(1,1), (1,3)
+##
+func get_end_tile_of_border(border_coord: Vector2i) -> Array[Vector2i]:
+	match get_border_type(border_coord):
+		BorderType.VERTICAL:
+			return [Vector2i(border_coord.x / 2, border_coord.y / 2 - 1),
+					Vector2i(border_coord.x / 2, border_coord.y / 2 + 1)]
+		BorderType.BACK_SLASH:
+			return [Vector2i(border_coord.x / 2 - 1, border_coord.y / 2 - 1),
+					Vector2i((border_coord.x + 1) / 2, border_coord.y / 2)]
+		BorderType.SLASH:
+			return [Vector2i((border_coord.x + 1) / 2, border_coord.y / 2 - 1),
+					Vector2i(border_coord.x / 2 - 1, border_coord.y / 2)]
+		_:
+			printerr("getEndTileOfBorder | unknown or unsupported border type")
+			return []
+
+
+func get_all_tile_border(tile_coord: Vector2i, include_center: bool) -> Array[Vector2i]:
 	var result = [
-			getTileCoordDirectedBorder(tile_coord, BorderDirection.LEFT_TOP),
-			getTileCoordDirectedBorder(tile_coord, BorderDirection.RIGHT_TOP),
-			getTileCoordDirectedBorder(tile_coord, BorderDirection.LEFT),
-			getTileCoordDirectedBorder(tile_coord, BorderDirection.RIGHT),
-			getTileCoordDirectedBorder(tile_coord, BorderDirection.LEFT_DOWN),
-			getTileCoordDirectedBorder(tile_coord, BorderDirection.RIGHT_DOWN),
+			get_tile_coord_directed_border(tile_coord, BorderDirection.LEFT_TOP),
+			get_tile_coord_directed_border(tile_coord, BorderDirection.RIGHT_TOP),
+			get_tile_coord_directed_border(tile_coord, BorderDirection.LEFT),
+			get_tile_coord_directed_border(tile_coord, BorderDirection.RIGHT),
+			get_tile_coord_directed_border(tile_coord, BorderDirection.LEFT_DOWN),
+			get_tile_coord_directed_border(tile_coord, BorderDirection.RIGHT_DOWN),
 	]
 	if include_center:
-		result.append(getTileCoordDirectedBorder(tile_coord, BorderDirection.CENTER))
+		result.append(get_tile_coord_directed_border(tile_coord, BorderDirection.CENTER))
 	return result
 
 
 # 获取地块在指定方向的边界地块
-func getTileCoordDirectedBorder(tile_coord: Vector2i, direction: BorderDirection) -> Vector2i:
+func get_tile_coord_directed_border(tile_coord: Vector2i, direction: BorderDirection) -> Vector2i:
 	match direction:
 		BorderDirection.LEFT_TOP:
 			return Vector2i(tile_coord.x * 2 + tile_coord.y % 2, 2 * tile_coord.y)
@@ -387,21 +479,21 @@ func getTileCoordDirectedBorder(tile_coord: Vector2i, direction: BorderDirection
 			return Vector2i(-1, -1)
 
 
-func testGetTileCoordDirectedBorder() -> void:
-	print("hexagon ", Vector2i(0, 0), "'s left top is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.LEFT_TOP)) # (0,0)
-	print("hexagon ", Vector2i(0, 0), "'s right top is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.RIGHT_TOP)) # (1,0)
-	print("hexagon ", Vector2i(0, 0), "'s left is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.LEFT)) # (-1,1)
-	print("hexagon ", Vector2i(0, 0), "'s center is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.CENTER)) # (0,1)
-	print("hexagon ", Vector2i(0, 0), "'s right is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.RIGHT)) # (1,1)
-	print("hexagon ", Vector2i(0, 0), "'s left down is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.LEFT_DOWN)) # (0,2)
-	print("hexagon ", Vector2i(0, 0), "'s right down is ", getTileCoordDirectedBorder(Vector2i(0, 0), BorderDirection.RIGHT_DOWN)) # (1,2)
-	print("hexagon ", Vector2i(0, 1), "'s left top is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.LEFT_TOP)) # (1,2)
-	print("hexagon ", Vector2i(0, 1), "'s right top is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.RIGHT_TOP)) # (2,2)
-	print("hexagon ", Vector2i(0, 1), "'s left is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.LEFT)) # (0,3)
-	print("hexagon ", Vector2i(0, 1), "'s center is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.CENTER)) # (1,3)
-	print("hexagon ", Vector2i(0, 1), "'s right is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.RIGHT)) # (2,3)
-	print("hexagon ", Vector2i(0, 1), "'s left down is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.LEFT_DOWN)) # (1,4)
-	print("hexagon ", Vector2i(0, 1), "'s right down is ", getTileCoordDirectedBorder(Vector2i(0, 1), BorderDirection.RIGHT_DOWN)) # (2,4)
+func test_get_tile_coord_directed_border() -> void:
+	print("hexagon ", Vector2i(0, 0), "'s left top is ", get_tile_coord_directed_border(Vector2i(0, 0), BorderDirection.LEFT_TOP)) # (0,0)
+	print("hexagon ", Vector2i(0, 0), "'s right top is ", get_tile_coord_directed_border(Vector2i(0, 0), BorderDirection.RIGHT_TOP)) # (1,0)
+	print("hexagon ", Vector2i(0, 0), "'s left is ", get_tile_coord_directed_border(Vector2i(0, 0), BorderDirection.LEFT)) # (-1,1)
+	print("hexagon ", Vector2i(0, 0), "'s center is ", get_tile_coord_directed_border(Vector2i(0, 0), BorderDirection.CENTER)) # (0,1)
+	print("hexagon ", Vector2i(0, 0), "'s right is ", get_tile_coord_directed_border(Vector2i(0, 0), BorderDirection.RIGHT)) # (1,1)
+	print("hexagon ", Vector2i(0, 0), "'s left down is ", get_tile_coord_directed_border(Vector2i(0, 0), BorderDirection.LEFT_DOWN)) # (0,2)
+	print("hexagon ", Vector2i(0, 0), "'s right down is ", get_tile_coord_directed_border(Vector2i(0, 0), BorderDirection.RIGHT_DOWN)) # (1,2)
+	print("hexagon ", Vector2i(0, 1), "'s left top is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.LEFT_TOP)) # (1,2)
+	print("hexagon ", Vector2i(0, 1), "'s right top is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.RIGHT_TOP)) # (2,2)
+	print("hexagon ", Vector2i(0, 1), "'s left is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.LEFT)) # (0,3)
+	print("hexagon ", Vector2i(0, 1), "'s center is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.CENTER)) # (1,3)
+	print("hexagon ", Vector2i(0, 1), "'s right is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.RIGHT)) # (2,3)
+	print("hexagon ", Vector2i(0, 1), "'s left down is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.LEFT_DOWN)) # (1,4)
+	print("hexagon ", Vector2i(0, 1), "'s right down is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.RIGHT_DOWN)) # (2,4)
 
 
 class MapTileCell:

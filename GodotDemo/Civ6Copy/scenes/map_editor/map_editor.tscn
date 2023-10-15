@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://5sn1yevebujw"]
+[gd_scene load_steps=30 format=3 uid="uid://5sn1yevebujw"]
 
 [ext_resource type="Script" path="res://scenes/map_editor/map_editor.gd" id="1_brqnu"]
 [ext_resource type="TileSet" uid="uid://bde1bs78up61k" path="res://tile_set/tile_set.tres" id="1_xpdht"]
@@ -7,9 +7,15 @@
 [ext_resource type="Texture2D" uid="uid://c5jlgggtsk414" path="res://assets/self_made_svg/cliff_slash.svg" id="3_64cht"]
 [ext_resource type="PackedScene" uid="uid://cw4d6w6b4mr0o" path="res://scenes/gui/map_editor_gui.tscn" id="4_1r2w3"]
 [ext_resource type="Texture2D" uid="uid://dxcuvpq0aldgy" path="res://assets/self_made_svg/cliff_vertical.svg" id="4_hbyls"]
+[ext_resource type="Texture2D" uid="uid://cf1ictvov4j0e" path="res://assets/self_made_svg/red_select_slash.svg" id="5_khfdy"]
 [ext_resource type="Texture2D" uid="uid://b1cebhwjqcjwb" path="res://assets/self_made_svg/river_backslash.svg" id="5_wnpqe"]
+[ext_resource type="Texture2D" uid="uid://bb5u2jbmg584v" path="res://assets/self_made_svg/red_select_vertical.svg" id="6_hr4fy"]
 [ext_resource type="Texture2D" uid="uid://pdppvsw5nos7" path="res://assets/self_made_svg/river_slash.svg" id="6_nv7ao"]
 [ext_resource type="Texture2D" uid="uid://b0deqkyaa0n3w" path="res://assets/self_made_svg/river_vertical.svg" id="7_6v4w8"]
+[ext_resource type="Texture2D" uid="uid://x1u34yboo3q5" path="res://assets/self_made_svg/green_select_backslash.svg" id="9_n5ede"]
+[ext_resource type="Texture2D" uid="uid://bvjlwfid3ffct" path="res://assets/self_made_svg/green_select_slash.svg" id="10_mkgtp"]
+[ext_resource type="Texture2D" uid="uid://bevyjoc7fgbos" path="res://assets/self_made_svg/green_select_vertical.svg" id="11_h5fly"]
+[ext_resource type="Texture2D" uid="uid://dqqfi186q4a5h" path="res://assets/self_made_svg/red_select_backslash.svg" id="14_gnyp4"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0iwd8"]
 texture = ExtResource("2_w6d2p")
@@ -20,6 +26,14 @@ texture_region_size = Vector2i(61, 71)
 texture = ExtResource("3_64cht")
 texture_region_size = Vector2i(61, 71)
 0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_25arm"]
+texture = ExtResource("5_khfdy")
+texture_region_size = Vector2i(61, 71)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6qgp2"]
+texture = ExtResource("6_hr4fy")
+texture_region_size = Vector2i(61, 71)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tv16t"]
 texture = ExtResource("4_hbyls")
@@ -41,6 +55,25 @@ texture = ExtResource("7_6v4w8")
 texture_region_size = Vector2i(61, 71)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dqsr2"]
+texture = ExtResource("9_n5ede")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3q1hq"]
+texture = ExtResource("10_mkgtp")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sqxng"]
+texture = ExtResource("11_h5fly")
+texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y8xqk"]
+texture = ExtResource("14_gnyp4")
+texture_region_size = Vector2i(61, 71)
+
 [sub_resource type="TileSet" id="TileSet_itrfv"]
 tile_shape = 3
 tile_size = Vector2i(61, 71)
@@ -50,6 +83,12 @@ sources/2 = SubResource("TileSetAtlasSource_tv16t")
 sources/3 = SubResource("TileSetAtlasSource_but7u")
 sources/4 = SubResource("TileSetAtlasSource_ubhj0")
 sources/5 = SubResource("TileSetAtlasSource_liv2s")
+sources/6 = SubResource("TileSetAtlasSource_dqsr2")
+sources/7 = SubResource("TileSetAtlasSource_3q1hq")
+sources/8 = SubResource("TileSetAtlasSource_sqxng")
+sources/9 = SubResource("TileSetAtlasSource_y8xqk")
+sources/10 = SubResource("TileSetAtlasSource_25arm")
+sources/11 = SubResource("TileSetAtlasSource_6qgp2")
 
 [node name="MapEditor" type="Node2D"]
 script = ExtResource("1_brqnu")
@@ -70,7 +109,14 @@ layer_1/tile_data = PackedInt32Array()
 position = Vector2(0, -18)
 tile_set = SubResource("TileSet_itrfv")
 format = 2
-layer_0/tile_data = PackedInt32Array(1, 0, 0, 0, 4, 0, 131071, 5, 0, 131072, 3, 0, 2, 1, 0, 65537, 5, 0, 262145, 3, 0, 131073, 4, 0, 131074, 3, 0, 131075, 1, 0, 131076, 3, 0, 131077, 1, 0, 131078, 3, 0, 5, 3, 0, 4, 1, 0, 3, 3, 0, 196608, 2, 0, 196610, 2, 0, 393215, 2, 0, 327681, 2, 0, 327683, 2, 0, 327685, 2, 0, 196612, 2, 0, 196614, 2, 0, 65541, 2, 0, 65539, 2, 0, 262146, 4, 0, 262148, 4, 0, 262150, 4, 0, 393217, 1, 0, 393219, 1, 0, 393221, 1, 0, 6, 1, 0, 131079, 1, 0, 262147, 0, 0, 393220, 0, 0, 393216, 0, 0, 393218, 3, 0, 262149, 3, 0, 262151, 3, 0, 7, 3, 0, 131080, 3, 0, 327687, 5, 0, 65543, 5, 0, 196616, 5, 0, 458756, 5, 0, 458754, 5, 0, 458752, 5, 0, 262144, 4, 0)
+layer_0/name = "边界层"
+layer_1/name = "选择区域层"
+layer_1/enabled = true
+layer_1/modulate = Color(1, 1, 1, 1)
+layer_1/y_sort_enabled = false
+layer_1/y_sort_origin = 0
+layer_1/z_index = 0
+layer_1/tile_data = PackedInt32Array()
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("3_0wudy")
