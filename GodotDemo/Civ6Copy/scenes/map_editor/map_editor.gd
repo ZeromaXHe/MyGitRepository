@@ -29,6 +29,12 @@ enum BorderType {
 	VERTICAL,
 }
 
+enum BorderTileType {
+	EMPTY,
+	RIVER,
+	CLIFF,
+}
+
 # 地图尺寸和格子数的映射字典
 const size_dict: Dictionary = {
 	0: Vector2i(44, 26),
@@ -66,6 +72,7 @@ var _map_size: MapSize
 var _map_type: MapType
 # 记录地图图块数据
 var _map_tile_info: Array = []
+var _border_tile_info: Array = []
 # 恢复和取消，记录操作的栈
 var _before_step_stack: Array[PaintStep] = []
 var _after_step_stack: Array[PaintStep] = []
@@ -84,9 +91,9 @@ func _ready() -> void:
 	gui.restore_btn_pressed.connect(handle_restore)
 	gui.cancel_btn_pressed.connect(handle_cancel)
 	
-	test_get_border_type()
-	print("-------------")
-	test_get_tile_coord_directed_border()
+#	test_get_border_type()
+#	print("-------------")
+#	test_get_tile_coord_directed_border()
 
 
 func _process(delta: float) -> void:
@@ -122,11 +129,23 @@ func handle_restore() -> void:
 	if _after_step_stack.is_empty():
 		gui.set_restore_button_disable(true)
 	for change in step.changed_arr:
-		# 恢复 TileMap 到操作后的状态
-		var cell_info: MapTileCell = _terrain_type_to_tile_dict[change.after.type]
-		tile_map.set_cell(0, change.coord, cell_info.source_id, cell_info.atlas_coords)
-		# 恢复地图地块信息
-		_map_tile_info[change.coord.x][change.coord.y] = change.after
+		if change.tile_change:
+			# 恢复 TileMap 到操作后的状态
+			var cell_info: MapTileCell = _terrain_type_to_tile_dict[change.after.type]
+			tile_map.set_cell(0, change.coord, cell_info.source_id, cell_info.atlas_coords)
+			# 恢复地图地块信息
+			_map_tile_info[change.coord.x][change.coord.y] = change.after
+		else:
+			# 恢复 BorderTileMap 到操作后的状态
+			match change.after_border.type:
+				BorderTileType.EMPTY:
+					border_tile_map.set_cell(0, change.coord, -1)
+				BorderTileType.RIVER:
+					paint_river(change.coord)
+				BorderTileType.CLIFF:
+					paint_cliff(change.coord)
+			# 恢复地图地块信息
+			_border_tile_info[change.coord.x][change.coord.y] = change.after_border
 	# 把操作存到之前的取消栈中
 	_before_step_stack.push_back(step)
 	gui.set_cancel_button_disable(false)
@@ -140,11 +159,23 @@ func handle_cancel() -> void:
 	if _before_step_stack.is_empty():
 		gui.set_cancel_button_disable(true)
 	for change in step.changed_arr:
-		# 还原 TileMap 到操作前的状态
-		var cell_info: MapTileCell = _terrain_type_to_tile_dict[change.before.type]
-		tile_map.set_cell(0, change.coord, cell_info.source_id, cell_info.atlas_coords)
-		# 还原地图地块信息
-		_map_tile_info[change.coord.x][change.coord.y] = change.before
+		if change.tile_change:
+			# 还原 TileMap 到操作前的状态
+			var cell_info: MapTileCell = _terrain_type_to_tile_dict[change.before.type]
+			tile_map.set_cell(0, change.coord, cell_info.source_id, cell_info.atlas_coords)
+			# 还原地图地块信息
+			_map_tile_info[change.coord.x][change.coord.y] = change.before
+		else:
+			# 恢复 BorderTileMap 到操作前的状态
+			match change.before_border.type:
+				BorderTileType.EMPTY:
+					border_tile_map.set_cell(0, change.coord, -1)
+				BorderTileType.RIVER:
+					paint_river(change.coord)
+				BorderTileType.CLIFF:
+					paint_cliff(change.coord)
+			# 恢复地图地块信息
+			_border_tile_info[change.coord.x][change.coord.y] = change.before_border
 	# 把操作存到之后的恢复栈中
 	_after_step_stack.push_back(step)
 	gui.set_restore_button_disable(false)
@@ -176,14 +207,47 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 	if _mouse_hover_border_coord != NULL_COORD:
 		border_tile_map.set_cell(1, _mouse_hover_border_coord)
 	
-	if gui.place_mode == MapEditorGUI.PlaceMode.CLIFF or gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
+	if gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
+		if is_in_map_border(border_coord) <= 0:
+			return
 		match get_border_type(border_coord):
 			BorderType.VERTICAL:
-				border_tile_map.set_cell(1, border_coord, 8, Vector2i(0, 0))
+				if is_river_placable(border_coord):
+					border_tile_map.set_cell(1, border_coord, 8, Vector2i(0, 0))
+				else:
+					border_tile_map.set_cell(1, border_coord, 11, Vector2i(0, 0))
 			BorderType.SLASH:
-				border_tile_map.set_cell(1, border_coord, 7, Vector2i(0, 0))
+				if is_river_placable(border_coord):
+					border_tile_map.set_cell(1, border_coord, 7, Vector2i(0, 0))
+				else:
+					border_tile_map.set_cell(1, border_coord, 10, Vector2i(0, 0))
 			BorderType.BACK_SLASH:
-				border_tile_map.set_cell(1, border_coord, 6, Vector2i(0, 0))
+				if is_river_placable(border_coord):
+					border_tile_map.set_cell(1, border_coord, 6, Vector2i(0, 0))
+				else:
+					border_tile_map.set_cell(1, border_coord, 9, Vector2i(0, 0))
+		
+		_mouse_hover_border_coord = border_coord
+		_mouse_hover_tile_coord = NULL_COORD
+	elif gui.place_mode == MapEditorGUI.PlaceMode.CLIFF:
+		if is_in_map_border(border_coord) <= 0:
+			return
+		match get_border_type(border_coord):
+			BorderType.VERTICAL:
+				if is_cliff_placable(border_coord):
+					border_tile_map.set_cell(1, border_coord, 8, Vector2i(0, 0))
+				else:
+					border_tile_map.set_cell(1, border_coord, 11, Vector2i(0, 0))
+			BorderType.SLASH:
+				if is_cliff_placable(border_coord):
+					border_tile_map.set_cell(1, border_coord, 7, Vector2i(0, 0))
+				else:
+					border_tile_map.set_cell(1, border_coord, 10, Vector2i(0, 0))
+			BorderType.BACK_SLASH:
+				if is_cliff_placable(border_coord):
+					border_tile_map.set_cell(1, border_coord, 6, Vector2i(0, 0))
+				else:
+					border_tile_map.set_cell(1, border_coord, 9, Vector2i(0, 0))
 		
 		_mouse_hover_border_coord = border_coord
 		_mouse_hover_tile_coord = NULL_COORD
@@ -198,7 +262,76 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 		_mouse_hover_border_coord = NULL_COORD
 
 
+func is_in_map_border(border_coord: Vector2i) -> int:
+	var neighbor_tile_coords: Array[Vector2i] = get_neighbor_tile_of_border(border_coord)
+	var count_empty: int = 0
+	var count_exist: int = 0
+	for coord in neighbor_tile_coords:
+		var src_id: int = tile_map.get_cell_source_id(0, coord)
+		if src_id == -1:
+			# 地图外为空图块
+			count_empty += 1
+		else:
+			count_exist += 1
+	if count_exist > 0:
+		if count_empty == 0 and count_exist <= 2:
+			# 表示在地图里
+			return 1
+		elif count_empty == 1 and count_exist == 1:
+			# 表示在地图边界上
+			return 0
+		else:
+			# 莫名其妙的情况
+			return -999
+	elif count_exist == 0 and count_empty <= 2:
+		# 地图外
+		return -1
+	else:
+		return -999
+
+
+func is_river_placable(border_coord: Vector2i) -> bool:
+	if is_in_map_border(border_coord) <= 0 or get_border_type(border_coord) == BorderType.CENTER:
+		return false
+	var neighbor_tile_coords: Array[Vector2i] = get_neighbor_tile_of_border(border_coord)
+	for coord in neighbor_tile_coords:
+		var src_id: int = tile_map.get_cell_source_id(0, coord)
+		if src_id == 1 || src_id == 2:
+			# 和浅海或者深海相邻
+			return false
+	var end_tile_coords: Array[Vector2i] = get_end_tile_of_border(border_coord)
+	for coord in end_tile_coords:
+		var src_id: int = tile_map.get_cell_source_id(0, coord)
+		if src_id == 1 || src_id == 2:
+			# 末端是浅海或者深海
+			return true
+	var connect_border_coords: Array[Vector2i] = get_connect_border_of_border(border_coord)
+	for coord in connect_border_coords:
+		var src_id: int = border_tile_map.get_cell_source_id(0, coord)
+		if src_id >= 3 and src_id <= 5:
+			# 连接的边界有河流
+			return true
+	return false
+
+
+func is_cliff_placable(border_coord: Vector2i) -> bool:
+	if is_in_map_border(border_coord) <= 0 or get_border_type(border_coord) == BorderType.CENTER:
+		return false
+	var neighbor_tile_coords: Array[Vector2i] = get_neighbor_tile_of_border(border_coord)
+	var neighbor_sea: bool = false
+	var neighbor_land: bool = false
+	for coord in neighbor_tile_coords:
+		var src_id: int = tile_map.get_cell_source_id(0, coord)
+		if src_id == 1 || src_id == 2:
+			# 和浅海或者深海相邻
+			neighbor_sea = true
+		else:
+			neighbor_land = true
+	return neighbor_land and neighbor_sea
+
+
 func paint_map() -> void:
+	var step: PaintStep = PaintStep.new()
 	if gui.place_mode == MapEditorGUI.PlaceMode.TERRAIN:
 		var map_coord: Vector2i = get_map_coord()
 		if not _terrain_type_to_tile_dict.has(gui.terrain_type):
@@ -208,7 +341,6 @@ func paint_map() -> void:
 		# 地图大小
 		var size: Vector2i = size_dict[_map_size]
 		var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
-		var step: PaintStep = PaintStep.new()
 		for coord in inside:
 			# 超出地图范围的不处理
 			if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
@@ -226,6 +358,50 @@ func paint_map() -> void:
 					continue
 				paint_tile(coord, step, MapEditorGUI.TerrainType.SHORE)
 		
+		# 强制重绘选择区域
+		paint_new_green_chosen_area(true)
+	elif gui.place_mode == MapEditorGUI.PlaceMode.CLIFF:
+		# TODO: 右键消除
+		var border_coord: Vector2i = get_border_coord()
+		if not is_cliff_placable(border_coord):
+			return
+		
+		# 记录操作
+		var change: PaintChange = PaintChange.new()
+		change.coord = border_coord
+		change.tile_change = false
+		change.before_border = _border_tile_info[border_coord.x][border_coord.y]
+		change.after_border = BorderInfo.new(BorderTileType.CLIFF)
+		step.changed_arr.append(change)
+		# 记录地图地块信息
+		_border_tile_info[border_coord.x][border_coord.y] = change.after
+		# 真正绘制边界悬崖
+		paint_cliff(border_coord)
+		
+		# 强制重绘选择区域
+		paint_new_green_chosen_area(true)
+	elif gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
+		# TODO: 右键消除
+		var border_coord: Vector2i = get_border_coord()
+		if not is_river_placable(border_coord):
+			return
+		
+		# 记录操作
+		var change: PaintChange = PaintChange.new()
+		change.coord = border_coord
+		change.tile_change = false
+		change.before_border = _border_tile_info[border_coord.x][border_coord.y]
+		change.after_border = BorderInfo.new(BorderTileType.RIVER)
+		step.changed_arr.append(change)
+		# 记录地图地块信息
+		_border_tile_info[border_coord.x][border_coord.y] = change.after
+		# 真正绘制边界河流
+		paint_river(border_coord)
+		
+		# 强制重绘选择区域
+		paint_new_green_chosen_area(true)
+	
+	if step.changed_arr.size() > 0:
 		_before_step_stack.push_back(step)
 		# 最多只记录 30 个历史操作
 		if _before_step_stack.size() > 30:
@@ -234,43 +410,33 @@ func paint_map() -> void:
 		# 每次操作后也就意味着不能向后恢复了
 		_after_step_stack.clear()
 		gui.set_restore_button_disable(true)
-		
-		# 强制重绘选择区域
-		paint_new_green_chosen_area(true)
-	elif gui.place_mode == MapEditorGUI.PlaceMode.CLIFF:
-		# TODO: 操作恢复和取消，右键消除，判断是否可以放置的逻辑
-		var border_coord: Vector2i = get_border_coord()
-		match get_border_type(border_coord):
-			BorderType.CENTER:
-				return
-			BorderType.BACK_SLASH:
-				border_tile_map.set_cell(0, border_coord, 0, Vector2i.ZERO)
-			BorderType.SLASH:
-				border_tile_map.set_cell(0, border_coord, 1, Vector2i.ZERO)
-			BorderType.VERTICAL:
-				border_tile_map.set_cell(0, border_coord, 2, Vector2i.ZERO)
-		# 强制重绘选择区域
-		paint_new_green_chosen_area(true)
-	elif gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
-		# TODO: 操作恢复和取消，右键消除，判断是否可以放置的逻辑
-		var border_coord: Vector2i = get_border_coord()
-		match get_border_type(border_coord):
-			BorderType.CENTER:
-				return
-			BorderType.BACK_SLASH:
-				border_tile_map.set_cell(0, border_coord, 3, Vector2i.ZERO)
-			BorderType.SLASH:
-				border_tile_map.set_cell(0, border_coord, 4, Vector2i.ZERO)
-			BorderType.VERTICAL:
-				border_tile_map.set_cell(0, border_coord, 5, Vector2i.ZERO)
-		# 强制重绘选择区域
-		paint_new_green_chosen_area(true)
+
+
+func paint_cliff(border_coord: Vector2i) -> void:
+	match get_border_type(border_coord):
+		BorderType.BACK_SLASH:
+			border_tile_map.set_cell(0, border_coord, 0, Vector2i.ZERO)
+		BorderType.SLASH:
+			border_tile_map.set_cell(0, border_coord, 1, Vector2i.ZERO)
+		BorderType.VERTICAL:
+			border_tile_map.set_cell(0, border_coord, 2, Vector2i.ZERO)
+
+
+func paint_river(border_coord: Vector2i) -> void:
+	match get_border_type(border_coord):
+		BorderType.BACK_SLASH:
+			border_tile_map.set_cell(0, border_coord, 3, Vector2i.ZERO)
+		BorderType.SLASH:
+			border_tile_map.set_cell(0, border_coord, 4, Vector2i.ZERO)
+		BorderType.VERTICAL:
+			border_tile_map.set_cell(0, border_coord, 5, Vector2i.ZERO)
 
 
 func paint_tile(coord: Vector2i, step: PaintStep, terrain_type: MapEditorGUI.TerrainType):
 	# 记录操作
 	var change: PaintChange = PaintChange.new()
 	change.coord = coord
+	change.tile_change = true
 	change.before = _map_tile_info[coord.x][coord.y]
 	change.after = TileInfo.new(terrain_type)
 	step.changed_arr.append(change)
@@ -319,6 +485,11 @@ func initialize_map(map_type: MapType, map_size: MapSize) -> void:
 			_map_tile_info.append([])
 			for j in range(size.y):
 				_map_tile_info[i].append(TileInfo.new(MapEditorGUI.TerrainType.OCEAN))
+		# 记录边界地块信息
+		for i in range(size.x * 2 + 2):
+			_border_tile_info.append([])
+			for j in range(size.y * 2 + 2):
+				_border_tile_info[i].append(BorderInfo.new(BorderTileType.EMPTY))
 
 
 func initialize_camera(map_size: MapSize) -> void:
@@ -394,16 +565,59 @@ func get_neighbor_tile_of_border(border_coord: Vector2i) -> Array[Vector2i]:
 		BorderType.CENTER:
 			return [border_coord / 2]
 		BorderType.VERTICAL:
-			return [Vector2i((border_coord.x - 1) / 2, border_coord.y / 2),
-					Vector2i((border_coord.x + 1) / 2, border_coord.y / 2)]
+			# 不能简写成 (border_corder.x - 1) / 2 否则负数有 bug
+			return [Vector2i((border_coord.x + 1)/ 2 - 1, border_coord.y / 2),
+					Vector2i(border_coord.x / 2 + border_coord.x % 2, border_coord.y / 2)]
 		BorderType.SLASH:
-			return [Vector2i((border_coord.x - 1) / 2, border_coord.y / 2 - 1),
+			return [Vector2i((border_coord.x + 1)/ 2 - 1, border_coord.y / 2 - 1),
 					Vector2i(border_coord.x / 2, border_coord.y / 2)]
 		BorderType.BACK_SLASH:
 			return [Vector2i(border_coord.x / 2, border_coord.y / 2 - 1),
-					Vector2i((border_coord.x - 1) / 2, border_coord.y / 2)]
+					Vector2i((border_coord.x + 1) / 2 - 1, border_coord.y / 2)]
 		_:
-			printerr("getNeighborTileOfBorder | unknown border type")
+			printerr("get_neighbor_tile_of_border | unknown border type")
+			return []
+
+
+##
+#	边界		相邻边界
+#	vertical
+#	(1,1)	(1,0),(2,0),(1,2),(2,2)
+#	(3,1)	(3,0),(4,0),(3,2),(4,2)
+#	(0,3)	(0,2),(1,2),(0,4),(1,4)
+#	(2,3)	(2,2),(3,2),(2,4),(3,4)
+#	slash
+#	(1,2)	(1,1),(2,2),(0,2),(0,3)
+#	(3,2)	(3,1),(4,2),(2,2),(2,3)
+#	(2,4)	(2,3),(3,4),(1,4),(1,5)
+#	(4,4)	(4,3),(5,4),(3,4),(3,5)
+#	back_slash:
+#	(2,2)	(1,1),(1,2),(3,2),(2,3)
+#	(4,2)	(3,1),(3,2),(5,2),(4,3)
+#	(1,4)	(0,3),(0,4),(2,4),(1,5)
+#	(3,4)	(2,3),(2,4),(4,4),(3,5)
+##
+func get_connect_border_of_border(border_coord: Vector2i) -> Array[Vector2i]:
+	match get_border_type(border_coord):
+		BorderType.CENTER:
+			return get_all_tile_border(border_coord / 2, false)
+		BorderType.VERTICAL:
+			return [Vector2i(border_coord.x, border_coord.y - 1),
+					Vector2i(border_coord.x + 1, border_coord.y - 1),
+					Vector2i(border_coord.x, border_coord.y + 1),
+					Vector2i(border_coord.x + 1, border_coord.y + 1)]
+		BorderType.SLASH:
+			return [Vector2i(border_coord.x, border_coord.y - 1),
+					Vector2i(border_coord.x + 1, border_coord.y),
+					Vector2i(border_coord.x - 1, border_coord.y),
+					Vector2i(border_coord.x - 1, border_coord.y + 1)]
+		BorderType.BACK_SLASH:
+			return [Vector2i(border_coord.x - 1, border_coord.y - 1),
+					Vector2i(border_coord.x - 1, border_coord.y),
+					Vector2i(border_coord.x + 1, border_coord.y),
+					Vector2i(border_coord.x, border_coord.y + 1)]
+		_:
+			printerr("get_connect_border_of_border | unknown border type")
 			return []
 
 
@@ -511,12 +725,22 @@ class PaintStep:
 
 class PaintChange:
 	var coord: Vector2i
+	var tile_change: bool
 	var before: TileInfo
 	var after: TileInfo
+	var before_border: BorderInfo
+	var after_border: BorderInfo
 
 
 class TileInfo:
 	var type: MapEditorGUI.TerrainType = MapEditorGUI.TerrainType.OCEAN
 	
 	func _init(type: MapEditorGUI.TerrainType) -> void:
+		self.type = type
+
+
+class BorderInfo:
+	var type: BorderTileType
+	
+	func _init(type: BorderTileType) -> void:
 		self.type = type

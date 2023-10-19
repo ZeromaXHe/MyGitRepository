@@ -30,10 +30,12 @@ texture_region_size = Vector2i(61, 71)
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_25arm"]
 texture = ExtResource("5_khfdy")
 texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6qgp2"]
 texture = ExtResource("6_hr4fy")
 texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tv16t"]
 texture = ExtResource("4_hbyls")
@@ -73,6 +75,7 @@ texture_region_size = Vector2i(61, 71)
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y8xqk"]
 texture = ExtResource("14_gnyp4")
 texture_region_size = Vector2i(61, 71)
+0:0/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_itrfv"]
 tile_shape = 3
