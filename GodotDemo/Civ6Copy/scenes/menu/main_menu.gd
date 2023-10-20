@@ -101,6 +101,12 @@ func _on_map_editor_button_pressed() -> void:
 	main_button_pressed(map_editor_button)
 
 
-## 点击地图编辑器的新地图按钮
+## 点击地图编辑器的“新地图”按钮
 func _on_new_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu/create_map_menu.tscn")
+
+
+## 点击地图编辑器的“加载地图”按钮
+func _on_load_button_pressed() -> void:
+	GlobalScript.load_map = true
+	get_tree().change_scene_to_file("res://scenes/map_editor/map_editor.tscn")

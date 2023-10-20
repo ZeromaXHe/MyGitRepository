@@ -31,7 +31,7 @@ var _terrain_type_to_tile_dict : Dictionary = {
 	Map.TerrainType.OCEAN: MapTileCell.new(2, Vector2i(0, 0)),
 }
 # 记录地图
-var _map: Map = Map.new()
+var _map: Map
 # 恢复和取消，记录操作的栈
 var _before_step_stack: Array[PaintStep] = []
 var _after_step_stack: Array[PaintStep] = []
@@ -43,10 +43,14 @@ var _after_step_stack: Array[PaintStep] = []
 
 
 func _ready() -> void:
-	initialize_map(_map.map_type, _map.map_size)
-	initialize_camera(_map.map_size)
+	if GlobalScript.load_map:
+		load_map()
+	else:
+		initialize_map()
+	initialize_camera(_map.size)
 	gui.restore_btn_pressed.connect(handle_restore)
 	gui.cancel_btn_pressed.connect(handle_cancel)
+	gui.save_map_btn_pressed.connect(handle_save_map)
 
 
 func _process(delta: float) -> void:
@@ -77,6 +81,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		camera.drag(event.position)
 
 
+func handle_save_map() -> void:
+	_map.save()
+
+
 func handle_restore() -> void:
 	if _after_step_stack.is_empty():
 		printerr("之后操作为空，异常！")
@@ -93,13 +101,7 @@ func handle_restore() -> void:
 			_map.change_map_tile_info(change.coord, change.after)
 		else:
 			# 恢复 BorderTileMap 到操作后的状态
-			match change.after_border.type:
-				Map.BorderTileType.EMPTY:
-					border_tile_map.set_cell(0, change.coord, -1)
-				Map.BorderTileType.RIVER:
-					paint_river(change.coord)
-				Map.BorderTileType.CLIFF:
-					paint_cliff(change.coord)
+			paint_border_tile_map(change.coord, change.after_border.type)
 			# 恢复地图地块信息
 			_map.change_border_tile_info(change.coord, change.after_border)
 	# 把操作存到之前的取消栈中
@@ -123,18 +125,22 @@ func handle_cancel() -> void:
 			_map.change_map_tile_info(change.coord, change.before)
 		else:
 			# 恢复 BorderTileMap 到操作前的状态
-			match change.before_border.type:
-				Map.BorderTileType.EMPTY:
-					border_tile_map.set_cell(0, change.coord, -1)
-				Map.BorderTileType.RIVER:
-					paint_river(change.coord)
-				Map.BorderTileType.CLIFF:
-					paint_cliff(change.coord)
+			paint_border_tile_map(change.coord, change.before_border.type)
 			# 恢复地图地块信息
 			_map.change_border_tile_info(change.coord, change.before_border)
 	# 把操作存到之后的恢复栈中
 	_after_step_stack.push_back(step)
 	gui.set_restore_button_disable(false)
+
+
+func paint_border_tile_map(coord: Vector2i, type: Map.BorderTileType) -> void:
+	match type:
+		Map.BorderTileType.EMPTY:
+			border_tile_map.set_cell(0, coord, -1)
+		Map.BorderTileType.RIVER:
+			paint_river(coord)
+		Map.BorderTileType.CLIFF:
+			paint_cliff(coord)
 
 
 func get_border_coord() -> Vector2i:
@@ -313,11 +319,11 @@ func paint_map() -> void:
 			return
 		var dist: int = gui.get_painter_size_dist()
 		# 地图大小
-		var size: Vector2i = _map.size_dict[_map.map_size]
+		var map_size: Vector2i = Map.SIZE_DICT[_map.size]
 		var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
 		for coord in inside:
 			# 超出地图范围的不处理
-			if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
+			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
 				continue
 			paint_tile(coord, step, gui.terrain_type)
 		# 围绕陆地地块绘制浅海
@@ -325,7 +331,7 @@ func paint_map() -> void:
 			var out_ring: Array[Vector2i] = get_surrounding_cells(map_coord, dist + 1, false)
 			for coord in out_ring:
 				# 超出地图范围的不处理
-				if coord.x < 0 or coord.x >= size.x or coord.y < 0 or coord.y >= size.y:
+				if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
 					continue
 				# 仅深海需要改为浅海
 				if tile_map.get_cell_source_id(0, coord) != 2:
@@ -449,10 +455,27 @@ func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool)
 	return result
 
 
-func initialize_map(map_type: Map.Type, map_size: Map.Size) -> void:
-	if map_type == Map.Type.BLANK:
+func load_map() -> void:
+	_map = Map.load_from_save()
+	var size: Vector2i = Map.SIZE_DICT[_map.size]
+	# 读取地块
+	for i in range(0, size.x):
+		for j in range(0, size.y):
+			var coord := Vector2i(i, j)
+			var tile: MapTileCell = _terrain_type_to_tile_dict[_map.get_map_tile_info_at(coord).type]
+			tile_map.set_cell(0, coord, tile.source_id, tile.atlas_coords)
+	# 读取边界
+	for i in range(size.x * 2 + 2):
+		for j in range(size.y * 2 + 2):
+			var coord := Vector2i(i, j)
+			paint_border_tile_map(coord, _map.get_border_tile_info_at(coord).type)
+
+
+func initialize_map() -> void:
+	_map = Map.new()
+	if _map.type == Map.Type.BLANK:
 		# 修改 TileMap 图块
-		var size: Vector2i = _map.size_dict[map_size]
+		var size: Vector2i = Map.SIZE_DICT[_map.size]
 		var ocean_cell: MapTileCell = _terrain_type_to_tile_dict[Map.TerrainType.OCEAN]
 		for i in range(0, size.x, 1):
 			for j in range(0, size.y, 1):
@@ -460,7 +483,7 @@ func initialize_map(map_type: Map.Type, map_size: Map.Size) -> void:
 
 
 func initialize_camera(map_size: Map.Size) -> void:
-	var size: Vector2i = _map.size_dict[map_size]
+	var size: Vector2i = Map.SIZE_DICT[map_size]
 	var tile_x: int = tile_map.tile_set.tile_size.x
 	var tile_y: int = tile_map.tile_set.tile_size.y
 	# 小心 int 溢出

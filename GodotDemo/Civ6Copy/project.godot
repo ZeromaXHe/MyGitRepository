@@ -14,3 +14,7 @@ config/name="Civ6Copy"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.1", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GlobalScript="*res://scripts/global_script.gd"

@@ -159,32 +159,74 @@ enum BorderTileType {
 }
 
 # 地图尺寸和格子数的映射字典
-const size_dict: Dictionary = {
+const SIZE_DICT: Dictionary = {
 	0: Vector2i(44, 26),
 }
 
-var map_size: Size
-var map_type: Type
+var size: Size
+var type: Type
 # 记录地图图块数据
 var _map_tile_info: Array = []
 var _border_tile_info: Array = []
 
 
 func _init() -> void:
-	map_size = Size.DUAL
-	map_type = Type.BLANK
+	size = Size.DUAL
+	type = Type.BLANK
 
-	var size: Vector2i = size_dict[map_size]
+	var map_size: Vector2i = SIZE_DICT[size]
 	# 记录地图地块信息
-	for i in range(size.x):
+	for i in range(map_size.x):
 		_map_tile_info.append([])
-		for j in range(size.y):
-			_map_tile_info[i].append(Map.TileInfo.new(Map.TerrainType.OCEAN))
+		for j in range(map_size.y):
+			_map_tile_info[i].append(TileInfo.new(TerrainType.OCEAN))
 	# 记录边界地块信息
-	for i in range(size.x * 2 + 2):
+	for i in range(map_size.x * 2 + 2):
 		_border_tile_info.append([])
-		for j in range(size.y * 2 + 2):
-			_border_tile_info[i].append(Map.BorderInfo.new(Map.BorderTileType.EMPTY))
+		for j in range(map_size.y * 2 + 2):
+			_border_tile_info[i].append(BorderInfo.new(BorderTileType.EMPTY))
+
+
+func save() -> void:
+	var json_string: String = JSON.stringify(get_persistance_dict())
+	print("save | json_string:", json_string)
+	var save_map: FileAccess = FileAccess.open("user://map.save", FileAccess.WRITE)
+	save_map.store_line(json_string)
+
+
+func get_persistance_dict() -> Dictionary:
+	return {
+		"size": size,
+		"type": type,
+		"map_tile_info": serialize_map_tile_info(),
+		"border_tile_info": serialize_border_tile_info(),
+	}
+
+
+func serialize_map_tile_info() -> String:
+	var res: String = ""
+	for row in _map_tile_info:
+		if res != "":
+			res += ";"
+		for elem in row:
+			if res != "" and not res.ends_with(";"):
+				res += ","
+			var tile_info := elem as TileInfo
+			res += str(tile_info.type)
+	return res
+
+
+func serialize_border_tile_info() -> String:
+	var res: String = ""
+	for row in _border_tile_info:
+		if res != "":
+			res += ";"
+		for elem in row:
+			if res != "" and not res.ends_with(";"):
+				res += ","
+			var border_info := elem as BorderInfo
+			res += str(border_info.type)
+	return res
 
 
 func change_map_tile_info(coord: Vector2i, tile_info: TileInfo) -> void:
@@ -201,6 +243,50 @@ func get_map_tile_info_at(coord: Vector2i) -> TileInfo:
 
 func get_border_tile_info_at(coord: Vector2i) -> BorderInfo:
 	return _border_tile_info[coord.x][coord.y]
+
+
+static func load_from_save() -> Map:
+	var res: Map = null
+	if not FileAccess.file_exists("user://map.save"):
+		printerr("load | Error! We don't have a save to load.")
+		return res
+	var save_map: FileAccess = FileAccess.open("user://map.save", FileAccess.READ)
+	while save_map.get_position() < save_map.get_length():
+		var json_string: String = save_map.get_line()
+		var json := JSON.new()
+		var parse_result: Error = json.parse(json_string)
+		if not parse_result == OK:
+			printerr("load | JSON Parse Error: ", json.get_error_message(), " in ", json_string, " at line ", json.get_error_line())
+			continue
+		var node_data: Variant = json.get_data()
+		res = Map.new()
+		res.size = node_data["size"]
+		res.type = node_data["type"]
+		res._map_tile_info = deserialize_map_tile_info(node_data["map_tile_info"])
+		res._border_tile_info = deserialize_border_tile_info(node_data["border_tile_info"])
+	return res
+
+
+static func deserialize_map_tile_info(data_str: String) -> Array:
+	var map_tile_info: Array = []
+	var row_strs: PackedStringArray = data_str.split(";")
+	for row_str in row_strs:
+		map_tile_info.append([])
+		var elem_strs: PackedStringArray = row_str.split(",")
+		for elem_str in elem_strs:
+			map_tile_info.back().append(TileInfo.new(int(elem_str)))
+	return map_tile_info
+
+
+static func deserialize_border_tile_info(data_str: String) -> Array:
+	var border_tile_info: Array = []
+	var row_strs: PackedStringArray = data_str.split(";")
+	for row_str in row_strs:
+		border_tile_info.append([])
+		var elem_strs: PackedStringArray = row_str.split(",")
+		for elem_str in elem_strs:
+			border_tile_info.back().append(BorderInfo.new(int(elem_str)))
+	return border_tile_info
 
 
 ##
@@ -407,9 +493,9 @@ static func test_get_tile_coord_directed_border() -> void:
 
 
 class TileInfo:
-	var type: Map.TerrainType = Map.TerrainType.OCEAN
+	var type: TerrainType = TerrainType.OCEAN
 	
-	func _init(type: Map.TerrainType) -> void:
+	func _init(type: TerrainType) -> void:
 		self.type = type
 
 

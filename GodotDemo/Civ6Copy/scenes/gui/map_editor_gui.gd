@@ -4,6 +4,7 @@ extends CanvasLayer
 
 signal restore_btn_pressed
 signal cancel_btn_pressed
+signal save_map_btn_pressed
 
 enum TabStatus {
 	PLACE,
@@ -25,6 +26,89 @@ enum PainterSize {
 	SMALL,
 	MID,
 	BIG,
+}
+
+const TERRAIN_NAME_TO_TYPE_DICT: Dictionary = {
+	"草原": Map.TerrainType.GRASS,
+	"草丘": Map.TerrainType.GRASS_HILL,
+	"草山": Map.TerrainType.GRASS_MOUNTAIN,
+	"平原": Map.TerrainType.PLAIN,
+	"平丘": Map.TerrainType.PLAIN_HILL,
+	"平山": Map.TerrainType.PLAIN_MOUNTAIN,
+	"沙漠": Map.TerrainType.DESERT,
+	"沙丘": Map.TerrainType.DESERT_HILL,
+	"沙山": Map.TerrainType.DESERT_MOUNTAIN,
+	"冻土": Map.TerrainType.TUNDRA,
+	"冻丘": Map.TerrainType.TUNDRA_HILL,
+	"冻山": Map.TerrainType.TUNDRA_MOUNTAIN,
+	"雪地": Map.TerrainType.SNOW,
+	"雪丘": Map.TerrainType.SNOW_HILL,
+	"雪山": Map.TerrainType.SNOW_MOUNTAIN,
+	"浅水": Map.TerrainType.SHORE,
+	"海洋": Map.TerrainType.OCEAN,
+}
+
+const PAINTER_NAME_TO_SIZE_DICT: Dictionary = {
+	"小笔刷": PainterSize.SMALL,
+	"中笔刷": PainterSize.MID,
+	"大笔刷": PainterSize.BIG,
+}
+
+const LANDSCAPE_NAME_TO_TYPE_DICT: Dictionary = {
+	"冰块": Map.LandscapeType.ICE,
+	"森林": Map.LandscapeType.FOREST,
+	"沼泽": Map.LandscapeType.SWAMP,
+	"泛滥": Map.LandscapeType.FLOOD,
+	"绿洲": Map.LandscapeType.OASIS,
+	"雨林": Map.LandscapeType.RAINFOREST,
+}
+
+const RESOURCE_NAME_TO_TYPE_DICT: Dictionary = {
+	"丝绸": Map.ResourceType.SILK,
+	"历遗": Map.ResourceType.RELIC,
+	"可可": Map.ResourceType.COCOA_BEAN,
+	"咖啡": Map.ResourceType.COFFEE,
+	"大理": Map.ResourceType.MARBLE,
+	"大米": Map.ResourceType.RICE,
+	"小麦": Map.ResourceType.WHEAT,
+	"松露": Map.ResourceType.TRUFFLE,
+	"柑橘": Map.ResourceType.ORANGE,
+	"染料": Map.ResourceType.DYE,
+	"棉花": Map.ResourceType.COTTON,
+	"水银": Map.ResourceType.MERCURY,
+	"海遗": Map.ResourceType.WRECKAGE,
+	"烟草": Map.ResourceType.TOBACCO,
+	"煤": Map.ResourceType.COAL,
+	"熏香": Map.ResourceType.INCENSE,
+	"牛": Map.ResourceType.COW,
+	"玉": Map.ResourceType.JADE,
+	"玉米": Map.ResourceType.CORN,
+	"珍珠": Map.ResourceType.PEARL,
+	"皮草": Map.ResourceType.FUR,
+	"盐": Map.ResourceType.SALT,
+	"石头": Map.ResourceType.STONE,
+	"石油": Map.ResourceType.OIL,
+	"石膏": Map.ResourceType.GYPSUM,
+	"硝石": Map.ResourceType.SALTPETER,
+	"糖": Map.ResourceType.SUGAR,
+	"羊": Map.ResourceType.SHEEP,
+	"茶": Map.ResourceType.TEA,
+	"葡萄": Map.ResourceType.WINE,
+	"蜂蜜": Map.ResourceType.HONEY,
+	"螃蟹": Map.ResourceType.CRAB,
+	"象牙": Map.ResourceType.IVORY,
+	"钻石": Map.ResourceType.DIAMOND,
+	"铀": Map.ResourceType.URANIUM,
+	"铁": Map.ResourceType.IRON,
+	"铜": Map.ResourceType.COPPER,
+	"铝": Map.ResourceType.ALUMINIUM,
+	"银": Map.ResourceType.SILVER,
+	"香料": Map.ResourceType.SPICE,
+	"香蕉": Map.ResourceType.BANANA,
+	"马": Map.ResourceType.HORSE,
+	"鱼": Map.ResourceType.FISH,
+	"鲸鱼": Map.ResourceType.WHALE,
+	"鹿": Map.ResourceType.DEER,
 }
 
 var place_mode: PlaceMode = PlaceMode.TERRAIN
@@ -50,6 +134,8 @@ var resource_type_group: ButtonGroup = null
 @onready var cliff_button: Button = $MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer/CliffButton
 @onready var resource_button: Button = $MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer/ResourceButton
 @onready var village_button: Button = $MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer/VillageButton
+# 菜单界面相关
+@onready var menu_overlay: PanelContainer = $MenuOverlay
 # 右下角放置时的容器
 @onready var terrain_container: GridContainer = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer"
 @onready var landscape_container: GridContainer = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/LandscapeGridContainer"
@@ -61,29 +147,11 @@ var resource_type_group: ButtonGroup = null
 @onready var village_container: GridContainer = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/VillageGridContainer"
 # 右边选择笔刷大小的按钮
 @onready var small_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/SmallButton"
-@onready var mid_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/MidButton"
-@onready var big_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/BigButton"
 # 恢复和取消按钮
 @onready var restore_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/RestoreButton"
 @onready var cancel_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/CancelButton"
 # 右边放置地形时的按钮
 @onready var grass_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/GrassButton"
-@onready var grass_hill_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/GrassHillButton"
-@onready var grass_mountain_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/GrassMountainButton"
-@onready var plain_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/PlainButton"
-@onready var plain_hill_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/PlainHillButton"
-@onready var plain_mountain_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/PlainMountainButton"
-@onready var desert_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/DesertButton"
-@onready var desert_hill_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/DesertHillButton"
-@onready var desert_mountain_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/DesertMountainButton"
-@onready var tundra_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/TundraButton"
-@onready var tundra_hill_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/TundraHillButton"
-@onready var tundra_mountain_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/TundraMountainButton"
-@onready var snow_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/SnowButton"
-@onready var snow_hill_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/SnowHillButton"
-@onready var snow_mountain_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/SnowMountainButton"
-@onready var shore_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/ShoreButton"
-@onready var ocean_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/TerrainGridContainer/OceanButton"
 # 右边放置地貌时的按钮
 @onready var ice_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/LandscapeGridContainer/IceButton"
 @onready var forest_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/LandscapeGridContainer/ForestButton"
@@ -95,50 +163,6 @@ var resource_type_group: ButtonGroup = null
 @onready var continent_option_button: OptionButton = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ContinentVBoxContainer/ContinentOptionButton"
 # 右边放置资源时的按钮
 @onready var silk_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SilkButton"
-@onready var relic_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/RelicButton"
-@onready var cocoa_bean_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CocoaBeanButton"
-@onready var coffee_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CoffeeButton"
-@onready var marble_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/MarbleButton"
-@onready var rice_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/RiceButton"
-@onready var wheat_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/WheatButton"
-@onready var truffle_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/TruffleButton"
-@onready var orange_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/OrangeButton"
-@onready var dye_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/DyeButton"
-@onready var cotton_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CottonButton"
-@onready var mercury_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/MercuryButton"
-@onready var wreckage_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/WreckageButton"
-@onready var tobacco_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/TobaccoButton"
-@onready var coal_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CoalButton"
-@onready var incense_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/IncenseButton"
-@onready var cow_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CowButton"
-@onready var jade_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/JadeButton"
-@onready var corn_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CornButton"
-@onready var pearl_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/PearlButton"
-@onready var fur_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/FurButton"
-@onready var salt_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SaltButton"
-@onready var stone_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/StoneButton"
-@onready var oil_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/OilButton"
-@onready var gypsum_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/GypsumButton"
-@onready var saltpeter_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SaltpeterButton"
-@onready var sugar_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SugarButton"
-@onready var sheep_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SheepButton"
-@onready var tea_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/TeaButton"
-@onready var wine_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/WineButton"
-@onready var honey_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/HoneyButton"
-@onready var crab_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CrabButton"
-@onready var ivory_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/IvoryButton"
-@onready var diamond_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/DiamondButton"
-@onready var uranium_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/UraniumButton"
-@onready var iron_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/IronButton"
-@onready var copper_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/CopperButton"
-@onready var aluminium_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/AluminiumButton"
-@onready var silver_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SilverButton"
-@onready var spice_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SpiceButton"
-@onready var banana_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/BananaButton"
-@onready var horse_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/HorseButton"
-@onready var fish_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/FishButton"
-@onready var whale_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/WhaleButton"
-@onready var deer_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/DeerButton"
 
 
 func _ready() -> void:
@@ -159,6 +183,8 @@ func _ready() -> void:
 	# 初始化恢复和取消按钮
 	restore_button.disabled = true
 	cancel_button.disabled = true
+	# 菜单界面不显示
+	menu_overlay.visible = false
 
 
 func disvisible_all_place_container() -> void:
@@ -204,73 +230,27 @@ func handle_place_mode_group_pressed(button: BaseButton) -> void:
 
 
 func handle_terrain_type_group_pressed(button: BaseButton) -> void:
-	match button:
-		grass_button:
-			terrain_type = Map.TerrainType.GRASS
-		grass_hill_button:
-			terrain_type = Map.TerrainType.GRASS_HILL
-		grass_mountain_button:
-			terrain_type = Map.TerrainType.GRASS_MOUNTAIN
-		plain_button:
-			terrain_type = Map.TerrainType.PLAIN
-		plain_hill_button:
-			terrain_type = Map.TerrainType.PLAIN_HILL
-		plain_mountain_button:
-			terrain_type = Map.TerrainType.PLAIN_MOUNTAIN
-		desert_button:
-			terrain_type = Map.TerrainType.DESERT
-		desert_hill_button:
-			terrain_type = Map.TerrainType.DESERT_HILL
-		desert_mountain_button:
-			terrain_type = Map.TerrainType.DESERT_MOUNTAIN
-		tundra_button:
-			terrain_type = Map.TerrainType.TUNDRA
-		tundra_hill_button:
-			terrain_type = Map.TerrainType.TUNDRA_HILL
-		tundra_mountain_button:
-			terrain_type = Map.TerrainType.TUNDRA_MOUNTAIN
-		snow_button:
-			terrain_type = Map.TerrainType.SNOW
-		snow_hill_button:
-			terrain_type = Map.TerrainType.SNOW_HILL
-		snow_mountain_button:
-			terrain_type = Map.TerrainType.SNOW_MOUNTAIN
-		shore_button:
-			terrain_type = Map.TerrainType.SHORE
-		ocean_button:
-			terrain_type = Map.TerrainType.OCEAN
-		_:
-			printerr("wrong button in terrain type group")
+	var btn := button as Button
+	if not TERRAIN_NAME_TO_TYPE_DICT.has(btn.text):
+		printerr("handle_terrain_type_group_pressed | wrong button in terrain type group")
+		return
+	terrain_type = TERRAIN_NAME_TO_TYPE_DICT[btn.text]
 
 
 func handle_painter_size_group_pressed(button: BaseButton) -> void:
-	match button:
-		small_button:
-			painter_size = PainterSize.SMALL
-		mid_button:
-			painter_size = PainterSize.MID
-		big_button:
-			painter_size = PainterSize.BIG
-		_:
-			printerr("wrong button in painter size group")
+	var btn := button as Button
+	if not PAINTER_NAME_TO_SIZE_DICT.has(btn.text):
+		printerr("handle_painter_size_group_pressed | wrong button in painter size group")
+		return
+	painter_size = PAINTER_NAME_TO_SIZE_DICT[btn.text]
 
 
 func handle_landscape_type_group_pressed(button: BaseButton) -> void:
-	match button:
-		ice_button:
-			landscape_type = Map.LandscapeType.ICE
-		forest_button:
-			landscape_type = Map.LandscapeType.FOREST
-		swamp_button:
-			landscape_type = Map.LandscapeType.SWAMP
-		flood_button:
-			landscape_type = Map.LandscapeType.FLOOD
-		oasis_button:
-			landscape_type = Map.LandscapeType.OASIS
-		rainforest_button:
-			landscape_type = Map.LandscapeType.RAINFOREST
-		_:
-			printerr("wrong button in landscape type group")
+	var btn := button as Button
+	if not LANDSCAPE_NAME_TO_TYPE_DICT.has(btn.text):
+		printerr("handle_landscape_type_group_pressed | wrong button in landscape type group")
+		return
+	landscape_type = LANDSCAPE_NAME_TO_TYPE_DICT[btn.text]
 
 
 func handle_continent_item_selected(idx: int) -> void:
@@ -279,99 +259,11 @@ func handle_continent_item_selected(idx: int) -> void:
 
 
 func handle_resource_type_group_pressed(button: BaseButton) -> void:
-	match button:
-		silk_button:
-			resource_type = Map.ResourceType.SILK
-		relic_button:
-			resource_type = Map.ResourceType.RELIC
-		cocoa_bean_button:
-			resource_type = Map.ResourceType.COCOA_BEAN
-		coffee_button:
-			resource_type = Map.ResourceType.COFFEE
-		marble_button:
-			resource_type = Map.ResourceType.MARBLE
-		rice_button:
-			resource_type = Map.ResourceType.RICE
-		wheat_button:
-			resource_type = Map.ResourceType.WHEAT
-		truffle_button:
-			resource_type = Map.ResourceType.TRUFFLE
-		orange_button:
-			resource_type = Map.ResourceType.ORANGE
-		dye_button:
-			resource_type = Map.ResourceType.DYE
-		cotton_button:
-			resource_type = Map.ResourceType.COTTON
-		mercury_button:
-			resource_type = Map.ResourceType.MERCURY
-		wreckage_button:
-			resource_type = Map.ResourceType.WRECKAGE
-		tobacco_button:
-			resource_type = Map.ResourceType.TOBACCO
-		coal_button:
-			resource_type = Map.ResourceType.COAL
-		incense_button:
-			resource_type = Map.ResourceType.INCENSE
-		cow_button:
-			resource_type = Map.ResourceType.COW
-		jade_button:
-			resource_type = Map.ResourceType.JADE
-		corn_button:
-			resource_type = Map.ResourceType.CORN
-		pearl_button:
-			resource_type = Map.ResourceType.PEARL
-		fur_button:
-			resource_type = Map.ResourceType.FUR
-		salt_button:
-			resource_type = Map.ResourceType.SALT
-		stone_button:
-			resource_type = Map.ResourceType.STONE
-		oil_button:
-			resource_type = Map.ResourceType.OIL
-		gypsum_button:
-			resource_type = Map.ResourceType.GYPSUM
-		saltpeter_button:
-			resource_type = Map.ResourceType.SALTPETER
-		sugar_button:
-			resource_type = Map.ResourceType.SUGAR
-		sheep_button:
-			resource_type = Map.ResourceType.SHEEP
-		tea_button:
-			resource_type = Map.ResourceType.TEA
-		wine_button:
-			resource_type = Map.ResourceType.WINE
-		honey_button:
-			resource_type = Map.ResourceType.HONEY
-		crab_button:
-			resource_type = Map.ResourceType.CRAB
-		ivory_button:
-			resource_type = Map.ResourceType.IVORY
-		diamond_button:
-			resource_type = Map.ResourceType.DIAMOND
-		uranium_button:
-			resource_type = Map.ResourceType.URANIUM
-		iron_button:
-			resource_type = Map.ResourceType.IRON
-		copper_button:
-			resource_type = Map.ResourceType.COPPER
-		aluminium_button:
-			resource_type = Map.ResourceType.ALUMINIUM
-		silver_button:
-			resource_type = Map.ResourceType.SILVER
-		spice_button:
-			resource_type = Map.ResourceType.SPICE
-		banana_button:
-			resource_type = Map.ResourceType.BANANA
-		horse_button:
-			resource_type = Map.ResourceType.HORSE
-		fish_button:
-			resource_type = Map.ResourceType.FISH
-		whale_button:
-			resource_type = Map.ResourceType.WHALE
-		deer_button:
-			resource_type = Map.ResourceType.DEER
-		_:
-			printerr("wrong button in resource type group")
+	var btn := button as Button
+	if not RESOURCE_NAME_TO_TYPE_DICT.has(btn.text):
+		printerr("handle_resource_type_group_pressed | wrong button in resource type group")
+		return
+	resource_type = RESOURCE_NAME_TO_TYPE_DICT[btn.text]
 
 
 func get_painter_size_dist() -> int:
@@ -406,9 +298,36 @@ func set_cancel_button_disable(b: bool) -> void:
 	cancel_button.disabled = b
 
 
+## 点击右边栏“恢复”按钮
 func _on_restore_button_pressed() -> void:
 	restore_btn_pressed.emit()
 
 
+## 点击右边栏“取消”按钮
 func _on_cancel_button_pressed() -> void:
 	cancel_btn_pressed.emit()
+
+
+## 点击右上角菜单按钮
+func _on_menu_button_pressed() -> void:
+	menu_overlay.visible = true
+
+
+## 点击菜单页面“返回到地图”
+func _on_return_button_pressed() -> void:
+	menu_overlay.visible = false
+
+
+## 点击菜单页面“返回主菜单”
+func _on_main_menu_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")
+
+
+## 点击菜单页面“返回桌面”
+func _on_desktop_button_pressed() -> void:
+	get_tree().quit()
+
+
+## 点击菜单页面“保存地图”
+func _on_save_button_pressed() -> void:
+	save_map_btn_pressed.emit()

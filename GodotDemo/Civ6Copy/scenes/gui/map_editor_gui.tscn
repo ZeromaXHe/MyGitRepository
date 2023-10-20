@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cw4d6w6b4mr0o"]
+[gd_scene load_steps=12 format=3 uid="uid://cw4d6w6b4mr0o"]
 
 [ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="1_gwgln"]
 [ext_resource type="Script" path="res://scenes/gui/map_editor_gui.gd" id="1_lwefg"]
@@ -9,6 +9,12 @@
 [ext_resource type="ButtonGroup" uid="uid://25ektawcibr" path="res://scenes/gui/painter_size_btn_group.tres" id="4_xnhqu"]
 [ext_resource type="ButtonGroup" uid="uid://chjyaxgfkotgt" path="res://scenes/gui/landscape_mode_place_btn_group.tres" id="6_u002j"]
 [ext_resource type="ButtonGroup" uid="uid://byp27x6033aly" path="res://scenes/gui/resource_mode_place_btn_group.tres" id="7_bf14j"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vkijp"]
+bg_color = Color(0.133333, 0.133333, 0.133333, 0.901961)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dypht"]
+bg_color = Color(0.0666667, 0.14902, 0.243137, 0.933333)
 
 [node name="MapEditorGUI" type="CanvasLayer"]
 script = ExtResource("1_lwefg")
@@ -998,5 +1004,71 @@ handle_input_locally = false
 size = Vector2i(288, 162)
 render_target_update_mode = 4
 
+[node name="MenuOverlay" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_vkijp")
+
+[node name="MenuCenterContainer" type="CenterContainer" parent="MenuOverlay"]
+layout_mode = 2
+
+[node name="MenuPanelContainer" type="PanelContainer" parent="MenuOverlay/MenuCenterContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dypht")
+
+[node name="MenuMarginContainer" type="MarginContainer" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 10
+
+[node name="MenuVBoxContainer" type="VBoxContainer" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer"]
+custom_minimum_size = Vector2(80, 200)
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+text = "菜单"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+
+[node name="ReturnButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+text = "返回到地图"
+
+[node name="EmptyLabel" type="Label" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SaveButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+text = "保存地图"
+
+[node name="OptionButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+text = "选项"
+
+[node name="MainMenuButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+text = "返回主菜单"
+
+[node name="DesktopButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+text = "返回桌面"
+
+[connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/MarginContainer/MenuButton" to="." method="_on_menu_button_pressed"]
 [connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/CancelButton" to="." method="_on_cancel_button_pressed"]
 [connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/RestoreButton" to="." method="_on_restore_button_pressed"]
+[connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/ReturnButton" to="." method="_on_return_button_pressed"]
+[connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
+[connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/DesktopButton" to="." method="_on_desktop_button_pressed"]
