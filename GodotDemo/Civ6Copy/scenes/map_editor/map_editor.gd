@@ -111,10 +111,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				# 选取图块
 				_from_camera_position = camera.to_local(get_global_mouse_position())
 			else:
-				get_viewport().set_input_as_handled()
 				camera.end_drag()
 				if camera.to_local(get_global_mouse_position()).distance_to(_from_camera_position) < 20:
 					paint_map()
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.is_released():
+				get_viewport().set_input_as_handled()
+				depaint_map()
 	elif event is InputEventMouseMotion:
 		# 拖拽镜头过程中
 		get_viewport().set_input_as_handled()
@@ -330,6 +333,24 @@ func is_cliff_placable(border_coord: Vector2i) -> bool:
 	return neighbor_land and neighbor_sea
 
 
+func depaint_map() -> void:
+	var step: PaintStep = PaintStep.new()
+	if gui.place_mode == MapEditorGUI.PlaceMode.CLIFF or gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
+		var border_coord: Vector2i = get_border_coord()
+		if gui.place_mode == MapEditorGUI.PlaceMode.CLIFF \
+				and _border_tile_info[border_coord.x][border_coord.y].type != BorderTileType.CLIFF:
+			return
+		if gui.place_mode == MapEditorGUI.PlaceMode.RIVER \
+				and _border_tile_info[border_coord.x][border_coord.y].type != BorderTileType.RIVER:
+			return
+		paint_border(border_coord, step, BorderTileType.EMPTY)
+		
+		# 强制重绘选择区域
+		paint_new_green_chosen_area(true)
+	
+	save_paint_step(step)
+
+
 func paint_map() -> void:
 	var step: PaintStep = PaintStep.new()
 	if gui.place_mode == MapEditorGUI.PlaceMode.TERRAIN:
@@ -361,46 +382,28 @@ func paint_map() -> void:
 		# 强制重绘选择区域
 		paint_new_green_chosen_area(true)
 	elif gui.place_mode == MapEditorGUI.PlaceMode.CLIFF:
-		# TODO: 右键消除
 		var border_coord: Vector2i = get_border_coord()
 		if not is_cliff_placable(border_coord):
 			return
-		
-		# 记录操作
-		var change: PaintChange = PaintChange.new()
-		change.coord = border_coord
-		change.tile_change = false
-		change.before_border = _border_tile_info[border_coord.x][border_coord.y]
-		change.after_border = BorderInfo.new(BorderTileType.CLIFF)
-		step.changed_arr.append(change)
-		# 记录地图地块信息
-		_border_tile_info[border_coord.x][border_coord.y] = change.after
-		# 真正绘制边界悬崖
-		paint_cliff(border_coord)
+		# 绘制边界悬崖
+		paint_border(border_coord, step, BorderTileType.CLIFF)
 		
 		# 强制重绘选择区域
 		paint_new_green_chosen_area(true)
 	elif gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
-		# TODO: 右键消除
 		var border_coord: Vector2i = get_border_coord()
 		if not is_river_placable(border_coord):
 			return
-		
-		# 记录操作
-		var change: PaintChange = PaintChange.new()
-		change.coord = border_coord
-		change.tile_change = false
-		change.before_border = _border_tile_info[border_coord.x][border_coord.y]
-		change.after_border = BorderInfo.new(BorderTileType.RIVER)
-		step.changed_arr.append(change)
-		# 记录地图地块信息
-		_border_tile_info[border_coord.x][border_coord.y] = change.after
-		# 真正绘制边界河流
-		paint_river(border_coord)
+		# 绘制边界河流
+		paint_border(border_coord, step, BorderTileType.RIVER)
 		
 		# 强制重绘选择区域
 		paint_new_green_chosen_area(true)
 	
+	save_paint_step(step)
+
+
+func save_paint_step(step: PaintStep) -> void:
 	if step.changed_arr.size() > 0:
 		_before_step_stack.push_back(step)
 		# 最多只记录 30 个历史操作
@@ -410,6 +413,27 @@ func paint_map() -> void:
 		# 每次操作后也就意味着不能向后恢复了
 		_after_step_stack.clear()
 		gui.set_restore_button_disable(true)
+
+
+func paint_border(border_coord: Vector2i, step: PaintStep, type :BorderTileType) -> void:
+	# 记录操作
+	var change: PaintChange = PaintChange.new()
+	change.coord = border_coord
+	change.tile_change = false
+	change.before_border = _border_tile_info[border_coord.x][border_coord.y]
+	change.after_border = BorderInfo.new(type)
+	step.changed_arr.append(change)
+	# 记录地图地块信息
+	_border_tile_info[border_coord.x][border_coord.y] = change.after_border
+	# 真正绘制边界
+	match type:
+		BorderTileType.RIVER:
+			paint_river(border_coord)
+		BorderTileType.CLIFF:
+			paint_cliff(border_coord)
+		BorderTileType.EMPTY:
+			# 真正绘制边界为空
+			border_tile_map.set_cell(0, border_coord, -1)
 
 
 func paint_cliff(border_coord: Vector2i) -> void:
