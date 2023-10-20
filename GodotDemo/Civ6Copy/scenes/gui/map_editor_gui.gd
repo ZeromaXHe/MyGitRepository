@@ -21,145 +21,22 @@ enum PlaceMode {
 	VILLAGE,
 }
 
-enum TerrainType {
-	GRASS,
-	GRASS_HILL,
-	GRASS_MOUNTAIN,
-	PLAIN,
-	PLAIN_HILL,
-	PLAIN_MOUNTAIN,
-	DESERT,
-	DESERT_HILL,
-	DESERT_MOUNTAIN,
-	TUNDRA,
-	TUNDRA_HILL,
-	TUNDRA_MOUNTAIN,
-	SNOW,
-	SNOW_HILL,
-	SNOW_MOUNTAIN,
-	SHORE,
-	OCEAN,
-}
-
 enum PainterSize {
 	SMALL,
 	MID,
 	BIG,
 }
 
-enum LandscapeType {
-	ICE, # 冰
-	FOREST, # 森林
-	SWAMP, # 沼泽
-	FLOOD, # 泛滥平原
-	OASIS, # 绿洲
-	RAINFOREST, # 雨林
-}
-
-enum ContinentType {
-	AFRICA, # 非洲
-	AMASIA, # 阿马西亚
-	AMERICA, # 美洲
-	ANTARCTICA, # 南极洲
-	ARCTIC, # 北极大陆
-	ASIA, # 亚洲
-	ASIAMERICA, # 亚美大陆
-	ATLANTICA, # 大西洋洲
-	ATLANTIS, # 亚特兰蒂斯
-	AUSTRALIA, # 澳大利亚
-	AVALONIA, # 阿瓦隆尼亚
-	AZANIA, # 阿扎尼亚
-	BALTICA, # 波罗大陆
-	CIMMERIA, # 辛梅利亚大陆
-	COLUMBIA, # 哥伦比亚
-	CONGO_CRATON, # 刚果克拉通
-	EURAMERICA, # 欧美大陆
-	EUROPE, # 欧洲
-	GONDWANA, # 冈瓦那
-	KALAHARI, # 喀拉哈里
-	KAZAKHSTANIA, # 哈萨克大陆
-	KENORLAND, # 凯诺兰
-	KUMARI_KANDAM, # 古默里坎达
-	LAURASIA, # 劳亚古陆
-	LAURENTIA, # 劳伦古陆
-	LEMURIA, # 利莫里亚 
-	MU, # 穆大陆
-	NENA, # 妮娜大陆
-	NORTH_AMERICA, # 北美洲
-	NOVOPANGAEA, # 新盘古大陆
-	NUNA, # 努纳
-	OCEANIA, # 大洋洲
-	PANGAEA, # 盘古大陆
-	PANGAEA_ULTIMA, # 终极盘古大陆
-	PANNOTIA, # 潘诺西亚
-	RODINIA, # 罗迪尼亚
-	SIBERIA, # 西伯利亚
-	SOUTH_AMERICA, # 南美洲
-	TERRA_AUSTRALIS, # 未知的南方大陆
-	UR, # 乌尔
-	VAALBARA, # 瓦巴拉
-	VENDIAN, # 文德期
-	ZEALANDIA, # 西兰蒂亚
-}
-
-enum ResourceType {
-	SILK, # 丝绸
-	RELIC, # 历史遗迹
-	COCOA_BEAN, # 可可豆
-	COFFEE, # 咖啡
-	MARBLE, # 大理石
-	RICE, # 大米
-	WHEAT, # 小麦
-	TRUFFLE, # 松露
-	ORANGE, # 柑橘
-	DYE, # 染料
-	COTTON, # 棉花
-	MERCURY, # 水银
-	WRECKAGE, # 海难遗迹
-	TOBACCO, # 烟草
-	COAL, # 煤
-	INCENSE, # 熏香
-	COW, # 牛
-	JADE, # 玉
-	CORN, # 玉米
-	PEARL, # 珍珠
-	FUR, # 皮草
-	SALT, # 盐
-	STONE, # 石头
-	OIL, # 石油
-	GYPSUM, # 石膏
-	SALTPETER, # 硝石
-	SUGAR, # 糖
-	SHEEP, # 羊
-	TEA, # 茶
-	WINE, # 葡萄酒
-	HONEY, # 蜂蜜
-	CRAB, # 螃蟹
-	IVORY, # 象牙
-	DIAMOND, # 钻石
-	URANIUM, # 铀
-	IRON, # 铁
-	COPPER, # 铜
-	ALUMINIUM, # 铝
-	SILVER, # 银
-	SPICE, # 香料
-	BANANA, # 香蕉
-	HORSE, # 马
-	FISH, # 鱼
-	WHALE, # 鲸鱼
-	DEER, # 鹿
-}
-
 var place_mode: PlaceMode = PlaceMode.TERRAIN
 var place_mode_group: ButtonGroup = null
-var terrain_type: TerrainType = TerrainType.GRASS
+var terrain_type: Map.TerrainType = Map.TerrainType.GRASS
 var terrain_type_group: ButtonGroup = null
 var painter_size: PainterSize = PainterSize.SMALL
 var painter_size_group: ButtonGroup = null
-var landscape_type: LandscapeType = LandscapeType.ICE
+var landscape_type: Map.LandscapeType = Map.LandscapeType.ICE
 var landscape_type_group: ButtonGroup = null
-var continent_type: ContinentType = ContinentType.AFRICA
-var resource_type: ResourceType = ResourceType.SILK
+var continent_type: Map.ContinentType = Map.ContinentType.AFRICA
+var resource_type: Map.ResourceType = Map.ResourceType.SILK
 var resource_type_group: ButtonGroup = null
 
 @onready var info_label: Label = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/InfoLabel
@@ -329,39 +206,39 @@ func handle_place_mode_group_pressed(button: BaseButton) -> void:
 func handle_terrain_type_group_pressed(button: BaseButton) -> void:
 	match button:
 		grass_button:
-			terrain_type = TerrainType.GRASS
+			terrain_type = Map.TerrainType.GRASS
 		grass_hill_button:
-			terrain_type = TerrainType.GRASS_HILL
+			terrain_type = Map.TerrainType.GRASS_HILL
 		grass_mountain_button:
-			terrain_type = TerrainType.GRASS_MOUNTAIN
+			terrain_type = Map.TerrainType.GRASS_MOUNTAIN
 		plain_button:
-			terrain_type = TerrainType.PLAIN
+			terrain_type = Map.TerrainType.PLAIN
 		plain_hill_button:
-			terrain_type = TerrainType.PLAIN_HILL
+			terrain_type = Map.TerrainType.PLAIN_HILL
 		plain_mountain_button:
-			terrain_type = TerrainType.PLAIN_MOUNTAIN
+			terrain_type = Map.TerrainType.PLAIN_MOUNTAIN
 		desert_button:
-			terrain_type = TerrainType.DESERT
+			terrain_type = Map.TerrainType.DESERT
 		desert_hill_button:
-			terrain_type = TerrainType.DESERT_HILL
+			terrain_type = Map.TerrainType.DESERT_HILL
 		desert_mountain_button:
-			terrain_type = TerrainType.DESERT_MOUNTAIN
+			terrain_type = Map.TerrainType.DESERT_MOUNTAIN
 		tundra_button:
-			terrain_type = TerrainType.TUNDRA
+			terrain_type = Map.TerrainType.TUNDRA
 		tundra_hill_button:
-			terrain_type = TerrainType.TUNDRA_HILL
+			terrain_type = Map.TerrainType.TUNDRA_HILL
 		tundra_mountain_button:
-			terrain_type = TerrainType.TUNDRA_MOUNTAIN
+			terrain_type = Map.TerrainType.TUNDRA_MOUNTAIN
 		snow_button:
-			terrain_type = TerrainType.SNOW
+			terrain_type = Map.TerrainType.SNOW
 		snow_hill_button:
-			terrain_type = TerrainType.SNOW_HILL
+			terrain_type = Map.TerrainType.SNOW_HILL
 		snow_mountain_button:
-			terrain_type = TerrainType.SNOW_MOUNTAIN
+			terrain_type = Map.TerrainType.SNOW_MOUNTAIN
 		shore_button:
-			terrain_type = TerrainType.SHORE
+			terrain_type = Map.TerrainType.SHORE
 		ocean_button:
-			terrain_type = TerrainType.OCEAN
+			terrain_type = Map.TerrainType.OCEAN
 		_:
 			printerr("wrong button in terrain type group")
 
@@ -381,17 +258,17 @@ func handle_painter_size_group_pressed(button: BaseButton) -> void:
 func handle_landscape_type_group_pressed(button: BaseButton) -> void:
 	match button:
 		ice_button:
-			landscape_type = LandscapeType.ICE
+			landscape_type = Map.LandscapeType.ICE
 		forest_button:
-			landscape_type = LandscapeType.FOREST
+			landscape_type = Map.LandscapeType.FOREST
 		swamp_button:
-			landscape_type = LandscapeType.SWAMP
+			landscape_type = Map.LandscapeType.SWAMP
 		flood_button:
-			landscape_type = LandscapeType.FLOOD
+			landscape_type = Map.LandscapeType.FLOOD
 		oasis_button:
-			landscape_type = LandscapeType.OASIS
+			landscape_type = Map.LandscapeType.OASIS
 		rainforest_button:
-			landscape_type = LandscapeType.RAINFOREST
+			landscape_type = Map.LandscapeType.RAINFOREST
 		_:
 			printerr("wrong button in landscape type group")
 
@@ -404,95 +281,95 @@ func handle_continent_item_selected(idx: int) -> void:
 func handle_resource_type_group_pressed(button: BaseButton) -> void:
 	match button:
 		silk_button:
-			resource_type = ResourceType.SILK
+			resource_type = Map.ResourceType.SILK
 		relic_button:
-			resource_type = ResourceType.RELIC
+			resource_type = Map.ResourceType.RELIC
 		cocoa_bean_button:
-			resource_type = ResourceType.COCOA_BEAN
+			resource_type = Map.ResourceType.COCOA_BEAN
 		coffee_button:
-			resource_type = ResourceType.COFFEE
+			resource_type = Map.ResourceType.COFFEE
 		marble_button:
-			resource_type = ResourceType.MARBLE
+			resource_type = Map.ResourceType.MARBLE
 		rice_button:
-			resource_type = ResourceType.RICE
+			resource_type = Map.ResourceType.RICE
 		wheat_button:
-			resource_type = ResourceType.WHEAT
+			resource_type = Map.ResourceType.WHEAT
 		truffle_button:
-			resource_type = ResourceType.TRUFFLE
+			resource_type = Map.ResourceType.TRUFFLE
 		orange_button:
-			resource_type = ResourceType.ORANGE
+			resource_type = Map.ResourceType.ORANGE
 		dye_button:
-			resource_type = ResourceType.DYE
+			resource_type = Map.ResourceType.DYE
 		cotton_button:
-			resource_type = ResourceType.COTTON
+			resource_type = Map.ResourceType.COTTON
 		mercury_button:
-			resource_type = ResourceType.MERCURY
+			resource_type = Map.ResourceType.MERCURY
 		wreckage_button:
-			resource_type = ResourceType.WRECKAGE
+			resource_type = Map.ResourceType.WRECKAGE
 		tobacco_button:
-			resource_type = ResourceType.TOBACCO
+			resource_type = Map.ResourceType.TOBACCO
 		coal_button:
-			resource_type = ResourceType.COAL
+			resource_type = Map.ResourceType.COAL
 		incense_button:
-			resource_type = ResourceType.INCENSE
+			resource_type = Map.ResourceType.INCENSE
 		cow_button:
-			resource_type = ResourceType.COW
+			resource_type = Map.ResourceType.COW
 		jade_button:
-			resource_type = ResourceType.JADE
+			resource_type = Map.ResourceType.JADE
 		corn_button:
-			resource_type = ResourceType.CORN
+			resource_type = Map.ResourceType.CORN
 		pearl_button:
-			resource_type = ResourceType.PEARL
+			resource_type = Map.ResourceType.PEARL
 		fur_button:
-			resource_type = ResourceType.FUR
+			resource_type = Map.ResourceType.FUR
 		salt_button:
-			resource_type = ResourceType.SALT
+			resource_type = Map.ResourceType.SALT
 		stone_button:
-			resource_type = ResourceType.STONE
+			resource_type = Map.ResourceType.STONE
 		oil_button:
-			resource_type = ResourceType.OIL
+			resource_type = Map.ResourceType.OIL
 		gypsum_button:
-			resource_type = ResourceType.GYPSUM
+			resource_type = Map.ResourceType.GYPSUM
 		saltpeter_button:
-			resource_type = ResourceType.SALTPETER
+			resource_type = Map.ResourceType.SALTPETER
 		sugar_button:
-			resource_type = ResourceType.SUGAR
+			resource_type = Map.ResourceType.SUGAR
 		sheep_button:
-			resource_type = ResourceType.SHEEP
+			resource_type = Map.ResourceType.SHEEP
 		tea_button:
-			resource_type = ResourceType.TEA
+			resource_type = Map.ResourceType.TEA
 		wine_button:
-			resource_type = ResourceType.WINE
+			resource_type = Map.ResourceType.WINE
 		honey_button:
-			resource_type = ResourceType.HONEY
+			resource_type = Map.ResourceType.HONEY
 		crab_button:
-			resource_type = ResourceType.CRAB
+			resource_type = Map.ResourceType.CRAB
 		ivory_button:
-			resource_type = ResourceType.IVORY
+			resource_type = Map.ResourceType.IVORY
 		diamond_button:
-			resource_type = ResourceType.DIAMOND
+			resource_type = Map.ResourceType.DIAMOND
 		uranium_button:
-			resource_type = ResourceType.URANIUM
+			resource_type = Map.ResourceType.URANIUM
 		iron_button:
-			resource_type = ResourceType.IRON
+			resource_type = Map.ResourceType.IRON
 		copper_button:
-			resource_type = ResourceType.COPPER
+			resource_type = Map.ResourceType.COPPER
 		aluminium_button:
-			resource_type = ResourceType.ALUMINIUM
+			resource_type = Map.ResourceType.ALUMINIUM
 		silver_button:
-			resource_type = ResourceType.SILVER
+			resource_type = Map.ResourceType.SILVER
 		spice_button:
-			resource_type = ResourceType.SPICE
+			resource_type = Map.ResourceType.SPICE
 		banana_button:
-			resource_type = ResourceType.BANANA
+			resource_type = Map.ResourceType.BANANA
 		horse_button:
-			resource_type = ResourceType.HORSE
+			resource_type = Map.ResourceType.HORSE
 		fish_button:
-			resource_type = ResourceType.FISH
+			resource_type = Map.ResourceType.FISH
 		whale_button:
-			resource_type = ResourceType.WHALE
+			resource_type = Map.ResourceType.WHALE
 		deer_button:
-			resource_type = ResourceType.DEER
+			resource_type = Map.ResourceType.DEER
 		_:
 			printerr("wrong button in resource type group")
 
