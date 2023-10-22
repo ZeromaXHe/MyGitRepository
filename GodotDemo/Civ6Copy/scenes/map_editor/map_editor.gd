@@ -12,23 +12,23 @@ var _mouse_hover_tile_coord := NULL_COORD
 var _mouse_hover_border_coord := NULL_COORD
 # 地块类型到 TileSet 信息映射
 var _terrain_type_to_tile_dict : Dictionary = {
-	Map.TerrainType.GRASS: MapTileCell.new(0, Vector2i(5, 1)),
-	Map.TerrainType.GRASS_HILL: MapTileCell.new(0, Vector2i(4, 4)),
-	Map.TerrainType.GRASS_MOUNTAIN: MapTileCell.new(0, Vector2i(4, 6)),
-	Map.TerrainType.PLAIN: MapTileCell.new(0, Vector2i(6, 5)),
-	Map.TerrainType.PLAIN_HILL: MapTileCell.new(0, Vector2i(5, 8)),
-	Map.TerrainType.PLAIN_MOUNTAIN: MapTileCell.new(0, Vector2i(5, 7)),
-	Map.TerrainType.DESERT: MapTileCell.new(0, Vector2i(2, 3)),
-	Map.TerrainType.DESERT_HILL: MapTileCell.new(0, Vector2i(1, 6)),
-	Map.TerrainType.DESERT_MOUNTAIN: MapTileCell.new(0, Vector2i(1, 8)),
-	Map.TerrainType.TUNDRA: MapTileCell.new(0, Vector2i(0, 12)),
-	Map.TerrainType.TUNDRA_HILL: MapTileCell.new(0, Vector2i(0, 5)),
-	Map.TerrainType.TUNDRA_MOUNTAIN: MapTileCell.new(0, Vector2i(10, 5)),
-	Map.TerrainType.SNOW: MapTileCell.new(3, Vector2i(1, 2)),
-	Map.TerrainType.SNOW_HILL: MapTileCell.new(3, Vector2i(2, 1)),
-	Map.TerrainType.SNOW_MOUNTAIN: MapTileCell.new(3, Vector2i(2, 2)),
-	Map.TerrainType.SHORE: MapTileCell.new(1, Vector2i(0, 0)),
-	Map.TerrainType.OCEAN: MapTileCell.new(2, Vector2i(0, 0)),
+	Map.TerrainType.GRASS: MapTileCell.new(0, Vector2i(0, 0)),
+	Map.TerrainType.GRASS_HILL: MapTileCell.new(1, Vector2i(0, 0)),
+	Map.TerrainType.GRASS_MOUNTAIN: MapTileCell.new(2, Vector2i(0, 0)),
+	Map.TerrainType.PLAIN: MapTileCell.new(3, Vector2i(0, 0)),
+	Map.TerrainType.PLAIN_HILL: MapTileCell.new(4, Vector2i(0, 0)),
+	Map.TerrainType.PLAIN_MOUNTAIN: MapTileCell.new(5, Vector2i(0, 0)),
+	Map.TerrainType.DESERT: MapTileCell.new(6, Vector2i(0, 0)),
+	Map.TerrainType.DESERT_HILL: MapTileCell.new(7, Vector2i(0, 0)),
+	Map.TerrainType.DESERT_MOUNTAIN: MapTileCell.new(8, Vector2i(0, 0)),
+	Map.TerrainType.TUNDRA: MapTileCell.new(9, Vector2i(0, 0)),
+	Map.TerrainType.TUNDRA_HILL: MapTileCell.new(10, Vector2i(0, 0)),
+	Map.TerrainType.TUNDRA_MOUNTAIN: MapTileCell.new(11, Vector2i(0, 0)),
+	Map.TerrainType.SNOW: MapTileCell.new(12, Vector2i(0, 0)),
+	Map.TerrainType.SNOW_HILL: MapTileCell.new(13, Vector2i(0, 0)),
+	Map.TerrainType.SNOW_MOUNTAIN: MapTileCell.new(14, Vector2i(0, 0)),
+	Map.TerrainType.SHORE: MapTileCell.new(15, Vector2i(0, 0)),
+	Map.TerrainType.OCEAN: MapTileCell.new(16, Vector2i(0, 0)),
 }
 # 记录地图
 var _map: Map
@@ -218,7 +218,7 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 		var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
 		for coord in new_inside:
 			# 新增新图块
-			tile_map.set_cell(1, coord, 4, Vector2i(0, 0))
+			tile_map.set_cell(1, coord, 17, Vector2i(0, 0))
 		
 		_mouse_hover_tile_coord = map_coord
 		_mouse_hover_border_coord = NULL_COORD
@@ -258,13 +258,13 @@ func is_river_placable(border_coord: Vector2i) -> bool:
 	var neighbor_tile_coords: Array[Vector2i] = Map.get_neighbor_tile_of_border(border_coord)
 	for coord in neighbor_tile_coords:
 		var src_id: int = tile_map.get_cell_source_id(0, coord)
-		if src_id == 1 || src_id == 2:
+		if src_id == 15 || src_id == 16:
 			# 和浅海或者深海相邻
 			return false
 	var end_tile_coords: Array[Vector2i] = Map.get_end_tile_of_border(border_coord)
 	for coord in end_tile_coords:
 		var src_id: int = tile_map.get_cell_source_id(0, coord)
-		if src_id == 1 || src_id == 2:
+		if src_id == 15 || src_id == 16:
 			# 末端是浅海或者深海
 			return true
 	var connect_border_coords: Array[Vector2i] = Map.get_connect_border_of_border(border_coord)
@@ -284,7 +284,7 @@ func is_cliff_placable(border_coord: Vector2i) -> bool:
 	var neighbor_land: bool = false
 	for coord in neighbor_tile_coords:
 		var src_id: int = tile_map.get_cell_source_id(0, coord)
-		if src_id == 1 || src_id == 2:
+		if src_id == 15 || src_id == 16:
 			# 和浅海或者深海相邻
 			neighbor_sea = true
 		else:
@@ -334,7 +334,7 @@ func paint_map() -> void:
 				if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
 					continue
 				# 仅深海需要改为浅海
-				if tile_map.get_cell_source_id(0, coord) != 2:
+				if tile_map.get_cell_source_id(0, coord) != 16:
 					continue
 				paint_tile(coord, step, Map.TerrainType.SHORE)
 		
@@ -457,6 +457,9 @@ func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool)
 
 func load_map() -> void:
 	_map = Map.load_from_save()
+	if _map == null:
+		initialize_map()
+		return
 	var size: Vector2i = Map.SIZE_DICT[_map.size]
 	# 读取地块
 	for i in range(0, size.x):

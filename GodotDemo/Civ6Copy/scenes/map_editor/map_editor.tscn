@@ -19,67 +19,67 @@
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0iwd8"]
 texture = ExtResource("2_w6d2p")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_na0dc"]
 texture = ExtResource("3_64cht")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_25arm"]
 texture = ExtResource("5_khfdy")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6qgp2"]
 texture = ExtResource("6_hr4fy")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tv16t"]
 texture = ExtResource("4_hbyls")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_but7u"]
 texture = ExtResource("5_wnpqe")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ubhj0"]
 texture = ExtResource("6_nv7ao")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_liv2s"]
 texture = ExtResource("7_6v4w8")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dqsr2"]
 texture = ExtResource("9_n5ede")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3q1hq"]
 texture = ExtResource("10_mkgtp")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sqxng"]
 texture = ExtResource("11_h5fly")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y8xqk"]
 texture = ExtResource("14_gnyp4")
-texture_region_size = Vector2i(61, 71)
+texture_region_size = Vector2i(92, 108)
 0:0/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_itrfv"]
 tile_shape = 3
-tile_size = Vector2i(61, 71)
+tile_size = Vector2i(92, 108)
 sources/0 = SubResource("TileSetAtlasSource_0iwd8")
 sources/1 = SubResource("TileSetAtlasSource_na0dc")
 sources/2 = SubResource("TileSetAtlasSource_tv16t")
@@ -109,7 +109,7 @@ layer_1/z_index = 0
 layer_1/tile_data = PackedInt32Array()
 
 [node name="BorderTileMap" type="TileMap" parent="."]
-position = Vector2(0, -18)
+position = Vector2(0, -27)
 tile_set = SubResource("TileSet_itrfv")
 format = 2
 layer_0/name = "边界层"

@@ -2,8 +2,8 @@ class_name CameraManager
 extends Camera2D
 
 
-@export var MIN_ZOOM := Vector2(0.5, 0.5)
-@export var MAX_ZOOM := Vector2(2, 2)
+@export var MIN_ZOOM := Vector2(0.3, 0.3)
+@export var MAX_ZOOM := Vector2(1.5, 1.5)
 @export var MAX_X: int = 1500
 @export var MIN_X: int = -1500
 @export var MAX_Y: int = 500

@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3 uid="uid://cw4d6w6b4mr0o"]
+[gd_scene load_steps=13 format=3 uid="uid://cw4d6w6b4mr0o"]
 
 [ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="1_gwgln"]
 [ext_resource type="Script" path="res://scenes/gui/map_editor_gui.gd" id="1_lwefg"]
 [ext_resource type="Texture2D" uid="uid://x3lg83lirlhc" path="res://assets/icon_park/地图_map-draw.svg" id="2_05a4t"]
 [ext_resource type="ButtonGroup" uid="uid://ck2cfmt42etn6" path="res://scenes/gui/place_mode_btn_group.tres" id="2_ah4ra"]
+[ext_resource type="StyleBox" uid="uid://dgk23451gpgek" path="res://scenes/map_editor/map_editor_gui_panel_style_box_flat.tres" id="2_ps6yy"]
 [ext_resource type="Texture2D" uid="uid://b1di533muewx2" path="res://assets/icon_park/全屏播放_full-screen-play.svg" id="3_8b823"]
 [ext_resource type="ButtonGroup" uid="uid://dcck466yvknxb" path="res://scenes/gui/terrain_mode_place_btn_group.tres" id="4_axx52"]
 [ext_resource type="ButtonGroup" uid="uid://25ektawcibr" path="res://scenes/gui/painter_size_btn_group.tres" id="4_xnhqu"]
@@ -30,6 +31,7 @@ grow_vertical = 2
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
+theme_override_styles/panel = ExtResource("2_ps6yy")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/LeftTopPanelContainer"]
 layout_mode = 2
@@ -122,6 +124,7 @@ custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
+theme_override_styles/panel = ExtResource("2_ps6yy")
 
 [node name="RtVBoxContainer" type="VBoxContainer" parent="MarginContainer/RightTopPanelContainer"]
 layout_mode = 2
