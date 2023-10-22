@@ -33,6 +33,7 @@ enum TerrainType {
 }
 
 enum LandscapeType {
+	EMPTY, # 空
 	ICE, # 冰
 	FOREST, # 森林
 	SWAMP, # 沼泽
@@ -88,6 +89,7 @@ enum ContinentType {
 }
 
 enum ResourceType {
+	EMPTY, # 空
 	SILK, # 丝绸
 	RELIC, # 历史遗迹
 	COCOA_BEAN, # 可可豆
@@ -212,7 +214,16 @@ func serialize_map_tile_info() -> String:
 			if res != "" and not res.ends_with(";"):
 				res += ","
 			var tile_info := elem as TileInfo
-			res += str(tile_info.type)
+			if tile_info.resource != ResourceType.EMPTY:
+				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
+						+ str(tile_info.village) + "|" + str(tile_info.resource)
+			elif tile_info.village != 0:
+				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
+						+ str(tile_info.village)
+			elif tile_info.landscape != LandscapeType.EMPTY:
+				res += str(tile_info.type) + "|" + str(tile_info.landscape)
+			else:
+				res += str(tile_info.type)
 	return res
 
 
@@ -274,7 +285,21 @@ static func deserialize_map_tile_info(data_str: String) -> Array:
 		map_tile_info.append([])
 		var elem_strs: PackedStringArray = row_str.split(",")
 		for elem_str in elem_strs:
-			map_tile_info.back().append(TileInfo.new(int(elem_str)))
+			var field_strs: PackedStringArray = elem_str.split("|")
+			var tile_info := TileInfo.new(int(field_strs[0]))
+			if field_strs.size() == 1:
+				map_tile_info.back().append(tile_info)
+				continue
+			tile_info.landscape = int(field_strs[1])
+			if field_strs.size() == 2:
+				map_tile_info.back().append(tile_info)
+				continue
+			tile_info.village = int(field_strs[2])
+			if field_strs.size() == 3:
+				map_tile_info.back().append(tile_info)
+				continue
+			tile_info.resource = int(field_strs[3])
+			map_tile_info.back().append(tile_info)
 	return map_tile_info
 
 
@@ -494,6 +519,9 @@ static func test_get_tile_coord_directed_border() -> void:
 
 class TileInfo:
 	var type: TerrainType = TerrainType.OCEAN
+	var landscape: LandscapeType = LandscapeType.EMPTY
+	var village: int = 0 # 0 表示没有，1 表示有
+	var resource: ResourceType = ResourceType.EMPTY
 	
 	func _init(type: TerrainType) -> void:
 		self.type = type

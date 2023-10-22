@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=39 format=3 uid="uid://bde1bs78up61k"]
+[gd_resource type="TileSet" load_steps=55 format=3 uid="uid://bde1bs78up61k"]
 
 [ext_resource type="Texture2D" uid="uid://fyq8m32mnwdi" path="res://assets/civ6_origin/tile/tile_grass.png" id="1_nmgkw"]
 [ext_resource type="Texture2D" uid="uid://csgj6bq84m1xl" path="res://assets/civ6_origin/tile/tile_grass_hill.png" id="2_ll6ai"]
@@ -12,13 +12,21 @@
 [ext_resource type="Texture2D" uid="uid://bdovojkon5jm3" path="res://assets/civ6_origin/tile/tile_ocean.png" id="9_pskib"]
 [ext_resource type="Texture2D" uid="uid://k7c87g1c8vjf" path="res://assets/civ6_origin/tile/tile_grass_mountain.png" id="11_i0sh5"]
 [ext_resource type="Texture2D" uid="uid://c0xqv4db6uyxj" path="res://assets/self_made_svg/red_select_hexagon.svg" id="12_hkaub"]
+[ext_resource type="Texture2D" uid="uid://cjlvwtwibwteb" path="res://assets/civ6_origin/tile/on_ice.png" id="12_s8jac"]
 [ext_resource type="Texture2D" uid="uid://ckau4kxa4g2cw" path="res://assets/civ6_origin/tile/tile_plain.png" id="13_7fev2"]
+[ext_resource type="Texture2D" uid="uid://c1woayutxduvf" path="res://assets/civ6_origin/tile/on_forest.png" id="14_8jvn0"]
 [ext_resource type="Texture2D" uid="uid://cwxqtusa374jk" path="res://assets/civ6_origin/tile/tile_plain_hill.png" id="14_d4sco"]
 [ext_resource type="Texture2D" uid="uid://c4504vy1enhdo" path="res://assets/civ6_origin/tile/tile_plain_mountain.png" id="15_43f1q"]
+[ext_resource type="Texture2D" uid="uid://ttgxfhw2jtkb" path="res://assets/civ6_origin/tile/on_swamp.png" id="15_yckke"]
+[ext_resource type="Texture2D" uid="uid://b6kusmhw2hbkk" path="res://assets/civ6_origin/tile/on_flood.png" id="16_cfxv4"]
 [ext_resource type="Texture2D" uid="uid://0ygluknqxcwr" path="res://assets/civ6_origin/tile/tile_desert.png" id="16_pm52w"]
 [ext_resource type="Texture2D" uid="uid://cwqef14ukde15" path="res://assets/civ6_origin/tile/tile_desert_hill.png" id="17_6bs2h"]
+[ext_resource type="Texture2D" uid="uid://b78f4yh3y5wsk" path="res://assets/civ6_origin/tile/on_oasis.png" id="17_dnn4k"]
+[ext_resource type="Texture2D" uid="uid://bypxmhr4d1um2" path="res://assets/civ6_origin/tile/on_rainforest.png" id="18_bq2ae"]
 [ext_resource type="Texture2D" uid="uid://htk7j6w437oi" path="res://assets/civ6_origin/tile/tile_desert_mountain.png" id="18_qg2q5"]
+[ext_resource type="Texture2D" uid="uid://e0657ix1yt6r" path="res://assets/civ6_origin/tile/on_village.png" id="19_3gy2r"]
 [ext_resource type="Texture2D" uid="uid://cyobgn7nvar1j" path="res://assets/civ6_origin/tile/tile_tundra.png" id="19_qgtgk"]
+[ext_resource type="Texture2D" uid="uid://c6lbmdmed2pxa" path="res://assets/civ6_origin/resource/resources_silk.png" id="20_dc3df"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_22jfd"]
 texture = ExtResource("1_nmgkw")
@@ -76,15 +84,63 @@ texture = ExtResource("4_lxgcy")
 texture_region_size = Vector2i(184, 215)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_gyyux"]
+texture = ExtResource("12_hkaub")
+texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2vdeq"]
+texture = ExtResource("12_s8jac")
+margins = Vector2i(1, 0)
+texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lxeni"]
 texture = ExtResource("11_i0sh5")
 margins = Vector2i(1, 0)
 texture_region_size = Vector2i(184, 215)
 0:0/0 = 0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_gyyux"]
-texture = ExtResource("12_hkaub")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rm5cu"]
+texture = ExtResource("14_8jvn0")
+margins = Vector2i(1, 0)
 texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fa8au"]
+texture = ExtResource("15_yckke")
+margins = Vector2i(1, 0)
+texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_yns3p"]
+texture = ExtResource("16_cfxv4")
+margins = Vector2i(3, 0)
+texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lp48t"]
+texture = ExtResource("17_dnn4k")
+margins = Vector2i(1, 0)
+texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kfk3m"]
+texture = ExtResource("18_bq2ae")
+margins = Vector2i(1, 0)
+texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_diclx"]
+texture = ExtResource("19_3gy2r")
+texture_region_size = Vector2i(184, 216)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_cj3e7"]
+texture = ExtResource("20_dc3df")
+margins = Vector2i(7, 0)
+texture_region_size = Vector2i(186, 196)
+0:0/next_alternative_id = 2
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_oqclh"]
@@ -148,4 +204,13 @@ sources/14 = SubResource("TileSetAtlasSource_e3fre")
 sources/15 = SubResource("TileSetAtlasSource_l2y28")
 sources/16 = SubResource("TileSetAtlasSource_wcvwd")
 sources/17 = SubResource("TileSetAtlasSource_hhyfp")
-sources/23 = SubResource("TileSetAtlasSource_gyyux")
+sources/19 = SubResource("TileSetAtlasSource_2vdeq")
+sources/18 = SubResource("TileSetAtlasSource_gyyux")
+sources/20 = SubResource("TileSetAtlasSource_rm5cu")
+sources/21 = SubResource("TileSetAtlasSource_fa8au")
+sources/22 = SubResource("TileSetAtlasSource_yns3p")
+sources/23 = SubResource("TileSetAtlasSource_lp48t")
+sources/24 = SubResource("TileSetAtlasSource_kfk3m")
+sources/25 = SubResource("TileSetAtlasSource_diclx")
+sources/26 = SubResource("TileSetAtlasSource_cj3e7")
+tile_proxies/source_level = [0, 0]

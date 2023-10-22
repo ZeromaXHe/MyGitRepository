@@ -99,14 +99,35 @@ script = ExtResource("1_brqnu")
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = ExtResource("1_xpdht")
 format = 2
-layer_0/name = "地图层"
-layer_1/name = "选择区域层"
+layer_0/name = "地形层"
+layer_1/name = "地貌层"
 layer_1/enabled = true
 layer_1/modulate = Color(1, 1, 1, 1)
 layer_1/y_sort_enabled = false
 layer_1/y_sort_origin = 0
 layer_1/z_index = 0
 layer_1/tile_data = PackedInt32Array()
+layer_2/name = "村庄层"
+layer_2/enabled = true
+layer_2/modulate = Color(1, 1, 1, 1)
+layer_2/y_sort_enabled = false
+layer_2/y_sort_origin = 0
+layer_2/z_index = 0
+layer_2/tile_data = PackedInt32Array()
+layer_3/name = "选择区域层"
+layer_3/enabled = true
+layer_3/modulate = Color(1, 1, 1, 1)
+layer_3/y_sort_enabled = false
+layer_3/y_sort_origin = 0
+layer_3/z_index = 0
+layer_3/tile_data = PackedInt32Array()
+layer_4/name = "资源层"
+layer_4/enabled = true
+layer_4/modulate = Color(1, 1, 1, 1)
+layer_4/y_sort_enabled = false
+layer_4/y_sort_origin = 0
+layer_4/z_index = 0
+layer_4/tile_data = PackedInt32Array()
 
 [node name="BorderTileMap" type="TileMap" parent="."]
 position = Vector2(0, -27)

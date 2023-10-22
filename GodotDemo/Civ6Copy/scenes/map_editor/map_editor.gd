@@ -2,7 +2,24 @@ class_name MapEditor
 extends Node2D
 
 
+enum TileChangeType {
+	TERRAIN,
+	LANDSCAPE,
+	VILLAGE,
+	RESOURCE,
+}
+
 const NULL_COORD := Vector2i(-10000, -10000)
+# TileMap 层索引
+const TILE_TERRAIN_LAYER_IDX: int = 0
+const TILE_LANDSCAPE_LAYER_IDX: int = 1
+const TILE_VILLAGE_LAYER_IDX: int = 2
+const TILE_CHOSEN_LAYER_IDX: int = 3
+const TILE_RESOURCE_LAYER_IDX: int = 4
+# BorderTileMap 层索引
+const BORDER_TILE_LAYER_IDX: int = 0
+const BORDER_CHOSEN_LAYER_IDX: int = 1
+
 
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
@@ -12,23 +29,23 @@ var _mouse_hover_tile_coord := NULL_COORD
 var _mouse_hover_border_coord := NULL_COORD
 # 地块类型到 TileSet 信息映射
 var _terrain_type_to_tile_dict : Dictionary = {
-	Map.TerrainType.GRASS: MapTileCell.new(0, Vector2i(0, 0)),
-	Map.TerrainType.GRASS_HILL: MapTileCell.new(1, Vector2i(0, 0)),
-	Map.TerrainType.GRASS_MOUNTAIN: MapTileCell.new(2, Vector2i(0, 0)),
-	Map.TerrainType.PLAIN: MapTileCell.new(3, Vector2i(0, 0)),
-	Map.TerrainType.PLAIN_HILL: MapTileCell.new(4, Vector2i(0, 0)),
-	Map.TerrainType.PLAIN_MOUNTAIN: MapTileCell.new(5, Vector2i(0, 0)),
-	Map.TerrainType.DESERT: MapTileCell.new(6, Vector2i(0, 0)),
-	Map.TerrainType.DESERT_HILL: MapTileCell.new(7, Vector2i(0, 0)),
-	Map.TerrainType.DESERT_MOUNTAIN: MapTileCell.new(8, Vector2i(0, 0)),
-	Map.TerrainType.TUNDRA: MapTileCell.new(9, Vector2i(0, 0)),
-	Map.TerrainType.TUNDRA_HILL: MapTileCell.new(10, Vector2i(0, 0)),
-	Map.TerrainType.TUNDRA_MOUNTAIN: MapTileCell.new(11, Vector2i(0, 0)),
-	Map.TerrainType.SNOW: MapTileCell.new(12, Vector2i(0, 0)),
-	Map.TerrainType.SNOW_HILL: MapTileCell.new(13, Vector2i(0, 0)),
-	Map.TerrainType.SNOW_MOUNTAIN: MapTileCell.new(14, Vector2i(0, 0)),
-	Map.TerrainType.SHORE: MapTileCell.new(15, Vector2i(0, 0)),
-	Map.TerrainType.OCEAN: MapTileCell.new(16, Vector2i(0, 0)),
+	Map.TerrainType.GRASS: MapTileCell.new(0, Vector2i.ZERO),
+	Map.TerrainType.GRASS_HILL: MapTileCell.new(1, Vector2i.ZERO),
+	Map.TerrainType.GRASS_MOUNTAIN: MapTileCell.new(2, Vector2i.ZERO),
+	Map.TerrainType.PLAIN: MapTileCell.new(3, Vector2i.ZERO),
+	Map.TerrainType.PLAIN_HILL: MapTileCell.new(4, Vector2i.ZERO),
+	Map.TerrainType.PLAIN_MOUNTAIN: MapTileCell.new(5, Vector2i.ZERO),
+	Map.TerrainType.DESERT: MapTileCell.new(6, Vector2i.ZERO),
+	Map.TerrainType.DESERT_HILL: MapTileCell.new(7, Vector2i.ZERO),
+	Map.TerrainType.DESERT_MOUNTAIN: MapTileCell.new(8, Vector2i.ZERO),
+	Map.TerrainType.TUNDRA: MapTileCell.new(9, Vector2i.ZERO),
+	Map.TerrainType.TUNDRA_HILL: MapTileCell.new(10, Vector2i.ZERO),
+	Map.TerrainType.TUNDRA_MOUNTAIN: MapTileCell.new(11, Vector2i.ZERO),
+	Map.TerrainType.SNOW: MapTileCell.new(12, Vector2i.ZERO),
+	Map.TerrainType.SNOW_HILL: MapTileCell.new(13, Vector2i.ZERO),
+	Map.TerrainType.SNOW_MOUNTAIN: MapTileCell.new(14, Vector2i.ZERO),
+	Map.TerrainType.SHORE: MapTileCell.new(15, Vector2i.ZERO),
+	Map.TerrainType.OCEAN: MapTileCell.new(16, Vector2i.ZERO),
 }
 # 记录地图
 var _map: Map
@@ -94,14 +111,20 @@ func handle_restore() -> void:
 		gui.set_restore_button_disable(true)
 	for change in step.changed_arr:
 		if change.tile_change:
-			# 恢复 TileMap 到操作后的状态
-			var cell_info: MapTileCell = _terrain_type_to_tile_dict[change.after.type]
-			tile_map.set_cell(0, change.coord, cell_info.source_id, cell_info.atlas_coords)
+			match change.tile_change_type:
+				TileChangeType.TERRAIN:
+					do_paint_terrain(change.coord, change.after.type)
+				TileChangeType.LANDSCAPE:
+					do_paint_landscape(change.coord, change.after.landscape)
+				TileChangeType.VILLAGE:
+					do_paint_village(change.coord, change.after.village)
+				TileChangeType.RESOURCE:
+					do_paint_resource(change.coord, change.after.resource)
 			# 恢复地图地块信息
 			_map.change_map_tile_info(change.coord, change.after)
 		else:
 			# 恢复 BorderTileMap 到操作后的状态
-			paint_border_tile_map(change.coord, change.after_border.type)
+			do_paint_border(change.coord, change.after_border.type)
 			# 恢复地图地块信息
 			_map.change_border_tile_info(change.coord, change.after_border)
 	# 把操作存到之前的取消栈中
@@ -118,14 +141,20 @@ func handle_cancel() -> void:
 		gui.set_cancel_button_disable(true)
 	for change in step.changed_arr:
 		if change.tile_change:
-			# 还原 TileMap 到操作前的状态
-			var cell_info: MapTileCell = _terrain_type_to_tile_dict[change.before.type]
-			tile_map.set_cell(0, change.coord, cell_info.source_id, cell_info.atlas_coords)
+			match change.tile_change_type:
+				TileChangeType.TERRAIN:
+					do_paint_terrain(change.coord, change.before.type)
+				TileChangeType.LANDSCAPE:
+					do_paint_landscape(change.coord, change.before.landscape)
+				TileChangeType.VILLAGE:
+					do_paint_village(change.coord, change.before.village)
+				TileChangeType.RESOURCE:
+					do_paint_resource(change.coord, change.before.resource)
 			# 还原地图地块信息
 			_map.change_map_tile_info(change.coord, change.before)
 		else:
 			# 恢复 BorderTileMap 到操作前的状态
-			paint_border_tile_map(change.coord, change.before_border.type)
+			do_paint_border(change.coord, change.before_border.type)
 			# 恢复地图地块信息
 			_map.change_border_tile_info(change.coord, change.before_border)
 	# 把操作存到之后的恢复栈中
@@ -133,10 +162,10 @@ func handle_cancel() -> void:
 	gui.set_restore_button_disable(false)
 
 
-func paint_border_tile_map(coord: Vector2i, type: Map.BorderTileType) -> void:
+func do_paint_border(coord: Vector2i, type: Map.BorderTileType) -> void:
 	match type:
 		Map.BorderTileType.EMPTY:
-			border_tile_map.set_cell(0, coord, -1)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, coord, -1)
 		Map.BorderTileType.RIVER:
 			paint_river(coord)
 		Map.BorderTileType.CLIFF:
@@ -164,10 +193,10 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 		var old_inside: Array[Vector2i] = get_surrounding_cells(_mouse_hover_tile_coord, 2, true)
 		for coord in old_inside:
 			# 擦除原图块
-			tile_map.set_cell(1, coord)
+			tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, coord)
 	# 清理之前的边界图块
 	if _mouse_hover_border_coord != NULL_COORD:
-		border_tile_map.set_cell(1, _mouse_hover_border_coord)
+		border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, _mouse_hover_border_coord)
 	
 	if gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
 		if is_in_map_border(border_coord) <= 0:
@@ -175,19 +204,19 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 		match Map.get_border_type(border_coord):
 			Map.BorderType.VERTICAL:
 				if is_river_placable(border_coord):
-					border_tile_map.set_cell(1, border_coord, 8, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 8, Vector2i(0, 0))
 				else:
-					border_tile_map.set_cell(1, border_coord, 11, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 11, Vector2i(0, 0))
 			Map.BorderType.SLASH:
 				if is_river_placable(border_coord):
-					border_tile_map.set_cell(1, border_coord, 7, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 7, Vector2i(0, 0))
 				else:
-					border_tile_map.set_cell(1, border_coord, 10, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 10, Vector2i(0, 0))
 			Map.BorderType.BACK_SLASH:
 				if is_river_placable(border_coord):
-					border_tile_map.set_cell(1, border_coord, 6, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 6, Vector2i(0, 0))
 				else:
-					border_tile_map.set_cell(1, border_coord, 9, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 9, Vector2i(0, 0))
 		
 		_mouse_hover_border_coord = border_coord
 		_mouse_hover_tile_coord = NULL_COORD
@@ -197,19 +226,19 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 		match Map.get_border_type(border_coord):
 			Map.BorderType.VERTICAL:
 				if is_cliff_placable(border_coord):
-					border_tile_map.set_cell(1, border_coord, 8, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 8, Vector2i(0, 0))
 				else:
-					border_tile_map.set_cell(1, border_coord, 11, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 11, Vector2i(0, 0))
 			Map.BorderType.SLASH:
 				if is_cliff_placable(border_coord):
-					border_tile_map.set_cell(1, border_coord, 7, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 7, Vector2i(0, 0))
 				else:
-					border_tile_map.set_cell(1, border_coord, 10, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 10, Vector2i(0, 0))
 			Map.BorderType.BACK_SLASH:
 				if is_cliff_placable(border_coord):
-					border_tile_map.set_cell(1, border_coord, 6, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 6, Vector2i(0, 0))
 				else:
-					border_tile_map.set_cell(1, border_coord, 9, Vector2i(0, 0))
+					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 9, Vector2i(0, 0))
 		
 		_mouse_hover_border_coord = border_coord
 		_mouse_hover_tile_coord = NULL_COORD
@@ -218,7 +247,7 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 		var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
 		for coord in new_inside:
 			# 新增新图块
-			tile_map.set_cell(1, coord, 17, Vector2i(0, 0))
+			tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, coord, 17, Vector2i(0, 0))
 		
 		_mouse_hover_tile_coord = map_coord
 		_mouse_hover_border_coord = NULL_COORD
@@ -294,70 +323,124 @@ func is_cliff_placable(border_coord: Vector2i) -> bool:
 
 func depaint_map() -> void:
 	var step: PaintStep = PaintStep.new()
-	if gui.place_mode == MapEditorGUI.PlaceMode.CLIFF or gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
-		var border_coord: Vector2i = get_border_coord()
-		if gui.place_mode == MapEditorGUI.PlaceMode.CLIFF \
-				and _map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.CLIFF:
-			return
-		if gui.place_mode == MapEditorGUI.PlaceMode.RIVER \
-				and _map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.RIVER:
-			return
-		paint_border(border_coord, step, Map.BorderTileType.EMPTY)
-		
-		# 强制重绘选择区域
-		paint_new_green_chosen_area(true)
-	
+	match gui.place_mode:
+		MapEditorGUI.PlaceMode.CLIFF:
+			var border_coord: Vector2i = get_border_coord()
+			if _map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.CLIFF:
+				return
+			paint_border(border_coord, step, Map.BorderTileType.EMPTY)
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.RIVER:
+			var border_coord: Vector2i = get_border_coord()
+			if _map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.RIVER:
+				return
+			paint_border(border_coord, step, Map.BorderTileType.EMPTY)
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.LANDSCAPE:
+			var tile_coord: Vector2i = get_map_coord()
+			if _map.get_map_tile_info_at(tile_coord).landscape == Map.LandscapeType.EMPTY:
+				return
+			paint_landscape(tile_coord, step, Map.LandscapeType.EMPTY)
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.VILLAGE:
+			var tile_coord: Vector2i = get_map_coord()
+			if _map.get_map_tile_info_at(tile_coord).village == 0:
+				return
+			paint_village(tile_coord, step, 0)
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.RESOURCE:
+			var tile_coord: Vector2i = get_map_coord()
+			if _map.get_map_tile_info_at(tile_coord).resource == Map.ResourceType.EMPTY:
+				return
+			paint_resource(tile_coord, step, Map.ResourceType.EMPTY)
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
 	save_paint_step(step)
 
 
 func paint_map() -> void:
 	var step: PaintStep = PaintStep.new()
-	if gui.place_mode == MapEditorGUI.PlaceMode.TERRAIN:
-		var map_coord: Vector2i = get_map_coord()
-		if not _terrain_type_to_tile_dict.has(gui.terrain_type):
-			printerr("can't paint unknown tile!")
-			return
-		var dist: int = gui.get_painter_size_dist()
-		# 地图大小
-		var map_size: Vector2i = Map.SIZE_DICT[_map.size]
-		var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
-		for coord in inside:
-			# 超出地图范围的不处理
-			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
-				continue
-			paint_tile(coord, step, gui.terrain_type)
-		# 围绕陆地地块绘制浅海
-		if gui.terrain_type != Map.TerrainType.SHORE and gui.terrain_type != Map.TerrainType.OCEAN:
-			var out_ring: Array[Vector2i] = get_surrounding_cells(map_coord, dist + 1, false)
-			for coord in out_ring:
+	match gui.place_mode:
+		MapEditorGUI.PlaceMode.TERRAIN:
+			var map_coord: Vector2i = get_map_coord()
+			if not _terrain_type_to_tile_dict.has(gui.terrain_type):
+				printerr("can't paint unknown tile!")
+				return
+			var dist: int = gui.get_painter_size_dist()
+			# 地图大小
+			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
+			var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
+			for coord in inside:
 				# 超出地图范围的不处理
 				if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
 					continue
-				# 仅深海需要改为浅海
-				if tile_map.get_cell_source_id(0, coord) != 16:
-					continue
-				paint_tile(coord, step, Map.TerrainType.SHORE)
-		
-		# 强制重绘选择区域
-		paint_new_green_chosen_area(true)
-	elif gui.place_mode == MapEditorGUI.PlaceMode.CLIFF:
-		var border_coord: Vector2i = get_border_coord()
-		if not is_cliff_placable(border_coord):
-			return
-		# 绘制边界悬崖
-		paint_border(border_coord, step, Map.BorderTileType.CLIFF)
-		
-		# 强制重绘选择区域
-		paint_new_green_chosen_area(true)
-	elif gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
-		var border_coord: Vector2i = get_border_coord()
-		if not is_river_placable(border_coord):
-			return
-		# 绘制边界河流
-		paint_border(border_coord, step, Map.BorderTileType.RIVER)
-		
-		# 强制重绘选择区域
-		paint_new_green_chosen_area(true)
+				paint_terrain(coord, step, gui.terrain_type)
+			# 围绕陆地地块绘制浅海
+			if gui.terrain_type != Map.TerrainType.SHORE and gui.terrain_type != Map.TerrainType.OCEAN:
+				var out_ring: Array[Vector2i] = get_surrounding_cells(map_coord, dist + 1, false)
+				for coord in out_ring:
+					# 超出地图范围的不处理
+					if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+						continue
+					# 仅深海需要改为浅海
+					if tile_map.get_cell_source_id(0, coord) != 16:
+						continue
+					paint_terrain(coord, step, Map.TerrainType.SHORE)
+			
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.LANDSCAPE:
+			var coord: Vector2i = get_map_coord()
+			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
+			# 超出地图范围的不处理
+			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+				return
+			paint_landscape(coord, step, gui.landscape_type)
+			
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.VILLAGE:
+			var coord: Vector2i = get_map_coord()
+			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
+			# 超出地图范围的不处理
+			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+				return
+			paint_village(coord, step, 1)
+			
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.RESOURCE:
+			var coord: Vector2i = get_map_coord()
+			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
+			# 超出地图范围的不处理
+			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+				return
+			paint_resource(coord, step, gui.resource_type)
+			
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.CLIFF:
+			var border_coord: Vector2i = get_border_coord()
+			if not is_cliff_placable(border_coord):
+				return
+			# 绘制边界悬崖
+			paint_border(border_coord, step, Map.BorderTileType.CLIFF)
+			
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.RIVER:
+			var border_coord: Vector2i = get_border_coord()
+			if not is_river_placable(border_coord):
+				return
+			# 绘制边界河流
+			paint_border(border_coord, step, Map.BorderTileType.RIVER)
+			
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
 	
 	save_paint_step(step)
 
@@ -372,6 +455,99 @@ func save_paint_step(step: PaintStep) -> void:
 		# 每次操作后也就意味着不能向后恢复了
 		_after_step_stack.clear()
 		gui.set_restore_button_disable(true)
+
+
+func do_paint_terrain(coord: Vector2i, type: Map.TerrainType) -> void:
+	var tile: MapTileCell = _terrain_type_to_tile_dict[type]
+	tile_map.set_cell(TILE_TERRAIN_LAYER_IDX, coord, tile.source_id, tile.atlas_coords)
+
+
+func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: Map.LandscapeType) -> void:
+	# 记录操作
+	var change: PaintChange = PaintChange.new()
+	change.coord = tile_coord
+	change.tile_change = true
+	change.tile_change_type = TileChangeType.LANDSCAPE
+	change.before = _map.get_map_tile_info_at(tile_coord)
+	change.after = Map.TileInfo.new(change.before.type)
+	change.after.landscape = type
+	change.after.village = change.before.village
+	change.after.resource = change.before.resource
+	step.changed_arr.append(change)
+	# 记录地图地块信息
+	_map.change_map_tile_info(tile_coord, change.after)
+	# 真正绘制地貌
+	do_paint_landscape(tile_coord, type)
+
+
+func do_paint_landscape(tile_coord: Vector2i, type: Map.LandscapeType) -> void:
+	match type:
+		Map.LandscapeType.ICE:
+			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 19, Vector2i.ZERO)
+		Map.LandscapeType.FOREST:
+			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 20, Vector2i.ZERO)
+		Map.LandscapeType.SWAMP:
+			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 21, Vector2i.ZERO)
+		Map.LandscapeType.FLOOD:
+			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 22, Vector2i.ZERO)
+		Map.LandscapeType.OASIS:
+			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 23, Vector2i.ZERO)
+		Map.LandscapeType.RAINFOREST:
+			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 24, Vector2i.ZERO)
+		Map.LandscapeType.EMPTY:
+			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, -1)
+
+
+func paint_village(tile_coord: Vector2i, step: PaintStep, type: int) -> void:
+	# 记录操作
+	var change: PaintChange = PaintChange.new()
+	change.coord = tile_coord
+	change.tile_change = true
+	change.tile_change_type = TileChangeType.VILLAGE
+	change.before = _map.get_map_tile_info_at(tile_coord)
+	change.after = Map.TileInfo.new(change.before.type)
+	change.after.landscape = change.before.landscape
+	change.after.village = type
+	change.after.resource = change.before.resource
+	step.changed_arr.append(change)
+	# 记录地图地块信息
+	_map.change_map_tile_info(tile_coord, change.after)
+	# 真正绘制村庄
+	do_paint_village(tile_coord, type)
+
+
+func do_paint_village(tile_coord: Vector2i, type: int):
+	if type == 0:
+		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, -1)
+	else:
+		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, 25, Vector2i.ZERO)
+
+
+func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceType) -> void:
+	# 记录操作
+	var change: PaintChange = PaintChange.new()
+	change.coord = tile_coord
+	change.tile_change = true
+	change.tile_change_type = TileChangeType.RESOURCE
+	change.before = _map.get_map_tile_info_at(tile_coord)
+	change.after = Map.TileInfo.new(change.before.type)
+	change.after.landscape = change.before.landscape
+	change.after.village = change.before.village
+	change.after.resource = type
+	step.changed_arr.append(change)
+	# 记录地图地块信息
+	_map.change_map_tile_info(tile_coord, change.after)
+	# 真正绘制资源
+	do_paint_resource(tile_coord, type)
+
+
+func do_paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
+	match type:
+		Map.ResourceType.EMPTY:
+			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1)
+		_:
+			# TODO: 资源素材太大了，在找到办法处理之前，先全部用丝绸的图标
+			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 26, Vector2i.ZERO)
 
 
 func paint_border(border_coord: Vector2i, step: PaintStep, type: Map.BorderTileType) -> void:
@@ -392,30 +568,30 @@ func paint_border(border_coord: Vector2i, step: PaintStep, type: Map.BorderTileT
 			paint_cliff(border_coord)
 		Map.BorderTileType.EMPTY:
 			# 真正绘制边界为空
-			border_tile_map.set_cell(0, border_coord, -1)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, -1)
 
 
 func paint_cliff(border_coord: Vector2i) -> void:
 	match Map.get_border_type(border_coord):
 		Map.BorderType.BACK_SLASH:
-			border_tile_map.set_cell(0, border_coord, 0, Vector2i.ZERO)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 0, Vector2i.ZERO)
 		Map.BorderType.SLASH:
-			border_tile_map.set_cell(0, border_coord, 1, Vector2i.ZERO)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 1, Vector2i.ZERO)
 		Map.BorderType.VERTICAL:
-			border_tile_map.set_cell(0, border_coord, 2, Vector2i.ZERO)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 2, Vector2i.ZERO)
 
 
 func paint_river(border_coord: Vector2i) -> void:
 	match Map.get_border_type(border_coord):
 		Map.BorderType.BACK_SLASH:
-			border_tile_map.set_cell(0, border_coord, 3, Vector2i.ZERO)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 3, Vector2i.ZERO)
 		Map.BorderType.SLASH:
-			border_tile_map.set_cell(0, border_coord, 4, Vector2i.ZERO)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 4, Vector2i.ZERO)
 		Map.BorderType.VERTICAL:
-			border_tile_map.set_cell(0, border_coord, 5, Vector2i.ZERO)
+			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 5, Vector2i.ZERO)
 
 
-func paint_tile(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainType):
+func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainType):
 	# 记录操作
 	var change: PaintChange = PaintChange.new()
 	change.coord = coord
@@ -426,8 +602,7 @@ func paint_tile(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainType)
 	# 记录地图地块信息
 	_map.change_map_tile_info(coord, change.after)
 	# 真正绘制 TileMap 地块
-	var cell_info: MapTileCell = _terrain_type_to_tile_dict[terrain_type]
-	tile_map.set_cell(0, coord, cell_info.source_id, cell_info.atlas_coords)
+	do_paint_terrain(coord, terrain_type)
 
 
 ## TODO: 目前基于 TileMap 既有 API 实现的，所以效率比较低，未来可以自己实现这个逻辑
@@ -465,13 +640,16 @@ func load_map() -> void:
 	for i in range(0, size.x):
 		for j in range(0, size.y):
 			var coord := Vector2i(i, j)
-			var tile: MapTileCell = _terrain_type_to_tile_dict[_map.get_map_tile_info_at(coord).type]
-			tile_map.set_cell(0, coord, tile.source_id, tile.atlas_coords)
+			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
+			do_paint_terrain(coord, tile_info.type)
+			do_paint_landscape(coord, tile_info.landscape)
+			do_paint_village(coord, tile_info.village)
+			do_paint_resource(coord, tile_info.resource)
 	# 读取边界
 	for i in range(size.x * 2 + 2):
 		for j in range(size.y * 2 + 2):
 			var coord := Vector2i(i, j)
-			paint_border_tile_map(coord, _map.get_border_tile_info_at(coord).type)
+			do_paint_border(coord, _map.get_border_tile_info_at(coord).type)
 
 
 func initialize_map() -> void:
@@ -482,7 +660,7 @@ func initialize_map() -> void:
 		var ocean_cell: MapTileCell = _terrain_type_to_tile_dict[Map.TerrainType.OCEAN]
 		for i in range(0, size.x, 1):
 			for j in range(0, size.y, 1):
-				tile_map.set_cell(0, Vector2i(i, j), ocean_cell.source_id, ocean_cell.atlas_coords)
+				tile_map.set_cell(TILE_TERRAIN_LAYER_IDX, Vector2i(i, j), ocean_cell.source_id, ocean_cell.atlas_coords)
 
 
 func initialize_camera(map_size: Map.Size) -> void:
@@ -516,6 +694,7 @@ class PaintStep:
 class PaintChange:
 	var coord: Vector2i
 	var tile_change: bool
+	var tile_change_type: TileChangeType = TileChangeType.TERRAIN
 	var before: Map.TileInfo
 	var after: Map.TileInfo
 	var before_border: Map.BorderInfo
