@@ -465,7 +465,7 @@ static func get_end_tile_of_border(border_coord: Vector2i) -> Array[Vector2i]:
 
 
 static func get_all_tile_border(tile_coord: Vector2i, include_center: bool) -> Array[Vector2i]:
-	var result = [
+	var result: Array[Vector2i] = [
 			get_tile_coord_directed_border(tile_coord, BorderDirection.LEFT_TOP),
 			get_tile_coord_directed_border(tile_coord, BorderDirection.RIGHT_TOP),
 			get_tile_coord_directed_border(tile_coord, BorderDirection.LEFT),

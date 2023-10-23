@@ -198,59 +198,159 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 	if _mouse_hover_border_coord != NULL_COORD:
 		border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, _mouse_hover_border_coord)
 	
-	if gui.place_mode == MapEditorGUI.PlaceMode.RIVER:
-		if is_in_map_border(border_coord) <= 0:
-			return
-		match Map.get_border_type(border_coord):
-			Map.BorderType.VERTICAL:
-				if is_river_placable(border_coord):
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 8, Vector2i(0, 0))
-				else:
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 11, Vector2i(0, 0))
-			Map.BorderType.SLASH:
-				if is_river_placable(border_coord):
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 7, Vector2i(0, 0))
-				else:
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 10, Vector2i(0, 0))
-			Map.BorderType.BACK_SLASH:
-				if is_river_placable(border_coord):
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 6, Vector2i(0, 0))
-				else:
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 9, Vector2i(0, 0))
-		
-		_mouse_hover_border_coord = border_coord
-		_mouse_hover_tile_coord = NULL_COORD
-	elif gui.place_mode == MapEditorGUI.PlaceMode.CLIFF:
-		if is_in_map_border(border_coord) <= 0:
-			return
-		match Map.get_border_type(border_coord):
-			Map.BorderType.VERTICAL:
-				if is_cliff_placable(border_coord):
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 8, Vector2i(0, 0))
-				else:
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 11, Vector2i(0, 0))
-			Map.BorderType.SLASH:
-				if is_cliff_placable(border_coord):
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 7, Vector2i(0, 0))
-				else:
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 10, Vector2i(0, 0))
-			Map.BorderType.BACK_SLASH:
-				if is_cliff_placable(border_coord):
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 6, Vector2i(0, 0))
-				else:
-					border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 9, Vector2i(0, 0))
-		
-		_mouse_hover_border_coord = border_coord
-		_mouse_hover_tile_coord = NULL_COORD
+	match gui.place_mode:
+		MapEditorGUI.PlaceMode.RIVER:
+			do_paint_green_chosen_border_area(border_coord, self.is_river_placable)
+			_mouse_hover_border_coord = border_coord
+			_mouse_hover_tile_coord = NULL_COORD
+		MapEditorGUI.PlaceMode.CLIFF:
+			do_paint_green_chosen_border_area(border_coord, self.is_cliff_placable)
+			_mouse_hover_border_coord = border_coord
+			_mouse_hover_tile_coord = NULL_COORD
+		MapEditorGUI.PlaceMode.TERRAIN:
+			var dist: int = gui.get_painter_size_dist()
+			var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
+			for coord in new_inside:
+				# 新增新图块
+				tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, coord, 17, Vector2i(0, 0))
+			
+			_mouse_hover_tile_coord = map_coord
+			_mouse_hover_border_coord = NULL_COORD
+		MapEditorGUI.PlaceMode.LANDSCAPE:
+			var placable: Callable = func(x) -> bool: return is_landscape_placable(x, gui.landscape_type)
+			do_paint_green_chosen_tile_area(map_coord, placable)
+			_mouse_hover_tile_coord = map_coord
+			_mouse_hover_border_coord = NULL_COORD
+		MapEditorGUI.PlaceMode.VILLAGE:
+			do_paint_green_chosen_tile_area(map_coord, self.is_village_placable)
+			_mouse_hover_tile_coord = map_coord
+			_mouse_hover_border_coord = NULL_COORD
+		MapEditorGUI.PlaceMode.RESOURCE:
+			# TODO: 补全资源判定逻辑。目前使用 lambda 暂时允许所有资源随便放
+			do_paint_green_chosen_tile_area(map_coord, func(x) -> bool: return true)
+			_mouse_hover_tile_coord = map_coord
+			_mouse_hover_border_coord = NULL_COORD
+
+
+func do_paint_green_chosen_tile_area(map_coord: Vector2i, placable: Callable) -> void:
+	if placable.call(map_coord):
+		tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, map_coord, 17, Vector2i(0, 0))
 	else:
-		var dist: int = gui.get_painter_size_dist()
-		var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
-		for coord in new_inside:
-			# 新增新图块
-			tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, coord, 17, Vector2i(0, 0))
-		
-		_mouse_hover_tile_coord = map_coord
-		_mouse_hover_border_coord = NULL_COORD
+		tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, map_coord, 18, Vector2i(0, 0))
+
+
+func do_paint_green_chosen_border_area(border_coord: Vector2i, placable: Callable) -> void:
+	if is_in_map_border(border_coord) <= 0:
+		return
+	match Map.get_border_type(border_coord):
+		Map.BorderType.VERTICAL:
+			if placable.call(border_coord):
+				border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 8, Vector2i(0, 0))
+			else:
+				border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 11, Vector2i(0, 0))
+		Map.BorderType.SLASH:
+			if placable.call(border_coord):
+				border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 7, Vector2i(0, 0))
+			else:
+				border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 10, Vector2i(0, 0))
+		Map.BorderType.BACK_SLASH:
+			if placable.call(border_coord):
+				border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 6, Vector2i(0, 0))
+			else:
+				border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, border_coord, 9, Vector2i(0, 0))
+
+
+func is_in_map_tile(coord: Vector2i) -> bool:
+	var map_size: Vector2i = Map.SIZE_DICT[_map.size]
+	return coord.x >= 0 and coord.x < map_size.x and coord.y >= 0 and coord.y < map_size.y
+
+
+func is_landscape_placable(tile_coord: Vector2i, landscape: Map.LandscapeType) -> bool:
+	# 超出地图范围的不处理
+	if not is_in_map_tile(tile_coord):
+		return false
+	match landscape:
+		Map.LandscapeType.ICE:
+			return is_ice_placable(tile_coord)
+		Map.LandscapeType.FOREST:
+			return is_forest_placable(tile_coord)
+		Map.LandscapeType.SWAMP:
+			return is_swamp_placable(tile_coord)
+		Map.LandscapeType.FLOOD:
+			return is_flood_placable(tile_coord)
+		Map.LandscapeType.OASIS:
+			return is_oasis_placable(tile_coord)
+		Map.LandscapeType.RAINFOREST:
+			return is_rainforest_placable(tile_coord)
+		Map.LandscapeType.EMPTY:
+			return true
+		_:
+			printerr("is_landscape_placable | unknown landscape: ", landscape)
+			return false
+
+
+func is_ice_placable(tile_coord: Vector2i) -> bool:
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN
+
+
+func is_forest_placable(tile_coord: Vector2i) -> bool:
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return terrain_type == Map.TerrainType.GRASS or terrain_type == Map.TerrainType.GRASS_HILL \
+			or terrain_type == Map.TerrainType.PLAIN or terrain_type == Map.TerrainType.PLAIN_HILL \
+			or terrain_type == Map.TerrainType.TUNDRA or terrain_type == Map.TerrainType.TUNDRA_HILL
+
+
+func is_swamp_placable(tile_coord: Vector2i) -> bool:
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return terrain_type == Map.TerrainType.GRASS
+
+
+## 泛滥平原需要放在沿河的沙漠
+func is_flood_placable(tile_coord: Vector2i) -> bool:
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	if terrain_type != Map.TerrainType.DESERT:
+		return false
+	var borders: Array[Vector2i] = Map.get_all_tile_border(tile_coord, false)
+	for border in borders:
+		if _map.get_border_tile_info_at(border).type == Map.BorderTileType.RIVER:
+			return true
+	return false
+
+
+## 绿洲需要放在周围全是沙漠/沙漠丘陵/沙漠山脉地块的沙漠，而且不能和其他绿洲相邻
+func is_oasis_placable(tile_coord: Vector2i) -> bool:
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	if terrain_type != Map.TerrainType.DESERT:
+		return false
+	var surroundings: Array[Vector2i] = get_surrounding_cells(tile_coord, 1, false)
+	for surrounding in surroundings:
+		var tile_info: Map.TileInfo = _map.get_map_tile_info_at(surrounding)
+		if tile_info.type != Map.TerrainType.DESERT \
+				and tile_info.type != Map.TerrainType.DESERT_HILL \
+				and tile_info.type != Map.TerrainType.DESERT_MOUNTAIN:
+			return false
+		if tile_info.landscape == Map.LandscapeType.OASIS:
+			return false
+	return true
+
+
+func is_rainforest_placable(tile_coord: Vector2i) -> bool:
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return terrain_type == Map.TerrainType.GRASS or terrain_type == Map.TerrainType.GRASS_HILL \
+			or terrain_type == Map.TerrainType.PLAIN or terrain_type == Map.TerrainType.PLAIN_HILL
+
+
+func is_village_placable(tile_coord: Vector2i) -> bool:
+	# 超出地图范围的不处理
+	if not is_in_map_tile(tile_coord):
+		return false
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return terrain_type == Map.TerrainType.GRASS or terrain_type == Map.TerrainType.GRASS_HILL \
+			or terrain_type == Map.TerrainType.PLAIN or terrain_type == Map.TerrainType.PLAIN_HILL \
+			or terrain_type == Map.TerrainType.DESERT or terrain_type == Map.TerrainType.DESERT_HILL \
+			or terrain_type == Map.TerrainType.TUNDRA or terrain_type == Map.TerrainType.TUNDRA_HILL \
+			or terrain_type == Map.TerrainType.SNOW or terrain_type == Map.TerrainType.SNOW_HILL
 
 
 func is_in_map_border(border_coord: Vector2i) -> int:
@@ -286,20 +386,20 @@ func is_river_placable(border_coord: Vector2i) -> bool:
 		return false
 	var neighbor_tile_coords: Array[Vector2i] = Map.get_neighbor_tile_of_border(border_coord)
 	for coord in neighbor_tile_coords:
-		var src_id: int = tile_map.get_cell_source_id(0, coord)
-		if src_id == 15 || src_id == 16:
+		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
+		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
 			# 和浅海或者深海相邻
 			return false
 	var end_tile_coords: Array[Vector2i] = Map.get_end_tile_of_border(border_coord)
 	for coord in end_tile_coords:
-		var src_id: int = tile_map.get_cell_source_id(0, coord)
-		if src_id == 15 || src_id == 16:
+		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
+		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
 			# 末端是浅海或者深海
 			return true
 	var connect_border_coords: Array[Vector2i] = Map.get_connect_border_of_border(border_coord)
 	for coord in connect_border_coords:
-		var src_id: int = border_tile_map.get_cell_source_id(0, coord)
-		if src_id >= 3 and src_id <= 5:
+		var border_tile_type: Map.BorderTileType = _map.get_border_tile_info_at(coord).type
+		if border_tile_type == Map.BorderTileType.RIVER:
 			# 连接的边界有河流
 			return true
 	return false
@@ -312,8 +412,8 @@ func is_cliff_placable(border_coord: Vector2i) -> bool:
 	var neighbor_sea: bool = false
 	var neighbor_land: bool = false
 	for coord in neighbor_tile_coords:
-		var src_id: int = tile_map.get_cell_source_id(0, coord)
-		if src_id == 15 || src_id == 16:
+		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
+		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
 			# 和浅海或者深海相邻
 			neighbor_sea = true
 		else:
@@ -371,12 +471,10 @@ func paint_map() -> void:
 				printerr("can't paint unknown tile!")
 				return
 			var dist: int = gui.get_painter_size_dist()
-			# 地图大小
-			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
 			var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
 			for coord in inside:
 				# 超出地图范围的不处理
-				if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+				if not is_in_map_tile(coord):
 					continue
 				paint_terrain(coord, step, gui.terrain_type)
 			# 围绕陆地地块绘制浅海
@@ -384,20 +482,27 @@ func paint_map() -> void:
 				var out_ring: Array[Vector2i] = get_surrounding_cells(map_coord, dist + 1, false)
 				for coord in out_ring:
 					# 超出地图范围的不处理
-					if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+					if not is_in_map_tile(coord):
 						continue
 					# 仅深海需要改为浅海
-					if tile_map.get_cell_source_id(0, coord) != 16:
+					if _map.get_map_tile_info_at(coord).type != Map.TerrainType.OCEAN:
 						continue
 					paint_terrain(coord, step, Map.TerrainType.SHORE)
-			
+			# 如果地块是丘陵，需要在周围沿海边界放置悬崖
+			if gui.terrain_type == Map.TerrainType.GRASS_HILL \
+					or gui.terrain_type == Map.TerrainType.PLAIN_HILL \
+					or gui.terrain_type == Map.TerrainType.DESERT_HILL \
+					or gui.terrain_type == Map.TerrainType.TUNDRA_HILL \
+					or gui.terrain_type == Map.TerrainType.SNOW_HILL:
+				var borders: Array[Vector2i] = get_surrounding_borders(map_coord, dist)
+				for border in borders:
+					if is_cliff_placable(border):
+						paint_border(border, step, Map.BorderTileType.CLIFF)
 			# 强制重绘选择区域
 			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
 			var coord: Vector2i = get_map_coord()
-			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
-			# 超出地图范围的不处理
-			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+			if not is_landscape_placable(coord, gui.landscape_type):
 				return
 			paint_landscape(coord, step, gui.landscape_type)
 			
@@ -405,22 +510,17 @@ func paint_map() -> void:
 			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
 			var coord: Vector2i = get_map_coord()
-			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
-			# 超出地图范围的不处理
-			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+			if not is_village_placable(coord):
 				return
 			paint_village(coord, step, 1)
-			
 			# 强制重绘选择区域
 			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var coord: Vector2i = get_map_coord()
-			var map_size: Vector2i = Map.SIZE_DICT[_map.size]
 			# 超出地图范围的不处理
-			if coord.x < 0 or coord.x >= map_size.x or coord.y < 0 or coord.y >= map_size.y:
+			if not is_in_map_tile(coord):
 				return
 			paint_resource(coord, step, gui.resource_type)
-			
 			# 强制重绘选择区域
 			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.CLIFF:
@@ -429,7 +529,6 @@ func paint_map() -> void:
 				return
 			# 绘制边界悬崖
 			paint_border(border_coord, step, Map.BorderTileType.CLIFF)
-			
 			# 强制重绘选择区域
 			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.RIVER:
@@ -605,10 +704,44 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainTy
 	do_paint_terrain(coord, terrain_type)
 
 
-## TODO: 目前基于 TileMap 既有 API 实现的，所以效率比较低，未来可以自己实现这个逻辑
 func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool) -> Array[Vector2i]:
 	if dist < 0:
 		return []
+	# 从坐标到是否边缘的布尔值的映射
+	var dict: Dictionary = get_tile_coord_to_rim_bool_dict(map_coord, dist)
+	var result: Array[Vector2i] = []
+	for k in dict:
+		if not include_inside and not dict[k]:
+			continue
+		result.append(k)
+	return result
+
+
+## TODO: 目前获取边界效率比较低，未来可以重构这个逻辑
+func get_surrounding_borders(map_coord: Vector2i, dist: int) -> Array[Vector2i]:
+	if dist < 0:
+		return []
+	# 从坐标到是否边缘的布尔值的映射
+	var dict: Dictionary = get_tile_coord_to_rim_bool_dict(map_coord, dist)
+	var result: Array[Vector2i] = []
+	for coord in dict:
+		if not dict[coord]:
+			# 非边缘的直接跳过
+			continue
+		var borders: Array[Vector2i] = Map.get_all_tile_border(coord, false)
+		for border in borders:
+			var neighbors: Array[Vector2i] = Map.get_neighbor_tile_of_border(border)
+			var count_out: int = 0
+			for neighbor in neighbors:
+				if not dict.has(neighbor):
+					count_out += 1
+			if count_out == 1:
+				result.append(border)
+	return result
+
+
+## TODO: 目前基于 TileMap 既有 API 实现的，所以效率比较低，未来可以自己实现这个逻辑
+func get_tile_coord_to_rim_bool_dict(map_coord: Vector2i, dist: int) -> Dictionary:
 	# 从坐标到是否边缘的布尔值的映射
 	var dict: Dictionary = {map_coord: true}
 	for i in range(0, dist):
@@ -622,12 +755,7 @@ func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool)
 					continue
 				dict[surround] = true
 			dict[k] = false
-	var result: Array[Vector2i] = []
-	for k in dict:
-		if not include_inside and not dict[k]:
-			continue
-		result.append(k)
-	return result
+	return dict
 
 
 func load_map() -> void:
