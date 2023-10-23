@@ -5,6 +5,8 @@ extends CanvasLayer
 signal restore_btn_pressed
 signal cancel_btn_pressed
 signal save_map_btn_pressed
+signal place_continent_btn_pressed
+signal place_other_btn_pressed
 
 enum TabStatus {
 	PLACE,
@@ -204,27 +206,35 @@ func handle_place_mode_group_pressed(button: BaseButton) -> void:
 		terrain_button:
 			place_mode = PlaceMode.TERRAIN
 			terrain_container.visible = true
+			place_other_btn_pressed.emit()
 		landscape_button:
 			place_mode = PlaceMode.LANDSCAPE
 			landscape_container.visible = true
+			place_other_btn_pressed.emit()
 		wonder_button:
 			place_mode = PlaceMode.WONDER
 			wonder_container.visible = true
+			place_other_btn_pressed.emit()
 		continent_button:
 			place_mode = PlaceMode.CONTINENT
 			continent_container.visible = true
+			place_continent_btn_pressed.emit()
 		river_button:
 			place_mode = PlaceMode.RIVER
 			river_container.visible = true
+			place_other_btn_pressed.emit()
 		cliff_button:
 			place_mode = PlaceMode.CLIFF
 			cliff_container.visible = true
+			place_other_btn_pressed.emit()
 		resource_button:
 			place_mode = PlaceMode.RESOURCE
 			resource_container.visible = true
+			place_other_btn_pressed.emit()
 		village_button:
 			place_mode = PlaceMode.VILLAGE
 			village_container.visible = true
+			place_other_btn_pressed.emit()
 		_:
 			printerr("wrong button in place mode group")
 

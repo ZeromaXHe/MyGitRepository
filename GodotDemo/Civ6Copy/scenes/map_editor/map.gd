@@ -214,7 +214,11 @@ func serialize_map_tile_info() -> String:
 			if res != "" and not res.ends_with(";"):
 				res += ","
 			var tile_info := elem as TileInfo
-			if tile_info.resource != ResourceType.EMPTY:
+			if tile_info.continent != ContinentType.AFRICA:
+				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
+						+ str(tile_info.village) + "|" + str(tile_info.resource) \
+						+ "|" + str(tile_info.continent)
+			elif tile_info.resource != ResourceType.EMPTY:
 				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
 						+ str(tile_info.village) + "|" + str(tile_info.resource)
 			elif tile_info.village != 0:
@@ -299,6 +303,10 @@ static func deserialize_map_tile_info(data_str: String) -> Array:
 				map_tile_info.back().append(tile_info)
 				continue
 			tile_info.resource = int(field_strs[3])
+			if field_strs.size() == 4:
+				map_tile_info.back().append(tile_info)
+				continue
+			tile_info.continent = int(field_strs[4])
 			map_tile_info.back().append(tile_info)
 	return map_tile_info
 
@@ -522,6 +530,7 @@ class TileInfo:
 	var landscape: LandscapeType = LandscapeType.EMPTY
 	var village: int = 0 # 0 表示没有，1 表示有
 	var resource: ResourceType = ResourceType.EMPTY
+	var continent: ContinentType = ContinentType.AFRICA
 	
 	func _init(type: TerrainType) -> void:
 		self.type = type

@@ -7,6 +7,7 @@ enum TileChangeType {
 	LANDSCAPE,
 	VILLAGE,
 	RESOURCE,
+	CONTINENT,
 }
 
 const NULL_COORD := Vector2i(-10000, -10000)
@@ -14,8 +15,9 @@ const NULL_COORD := Vector2i(-10000, -10000)
 const TILE_TERRAIN_LAYER_IDX: int = 0
 const TILE_LANDSCAPE_LAYER_IDX: int = 1
 const TILE_VILLAGE_LAYER_IDX: int = 2
-const TILE_CHOSEN_LAYER_IDX: int = 3
-const TILE_RESOURCE_LAYER_IDX: int = 4
+const TILE_CONTINENT_LAYER_IDX: int = 3
+const TILE_CHOSEN_LAYER_IDX: int = 4
+const TILE_RESOURCE_LAYER_IDX: int = 5
 # BorderTileMap 层索引
 const BORDER_TILE_LAYER_IDX: int = 0
 const BORDER_CHOSEN_LAYER_IDX: int = 1
@@ -65,9 +67,14 @@ func _ready() -> void:
 	else:
 		initialize_map()
 	initialize_camera(_map.size)
+	
 	gui.restore_btn_pressed.connect(handle_restore)
 	gui.cancel_btn_pressed.connect(handle_cancel)
 	gui.save_map_btn_pressed.connect(handle_save_map)
+	# 控制大洲滤镜的显示与否
+	gui.place_other_btn_pressed.connect(func(): tile_map.set_layer_enabled(3, false))
+	gui.place_continent_btn_pressed.connect(func(): tile_map.set_layer_enabled(3, true))
+	tile_map.set_layer_enabled(TILE_CONTINENT_LAYER_IDX, false)
 
 
 func _process(delta: float) -> void:
@@ -114,12 +121,15 @@ func handle_restore() -> void:
 			match change.tile_change_type:
 				TileChangeType.TERRAIN:
 					do_paint_terrain(change.coord, change.after.type)
+					paint_or_depaint_continent_when_terrain_change(change.coord, change.before, change.after)
 				TileChangeType.LANDSCAPE:
 					do_paint_landscape(change.coord, change.after.landscape)
 				TileChangeType.VILLAGE:
 					do_paint_village(change.coord, change.after.village)
 				TileChangeType.RESOURCE:
 					do_paint_resource(change.coord, change.after.resource)
+				TileChangeType.CONTINENT:
+					do_paint_continent(change.coord, change.after.continent)
 			# 恢复地图地块信息
 			_map.change_map_tile_info(change.coord, change.after)
 		else:
@@ -144,12 +154,15 @@ func handle_cancel() -> void:
 			match change.tile_change_type:
 				TileChangeType.TERRAIN:
 					do_paint_terrain(change.coord, change.before.type)
+					paint_or_depaint_continent_when_terrain_change(change.coord, change.after, change.before)
 				TileChangeType.LANDSCAPE:
 					do_paint_landscape(change.coord, change.before.landscape)
 				TileChangeType.VILLAGE:
 					do_paint_village(change.coord, change.before.village)
 				TileChangeType.RESOURCE:
 					do_paint_resource(change.coord, change.before.resource)
+				TileChangeType.CONTINENT:
+					do_paint_continent(change.coord, change.before.continent)
 			# 还原地图地块信息
 			_map.change_map_tile_info(change.coord, change.before)
 		else:
@@ -228,6 +241,11 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 		MapEditorGUI.PlaceMode.RESOURCE:
 			# TODO: 补全资源判定逻辑。目前使用 lambda 暂时允许所有资源随便放
 			do_paint_green_chosen_tile_area(map_coord, func(x) -> bool: return true)
+			_mouse_hover_tile_coord = map_coord
+			_mouse_hover_border_coord = NULL_COORD
+		MapEditorGUI.PlaceMode.CONTINENT:
+			# TODO: 补全资源判定逻辑。目前使用 lambda 暂时允许所有资源随便放
+			do_paint_green_chosen_tile_area(map_coord, self.is_continent_placable)
 			_mouse_hover_tile_coord = map_coord
 			_mouse_hover_border_coord = NULL_COORD
 
@@ -351,6 +369,14 @@ func is_village_placable(tile_coord: Vector2i) -> bool:
 			or terrain_type == Map.TerrainType.DESERT or terrain_type == Map.TerrainType.DESERT_HILL \
 			or terrain_type == Map.TerrainType.TUNDRA or terrain_type == Map.TerrainType.TUNDRA_HILL \
 			or terrain_type == Map.TerrainType.SNOW or terrain_type == Map.TerrainType.SNOW_HILL
+
+
+func is_continent_placable(tile_coord: Vector2i) -> bool:
+	# 超出地图范围的不处理
+	if not is_in_map_tile(tile_coord):
+		return false
+	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return terrain_type != Map.TerrainType.SHORE and terrain_type != Map.TerrainType.OCEAN
 
 
 func is_in_map_border(border_coord: Vector2i) -> int:
@@ -523,6 +549,13 @@ func paint_map() -> void:
 			paint_resource(coord, step, gui.resource_type)
 			# 强制重绘选择区域
 			paint_new_green_chosen_area(true)
+		MapEditorGUI.PlaceMode.CONTINENT:
+			var coord: Vector2i = get_map_coord()
+			if not is_continent_placable(coord):
+				return
+			paint_continent(coord, step, gui.continent_type)
+			# 强制重绘选择区域
+			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.CLIFF:
 			var border_coord: Vector2i = get_border_coord()
 			if not is_cliff_placable(border_coord):
@@ -556,6 +589,41 @@ func save_paint_step(step: PaintStep) -> void:
 		gui.set_restore_button_disable(true)
 
 
+func copy_tile_info(from: Map.TileInfo) -> Map.TileInfo:
+	var to: Map.TileInfo = Map.TileInfo.new(from.type)
+	to.landscape = from.landscape
+	to.village = from.village
+	to.resource = from.resource
+	to.continent = from.continent
+	return to
+
+
+func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainType):
+	# 记录操作
+	var change: PaintChange = PaintChange.new()
+	change.coord = coord
+	change.tile_change_type = TileChangeType.TERRAIN
+	change.tile_change = true
+	change.before = _map.get_map_tile_info_at(coord)
+	change.after = copy_tile_info(change.before)
+	change.after.type = terrain_type
+	paint_or_depaint_continent_when_terrain_change(coord, change.before, change.after)
+	step.changed_arr.append(change)
+	# 记录地图地块信息
+	_map.change_map_tile_info(coord, change.after)
+	# 真正绘制 TileMap 地块
+	do_paint_terrain(coord, terrain_type)
+
+
+func paint_or_depaint_continent_when_terrain_change(coord: Vector2i, before: Map.TileInfo, after: Map.TileInfo) -> void:
+	if (before.type == Map.TerrainType.SHORE or before.type == Map.TerrainType.OCEAN) \
+			and (after.type != Map.TerrainType.SHORE and after.type != Map.TerrainType.OCEAN):
+		do_paint_continent(coord, after.continent)
+	elif (before.type != Map.TerrainType.SHORE and before.type != Map.TerrainType.OCEAN) \
+			and (after.type == Map.TerrainType.SHORE or after.type == Map.TerrainType.OCEAN):
+		do_depaint_continent(coord)
+
+
 func do_paint_terrain(coord: Vector2i, type: Map.TerrainType) -> void:
 	var tile: MapTileCell = _terrain_type_to_tile_dict[type]
 	tile_map.set_cell(TILE_TERRAIN_LAYER_IDX, coord, tile.source_id, tile.atlas_coords)
@@ -568,10 +636,8 @@ func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: Map.LandscapeT
 	change.tile_change = true
 	change.tile_change_type = TileChangeType.LANDSCAPE
 	change.before = _map.get_map_tile_info_at(tile_coord)
-	change.after = Map.TileInfo.new(change.before.type)
+	change.after = copy_tile_info(change.before)
 	change.after.landscape = type
-	change.after.village = change.before.village
-	change.after.resource = change.before.resource
 	step.changed_arr.append(change)
 	# 记录地图地块信息
 	_map.change_map_tile_info(tile_coord, change.after)
@@ -604,10 +670,8 @@ func paint_village(tile_coord: Vector2i, step: PaintStep, type: int) -> void:
 	change.tile_change = true
 	change.tile_change_type = TileChangeType.VILLAGE
 	change.before = _map.get_map_tile_info_at(tile_coord)
-	change.after = Map.TileInfo.new(change.before.type)
-	change.after.landscape = change.before.landscape
+	change.after = copy_tile_info(change.before)
 	change.after.village = type
-	change.after.resource = change.before.resource
 	step.changed_arr.append(change)
 	# 记录地图地块信息
 	_map.change_map_tile_info(tile_coord, change.after)
@@ -629,9 +693,7 @@ func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceTyp
 	change.tile_change = true
 	change.tile_change_type = TileChangeType.RESOURCE
 	change.before = _map.get_map_tile_info_at(tile_coord)
-	change.after = Map.TileInfo.new(change.before.type)
-	change.after.landscape = change.before.landscape
-	change.after.village = change.before.village
+	change.after = copy_tile_info(change.before)
 	change.after.resource = type
 	step.changed_arr.append(change)
 	# 记录地图地块信息
@@ -646,7 +708,31 @@ func do_paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
 			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1)
 		_:
 			# TODO: 资源素材太大了，在找到办法处理之前，先全部用丝绸的图标
-			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 26, Vector2i.ZERO)
+			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO)
+
+
+func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentType) -> void:
+	# 记录操作
+	var change: PaintChange = PaintChange.new()
+	change.coord = tile_coord
+	change.tile_change = true
+	change.tile_change_type = TileChangeType.CONTINENT
+	change.before = _map.get_map_tile_info_at(tile_coord)
+	change.after = copy_tile_info(change.before)
+	change.after.continent = type
+	step.changed_arr.append(change)
+	# 记录地图地块信息
+	_map.change_map_tile_info(tile_coord, change.after)
+	# 真正绘制资源
+	do_paint_continent(tile_coord, type)
+
+
+func do_paint_continent(tile_coord: Vector2i, type: Map.ContinentType) -> void:
+	tile_map.set_cell(TILE_CONTINENT_LAYER_IDX, tile_coord, 26, Vector2i(type % 10, type / 10))
+
+
+func do_depaint_continent(tile_coord: Vector2i) -> void:
+	tile_map.erase_cell(TILE_CONTINENT_LAYER_IDX, tile_coord)
 
 
 func paint_border(border_coord: Vector2i, step: PaintStep, type: Map.BorderTileType) -> void:
@@ -688,20 +774,6 @@ func paint_river(border_coord: Vector2i) -> void:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 4, Vector2i.ZERO)
 		Map.BorderType.VERTICAL:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 5, Vector2i.ZERO)
-
-
-func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainType):
-	# 记录操作
-	var change: PaintChange = PaintChange.new()
-	change.coord = coord
-	change.tile_change = true
-	change.before = _map.get_map_tile_info_at(coord)
-	change.after = Map.TileInfo.new(terrain_type)
-	step.changed_arr.append(change)
-	# 记录地图地块信息
-	_map.change_map_tile_info(coord, change.after)
-	# 真正绘制 TileMap 地块
-	do_paint_terrain(coord, terrain_type)
 
 
 func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool) -> Array[Vector2i]:
@@ -773,6 +845,8 @@ func load_map() -> void:
 			do_paint_landscape(coord, tile_info.landscape)
 			do_paint_village(coord, tile_info.village)
 			do_paint_resource(coord, tile_info.resource)
+			if is_continent_placable(coord):
+				do_paint_continent(coord, tile_info.continent)
 	# 读取边界
 	for i in range(size.x * 2 + 2):
 		for j in range(size.y * 2 + 2):
