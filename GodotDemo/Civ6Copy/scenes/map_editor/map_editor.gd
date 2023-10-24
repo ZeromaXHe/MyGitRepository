@@ -21,6 +21,54 @@ const TILE_RESOURCE_LAYER_IDX: int = 5
 # BorderTileMap 层索引
 const BORDER_TILE_LAYER_IDX: int = 0
 const BORDER_CHOSEN_LAYER_IDX: int = 1
+# 资源类型和对应资源图标场景的映射字典
+const RESOURCE_TYPE_TO_ICON_SCENE_DICT: Dictionary = {
+	Map.ResourceType.SILK: preload("res://scenes/map_editor/resource_tiles/resource_sprite.tscn"),
+	Map.ResourceType.RELIC: preload("res://scenes/map_editor/resource_tiles/sprite_relic.tscn"),
+	Map.ResourceType.COCOA_BEAN: preload("res://scenes/map_editor/resource_tiles/sprite_cocoa_bean.tscn"),
+	Map.ResourceType.COFFEE: preload("res://scenes/map_editor/resource_tiles/sprite_coffee.tscn"),
+	Map.ResourceType.MARBLE: preload("res://scenes/map_editor/resource_tiles/sprite_marble.tscn"),
+	Map.ResourceType.RICE: preload("res://scenes/map_editor/resource_tiles/sprite_rice.tscn"),
+	Map.ResourceType.WHEAT: preload("res://scenes/map_editor/resource_tiles/sprite_wheat.tscn"),
+	Map.ResourceType.TRUFFLE: preload("res://scenes/map_editor/resource_tiles/sprite_truffle.tscn"),
+	Map.ResourceType.ORANGE: preload("res://scenes/map_editor/resource_tiles/sprite_orange.tscn"),
+	Map.ResourceType.DYE: preload("res://scenes/map_editor/resource_tiles/sprite_dye.tscn"),
+	Map.ResourceType.COTTON: preload("res://scenes/map_editor/resource_tiles/sprite_cotton.tscn"),
+	Map.ResourceType.MERCURY: preload("res://scenes/map_editor/resource_tiles/sprite_mercury.tscn"),
+	Map.ResourceType.WRECKAGE: preload("res://scenes/map_editor/resource_tiles/sprite_wreckage.tscn"),
+	Map.ResourceType.TOBACCO: preload("res://scenes/map_editor/resource_tiles/sprite_tobacco.tscn"),
+	Map.ResourceType.COAL: preload("res://scenes/map_editor/resource_tiles/sprite_coal.tscn"),
+	Map.ResourceType.INCENSE: preload("res://scenes/map_editor/resource_tiles/sprite_incense.tscn"),
+	Map.ResourceType.COW: preload("res://scenes/map_editor/resource_tiles/sprite_cow.tscn"),
+	Map.ResourceType.JADE: preload("res://scenes/map_editor/resource_tiles/sprite_jade.tscn"),
+	Map.ResourceType.CORN: preload("res://scenes/map_editor/resource_tiles/sprite_corn.tscn"),
+	Map.ResourceType.PEARL: preload("res://scenes/map_editor/resource_tiles/sprite_pearl.tscn"),
+	Map.ResourceType.FUR: preload("res://scenes/map_editor/resource_tiles/sprite_fur.tscn"),
+	Map.ResourceType.SALT: preload("res://scenes/map_editor/resource_tiles/sprite_salt.tscn"),
+	Map.ResourceType.STONE: preload("res://scenes/map_editor/resource_tiles/sprite_stone.tscn"),
+	Map.ResourceType.OIL: preload("res://scenes/map_editor/resource_tiles/sprite_oil.tscn"),
+	Map.ResourceType.GYPSUM: preload("res://scenes/map_editor/resource_tiles/sprite_gypsum.tscn"),
+	Map.ResourceType.SALTPETER: preload("res://scenes/map_editor/resource_tiles/sprite_saltpeter.tscn"),
+	Map.ResourceType.SUGAR: preload("res://scenes/map_editor/resource_tiles/sprite_sugar.tscn"),
+	Map.ResourceType.SHEEP: preload("res://scenes/map_editor/resource_tiles/sprite_sheep.tscn"),
+	Map.ResourceType.TEA: preload("res://scenes/map_editor/resource_tiles/sprite_tea.tscn"),
+	Map.ResourceType.WINE: preload("res://scenes/map_editor/resource_tiles/sprite_wine.tscn"),
+	Map.ResourceType.HONEY: preload("res://scenes/map_editor/resource_tiles/sprite_honey.tscn"),
+	Map.ResourceType.CRAB: preload("res://scenes/map_editor/resource_tiles/sprite_crab.tscn"),
+	Map.ResourceType.IVORY: preload("res://scenes/map_editor/resource_tiles/sprite_ivory.tscn"),
+	Map.ResourceType.DIAMOND: preload("res://scenes/map_editor/resource_tiles/sprite_diamond.tscn"),
+	Map.ResourceType.URANIUM: preload("res://scenes/map_editor/resource_tiles/sprite_uranium.tscn"),
+	Map.ResourceType.IRON: preload("res://scenes/map_editor/resource_tiles/sprite_iron.tscn"),
+	Map.ResourceType.COPPER: preload("res://scenes/map_editor/resource_tiles/sprite_copper.tscn"),
+	Map.ResourceType.ALUMINIUM: preload("res://scenes/map_editor/resource_tiles/sprite_aluminium.tscn"),
+	Map.ResourceType.SILVER: preload("res://scenes/map_editor/resource_tiles/sprite_silver.tscn"),
+	Map.ResourceType.SPICE: preload("res://scenes/map_editor/resource_tiles/sprite_spice.tscn"),
+	Map.ResourceType.BANANA: preload("res://scenes/map_editor/resource_tiles/sprite_banana.tscn"),
+	Map.ResourceType.HORSE: preload("res://scenes/map_editor/resource_tiles/sprite_horse.tscn"),
+	Map.ResourceType.FISH: preload("res://scenes/map_editor/resource_tiles/sprite_fish.tscn"),
+	Map.ResourceType.WHALE: preload("res://scenes/map_editor/resource_tiles/sprite_whale.tscn"),
+	Map.ResourceType.DEER: preload("res://scenes/map_editor/resource_tiles/sprite_deer.tscn"),
+}
 
 
 # 左键点击开始时相对镜头的本地坐标
@@ -54,9 +102,12 @@ var _map: Map
 # 恢复和取消，记录操作的栈
 var _before_step_stack: Array[PaintStep] = []
 var _after_step_stack: Array[PaintStep] = []
+# 记录 TileMap 坐标到资源图标的映射的字典
+var _coord_to_resource_icon_dict: Dictionary = {}
 
 @onready var border_tile_map: TileMap = $BorderTileMap
 @onready var tile_map: TileMap = $TileMap
+@onready var resource_icons: Node2D = $ResourceIcons
 @onready var camera: CameraManager = $Camera2D
 @onready var gui: MapEditorGUI = $MapEditorGUI
 
@@ -707,7 +758,7 @@ func depaint_map() -> void:
 			var tile_coord: Vector2i = get_map_coord()
 			if _map.get_map_tile_info_at(tile_coord).resource == Map.ResourceType.EMPTY:
 				# FIXME: 4.1 现在的场景 TileMap bug，需要等待 4.2 发布解决。目前先打日志说明一下
-				print("tile map ", tile_coord, " is empty. (if you see a icon, it's because 4.1's bug. Wait for 4.2 update to fix it)")
+#				print("tile map ", tile_coord, " is empty. (if you see a icon, it's because 4.1's bug. Wait for 4.2 update to fix it)")
 				return
 			paint_resource(tile_coord, step, Map.ResourceType.EMPTY)
 			# 强制重绘选择区域
@@ -927,16 +978,23 @@ func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceTyp
 
 
 func do_paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
-	match type:
-		Map.ResourceType.EMPTY:
-			# FIXME：4.1 有 bug，TileMap 没办法把实例化的场景清除。现在的场景 TileMap 简直不能用…… 太蠢了
-			# 静待 4.2 发布，看 GitHub 讨论区貌似在 4.2 得到了修复。在修复前，会有资源显示和实际数据不一致的情况
-			# 对应的讨论区：https://github.com/godotengine/godot/issues/69596
-			print("do_paint_resource empty: ", tile_coord, " (tile map won't update until 4.2 is relased)")
-			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1, Vector2i(-1, -1), -1)
-		_:
-			# 保证资源图标场景的排序和 ResourseType 中一致
-			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
+	if type == Map.ResourceType.EMPTY:
+		# FIXME：4.1 有 bug，TileMap 没办法把实例化的场景清除。现在的场景 TileMap 简直不能用…… 太蠢了
+		# 静待 4.2 发布，看 GitHub 讨论区貌似在 4.2 得到了修复。在修复前，会有资源显示和实际数据不一致的情况
+		# 对应的讨论区：https://github.com/godotengine/godot/issues/69596
+#			print("do_paint_resource empty: ", tile_coord, " (tile map won't update until 4.2 is relased)")
+#			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1, Vector2i(-1, -1), -1)
+		if _coord_to_resource_icon_dict.has(tile_coord):
+			_coord_to_resource_icon_dict[tile_coord].queue_free()
+			_coord_to_resource_icon_dict.erase(tile_coord)
+	else:
+		# 保证资源图标场景的排序和 ResourseType 中一致
+#		tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
+		var scene: PackedScene = RESOURCE_TYPE_TO_ICON_SCENE_DICT[type]
+		var sprite := scene.instantiate() as Sprite2D
+		sprite.global_position = tile_map.to_global(tile_map.map_to_local(tile_coord)) + Vector2(0, 40)
+		_coord_to_resource_icon_dict[tile_coord] = sprite
+		resource_icons.add_child(sprite)
 
 
 func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentType) -> void:
