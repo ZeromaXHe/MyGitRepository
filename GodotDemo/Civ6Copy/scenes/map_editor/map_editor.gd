@@ -668,12 +668,16 @@ func is_river_placable(border_coord: Vector2i) -> bool:
 		return false
 	var neighbor_tile_coords: Array[Vector2i] = Map.get_neighbor_tile_of_border(border_coord)
 	for coord in neighbor_tile_coords:
+		if not is_in_map_tile(coord):
+			continue
 		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
 		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
 			# 和浅海或者深海相邻
 			return false
 	var end_tile_coords: Array[Vector2i] = Map.get_end_tile_of_border(border_coord)
 	for coord in end_tile_coords:
+		if not is_in_map_tile(coord):
+			continue
 		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
 		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
 			# 末端是浅海或者深海
