@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://cw4d6w6b4mr0o"]
+[gd_scene load_steps=14 format=3 uid="uid://cw4d6w6b4mr0o"]
 
 [ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="1_gwgln"]
 [ext_resource type="Script" path="res://scenes/gui/map_editor_gui.gd" id="1_lwefg"]
@@ -16,6 +16,9 @@ bg_color = Color(0.133333, 0.133333, 0.133333, 0.901961)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dypht"]
 bg_color = Color(0.0666667, 0.14902, 0.243137, 0.933333)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rwq4m"]
+bg_color = Color(1, 1, 1, 0.8)
 
 [node name="MapEditorGUI" type="CanvasLayer"]
 script = ExtResource("1_lwefg")
@@ -1067,6 +1070,32 @@ text = "返回主菜单"
 [node name="DesktopButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
 layout_mode = 2
 text = "返回桌面"
+
+[node name="MouseHoverTilePanel" type="PanelContainer" parent="."]
+anchors_preset = -1
+offset_left = 400.0
+offset_top = 400.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_rwq4m")
+
+[node name="MarginContainer" type="MarginContainer" parent="MouseHoverTilePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Label" type="Label" parent="MouseHoverTilePanel/MarginContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14902, 0.14902, 0.14902, 1)
+theme_override_font_sizes/font_size = 12
+text = "沙漠（丘陵）
+移动力消耗：2
+防御值变更：3
+魅力：迷人的（2）
+大陆：非洲
+---------------
+1 生产力
+Hex (45, 25)"
 
 [connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/MarginContainer/MenuButton" to="." method="_on_menu_button_pressed"]
 [connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/CancelButton" to="." method="_on_cancel_button_pressed"]

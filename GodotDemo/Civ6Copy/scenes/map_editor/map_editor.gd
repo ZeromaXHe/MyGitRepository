@@ -73,10 +73,11 @@ const RESOURCE_TYPE_TO_ICON_SCENE_DICT: Dictionary = {
 
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
-# 鼠标悬浮的图块坐标
-var _mouse_hover_tile_coord := NULL_COORD
+# 鼠标悬浮的图块坐标和时间
+var _mouse_hover_tile_coord: Vector2i = NULL_COORD
+var _mouse_hover_tile_time: float = 0
 # 鼠标悬浮的边界坐标
-var _mouse_hover_border_coord := NULL_COORD
+var _mouse_hover_border_coord: Vector2i = NULL_COORD
 # 地块类型到 TileSet 信息映射
 var _terrain_type_to_tile_dict : Dictionary = {
 	Map.TerrainType.GRASS: MapTileCell.new(0, Vector2i.ZERO),
@@ -129,7 +130,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	paint_new_green_chosen_area()
+	var tile_moved: bool = handle_mouse_hover_tile(delta)
+	var border_moved: bool = handle_mouse_hover_border(delta)
+	if tile_moved or border_moved:
+		paint_new_chosen_area()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -244,61 +248,76 @@ func get_map_coord() -> Vector2i:
 	return tile_map.local_to_map(tile_map.to_local(get_global_mouse_position()))
 
 
-func paint_new_green_chosen_area(renew: bool = false) -> void:
+func handle_mouse_hover_tile(delta: float) -> bool:
 	var map_coord: Vector2i = get_map_coord()
-	var border_coord: Vector2i = get_border_coord()
-	# 只在放置模式下绘制鼠标悬浮地块
-	if gui.get_rt_tab_status() != MapEditorGUI.TabStatus.PLACE:
-		return
-	if not renew and (map_coord == _mouse_hover_tile_coord or border_coord == _mouse_hover_border_coord):
-		return
+	if map_coord == _mouse_hover_tile_coord:
+		_mouse_hover_tile_time += delta
+		if not gui.mouse_hover_info_showed and _mouse_hover_tile_time > 2 and is_in_map_tile(map_coord):
+			gui.show_mouse_hover_tile_info(map_coord, _map.get_map_tile_info_at(map_coord))
+		return false
+	clear_pre_mouse_hover_tile_selection()
+	_mouse_hover_tile_coord = map_coord
+	_mouse_hover_tile_time = 0
+	gui.hide_mouse_hover_tile_info()
+	return true
+
+
+func clear_pre_mouse_hover_tile_selection() -> void:
 	# 按最大笔刷的范围擦除原来图块
 	if _mouse_hover_tile_coord != NULL_COORD:
 		var old_inside: Array[Vector2i] = get_surrounding_cells(_mouse_hover_tile_coord, 2, true)
 		for coord in old_inside:
 			# 擦除原图块
-			tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, coord)
+			tile_map.erase_cell(TILE_CHOSEN_LAYER_IDX, coord)
+
+
+func handle_mouse_hover_border(_delta: float) -> bool:
+	var border_coord: Vector2i = get_border_coord()
+	if border_coord == _mouse_hover_border_coord:
+		return false
+	clear_pre_mouse_hover_border_selection()
+	_mouse_hover_border_coord = border_coord
+	return true
+
+
+func clear_pre_mouse_hover_border_selection() -> void:
 	# 清理之前的边界图块
 	if _mouse_hover_border_coord != NULL_COORD:
-		border_tile_map.set_cell(BORDER_CHOSEN_LAYER_IDX, _mouse_hover_border_coord)
+		border_tile_map.erase_cell(BORDER_CHOSEN_LAYER_IDX, _mouse_hover_border_coord)
+
+
+func paint_new_chosen_area(renew: bool = false) -> void:
+	var map_coord: Vector2i = get_map_coord()
+	var border_coord: Vector2i = get_border_coord()
+	# 只在放置模式下绘制鼠标悬浮地块
+	if gui.get_rt_tab_status() != MapEditorGUI.TabStatus.PLACE:
+		return
+	if renew:
+		clear_pre_mouse_hover_tile_selection()
+		clear_pre_mouse_hover_border_selection()
 	
 	match gui.place_mode:
 		MapEditorGUI.PlaceMode.RIVER:
 			do_paint_green_chosen_border_area(border_coord, self.is_river_placable)
-			_mouse_hover_border_coord = border_coord
-			_mouse_hover_tile_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.CLIFF:
 			do_paint_green_chosen_border_area(border_coord, self.is_cliff_placable)
-			_mouse_hover_border_coord = border_coord
-			_mouse_hover_tile_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.TERRAIN:
 			var dist: int = gui.get_painter_size_dist()
 			var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
 			for coord in new_inside:
 				# 新增新图块
 				tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, coord, 17, Vector2i(0, 0))
-			
-			_mouse_hover_tile_coord = map_coord
-			_mouse_hover_border_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.LANDSCAPE:
 			var placable: Callable = func(x) -> bool: return is_landscape_placable(x, gui.landscape_type)
 			do_paint_green_chosen_tile_area(map_coord, placable)
-			_mouse_hover_tile_coord = map_coord
-			_mouse_hover_border_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.VILLAGE:
 			do_paint_green_chosen_tile_area(map_coord, self.is_village_placable)
-			_mouse_hover_tile_coord = map_coord
-			_mouse_hover_border_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var placable: Callable = func(x) -> bool: return is_resource_placable(x, gui.resource_type)
 			do_paint_green_chosen_tile_area(map_coord, placable)
-			_mouse_hover_tile_coord = map_coord
-			_mouse_hover_border_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.CONTINENT:
 			# TODO: 补全资源判定逻辑。目前使用 lambda 暂时允许所有资源随便放
 			do_paint_green_chosen_tile_area(map_coord, self.is_continent_placable)
-			_mouse_hover_tile_coord = map_coord
-			_mouse_hover_border_coord = NULL_COORD
 
 
 func do_paint_green_chosen_tile_area(map_coord: Vector2i, placable: Callable) -> void:
@@ -732,28 +751,28 @@ func depaint_map() -> void:
 				return
 			paint_border(border_coord, step, Map.BorderTileType.EMPTY)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RIVER:
 			var border_coord: Vector2i = get_border_coord()
 			if _map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.RIVER:
 				return
 			paint_border(border_coord, step, Map.BorderTileType.EMPTY)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
 			var tile_coord: Vector2i = get_map_coord()
 			if _map.get_map_tile_info_at(tile_coord).landscape == Map.LandscapeType.EMPTY:
 				return
 			paint_landscape(tile_coord, step, Map.LandscapeType.EMPTY)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
 			var tile_coord: Vector2i = get_map_coord()
 			if _map.get_map_tile_info_at(tile_coord).village == 0:
 				return
 			paint_village(tile_coord, step, 0)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var tile_coord: Vector2i = get_map_coord()
 			if _map.get_map_tile_info_at(tile_coord).resource == Map.ResourceType.EMPTY:
@@ -762,7 +781,7 @@ func depaint_map() -> void:
 				return
 			paint_resource(tile_coord, step, Map.ResourceType.EMPTY)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 	save_paint_step(step)
 
 
@@ -803,35 +822,35 @@ func paint_map() -> void:
 					if is_cliff_placable(border):
 						paint_border(border, step, Map.BorderTileType.CLIFF)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
 			var coord: Vector2i = get_map_coord()
 			if not is_landscape_placable(coord, gui.landscape_type):
 				return
 			paint_landscape(coord, step, gui.landscape_type)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
 			var coord: Vector2i = get_map_coord()
 			if not is_village_placable(coord):
 				return
 			paint_village(coord, step, 1)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var coord: Vector2i = get_map_coord()
 			if not is_resource_placable(coord, gui.resource_type):
 				return
 			paint_resource(coord, step, gui.resource_type)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.CONTINENT:
 			var coord: Vector2i = get_map_coord()
 			if not is_continent_placable(coord):
 				return
 			paint_continent(coord, step, gui.continent_type)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.CLIFF:
 			var border_coord: Vector2i = get_border_coord()
 			if not is_cliff_placable(border_coord):
@@ -839,7 +858,7 @@ func paint_map() -> void:
 			# 绘制边界悬崖
 			paint_border(border_coord, step, Map.BorderTileType.CLIFF)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RIVER:
 			var border_coord: Vector2i = get_border_coord()
 			if not is_river_placable(border_coord):
@@ -847,7 +866,7 @@ func paint_map() -> void:
 			# 绘制边界河流
 			paint_border(border_coord, step, Map.BorderTileType.RIVER)
 			# 强制重绘选择区域
-			paint_new_green_chosen_area(true)
+			paint_new_chosen_area(true)
 	
 	save_paint_step(step)
 
