@@ -239,8 +239,8 @@ func paint_new_green_chosen_area(renew: bool = false) -> void:
 			_mouse_hover_tile_coord = map_coord
 			_mouse_hover_border_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.RESOURCE:
-			# TODO: 补全资源判定逻辑。目前使用 lambda 暂时允许所有资源随便放
-			do_paint_green_chosen_tile_area(map_coord, func(x) -> bool: return true)
+			var placable: Callable = func(x) -> bool: return is_resource_placable(x, gui.resource_type)
+			do_paint_green_chosen_tile_area(map_coord, placable)
 			_mouse_hover_tile_coord = map_coord
 			_mouse_hover_border_coord = NULL_COORD
 		MapEditorGUI.PlaceMode.CONTINENT:
@@ -371,6 +371,231 @@ func is_village_placable(tile_coord: Vector2i) -> bool:
 			or terrain_type == Map.TerrainType.SNOW or terrain_type == Map.TerrainType.SNOW_HILL
 
 
+func is_resource_placable(tile_coord: Vector2i, type: Map.ResourceType) -> bool:
+	# 超出地图范围的不处理
+	if not is_in_map_tile(tile_coord):
+		return false
+	var tile_info: Map.TileInfo = _map.get_map_tile_info_at(tile_coord)
+	match type:
+		Map.ResourceType.EMPTY:
+			return true
+		Map.ResourceType.SILK:
+			return tile_info.landscape == Map.LandscapeType.FOREST
+		Map.ResourceType.RELIC:
+			return tile_info.type != Map.TerrainType.SHORE \
+					and tile_info.type != Map.TerrainType.OCEAN
+		Map.ResourceType.COCOA_BEAN:
+			return tile_info.landscape == Map.LandscapeType.RAINFOREST
+		Map.ResourceType.COFFEE:
+			return tile_info.type == Map.TerrainType.GRASS \
+					and tile_info.landscape == Map.LandscapeType.RAINFOREST
+		Map.ResourceType.MARBLE:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.GRASS_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.RICE:
+			return tile_info.type == Map.TerrainType.GRASS \
+					and (tile_info.landscape == Map.LandscapeType.EMPTY \
+					or tile_info.landscape == Map.LandscapeType.SWAMP \
+					or tile_info.landscape == Map.LandscapeType.FLOOD)
+		Map.ResourceType.WHEAT:
+			return ((tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.DESERT) \
+					and tile_info.landscape == Map.LandscapeType.FLOOD) \
+					or (tile_info.type == Map.TerrainType.PLAIN \
+					and tile_info.landscape == Map.LandscapeType.EMPTY)
+		Map.ResourceType.TRUFFLE:
+			return tile_info.landscape == Map.LandscapeType.FOREST \
+					or tile_info.landscape == Map.LandscapeType.RAINFOREST \
+					or tile_info.landscape == Map.LandscapeType.SWAMP
+		Map.ResourceType.ORANGE:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.DYE:
+			return tile_info.landscape == Map.LandscapeType.RAINFOREST \
+					or tile_info.landscape == Map.LandscapeType.FOREST
+		Map.ResourceType.COTTON:
+			return ((tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.DESERT) \
+					and tile_info.landscape == Map.LandscapeType.FLOOD) \
+					or ((tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY)
+		Map.ResourceType.MERCURY:
+			# FIXME: 网上百科里的判定条件怪怪的
+			return tile_info.type == Map.TerrainType.PLAIN \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.WRECKAGE:
+			return tile_info.type == Map.TerrainType.SHORE \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.TOBACCO:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and (tile_info.landscape == Map.LandscapeType.FOREST \
+					or tile_info.landscape == Map.LandscapeType.RAINFOREST)
+		Map.ResourceType.COAL:
+			return (tile_info.type == Map.TerrainType.GRASS_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL) \
+					and tile_info.landscape == Map.LandscapeType.FOREST
+		Map.ResourceType.INCENSE:
+			return (tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.COW:
+			return tile_info.type == Map.TerrainType.GRASS \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.JADE:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.TUNDRA) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.CORN:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and (tile_info.landscape == Map.LandscapeType.FLOOD \
+					or tile_info.landscape == Map.LandscapeType.EMPTY)
+		Map.ResourceType.PEARL:
+			return tile_info.type == Map.TerrainType.SHORE \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.FUR:
+			return tile_info.type == Map.TerrainType.TUNDRA \
+					and tile_info.landscape == Map.LandscapeType.FOREST
+		Map.ResourceType.SALT:
+			return (tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.TUNDRA) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.STONE:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.GRASS_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.OIL:
+			return ((tile_info.type == Map.TerrainType.SHORE \
+					or tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.TUNDRA \
+					or tile_info.type == Map.TerrainType.SNOW) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY) \
+					or (tile_info.type == Map.TerrainType.DESERT \
+					and tile_info.landscape == Map.LandscapeType.FLOOD) \
+					or tile_info.landscape == Map.LandscapeType.SWAMP
+		Map.ResourceType.GYPSUM:
+			return (tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.SALTPETER:
+			return ((tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and (tile_info.landscape == Map.LandscapeType.EMPTY \
+					or tile_info.landscape == Map.LandscapeType.FLOOD)) \
+					or ((tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.TUNDRA) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY)
+		Map.ResourceType.SUGAR:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.DESERT) \
+					and (tile_info.landscape == Map.LandscapeType.FLOOD \
+					or tile_info.landscape == Map.LandscapeType.SWAMP)
+		Map.ResourceType.SHEEP:
+			return (tile_info.type == Map.TerrainType.GRASS_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.TEA:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.GRASS_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.WINE:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and tile_info.landscape == Map.LandscapeType.FOREST
+		Map.ResourceType.HONEY:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.CRAB:
+			return tile_info.type == Map.TerrainType.SHORE \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.IVORY:
+			# FIXME: 这里条件是不是有问题？沙漠貌似无法满足
+			return (tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL) \
+					and (tile_info.landscape == Map.LandscapeType.RAINFOREST \
+					or tile_info.landscape == Map.LandscapeType.FOREST)
+		Map.ResourceType.DIAMOND:
+			return (tile_info.type == Map.TerrainType.GRASS_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
+					and tile_info.landscape == Map.LandscapeType.RAINFOREST
+		Map.ResourceType.URANIUM:
+			# FIXME: 沙漠和雪地和森林雨林冲突
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.GRASS_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL \
+					or tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.TUNDRA \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL \
+					or tile_info.type == Map.TerrainType.SNOW \
+					or tile_info.type == Map.TerrainType.SNOW_HILL) \
+					and (tile_info.landscape == Map.LandscapeType.RAINFOREST \
+					or tile_info.landscape == Map.LandscapeType.FOREST)
+		Map.ResourceType.IRON:
+			return (tile_info.type == Map.TerrainType.GRASS_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.COPPER:
+			return (tile_info.type == Map.TerrainType.GRASS_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN_HILL \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL \
+					or tile_info.type == Map.TerrainType.SNOW_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.ALUMINIUM:
+			# FIXME: 这里条件是不是有问题？沙漠、沙漠丘陵貌似无法满足
+			return (tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and tile_info.landscape == Map.LandscapeType.RAINFOREST
+		Map.ResourceType.SILVER:
+			return (tile_info.type == Map.TerrainType.DESERT \
+					or tile_info.type == Map.TerrainType.DESERT_HILL \
+					or tile_info.type == Map.TerrainType.TUNDRA \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.SPICE:
+			return tile_info.landscape == Map.LandscapeType.RAINFOREST \
+					or tile_info.landscape == Map.LandscapeType.FOREST
+		Map.ResourceType.BANANA:
+			return tile_info.landscape == Map.LandscapeType.RAINFOREST
+		Map.ResourceType.HORSE:
+			return (tile_info.type == Map.TerrainType.GRASS \
+					or tile_info.type == Map.TerrainType.PLAIN) \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.FISH:
+			return tile_info.type == Map.TerrainType.SHORE \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.WHALE:
+			return tile_info.type == Map.TerrainType.SHORE \
+					and tile_info.landscape == Map.LandscapeType.EMPTY
+		Map.ResourceType.DEER:
+			return (tile_info.type == Map.TerrainType.TUNDRA \
+					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
+					and tile_info.landscape == Map.LandscapeType.FOREST
+	return false
+
+
 func is_continent_placable(tile_coord: Vector2i) -> bool:
 	# 超出地图范围的不处理
 	if not is_in_map_tile(tile_coord):
@@ -481,6 +706,8 @@ func depaint_map() -> void:
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var tile_coord: Vector2i = get_map_coord()
 			if _map.get_map_tile_info_at(tile_coord).resource == Map.ResourceType.EMPTY:
+				# FIXME: 4.1 现在的场景 TileMap bug，需要等待 4.2 发布解决。目前先打日志说明一下
+				print("tile map ", tile_coord, " is empty. (if you see a icon, it's because 4.1's bug. Wait for 4.2 update to fix it)")
 				return
 			paint_resource(tile_coord, step, Map.ResourceType.EMPTY)
 			# 强制重绘选择区域
@@ -531,7 +758,6 @@ func paint_map() -> void:
 			if not is_landscape_placable(coord, gui.landscape_type):
 				return
 			paint_landscape(coord, step, gui.landscape_type)
-			
 			# 强制重绘选择区域
 			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
@@ -543,8 +769,7 @@ func paint_map() -> void:
 			paint_new_green_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var coord: Vector2i = get_map_coord()
-			# 超出地图范围的不处理
-			if not is_in_map_tile(coord):
+			if not is_resource_placable(coord, gui.resource_type):
 				return
 			paint_resource(coord, step, gui.resource_type)
 			# 强制重绘选择区域
@@ -570,7 +795,6 @@ func paint_map() -> void:
 				return
 			# 绘制边界河流
 			paint_border(border_coord, step, Map.BorderTileType.RIVER)
-			
 			# 强制重绘选择区域
 			paint_new_green_chosen_area(true)
 	
@@ -705,10 +929,14 @@ func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceTyp
 func do_paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
 	match type:
 		Map.ResourceType.EMPTY:
-			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1)
+			# FIXME：4.1 有 bug，TileMap 没办法把实例化的场景清除。现在的场景 TileMap 简直不能用…… 太蠢了
+			# 静待 4.2 发布，看 GitHub 讨论区貌似在 4.2 得到了修复。在修复前，会有资源显示和实际数据不一致的情况
+			# 对应的讨论区：https://github.com/godotengine/godot/issues/69596
+			print("do_paint_resource empty: ", tile_coord, " (tile map won't update until 4.2 is relased)")
+			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1, Vector2i(-1, -1), -1)
 		_:
-			# TODO: 资源素材太大了，在找到办法处理之前，先全部用丝绸的图标
-			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO)
+			# 保证资源图标场景的排序和 ResourseType 中一致
+			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
 
 
 func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentType) -> void:

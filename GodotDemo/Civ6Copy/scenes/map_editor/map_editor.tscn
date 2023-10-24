@@ -105,48 +105,52 @@ layer_1/enabled = true
 layer_1/modulate = Color(1, 1, 1, 1)
 layer_1/y_sort_enabled = false
 layer_1/y_sort_origin = 0
-layer_1/z_index = 0
+layer_1/z_index = 1
 layer_1/tile_data = PackedInt32Array()
 layer_2/name = "村庄层"
 layer_2/enabled = true
 layer_2/modulate = Color(1, 1, 1, 1)
 layer_2/y_sort_enabled = false
 layer_2/y_sort_origin = 0
-layer_2/z_index = 0
+layer_2/z_index = 2
 layer_2/tile_data = PackedInt32Array()
 layer_3/name = "大洲层"
 layer_3/enabled = false
 layer_3/modulate = Color(1, 1, 1, 1)
 layer_3/y_sort_enabled = false
 layer_3/y_sort_origin = 0
-layer_3/z_index = 0
+layer_3/z_index = 3
 layer_3/tile_data = PackedInt32Array()
 layer_4/name = "选择区域层"
 layer_4/enabled = true
 layer_4/modulate = Color(1, 1, 1, 1)
 layer_4/y_sort_enabled = false
 layer_4/y_sort_origin = 0
-layer_4/z_index = 0
+layer_4/z_index = 4
 layer_4/tile_data = PackedInt32Array()
 layer_5/name = "资源层"
 layer_5/enabled = true
 layer_5/modulate = Color(1, 1, 1, 1)
 layer_5/y_sort_enabled = false
 layer_5/y_sort_origin = 0
-layer_5/z_index = 0
+layer_5/z_index = 5
 layer_5/tile_data = PackedInt32Array()
+
+[node name="ResourceIcons" type="Node2D" parent="."]
+z_index = 5
 
 [node name="BorderTileMap" type="TileMap" parent="."]
 position = Vector2(0, -27)
 tile_set = SubResource("TileSet_itrfv")
 format = 2
 layer_0/name = "边界层"
+layer_0/z_index = 1
 layer_1/name = "选择区域层"
 layer_1/enabled = true
 layer_1/modulate = Color(1, 1, 1, 1)
 layer_1/y_sort_enabled = false
 layer_1/y_sort_origin = 0
-layer_1/z_index = 0
+layer_1/z_index = 4
 layer_1/tile_data = PackedInt32Array()
 
 [node name="Camera2D" type="Camera2D" parent="."]

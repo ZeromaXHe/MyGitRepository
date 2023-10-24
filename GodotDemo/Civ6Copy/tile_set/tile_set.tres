@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=57 format=3 uid="uid://bde1bs78up61k"]
+[gd_resource type="TileSet" load_steps=101 format=3 uid="uid://bde1bs78up61k"]
 
 [ext_resource type="Texture2D" uid="uid://fyq8m32mnwdi" path="res://assets/civ6_origin/tile/tile_grass.png" id="1_nmgkw"]
 [ext_resource type="Texture2D" uid="uid://csgj6bq84m1xl" path="res://assets/civ6_origin/tile/tile_grass_hill.png" id="2_ll6ai"]
@@ -27,7 +27,51 @@
 [ext_resource type="Texture2D" uid="uid://e0657ix1yt6r" path="res://assets/civ6_origin/tile/on_village.png" id="19_3gy2r"]
 [ext_resource type="Texture2D" uid="uid://cyobgn7nvar1j" path="res://assets/civ6_origin/tile/tile_tundra.png" id="19_qgtgk"]
 [ext_resource type="Texture2D" uid="uid://0alrqgplql21" path="res://assets/self_made_svg/continent_hexagons.svg" id="20_da2ks"]
-[ext_resource type="Texture2D" uid="uid://c6lbmdmed2pxa" path="res://assets/civ6_origin/resource/resources_silk.png" id="20_dc3df"]
+[ext_resource type="PackedScene" uid="uid://b6l2c3p2vvyjh" path="res://scenes/map_editor/resource_tiles/resource_sprite.tscn" id="21_pqsu7"]
+[ext_resource type="PackedScene" uid="uid://c5rtuqkjypkkr" path="res://scenes/map_editor/resource_tiles/sprite_dye.tscn" id="22_3l8kw"]
+[ext_resource type="PackedScene" uid="uid://ctjupqmtw0war" path="res://scenes/map_editor/resource_tiles/sprite_cotton.tscn" id="23_chjs8"]
+[ext_resource type="PackedScene" uid="uid://dxpxv6v8hqlde" path="res://scenes/map_editor/resource_tiles/sprite_mercury.tscn" id="24_vtouu"]
+[ext_resource type="PackedScene" uid="uid://dxqn5f1pmxo6n" path="res://scenes/map_editor/resource_tiles/sprite_wreckage.tscn" id="25_3hk4v"]
+[ext_resource type="PackedScene" uid="uid://c28vdge1ixand" path="res://scenes/map_editor/resource_tiles/sprite_tobacco.tscn" id="26_fy60i"]
+[ext_resource type="PackedScene" uid="uid://bi2dedgmfy078" path="res://scenes/map_editor/resource_tiles/sprite_coal.tscn" id="27_vhcv3"]
+[ext_resource type="PackedScene" uid="uid://bknsjfmxv3tul" path="res://scenes/map_editor/resource_tiles/sprite_incense.tscn" id="28_ki3hu"]
+[ext_resource type="PackedScene" uid="uid://dopndmcylwdc4" path="res://scenes/map_editor/resource_tiles/sprite_cow.tscn" id="29_l5ojr"]
+[ext_resource type="PackedScene" uid="uid://v3wx16lulxin" path="res://scenes/map_editor/resource_tiles/sprite_jade.tscn" id="30_14xvy"]
+[ext_resource type="PackedScene" uid="uid://c133rqhrt1sxg" path="res://scenes/map_editor/resource_tiles/sprite_corn.tscn" id="31_56wck"]
+[ext_resource type="PackedScene" uid="uid://dp6jylcpgdule" path="res://scenes/map_editor/resource_tiles/sprite_relic.tscn" id="32_0smsq"]
+[ext_resource type="PackedScene" uid="uid://ku6fqkcc2v66" path="res://scenes/map_editor/resource_tiles/sprite_pearl.tscn" id="33_jo5ld"]
+[ext_resource type="PackedScene" uid="uid://cik71y1fqiqgd" path="res://scenes/map_editor/resource_tiles/sprite_fur.tscn" id="34_8iecd"]
+[ext_resource type="PackedScene" uid="uid://jifjye327a1k" path="res://scenes/map_editor/resource_tiles/sprite_salt.tscn" id="35_yqsyw"]
+[ext_resource type="PackedScene" uid="uid://ddkhpmu8w5kyg" path="res://scenes/map_editor/resource_tiles/sprite_stone.tscn" id="36_sy5e2"]
+[ext_resource type="PackedScene" uid="uid://b3msy6qtr4o4d" path="res://scenes/map_editor/resource_tiles/sprite_oil.tscn" id="37_sa4af"]
+[ext_resource type="PackedScene" uid="uid://obsqxdlr5dxr" path="res://scenes/map_editor/resource_tiles/sprite_gypsum.tscn" id="38_q75l6"]
+[ext_resource type="PackedScene" uid="uid://cdncmr28f5q5w" path="res://scenes/map_editor/resource_tiles/sprite_saltpeter.tscn" id="39_n083i"]
+[ext_resource type="PackedScene" uid="uid://dbuns7g2aucfg" path="res://scenes/map_editor/resource_tiles/sprite_sugar.tscn" id="40_a5ffx"]
+[ext_resource type="PackedScene" uid="uid://dkl5tq8segu8k" path="res://scenes/map_editor/resource_tiles/sprite_sheep.tscn" id="41_fvi45"]
+[ext_resource type="PackedScene" uid="uid://x5k6sf811khx" path="res://scenes/map_editor/resource_tiles/sprite_tea.tscn" id="42_mx47l"]
+[ext_resource type="PackedScene" uid="uid://dfwrvxfytm4by" path="res://scenes/map_editor/resource_tiles/sprite_cocoa_bean.tscn" id="43_kykbq"]
+[ext_resource type="PackedScene" uid="uid://fkgnqrhu60c6" path="res://scenes/map_editor/resource_tiles/sprite_wine.tscn" id="44_hbu6r"]
+[ext_resource type="PackedScene" uid="uid://cw6rmf3t4mscc" path="res://scenes/map_editor/resource_tiles/sprite_honey.tscn" id="45_ux8po"]
+[ext_resource type="PackedScene" uid="uid://b2kjs5itky7ju" path="res://scenes/map_editor/resource_tiles/sprite_crab.tscn" id="46_5ilji"]
+[ext_resource type="PackedScene" uid="uid://dg5r6s7325fg2" path="res://scenes/map_editor/resource_tiles/sprite_ivory.tscn" id="47_uklrb"]
+[ext_resource type="PackedScene" uid="uid://cs6kvvywwcwvf" path="res://scenes/map_editor/resource_tiles/sprite_diamond.tscn" id="48_3uygo"]
+[ext_resource type="PackedScene" uid="uid://cheuj6xxsgkko" path="res://scenes/map_editor/resource_tiles/sprite_uranium.tscn" id="49_v5s5p"]
+[ext_resource type="PackedScene" uid="uid://cp4n1ia63cyfi" path="res://scenes/map_editor/resource_tiles/sprite_iron.tscn" id="50_fx0nm"]
+[ext_resource type="PackedScene" uid="uid://cwhrhc0jva1yc" path="res://scenes/map_editor/resource_tiles/sprite_copper.tscn" id="51_gwdug"]
+[ext_resource type="PackedScene" uid="uid://cr6k7snkanfhi" path="res://scenes/map_editor/resource_tiles/sprite_aluminium.tscn" id="52_kojvu"]
+[ext_resource type="PackedScene" uid="uid://qnx18xwcy8lm" path="res://scenes/map_editor/resource_tiles/sprite_silver.tscn" id="53_58ehe"]
+[ext_resource type="PackedScene" uid="uid://dtkinsrgt8147" path="res://scenes/map_editor/resource_tiles/sprite_coffee.tscn" id="54_er5w0"]
+[ext_resource type="PackedScene" uid="uid://d3k2jt3rk1t7u" path="res://scenes/map_editor/resource_tiles/sprite_spice.tscn" id="55_v86q8"]
+[ext_resource type="PackedScene" uid="uid://csanhkg2myi3h" path="res://scenes/map_editor/resource_tiles/sprite_banana.tscn" id="56_xq5xc"]
+[ext_resource type="PackedScene" uid="uid://bvahmrsnfpejd" path="res://scenes/map_editor/resource_tiles/sprite_horse.tscn" id="57_67pr4"]
+[ext_resource type="PackedScene" uid="uid://cv5arsf2sn383" path="res://scenes/map_editor/resource_tiles/sprite_fish.tscn" id="58_hoy38"]
+[ext_resource type="PackedScene" uid="uid://c6541ehcm3w8e" path="res://scenes/map_editor/resource_tiles/sprite_whale.tscn" id="59_ll1pi"]
+[ext_resource type="PackedScene" uid="uid://c6s8tkksj48bf" path="res://scenes/map_editor/resource_tiles/sprite_deer.tscn" id="60_0iy0s"]
+[ext_resource type="PackedScene" uid="uid://c0ujucj2su4sx" path="res://scenes/map_editor/resource_tiles/sprite_marble.tscn" id="61_bqd43"]
+[ext_resource type="PackedScene" uid="uid://do57ca8g62nup" path="res://scenes/map_editor/resource_tiles/sprite_rice.tscn" id="62_37iph"]
+[ext_resource type="PackedScene" uid="uid://ouv2gh0xbnfq" path="res://scenes/map_editor/resource_tiles/sprite_wheat.tscn" id="63_1hvjv"]
+[ext_resource type="PackedScene" uid="uid://cc22i3od2608m" path="res://scenes/map_editor/resource_tiles/sprite_truffle.tscn" id="64_yd2v4"]
+[ext_resource type="PackedScene" uid="uid://bctyjs7qd4ity" path="res://scenes/map_editor/resource_tiles/sprite_orange.tscn" id="65_ll13l"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_22jfd"]
 texture = ExtResource("1_nmgkw")
@@ -184,12 +228,53 @@ texture_region_size = Vector2i(184, 215)
 1:4/0 = 0
 2:4/0 = 0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_cj3e7"]
-texture = ExtResource("20_dc3df")
-margins = Vector2i(7, 0)
-texture_region_size = Vector2i(186, 196)
-0:0/next_alternative_id = 2
-0:0/0 = 0
+[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_ps70b"]
+resource_name = "resource_icons"
+scenes/1/scene = ExtResource("21_pqsu7")
+scenes/2/scene = ExtResource("32_0smsq")
+scenes/3/scene = ExtResource("43_kykbq")
+scenes/4/scene = ExtResource("54_er5w0")
+scenes/5/scene = ExtResource("61_bqd43")
+scenes/6/scene = ExtResource("62_37iph")
+scenes/7/scene = ExtResource("63_1hvjv")
+scenes/8/scene = ExtResource("64_yd2v4")
+scenes/9/scene = ExtResource("65_ll13l")
+scenes/10/scene = ExtResource("22_3l8kw")
+scenes/11/scene = ExtResource("23_chjs8")
+scenes/12/scene = ExtResource("24_vtouu")
+scenes/13/scene = ExtResource("25_3hk4v")
+scenes/14/scene = ExtResource("26_fy60i")
+scenes/15/scene = ExtResource("27_vhcv3")
+scenes/16/scene = ExtResource("28_ki3hu")
+scenes/17/scene = ExtResource("29_l5ojr")
+scenes/18/scene = ExtResource("30_14xvy")
+scenes/19/scene = ExtResource("31_56wck")
+scenes/20/scene = ExtResource("33_jo5ld")
+scenes/21/scene = ExtResource("34_8iecd")
+scenes/22/scene = ExtResource("35_yqsyw")
+scenes/23/scene = ExtResource("36_sy5e2")
+scenes/24/scene = ExtResource("37_sa4af")
+scenes/25/scene = ExtResource("38_q75l6")
+scenes/26/scene = ExtResource("39_n083i")
+scenes/27/scene = ExtResource("40_a5ffx")
+scenes/28/scene = ExtResource("41_fvi45")
+scenes/29/scene = ExtResource("42_mx47l")
+scenes/30/scene = ExtResource("44_hbu6r")
+scenes/31/scene = ExtResource("45_ux8po")
+scenes/32/scene = ExtResource("46_5ilji")
+scenes/33/scene = ExtResource("47_uklrb")
+scenes/34/scene = ExtResource("48_3uygo")
+scenes/35/scene = ExtResource("49_v5s5p")
+scenes/36/scene = ExtResource("50_fx0nm")
+scenes/37/scene = ExtResource("51_gwdug")
+scenes/38/scene = ExtResource("52_kojvu")
+scenes/39/scene = ExtResource("53_58ehe")
+scenes/40/scene = ExtResource("55_v86q8")
+scenes/41/scene = ExtResource("56_xq5xc")
+scenes/42/scene = ExtResource("57_67pr4")
+scenes/43/scene = ExtResource("58_hoy38")
+scenes/44/scene = ExtResource("59_ll1pi")
+scenes/45/scene = ExtResource("60_0iy0s")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_oqclh"]
 texture = ExtResource("13_7fev2")
@@ -261,5 +346,5 @@ sources/23 = SubResource("TileSetAtlasSource_lp48t")
 sources/24 = SubResource("TileSetAtlasSource_kfk3m")
 sources/25 = SubResource("TileSetAtlasSource_diclx")
 sources/26 = SubResource("TileSetAtlasSource_hy28n")
-sources/27 = SubResource("TileSetAtlasSource_cj3e7")
+sources/27 = SubResource("TileSetScenesCollectionSource_ps70b")
 tile_proxies/source_level = [0, 0]

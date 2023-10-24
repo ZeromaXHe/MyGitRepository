@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3k2jt3rk1t7u"]
+
+[ext_resource type="PackedScene" uid="uid://b6l2c3p2vvyjh" path="res://scenes/map_editor/resource_tiles/resource_sprite.tscn" id="1_5kmj7"]
+[ext_resource type="Texture2D" uid="uid://ciuwa1ei0yl2a" path="res://assets/civ6_origin/resource/resources_spice.png" id="2_8se24"]
+
+[node name="ResourceSprite" instance=ExtResource("1_5kmj7")]
+texture = ExtResource("2_8se24")

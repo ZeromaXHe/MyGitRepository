@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://cv5arsf2sn383"]
+
+[ext_resource type="PackedScene" uid="uid://b6l2c3p2vvyjh" path="res://scenes/map_editor/resource_tiles/resource_sprite.tscn" id="1_vgp87"]
+[ext_resource type="Texture2D" uid="uid://l4k37lvgxrpc" path="res://assets/civ6_origin/resource/resources_fish.png" id="2_oawis"]
+
+[node name="ResourceSprite" instance=ExtResource("1_vgp87")]
+texture = ExtResource("2_oawis")

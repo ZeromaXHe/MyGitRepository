@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://dopndmcylwdc4"]
+
+[ext_resource type="PackedScene" uid="uid://b6l2c3p2vvyjh" path="res://scenes/map_editor/resource_tiles/resource_sprite.tscn" id="1_linsp"]
+[ext_resource type="Texture2D" uid="uid://cm3vli2sv8lk" path="res://assets/civ6_origin/resource/resources_cow.png" id="2_wyf16"]
+
+[node name="ResourceSprite" instance=ExtResource("1_linsp")]
+texture = ExtResource("2_wyf16")

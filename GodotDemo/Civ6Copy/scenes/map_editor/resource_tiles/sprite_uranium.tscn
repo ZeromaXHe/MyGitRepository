@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://cheuj6xxsgkko"]
+
+[ext_resource type="PackedScene" uid="uid://b6l2c3p2vvyjh" path="res://scenes/map_editor/resource_tiles/resource_sprite.tscn" id="1_pckey"]
+[ext_resource type="Texture2D" uid="uid://dv050xgdk4x3d" path="res://assets/civ6_origin/resource/resources_uranium.png" id="2_f4u2w"]
+
+[node name="ResourceSprite" instance=ExtResource("1_pckey")]
+texture = ExtResource("2_f4u2w")
