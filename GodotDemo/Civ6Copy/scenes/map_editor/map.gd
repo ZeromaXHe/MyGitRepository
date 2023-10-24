@@ -43,6 +43,7 @@ enum LandscapeType {
 }
 
 enum ContinentType {
+	EMPTY, # 空
 	AFRICA, # 非洲
 	AMASIA, # 阿马西亚
 	AMERICA, # 美洲
@@ -181,7 +182,7 @@ const TERRAIN_TYPE_TO_NAME_DICT: Dictionary = {
 }
 
 const LANDSCAPE_TYPE_TO_NAME_DICT: Dictionary = {
-	LandscapeType.EMPTY: "无",
+	LandscapeType.EMPTY: "空",
 	LandscapeType.ICE: "冰",
 	LandscapeType.FOREST: "森林",
 	LandscapeType.SWAMP: "沼泽",
@@ -191,6 +192,7 @@ const LANDSCAPE_TYPE_TO_NAME_DICT: Dictionary = {
 }
 
 const CONTINENT_TYPE_TO_NAME_DICT: Dictionary = {
+	ContinentType.EMPTY: "空",
 	ContinentType.AFRICA: "非洲",
 	ContinentType.AMASIA: "阿马西亚",
 	ContinentType.AMERICA: "美洲",
@@ -655,7 +657,7 @@ class TileInfo:
 	var landscape: LandscapeType = LandscapeType.EMPTY
 	var village: int = 0 # 0 表示没有，1 表示有
 	var resource: ResourceType = ResourceType.EMPTY
-	var continent: ContinentType = ContinentType.AFRICA
+	var continent: ContinentType = ContinentType.EMPTY
 	
 	func _init(type: TerrainType) -> void:
 		self.type = type

@@ -175,10 +175,9 @@ func handle_restore() -> void:
 		if change.tile_change:
 			match change.tile_change_type:
 				TileChangeType.TERRAIN:
-					do_paint_terrain(change.coord, change.after.type)
-					paint_or_depaint_continent_when_terrain_change(change.coord, change.before, change.after)
+					do_paint_tile(change.coord, change.after)
 				TileChangeType.LANDSCAPE:
-					do_paint_landscape(change.coord, change.after.landscape)
+					do_paint_tile(change.coord, change.after)
 				TileChangeType.VILLAGE:
 					do_paint_village(change.coord, change.after.village)
 				TileChangeType.RESOURCE:
@@ -208,10 +207,9 @@ func handle_cancel() -> void:
 		if change.tile_change:
 			match change.tile_change_type:
 				TileChangeType.TERRAIN:
-					do_paint_terrain(change.coord, change.before.type)
-					paint_or_depaint_continent_when_terrain_change(change.coord, change.after, change.before)
+					do_paint_tile(change.coord, change.before)
 				TileChangeType.LANDSCAPE:
-					do_paint_landscape(change.coord, change.before.landscape)
+					do_paint_tile(change.coord, change.before)
 				TileChangeType.VILLAGE:
 					do_paint_village(change.coord, change.before.village)
 				TileChangeType.RESOURCE:
@@ -357,48 +355,59 @@ func is_landscape_placable(tile_coord: Vector2i, landscape: Map.LandscapeType) -
 	# 超出地图范围的不处理
 	if not is_in_map_tile(tile_coord):
 		return false
+	if not is_landscape_placable_terrain(landscape, _map.get_map_tile_info_at(tile_coord).type):
+		return false
+	match landscape:
+		Map.LandscapeType.FLOOD:
+			## 泛滥平原需要放在沿河的沙漠
+			return is_flood_placable_borders(tile_coord)
+		Map.LandscapeType.OASIS:
+			## 绿洲需要放在周围全是沙漠/沙漠丘陵/沙漠山脉地块的沙漠，而且不能和其他绿洲相邻
+			return is_oasis_placable_surroundings(tile_coord)
+		_:
+			return true
+
+
+func is_landscape_placable_terrain(landscape: Map.LandscapeType, terrain_type: Map.TerrainType) -> bool:
 	match landscape:
 		Map.LandscapeType.ICE:
-			return is_ice_placable(tile_coord)
+			return is_ice_placable_terrain(terrain_type)
 		Map.LandscapeType.FOREST:
-			return is_forest_placable(tile_coord)
+			return is_forest_placable_terrain(terrain_type)
 		Map.LandscapeType.SWAMP:
-			return is_swamp_placable(tile_coord)
+			return is_swamp_placable_terrain(terrain_type)
 		Map.LandscapeType.FLOOD:
-			return is_flood_placable(tile_coord)
+			return is_flood_placable_terrain(terrain_type)
 		Map.LandscapeType.OASIS:
-			return is_oasis_placable(tile_coord)
+			return is_oasis_placable_terrain(terrain_type)
 		Map.LandscapeType.RAINFOREST:
-			return is_rainforest_placable(tile_coord)
+			return is_rainforest_placable_terrain(terrain_type)
 		Map.LandscapeType.EMPTY:
 			return true
 		_:
-			printerr("is_landscape_placable | unknown landscape: ", landscape)
+			printerr("is_landscape_placable_tile | unknown landscape: ", landscape)
 			return false
 
 
-func is_ice_placable(tile_coord: Vector2i) -> bool:
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+func is_ice_placable_terrain(terrain_type: Map.TerrainType) -> bool:
 	return terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN
 
 
-func is_forest_placable(tile_coord: Vector2i) -> bool:
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+func is_forest_placable_terrain(terrain_type: Map.TerrainType) -> bool:
 	return terrain_type == Map.TerrainType.GRASS or terrain_type == Map.TerrainType.GRASS_HILL \
 			or terrain_type == Map.TerrainType.PLAIN or terrain_type == Map.TerrainType.PLAIN_HILL \
 			or terrain_type == Map.TerrainType.TUNDRA or terrain_type == Map.TerrainType.TUNDRA_HILL
 
 
-func is_swamp_placable(tile_coord: Vector2i) -> bool:
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+func is_swamp_placable_terrain(terrain_type: Map.TerrainType) -> bool:
 	return terrain_type == Map.TerrainType.GRASS
 
 
-## 泛滥平原需要放在沿河的沙漠
-func is_flood_placable(tile_coord: Vector2i) -> bool:
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
-	if terrain_type != Map.TerrainType.DESERT:
-		return false
+func is_flood_placable_terrain(terrain_type: Map.TerrainType) -> bool:
+	return terrain_type == Map.TerrainType.DESERT
+
+
+func is_flood_placable_borders(tile_coord: Vector2i) -> bool:
 	var borders: Array[Vector2i] = Map.get_all_tile_border(tile_coord, false)
 	for border in borders:
 		if _map.get_border_tile_info_at(border).type == Map.BorderTileType.RIVER:
@@ -406,11 +415,11 @@ func is_flood_placable(tile_coord: Vector2i) -> bool:
 	return false
 
 
-## 绿洲需要放在周围全是沙漠/沙漠丘陵/沙漠山脉地块的沙漠，而且不能和其他绿洲相邻
-func is_oasis_placable(tile_coord: Vector2i) -> bool:
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
-	if terrain_type != Map.TerrainType.DESERT:
-		return false
+func is_oasis_placable_terrain(terrain_type: Map.TerrainType) -> bool:
+	return terrain_type == Map.TerrainType.DESERT
+
+
+func is_oasis_placable_surroundings(tile_coord: Vector2i) -> bool:
 	var surroundings: Array[Vector2i] = get_surrounding_cells(tile_coord, 1, false)
 	for surrounding in surroundings:
 		var tile_info: Map.TileInfo = _map.get_map_tile_info_at(surrounding)
@@ -423,8 +432,7 @@ func is_oasis_placable(tile_coord: Vector2i) -> bool:
 	return true
 
 
-func is_rainforest_placable(tile_coord: Vector2i) -> bool:
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+func is_rainforest_placable_terrain(terrain_type: Map.TerrainType) -> bool:
 	return terrain_type == Map.TerrainType.GRASS or terrain_type == Map.TerrainType.GRASS_HILL \
 			or terrain_type == Map.TerrainType.PLAIN or terrain_type == Map.TerrainType.PLAIN_HILL
 
@@ -433,7 +441,10 @@ func is_village_placable(tile_coord: Vector2i) -> bool:
 	# 超出地图范围的不处理
 	if not is_in_map_tile(tile_coord):
 		return false
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return is_village_placable_terrain(_map.get_map_tile_info_at(tile_coord).type)
+
+
+func is_village_placable_terrain(terrain_type: Map.TerrainType) -> bool:
 	return terrain_type == Map.TerrainType.GRASS or terrain_type == Map.TerrainType.GRASS_HILL \
 			or terrain_type == Map.TerrainType.PLAIN or terrain_type == Map.TerrainType.PLAIN_HILL \
 			or terrain_type == Map.TerrainType.DESERT or terrain_type == Map.TerrainType.DESERT_HILL \
@@ -446,223 +457,170 @@ func is_resource_placable(tile_coord: Vector2i, type: Map.ResourceType) -> bool:
 	if not is_in_map_tile(tile_coord):
 		return false
 	var tile_info: Map.TileInfo = _map.get_map_tile_info_at(tile_coord)
-	match type:
+	return is_resource_placable_terrain_and_landscape(type, tile_info.type, tile_info.landscape)
+
+
+func is_resource_placable_terrain_and_landscape(resource: Map.ResourceType, \
+		terrain: Map.TerrainType, landscape: Map.LandscapeType) -> bool:
+	match resource:
 		Map.ResourceType.EMPTY:
 			return true
 		Map.ResourceType.SILK:
-			return tile_info.landscape == Map.LandscapeType.FOREST
+			return landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.RELIC:
-			return tile_info.type != Map.TerrainType.SHORE \
-					and tile_info.type != Map.TerrainType.OCEAN
+			return terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
+					or terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.PLAIN_HILL \
+					or terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
+					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL \
+					or terrain == Map.TerrainType.SNOW or terrain == Map.TerrainType.SNOW_HILL
 		Map.ResourceType.COCOA_BEAN:
-			return tile_info.landscape == Map.LandscapeType.RAINFOREST
+			return landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.COFFEE:
-			return tile_info.type == Map.TerrainType.GRASS \
-					and tile_info.landscape == Map.LandscapeType.RAINFOREST
+			return terrain == Map.TerrainType.GRASS and landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.MARBLE:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.GRASS_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
+					or terrain == Map.TerrainType.PLAIN_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.RICE:
-			return tile_info.type == Map.TerrainType.GRASS \
-					and (tile_info.landscape == Map.LandscapeType.EMPTY \
-					or tile_info.landscape == Map.LandscapeType.SWAMP \
-					or tile_info.landscape == Map.LandscapeType.FLOOD)
+			return terrain == Map.TerrainType.GRASS \
+					and (landscape == Map.LandscapeType.EMPTY or landscape == Map.LandscapeType.SWAMP \
+					or landscape == Map.LandscapeType.FLOOD)
 		Map.ResourceType.WHEAT:
-			return ((tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.DESERT) \
-					and tile_info.landscape == Map.LandscapeType.FLOOD) \
-					or (tile_info.type == Map.TerrainType.PLAIN \
-					and tile_info.landscape == Map.LandscapeType.EMPTY)
+			return ((terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.DESERT) \
+					and landscape == Map.LandscapeType.FLOOD) \
+					or (terrain == Map.TerrainType.PLAIN and landscape == Map.LandscapeType.EMPTY)
 		Map.ResourceType.TRUFFLE:
-			return tile_info.landscape == Map.LandscapeType.FOREST \
-					or tile_info.landscape == Map.LandscapeType.RAINFOREST \
-					or tile_info.landscape == Map.LandscapeType.SWAMP
+			return landscape == Map.LandscapeType.FOREST or landscape == Map.LandscapeType.RAINFOREST \
+					or landscape == Map.LandscapeType.SWAMP
 		Map.ResourceType.ORANGE:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.DYE:
-			return tile_info.landscape == Map.LandscapeType.RAINFOREST \
-					or tile_info.landscape == Map.LandscapeType.FOREST
+			return landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.COTTON:
-			return ((tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.DESERT) \
-					and tile_info.landscape == Map.LandscapeType.FLOOD) \
-					or ((tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY)
+			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN \
+					or terrain == Map.TerrainType.DESERT) and landscape == Map.LandscapeType.FLOOD) \
+					or ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.EMPTY)
 		Map.ResourceType.MERCURY:
 			# FIXME: 网上百科里的判定条件怪怪的
-			return tile_info.type == Map.TerrainType.PLAIN \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return terrain == Map.TerrainType.PLAIN \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.WRECKAGE:
-			return tile_info.type == Map.TerrainType.SHORE \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return terrain == Map.TerrainType.SHORE \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.TOBACCO:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and (tile_info.landscape == Map.LandscapeType.FOREST \
-					or tile_info.landscape == Map.LandscapeType.RAINFOREST)
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and (landscape == Map.LandscapeType.FOREST or landscape == Map.LandscapeType.RAINFOREST)
 		Map.ResourceType.COAL:
-			return (tile_info.type == Map.TerrainType.GRASS_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL) \
-					and tile_info.landscape == Map.LandscapeType.FOREST
+			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL) \
+					and landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.INCENSE:
-			return (tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.COW:
-			return tile_info.type == Map.TerrainType.GRASS \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return terrain == Map.TerrainType.GRASS and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.JADE:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.TUNDRA) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN \
+					or terrain == Map.TerrainType.TUNDRA) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.CORN:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and (tile_info.landscape == Map.LandscapeType.FLOOD \
-					or tile_info.landscape == Map.LandscapeType.EMPTY)
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and (landscape == Map.LandscapeType.FLOOD or landscape == Map.LandscapeType.EMPTY)
 		Map.ResourceType.PEARL:
-			return tile_info.type == Map.TerrainType.SHORE \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return terrain == Map.TerrainType.SHORE and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.FUR:
-			return tile_info.type == Map.TerrainType.TUNDRA \
-					and tile_info.landscape == Map.LandscapeType.FOREST
+			return terrain == Map.TerrainType.TUNDRA and landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.SALT:
-			return (tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.TUNDRA) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.PLAIN \
+					or terrain == Map.TerrainType.TUNDRA) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.STONE:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.GRASS_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.OIL:
-			return ((tile_info.type == Map.TerrainType.SHORE \
-					or tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.TUNDRA \
-					or tile_info.type == Map.TerrainType.SNOW) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY) \
-					or (tile_info.type == Map.TerrainType.DESERT \
-					and tile_info.landscape == Map.LandscapeType.FLOOD) \
-					or tile_info.landscape == Map.LandscapeType.SWAMP
+			return ((terrain == Map.TerrainType.SHORE or terrain == Map.TerrainType.DESERT \
+					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.SNOW) \
+					and landscape == Map.LandscapeType.EMPTY) \
+					or (terrain == Map.TerrainType.DESERT and landscape == Map.LandscapeType.FLOOD) \
+					or landscape == Map.LandscapeType.SWAMP
 		Map.ResourceType.GYPSUM:
-			return (tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.PLAIN_HILL \
+					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.SALTPETER:
-			return ((tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and (tile_info.landscape == Map.LandscapeType.EMPTY \
-					or tile_info.landscape == Map.LandscapeType.FLOOD)) \
-					or ((tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.TUNDRA) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY)
+			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and (landscape == Map.LandscapeType.EMPTY or landscape == Map.LandscapeType.FLOOD)) \
+					or ((terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.TUNDRA) \
+					and landscape == Map.LandscapeType.EMPTY)
 		Map.ResourceType.SUGAR:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.DESERT) \
-					and (tile_info.landscape == Map.LandscapeType.FLOOD \
-					or tile_info.landscape == Map.LandscapeType.SWAMP)
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN \
+					or terrain == Map.TerrainType.DESERT) \
+					and (landscape == Map.LandscapeType.FLOOD or landscape == Map.LandscapeType.SWAMP)
 		Map.ResourceType.SHEEP:
-			return (tile_info.type == Map.TerrainType.GRASS_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
+					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.TEA:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.GRASS_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.WINE:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and tile_info.landscape == Map.LandscapeType.FOREST
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.HONEY:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.CRAB:
-			return tile_info.type == Map.TerrainType.SHORE \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return terrain == Map.TerrainType.SHORE and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.IVORY:
 			# FIXME: 这里条件是不是有问题？沙漠貌似无法满足
-			return (tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL) \
-					and (tile_info.landscape == Map.LandscapeType.RAINFOREST \
-					or tile_info.landscape == Map.LandscapeType.FOREST)
+			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.PLAIN \
+					or terrain == Map.TerrainType.PLAIN_HILL) \
+					and (landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST)
 		Map.ResourceType.DIAMOND:
-			return (tile_info.type == Map.TerrainType.GRASS_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
-					and tile_info.landscape == Map.LandscapeType.RAINFOREST
+			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
+					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
+					and landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.URANIUM:
 			# FIXME: 沙漠和雪地和森林雨林冲突
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.GRASS_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL \
-					or tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.TUNDRA \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL \
-					or tile_info.type == Map.TerrainType.SNOW \
-					or tile_info.type == Map.TerrainType.SNOW_HILL) \
-					and (tile_info.landscape == Map.LandscapeType.RAINFOREST \
-					or tile_info.landscape == Map.LandscapeType.FOREST)
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
+					or terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.PLAIN_HILL \
+					or terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
+					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL \
+					or terrain == Map.TerrainType.SNOW or terrain == Map.TerrainType.SNOW_HILL) \
+					and (landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST)
 		Map.ResourceType.IRON:
-			return (tile_info.type == Map.TerrainType.GRASS_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
+					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.COPPER:
-			return (tile_info.type == Map.TerrainType.GRASS_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN_HILL \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL \
-					or tile_info.type == Map.TerrainType.SNOW_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
+					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL \
+					or terrain == Map.TerrainType.SNOW_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.ALUMINIUM:
 			# FIXME: 这里条件是不是有问题？沙漠、沙漠丘陵貌似无法满足
-			return (tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and tile_info.landscape == Map.LandscapeType.RAINFOREST
+			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
+					or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.SILVER:
-			return (tile_info.type == Map.TerrainType.DESERT \
-					or tile_info.type == Map.TerrainType.DESERT_HILL \
-					or tile_info.type == Map.TerrainType.TUNDRA \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
+					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.SPICE:
-			return tile_info.landscape == Map.LandscapeType.RAINFOREST \
-					or tile_info.landscape == Map.LandscapeType.FOREST
+			return landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.BANANA:
-			return tile_info.landscape == Map.LandscapeType.RAINFOREST
+			return landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.HORSE:
-			return (tile_info.type == Map.TerrainType.GRASS \
-					or tile_info.type == Map.TerrainType.PLAIN) \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.FISH:
-			return tile_info.type == Map.TerrainType.SHORE \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return terrain == Map.TerrainType.SHORE and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.WHALE:
-			return tile_info.type == Map.TerrainType.SHORE \
-					and tile_info.landscape == Map.LandscapeType.EMPTY
+			return terrain == Map.TerrainType.SHORE and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.DEER:
-			return (tile_info.type == Map.TerrainType.TUNDRA \
-					or tile_info.type == Map.TerrainType.TUNDRA_HILL) \
-					and tile_info.landscape == Map.LandscapeType.FOREST
+			return (terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL) \
+					and landscape == Map.LandscapeType.FOREST
 	return false
 
 
@@ -670,7 +628,10 @@ func is_continent_placable(tile_coord: Vector2i) -> bool:
 	# 超出地图范围的不处理
 	if not is_in_map_tile(tile_coord):
 		return false
-	var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(tile_coord).type
+	return is_continent_placable_terrain(_map.get_map_tile_info_at(tile_coord).type)
+
+
+func is_continent_placable_terrain(terrain_type: Map.TerrainType) -> bool:
 	return terrain_type != Map.TerrainType.SHORE and terrain_type != Map.TerrainType.OCEAN
 
 
@@ -901,21 +862,49 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainTy
 	change.before = _map.get_map_tile_info_at(coord)
 	change.after = copy_tile_info(change.before)
 	change.after.type = terrain_type
-	paint_or_depaint_continent_when_terrain_change(coord, change.before, change.after)
+	
+	if change.before.landscape != Map.LandscapeType.EMPTY \
+			and not is_landscape_placable_terrain(change.before.landscape, terrain_type):
+		change.after.landscape = Map.LandscapeType.EMPTY
+	if change.before.village == 1 and not is_village_placable_terrain(terrain_type):
+		change.after.village = 0
+	
+	if change.before.continent != Map.ContinentType.EMPTY \
+			and not is_continent_placable_terrain(terrain_type):
+		change.after.continent = Map.ContinentType.EMPTY
+	elif is_continent_placable_terrain(terrain_type) and change.before.continent == Map.ContinentType.EMPTY:
+		# 从海变陆时需要给个默认的大洲
+		change.after.continent = gui.continent_type
+	
+	if change.before.resource != Map.ResourceType.EMPTY \
+			and not is_resource_placable_terrain_and_landscape(change.before.resource, terrain_type, change.after.landscape):
+		change.after.resource = Map.ResourceType.EMPTY
+	
 	step.changed_arr.append(change)
+	
 	# 记录地图地块信息
 	_map.change_map_tile_info(coord, change.after)
-	# 真正绘制 TileMap 地块
-	do_paint_terrain(coord, terrain_type)
+	# 重新绘制整个 TileMap 地块
+	do_paint_tile(coord, change.after)
+	
+	# 对周围一圈边界进行校验，不符合的边界需要重置为空
+	var borders: Array[Vector2i] = Map.get_all_tile_border(coord, false)
+	for border in borders:
+		var border_info: Map.BorderInfo = _map.get_border_tile_info_at(border)
+		if border_info.type == Map.BorderTileType.CLIFF:
+			if not is_cliff_placable(border):
+				paint_border(border, step, Map.BorderTileType.EMPTY)
+		elif border_info.type == Map.BorderTileType.RIVER:
+			if not is_river_placable(border):
+				paint_border(border, step, Map.BorderTileType.EMPTY)
 
 
-func paint_or_depaint_continent_when_terrain_change(coord: Vector2i, before: Map.TileInfo, after: Map.TileInfo) -> void:
-	if (before.type == Map.TerrainType.SHORE or before.type == Map.TerrainType.OCEAN) \
-			and (after.type != Map.TerrainType.SHORE and after.type != Map.TerrainType.OCEAN):
-		do_paint_continent(coord, after.continent)
-	elif (before.type != Map.TerrainType.SHORE and before.type != Map.TerrainType.OCEAN) \
-			and (after.type == Map.TerrainType.SHORE or after.type == Map.TerrainType.OCEAN):
-		do_depaint_continent(coord)
+func do_paint_tile(coord: Vector2i, tile_info: Map.TileInfo) -> void:
+	do_paint_terrain(coord, tile_info.type)
+	do_paint_landscape(coord, tile_info.landscape)
+	do_paint_village(coord, tile_info.village)
+	do_paint_continent(coord, tile_info.continent)
+	do_paint_resource(coord, tile_info.resource)
 
 
 func do_paint_terrain(coord: Vector2i, type: Map.TerrainType) -> void:
@@ -932,6 +921,12 @@ func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: Map.LandscapeT
 	change.before = _map.get_map_tile_info_at(tile_coord)
 	change.after = copy_tile_info(change.before)
 	change.after.landscape = type
+	
+	if change.before.resource == Map.ResourceType.EMPTY \
+			and not is_resource_placable_terrain_and_landscape(change.before.resource, change.before.type, type):
+		change.after.resource = Map.ResourceType.EMPTY
+		do_paint_resource(tile_coord, Map.ResourceType.EMPTY)
+	
 	step.changed_arr.append(change)
 	# 记录地图地块信息
 	_map.change_map_tile_info(tile_coord, change.after)
@@ -1011,7 +1006,7 @@ func do_paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
 #		tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
 		var scene: PackedScene = RESOURCE_TYPE_TO_ICON_SCENE_DICT[type]
 		var sprite := scene.instantiate() as Sprite2D
-		sprite.global_position = tile_map.to_global(tile_map.map_to_local(tile_coord)) + Vector2(0, 40)
+		sprite.global_position = tile_map.to_global(tile_map.map_to_local(tile_coord)) + Vector2(0, 60)
 		_coord_to_resource_icon_dict[tile_coord] = sprite
 		resource_icons.add_child(sprite)
 
@@ -1033,11 +1028,10 @@ func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentT
 
 
 func do_paint_continent(tile_coord: Vector2i, type: Map.ContinentType) -> void:
-	tile_map.set_cell(TILE_CONTINENT_LAYER_IDX, tile_coord, 26, Vector2i(type % 10, type / 10))
-
-
-func do_depaint_continent(tile_coord: Vector2i) -> void:
-	tile_map.erase_cell(TILE_CONTINENT_LAYER_IDX, tile_coord)
+	if type == Map.ContinentType.EMPTY:
+		tile_map.erase_cell(TILE_CONTINENT_LAYER_IDX, tile_coord)
+	else:
+		tile_map.set_cell(TILE_CONTINENT_LAYER_IDX, tile_coord, 26, Vector2i((type - 1) % 10, (type - 1) / 10))
 
 
 func paint_border(border_coord: Vector2i, step: PaintStep, type: Map.BorderTileType) -> void:

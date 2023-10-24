@@ -305,7 +305,7 @@ func handle_landscape_type_group_pressed(button: BaseButton) -> void:
 
 func handle_continent_item_selected(idx: int) -> void:
 	# 直接默认大陆选择按钮的个数和枚举个数是一一对应的，暂时不校验
-	continent_type = idx
+	continent_type = idx + 1
 
 
 func handle_resource_type_group_pressed(button: BaseButton) -> void:
