@@ -296,9 +296,9 @@ func paint_new_chosen_area(renew: bool = false) -> void:
 	
 	match gui.place_mode:
 		MapEditorGUI.PlaceMode.RIVER:
-			do_paint_green_chosen_border_area(border_coord, self.is_river_placable)
+			do_paint_chosen_border_area(border_coord, self.is_river_placable)
 		MapEditorGUI.PlaceMode.CLIFF:
-			do_paint_green_chosen_border_area(border_coord, self.is_cliff_placable)
+			do_paint_chosen_border_area(border_coord, self.is_cliff_placable)
 		MapEditorGUI.PlaceMode.TERRAIN:
 			var dist: int = gui.get_painter_size_dist()
 			var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
@@ -307,25 +307,27 @@ func paint_new_chosen_area(renew: bool = false) -> void:
 				tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, coord, 17, Vector2i(0, 0))
 		MapEditorGUI.PlaceMode.LANDSCAPE:
 			var placable: Callable = func(x) -> bool: return is_landscape_placable(x, gui.landscape_type)
-			do_paint_green_chosen_tile_area(map_coord, placable)
+			do_paint_chosen_tile_area(map_coord, placable)
 		MapEditorGUI.PlaceMode.VILLAGE:
-			do_paint_green_chosen_tile_area(map_coord, self.is_village_placable)
+			do_paint_chosen_tile_area(map_coord, self.is_village_placable)
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var placable: Callable = func(x) -> bool: return is_resource_placable(x, gui.resource_type)
-			do_paint_green_chosen_tile_area(map_coord, placable)
+			do_paint_chosen_tile_area(map_coord, placable)
 		MapEditorGUI.PlaceMode.CONTINENT:
-			# TODO: 补全资源判定逻辑。目前使用 lambda 暂时允许所有资源随便放
-			do_paint_green_chosen_tile_area(map_coord, self.is_continent_placable)
+			var dist: int = gui.get_painter_size_dist()
+			var new_inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
+			for coord in new_inside:
+				do_paint_chosen_tile_area(coord, self.is_continent_placable)
 
 
-func do_paint_green_chosen_tile_area(map_coord: Vector2i, placable: Callable) -> void:
+func do_paint_chosen_tile_area(map_coord: Vector2i, placable: Callable) -> void:
 	if placable.call(map_coord):
 		tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, map_coord, 17, Vector2i(0, 0))
 	else:
 		tile_map.set_cell(TILE_CHOSEN_LAYER_IDX, map_coord, 18, Vector2i(0, 0))
 
 
-func do_paint_green_chosen_border_area(border_coord: Vector2i, placable: Callable) -> void:
+func do_paint_chosen_border_area(border_coord: Vector2i, placable: Callable) -> void:
 	if is_in_map_border(border_coord) <= 0:
 		return
 	match Map.get_border_type(border_coord):
@@ -764,6 +766,8 @@ func paint_map() -> void:
 				# 超出地图范围的不处理
 				if not is_in_map_tile(coord):
 					continue
+				if _map.get_map_tile_info_at(coord).type == gui.terrain_type:
+					continue
 				paint_terrain(coord, step, gui.terrain_type)
 			# 围绕陆地地块绘制浅海
 			if gui.terrain_type != Map.TerrainType.SHORE and gui.terrain_type != Map.TerrainType.OCEAN:
@@ -792,12 +796,16 @@ func paint_map() -> void:
 			var coord: Vector2i = get_map_coord()
 			if not is_landscape_placable(coord, gui.landscape_type):
 				return
+			if _map.get_map_tile_info_at(coord).landscape == gui.landscape_type:
+				return
 			paint_landscape(coord, step, gui.landscape_type)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
 			var coord: Vector2i = get_map_coord()
 			if not is_village_placable(coord):
+				return
+			if _map.get_map_tile_info_at(coord).village == 1:
 				return
 			paint_village(coord, step, 1)
 			# 强制重绘选择区域
@@ -806,19 +814,28 @@ func paint_map() -> void:
 			var coord: Vector2i = get_map_coord()
 			if not is_resource_placable(coord, gui.resource_type):
 				return
+			if _map.get_map_tile_info_at(coord).resource == gui.resource_type:
+				return
 			paint_resource(coord, step, gui.resource_type)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.CONTINENT:
-			var coord: Vector2i = get_map_coord()
-			if not is_continent_placable(coord):
-				return
-			paint_continent(coord, step, gui.continent_type)
+			var map_coord: Vector2i = get_map_coord()
+			var dist: int = gui.get_painter_size_dist()
+			var inside: Array[Vector2i] = get_surrounding_cells(map_coord, dist, true)
+			for coord in inside:
+				if not is_continent_placable(coord):
+					continue
+				if _map.get_map_tile_info_at(coord).continent == gui.continent_type:
+					continue
+				paint_continent(coord, step, gui.continent_type)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.CLIFF:
 			var border_coord: Vector2i = get_border_coord()
 			if not is_cliff_placable(border_coord):
+				return
+			if _map.get_border_tile_info_at(border_coord).type == Map.BorderTileType.CLIFF:
 				return
 			# 绘制边界悬崖
 			paint_border(border_coord, step, Map.BorderTileType.CLIFF)
@@ -827,6 +844,8 @@ func paint_map() -> void:
 		MapEditorGUI.PlaceMode.RIVER:
 			var border_coord: Vector2i = get_border_coord()
 			if not is_river_placable(border_coord):
+				return
+			if _map.get_border_tile_info_at(border_coord).type == Map.BorderTileType.RIVER:
 				return
 			# 绘制边界河流
 			paint_border(border_coord, step, Map.BorderTileType.RIVER)
@@ -996,15 +1015,17 @@ func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceTyp
 
 
 func do_paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
+	# 清除原来的资源图标
+	if _coord_to_resource_icon_dict.has(tile_coord):
+		_coord_to_resource_icon_dict[tile_coord].queue_free()
+		_coord_to_resource_icon_dict.erase(tile_coord)
 	if type == Map.ResourceType.EMPTY:
 		# FIXME：4.1 有 bug，TileMap 没办法把实例化的场景清除。现在的场景 TileMap 简直不能用…… 太蠢了
 		# 静待 4.2 发布，看 GitHub 讨论区貌似在 4.2 得到了修复。在修复前，会有资源显示和实际数据不一致的情况
 		# 对应的讨论区：https://github.com/godotengine/godot/issues/69596
 #			print("do_paint_resource empty: ", tile_coord, " (tile map won't update until 4.2 is relased)")
 #			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1, Vector2i(-1, -1), -1)
-		if _coord_to_resource_icon_dict.has(tile_coord):
-			_coord_to_resource_icon_dict[tile_coord].queue_free()
-			_coord_to_resource_icon_dict.erase(tile_coord)
+		pass
 	else:
 		# 保证资源图标场景的排序和 ResourseType 中一致
 #		tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
@@ -1027,7 +1048,7 @@ func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentT
 	step.changed_arr.append(change)
 	# 记录地图地块信息
 	_map.change_map_tile_info(tile_coord, change.after)
-	# 真正绘制资源
+	# 真正绘制大洲
 	do_paint_continent(tile_coord, type)
 
 
