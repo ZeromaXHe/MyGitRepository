@@ -193,6 +193,9 @@ func _ready() -> void:
 	menu_overlay.visible = false
 	# 鼠标悬停面板不显示
 	hide_mouse_hover_tile_info()
+	# 经常重新打开项目时，Git 提交里就显示这个值就没了，不是自定义（-1）了，就离谱
+	# 为了避免哪天不小心提交了，所以强制指定一下
+	mouse_hover_tile_panel.anchors_preset = -1
 
 
 func _process(delta: float) -> void:

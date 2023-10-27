@@ -661,6 +661,15 @@ class TileInfo:
 	
 	func _init(type: TerrainType) -> void:
 		self.type = type
+	
+	
+	static func copy(from: Map.TileInfo) -> Map.TileInfo:
+		var to: Map.TileInfo = Map.TileInfo.new(from.type)
+		to.landscape = from.landscape
+		to.village = from.village
+		to.resource = from.resource
+		to.continent = from.continent
+		return to
 
 
 class BorderInfo:
