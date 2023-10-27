@@ -145,15 +145,13 @@ func paint_chosen_border_area(border_coord: Vector2i, placeable: Callable) -> vo
 				border_tile_map.set_cell(MapShower.BORDER_CHOSEN_LAYER_IDX, border_coord, 9, Vector2i(0, 0))
 
 
-func clear_big_painter_tile_chosen(tile_coord: Vector2i) -> void:
-	var old_inside: Array[Vector2i] = get_surrounding_cells(tile_coord, 2, true)
-	for coord in old_inside:
-		# 擦除原图块
-		tile_map.erase_cell(MapShower.TILE_CHOSEN_LAYER_IDX, coord)
+func clear_tile_chosen() -> void:
+	# 擦除选择层全部图块
+	tile_map.clear_layer(MapShower.TILE_CHOSEN_LAYER_IDX)
 
 
-func clear_border_chosen(border_coord: Vector2i) -> void:
-	border_tile_map.erase_cell(MapShower.BORDER_CHOSEN_LAYER_IDX, border_coord)
+func clear_border_chosen() -> void:
+	border_tile_map.clear_layer(MapShower.BORDER_CHOSEN_LAYER_IDX)
 
 
 func is_in_map_border(border_coord: Vector2i) -> int:

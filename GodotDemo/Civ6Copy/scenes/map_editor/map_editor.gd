@@ -82,6 +82,51 @@ func handle_save_map() -> void:
 	_map.save()
 
 
+func load_map() -> void:
+	_map = Map.load_from_save()
+	if _map == null:
+		initialize_map()
+		return
+	var size: Vector2i = Map.SIZE_DICT[_map.size]
+	# 读取地块
+	for i in range(0, size.x):
+		for j in range(0, size.y):
+			var coord := Vector2i(i, j)
+			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
+			map_shower.paint_tile(coord, tile_info)
+	# 读取边界
+	for i in range(size.x * 2 + 2):
+		for j in range(size.y * 2 + 2):
+			var coord := Vector2i(i, j)
+			map_shower.paint_border(coord, _map.get_border_tile_info_at(coord).type)
+
+
+func initialize_map() -> void:
+	_map = Map.new()
+	if _map.type == Map.Type.BLANK:
+		# 修改 TileMap 图块
+		var size: Vector2i = Map.SIZE_DICT[_map.size]
+		for i in range(0, size.x, 1):
+			for j in range(0, size.y, 1):
+				var coord := Vector2i(i, j)
+				map_shower.paint_tile(coord, _map.get_map_tile_info_at(coord))
+
+
+func initialize_camera(map_size: Map.Size) -> void:
+	var size: Vector2i = Map.SIZE_DICT[map_size]
+	var tile_x: int = map_shower.get_map_tile_size().x
+	var tile_y: int = map_shower.get_map_tile_size().y
+	# 小心 int 溢出
+	var max_x = size.x * tile_x + (tile_x / 2)
+	var max_y = (size.y * tile_y * 3 + tile_y)/ 4
+	camera.set_max_x(max_x)
+	camera.set_min_x(0)
+	camera.set_max_y(max_y)
+	camera.set_min_y(0)
+	# 摄像头默认居中
+	camera.global_position = Vector2(max_x / 2, max_y / 2)
+
+
 func handle_restore() -> void:
 	if _after_step_stack.is_empty():
 		printerr("之后操作为空，异常！")
@@ -161,9 +206,8 @@ func handle_mouse_hover_tile(delta: float) -> bool:
 
 
 func clear_pre_mouse_hover_tile_chosen() -> void:
-	# 按最大笔刷的范围擦除原来图块
-	if _mouse_hover_tile_coord != NULL_COORD:
-		map_shower.clear_big_painter_tile_chosen(_mouse_hover_tile_coord)
+	# 擦除所有选择的地块图块
+	map_shower.clear_tile_chosen()
 
 
 func handle_mouse_hover_border(_delta: float) -> bool:
@@ -176,9 +220,8 @@ func handle_mouse_hover_border(_delta: float) -> bool:
 
 
 func clear_pre_mouse_hover_border_chosen() -> void:
-	# 清理之前的边界图块
-	if _mouse_hover_border_coord != NULL_COORD:
-		map_shower.clear_border_chosen(_mouse_hover_border_coord)
+	# 清理所有选择的边界图块
+	map_shower.clear_border_chosen()
 
 
 func paint_new_chosen_area(renew: bool = false) -> void:
@@ -707,12 +750,7 @@ func save_paint_step(step: PaintStep) -> void:
 
 func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainType):
 	# 记录操作
-	var change: PaintChange = PaintChange.new()
-	change.coord = coord
-	change.tile_change_type = TileChangeType.TERRAIN
-	change.tile_change = true
-	change.before = _map.get_map_tile_info_at(coord)
-	change.after = Map.TileInfo.copy(change.before)
+	var change: PaintChange = build_change_of_tile(coord, TileChangeType.TERRAIN)
 	change.after.type = terrain_type
 	
 	if change.before.landscape != Map.LandscapeType.EMPTY \
@@ -753,12 +791,7 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainTy
 
 func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: Map.LandscapeType) -> void:
 	# 记录操作
-	var change: PaintChange = PaintChange.new()
-	change.coord = tile_coord
-	change.tile_change = true
-	change.tile_change_type = TileChangeType.LANDSCAPE
-	change.before = _map.get_map_tile_info_at(tile_coord)
-	change.after = Map.TileInfo.copy(change.before)
+	var change: PaintChange = build_change_of_tile(tile_coord, TileChangeType.LANDSCAPE)
 	change.after.landscape = type
 	
 	if change.before.resource == Map.ResourceType.EMPTY \
@@ -775,12 +808,7 @@ func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: Map.LandscapeT
 
 func paint_village(tile_coord: Vector2i, step: PaintStep, type: int) -> void:
 	# 记录操作
-	var change: PaintChange = PaintChange.new()
-	change.coord = tile_coord
-	change.tile_change = true
-	change.tile_change_type = TileChangeType.VILLAGE
-	change.before = _map.get_map_tile_info_at(tile_coord)
-	change.after = Map.TileInfo.copy(change.before)
+	var change: PaintChange = build_change_of_tile(tile_coord, TileChangeType.VILLAGE)
 	change.after.village = type
 	step.changed_arr.append(change)
 	# 记录地图地块信息
@@ -791,12 +819,7 @@ func paint_village(tile_coord: Vector2i, step: PaintStep, type: int) -> void:
 
 func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceType) -> void:
 	# 记录操作
-	var change: PaintChange = PaintChange.new()
-	change.coord = tile_coord
-	change.tile_change = true
-	change.tile_change_type = TileChangeType.RESOURCE
-	change.before = _map.get_map_tile_info_at(tile_coord)
-	change.after = Map.TileInfo.copy(change.before)
+	var change: PaintChange = build_change_of_tile(tile_coord, TileChangeType.RESOURCE)
 	change.after.resource = type
 	step.changed_arr.append(change)
 	# 记录地图地块信息
@@ -807,12 +830,7 @@ func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceTyp
 
 func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentType) -> void:
 	# 记录操作
-	var change: PaintChange = PaintChange.new()
-	change.coord = tile_coord
-	change.tile_change = true
-	change.tile_change_type = TileChangeType.CONTINENT
-	change.before = _map.get_map_tile_info_at(tile_coord)
-	change.after = Map.TileInfo.copy(change.before)
+	var change: PaintChange = build_change_of_tile(tile_coord, TileChangeType.CONTINENT)
 	change.after.continent = type
 	step.changed_arr.append(change)
 	# 记录地图地块信息
@@ -823,11 +841,7 @@ func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentT
 
 func paint_border(border_coord: Vector2i, step: PaintStep, type: Map.BorderTileType) -> void:
 	# 记录操作
-	var change: PaintChange = PaintChange.new()
-	change.coord = border_coord
-	change.tile_change = false
-	change.before_border = _map.get_border_tile_info_at(border_coord)
-	change.after_border = Map.BorderInfo.new(type)
+	var change: PaintChange = build_change_of_border(border_coord, type)
 	step.changed_arr.append(change)
 	# 记录地图地块信息
 	_map.change_border_tile_info(border_coord, change.after_border)
@@ -835,49 +849,23 @@ func paint_border(border_coord: Vector2i, step: PaintStep, type: Map.BorderTileT
 	map_shower.paint_border(border_coord, type)
 
 
-func load_map() -> void:
-	_map = Map.load_from_save()
-	if _map == null:
-		initialize_map()
-		return
-	var size: Vector2i = Map.SIZE_DICT[_map.size]
-	# 读取地块
-	for i in range(0, size.x):
-		for j in range(0, size.y):
-			var coord := Vector2i(i, j)
-			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
-			map_shower.paint_tile(coord, tile_info)
-	# 读取边界
-	for i in range(size.x * 2 + 2):
-		for j in range(size.y * 2 + 2):
-			var coord := Vector2i(i, j)
-			map_shower.paint_border(coord, _map.get_border_tile_info_at(coord).type)
-
-
-func initialize_map() -> void:
-	_map = Map.new()
-	if _map.type == Map.Type.BLANK:
-		# 修改 TileMap 图块
-		var size: Vector2i = Map.SIZE_DICT[_map.size]
-		for i in range(0, size.x, 1):
-			for j in range(0, size.y, 1):
-				var coord := Vector2i(i, j)
-				map_shower.paint_tile(coord, _map.get_map_tile_info_at(coord))
-
-
-func initialize_camera(map_size: Map.Size) -> void:
-	var size: Vector2i = Map.SIZE_DICT[map_size]
-	var tile_x: int = map_shower.get_map_tile_size().x
-	var tile_y: int = map_shower.get_map_tile_size().y
-	# 小心 int 溢出
-	var max_x = size.x * tile_x + (tile_x / 2)
-	var max_y = (size.y * tile_y * 3 + tile_y)/ 4
-	camera.set_max_x(max_x)
-	camera.set_min_x(0)
-	camera.set_max_y(max_y)
-	camera.set_min_y(0)
-	# 摄像头默认居中
-	camera.global_position = Vector2(max_x / 2, max_y / 2)
+func build_change_of_tile(tile_coord: Vector2i, type: TileChangeType) -> PaintChange:
+	var change: PaintChange = PaintChange.new()
+	change.coord = tile_coord
+	change.tile_change = true
+	change.tile_change_type = type
+	change.before = _map.get_map_tile_info_at(tile_coord)
+	change.after = Map.TileInfo.copy(change.before)
+	return change
+	
+	
+func build_change_of_border(border_coord: Vector2i, type: Map.BorderTileType) -> PaintChange:
+	var change: PaintChange = PaintChange.new()
+	change.coord = border_coord
+	change.tile_change = false
+	change.before_border = _map.get_border_tile_info_at(border_coord)
+	change.after_border = Map.BorderInfo.new(type)
+	return change
 
 
 class PaintStep:
