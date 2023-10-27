@@ -79,6 +79,11 @@ func _on_multiplayer_button_pressed() -> void:
 	main_button_pressed(multiplayer_button)
 
 
+## 按下“热座模式”按钮
+func _on_hot_seat_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/menu/multiplayer_setting_menu.tscn")
+
+
 # 无 VBox
 func _on_option_button_pressed() -> void:
 	main_button_pressed(option_button)

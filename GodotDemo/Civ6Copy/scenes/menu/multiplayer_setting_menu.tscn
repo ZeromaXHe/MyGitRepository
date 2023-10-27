@@ -1,0 +1,515 @@
+[gd_scene load_steps=2 format=3 uid="uid://c2sypgoilitpf"]
+
+[ext_resource type="Script" path="res://scenes/menu/multiplayer_setting_menu.gd" id="1_qmcuf"]
+
+[node name="MultiplayerSettingMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qmcuf")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="AuthorLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "ZeromaX's"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Civ 6 Copy"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="DefaultButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+tooltip_text = "将所有参数恢复到默认值。"
+text = "恢复默认设置"
+
+[node name="MultiPlayerSettingTitle" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "多人游戏设置"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "返回"
+
+[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="DlcButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_horizontal = 0
+tooltip_text = "将所有参数恢复到默认值。"
+text = "额外内容"
+
+[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "游戏设置"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+scroll_vertical = 939
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_right = 100
+
+[node name="GameSettingVBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="MapOptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "地图选项"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OptionsGridContainer" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 2
+
+[node name="RuleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "规则"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="RuleOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "这是标准《Civ 6 Copy》游戏。"
+item_count = 1
+selected = 0
+popup/item_0/text = "标准的规则"
+popup/item_0/id = 0
+
+[node name="GameNameLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "游戏名称"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="GameNameLineEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "Kenny not KennyS[CN] 的游戏"
+
+[node name="TurnLimitLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "回合时间限制"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TurnLimitButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "无回合时间限制"
+popup/item_0/id = 0
+
+[node name="StartEraLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "开始时代"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="StartEraButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "远古时代"
+popup/item_0/id = 0
+
+[node name="CityStateLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "城邦"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="CityStateHSlider" type="HSlider" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+max_value = 15.0
+value = 9.0
+
+[node name="SpeedLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "游戏速度"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SpeedOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "带有标准资源的地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "联机"
+popup/item_0/id = 0
+
+[node name="MapLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "地图"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MapButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "盘古大陆"
+popup/item_0/id = 0
+
+[node name="SizeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "地图尺寸"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SizeOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "决斗"
+popup/item_0/id = 0
+
+[node name="LeaderPool1Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "领袖池1"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LeaderPool1Button" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "全选"
+
+[node name="LeaderPool2Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "领袖池2"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LeaderPool2Button" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "全选"
+
+[node name="WorldEraLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "世界纪元"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="WorldEraButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "标准"
+popup/item_0/id = 0
+
+[node name="CityStatePoolLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "选择城邦"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="CityStatePoolButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "全选"
+
+[node name="WonderPoolLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "选择自然奇观"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="WonderPoolButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "全选"
+
+[node name="ResourceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "资源"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ResourceOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "带有标准资源的地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "标准"
+popup/item_0/id = 0
+
+[node name="SpawnLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "启动位置"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SpawnOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "标准启动位置。"
+item_count = 1
+selected = 0
+popup/item_0/text = "平衡"
+popup/item_0/id = 0
+
+[node name="TemperatureLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "温度"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TemperatureOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "带有标准资源的地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "标准"
+popup/item_0/id = 0
+
+[node name="RainfallLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "降雨量"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="RainfallOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "带有标准资源的地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "标准"
+popup/item_0/id = 0
+
+[node name="SeaLevelLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+text = "海平面"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SeaLevelOptionButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
+layout_mode = 2
+tooltip_text = "带有标准资源的地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "标准"
+popup/item_0/id = 0
+
+[node name="GameModeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "游戏模式"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ModeRandomCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "科技与市政随机模式"
+alignment = 1
+
+[node name="ModeCompanyCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "垄断与公司模式"
+alignment = 1
+
+[node name="ModeClanCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "蛮族氏族模式"
+alignment = 1
+
+[node name="ModeZombieCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "丧尸之围模式"
+alignment = 1
+
+[node name="ModeHeroCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "英雄与传奇模式"
+alignment = 1
+
+[node name="WinLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "胜利条件"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WinScoreCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "分数胜利"
+alignment = 1
+
+[node name="WinTechCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "科技胜利"
+alignment = 1
+
+[node name="WinGovernCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "统治胜利"
+alignment = 1
+
+[node name="WinCultureCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "文化胜利"
+alignment = 1
+
+[node name="WinReligionCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "宗教胜利"
+alignment = 1
+
+[node name="AdvanceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "高级选项"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TurnLimitHBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="TurnLimitLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/TurnLimitHBoxContainer"]
+layout_mode = 2
+text = "回合数限制"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TurnLimitButton" type="OptionButton" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/TurnLimitHBoxContainer"]
+layout_mode = 2
+tooltip_text = "仅供两名玩家使用的超小地图。"
+item_count = 1
+selected = 0
+popup/item_0/text = "以游戏速度为准"
+popup/item_0/id = 0
+
+[node name="NoRepeatLeaderCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "无重复领袖"
+alignment = 1
+
+[node name="NoRepeatCivCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "无重复文明"
+alignment = 1
+
+[node name="TeamShareViewCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "团队共享能见度"
+alignment = 1
+
+[node name="NoVillageCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "无部落村庄"
+alignment = 1
+
+[node name="NoBarbarianCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "无蛮族"
+alignment = 1
+
+[node name="NoTeamCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+text = "无团队"
+alignment = 1
+
+[node name="GameRandHBox" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/GameRandHBox"]
+layout_mode = 2
+text = "游戏随机种子"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/GameRandHBox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="MapRandHBox" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/MapRandHBox"]
+layout_mode = 2
+text = "地图随机种子"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/MapRandHBox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="LoadGameButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "加载游戏"
+
+[node name="LoadConfigButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "加载配置"
+
+[node name="SaveConfigButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "保存配置"
+
+[node name="ConfirmButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "确认设置"
+
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MarginContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer/ConfirmButton" to="." method="_on_confirm_button_pressed"]
