@@ -124,8 +124,8 @@ func _ready() -> void:
 	gui.cancel_btn_pressed.connect(handle_cancel)
 	gui.save_map_btn_pressed.connect(handle_save_map)
 	# 控制大洲滤镜的显示与否
-	gui.place_other_btn_pressed.connect(func(): tile_map.set_layer_enabled(3, false))
-	gui.place_continent_btn_pressed.connect(func(): tile_map.set_layer_enabled(3, true))
+	gui.place_other_btn_pressed.connect(func(): tile_map.set_layer_enabled(TILE_CONTINENT_LAYER_IDX, false))
+	gui.place_continent_btn_pressed.connect(func(): tile_map.set_layer_enabled(TILE_CONTINENT_LAYER_IDX, true))
 	tile_map.set_layer_enabled(TILE_CONTINENT_LAYER_IDX, false)
 
 

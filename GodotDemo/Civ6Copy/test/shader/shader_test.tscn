@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://1blrj0woarww"]
+
+[ext_resource type="Shader" path="res://test/shader/test_shader.gdshader" id="1_4yp4t"]
+[ext_resource type="Texture2D" uid="uid://ducbluwofubp2" path="res://icon.svg" id="2_ebod6"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gipu7"]
+shader = ExtResource("1_4yp4t")
+shader_parameter/from1 = Color(0.278431, 0.54902, 0.74902, 1)
+shader_parameter/from2 = Color(0.211765, 0.239216, 0.321569, 1)
+shader_parameter/to1 = Color(0.67451, 0, 0, 1)
+shader_parameter/to2 = Color(0.4, 0.160784, 0, 1)
+shader_parameter/threshold = 0.1
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_gipu7")
+texture = ExtResource("2_ebod6")
