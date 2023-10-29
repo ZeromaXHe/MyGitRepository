@@ -102,11 +102,27 @@ func show_continent_layer() -> void:
 
 
 func get_border_coord() -> Vector2i:
-	return border_tile_map.local_to_map(border_tile_map.to_local(get_global_mouse_position()))
+	return global_position_to_border_coord(get_global_mouse_position())
+
+
+func global_position_to_border_coord(global_posi: Vector2) -> Vector2i:
+	return border_tile_map.local_to_map(border_tile_map.to_local(global_posi))
+
+
+func border_coord_to_global_position(border_coord: Vector2i) -> Vector2:
+	return border_tile_map.to_global(border_tile_map.map_to_local(border_coord))
 
 
 func get_map_coord() -> Vector2i:
-	return tile_map.local_to_map(tile_map.to_local(get_global_mouse_position()))
+	return global_position_to_map_coord(get_global_mouse_position())
+
+
+func global_position_to_map_coord(global_posi: Vector2) -> Vector2i:
+	return tile_map.local_to_map(tile_map.to_local(global_posi))
+
+
+func map_coord_to_global_position(map_coord: Vector2i) -> Vector2:
+	return tile_map.to_global(tile_map.map_to_local(map_coord))
 
 
 func paint_chosen_tile_area(map_coord: Vector2i, placeable: Callable) -> void:
@@ -237,7 +253,7 @@ func paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
 #		tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
 		var scene: PackedScene = RESOURCE_TYPE_TO_ICON_SCENE_DICT[type]
 		var sprite := scene.instantiate() as Sprite2D
-		sprite.global_position = tile_map.to_global(tile_map.map_to_local(tile_coord)) + Vector2(0, 60)
+		sprite.global_position = map_coord_to_global_position(tile_coord) + Vector2(0, 60)
 		_coord_to_resource_icon_dict[tile_coord] = sprite
 		resource_icons.add_child(sprite)
 

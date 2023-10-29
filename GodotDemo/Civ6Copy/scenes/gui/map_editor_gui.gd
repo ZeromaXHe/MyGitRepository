@@ -125,7 +125,6 @@ var landscape_type_group: ButtonGroup = null
 var continent_type: Map.ContinentType = Map.ContinentType.AFRICA
 var resource_type: Map.ResourceType = Map.ResourceType.SILK
 var resource_type_group: ButtonGroup = null
-var mouse_hover_info_showed: bool = false
 
 @onready var info_label: Label = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/InfoLabel
 @onready var rt_tab: TabContainer = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer
@@ -170,7 +169,7 @@ var mouse_hover_info_showed: bool = false
 # 右边放置资源时的按钮
 @onready var silk_button: Button = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/ScrollContainer/ResourceGridContainer/SilkButton"
 # 鼠标悬停在地块上时显示的面板
-@onready var mouse_hover_tile_panel: PanelContainer = $MouseHoverTilePanel
+@onready var mouse_hover_tile_panel: MouseHoverTilePanel = $MouseHoverTilePanel
 @onready var mouse_hover_tile_label: Label = $MouseHoverTilePanel/MarginContainer/Label
 
 
@@ -205,7 +204,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if mouse_hover_info_showed:
+	if mouse_hover_tile_panel.visible:
 		var mouse_posi: Vector2 = get_viewport().get_mouse_position()
 		# TODO: 目前如果只在右下角显示的话，当鼠标在窗口右下角可能看不到提示。
 		# 未来可以加个根据坐标相对窗口的位置决定悬浮面板位置的逻辑
@@ -237,29 +236,16 @@ func update_grid_info(coord: Vector2i, tile_info: Map.TileInfo) -> void:
 	# TODO: 其他格位信息
 
 
+func is_mouse_hover_info_shown() -> bool:
+	return mouse_hover_tile_panel.visible
+
+
 func show_mouse_hover_tile_info(map_coord: Vector2i, tile_info: Map.TileInfo) -> void:
-	mouse_hover_info_showed = true
-	mouse_hover_tile_panel.visible = true
-	mouse_hover_tile_label.text = Map.TERRAIN_TYPE_TO_NAME_DICT[tile_info.type]
-	if tile_info.landscape != Map.LandscapeType.EMPTY:
-		mouse_hover_tile_label.text += "\n" + Map.LANDSCAPE_TYPE_TO_NAME_DICT[tile_info.landscape]
-	if tile_info.village == 1:
-		mouse_hover_tile_label.text += "\n部落村庄"
-	if tile_info.resource != Map.ResourceType.EMPTY:
-		mouse_hover_tile_label.text += "\n" + Map.RESOURCE_TYPE_TO_NAME_DICT[tile_info.resource]
-	if tile_info.type != Map.TerrainType.SHORE and tile_info.type != Map.TerrainType.OCEAN:
-		mouse_hover_tile_label.text += "\n大陆：" + Map.CONTINENT_TYPE_TO_NAME_DICT[tile_info.continent]
-	mouse_hover_tile_label.text += "\n---------------"
-	mouse_hover_tile_label.text += "\nHex " + str(map_coord)
-	
-	var mouse_posi: Vector2 = get_viewport().get_mouse_position()
-	mouse_hover_tile_panel.offset_left = mouse_posi.x
-	mouse_hover_tile_panel.offset_top = mouse_posi.y
+	mouse_hover_tile_panel.show_info(map_coord, tile_info)
 
 
 func hide_mouse_hover_tile_info() -> void:
-	mouse_hover_info_showed = false
-	mouse_hover_tile_panel.visible = false
+	mouse_hover_tile_panel.hide_info()
 
 
 func handle_place_mode_group_pressed(button: BaseButton) -> void:

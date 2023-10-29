@@ -1,0 +1,91 @@
+[gd_scene load_steps=8 format=3 uid="uid://df6kd5ngx5vm8"]
+
+[ext_resource type="Script" path="res://scenes/menu/hot_seat_changing_scene.gd" id="1_c83s0"]
+[ext_resource type="Texture2D" uid="uid://b3xssty38wbtc" path="res://assets/civ6_origin/background/Background_A.png" id="1_enhd7"]
+[ext_resource type="StyleBox" uid="uid://bc4g1w73a30v" path="res://styles/top_gradient_black_blue_bar.tres" id="3_ekyr4"]
+[ext_resource type="StyleBox" uid="uid://bj7xx7wnoe7vd" path="res://styles/menu_blue_button_normal.tres" id="4_djcy8"]
+[ext_resource type="StyleBox" uid="uid://b4xkboxi50vdl" path="res://styles/menu_blue_button_hover.tres" id="5_jmi6k"]
+[ext_resource type="StyleBox" uid="uid://c6jfyt57bjnn0" path="res://styles/menu_blue_button_press.tres" id="6_slx1n"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wlo0l"]
+bg_color = Color(0.619608, 0.768627, 0.807843, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.917647, 0.843137, 0.682353, 1)
+
+[node name="HotSeatChangingScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_c83s0")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_enhd7")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wlo0l")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="PlayerLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.466667, 0.658824, 0.729412, 1)
+theme_override_styles/normal = ExtResource("3_ekyr4")
+text = "玩家 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 10
+
+[node name="SaveButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer/HBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("4_djcy8")
+theme_override_styles/hover = ExtResource("5_jmi6k")
+theme_override_styles/pressed = ExtResource("6_slx1n")
+text = "        保存游戏        "
+
+[node name="MarginContainer2" type="MarginContainer" parent="CenterContainer/PanelContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 10
+
+[node name="StartButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer/HBoxContainer/MarginContainer2"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("4_djcy8")
+theme_override_styles/hover = ExtResource("5_jmi6k")
+theme_override_styles/pressed = ExtResource("6_slx1n")
+text = "        开始回合        "
+
+[connection signal="pressed" from="CenterContainer/PanelContainer/VBoxContainer/HBoxContainer/MarginContainer2/StartButton" to="." method="_on_start_button_pressed"]

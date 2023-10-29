@@ -1,0 +1,31 @@
+[gd_scene load_steps=3 format=3 uid="uid://babhwv4eoh1kt"]
+
+[ext_resource type="Script" path="res://scenes/gui/mouse_hover_tile_panel.gd" id="1_44ucj"]
+[ext_resource type="StyleBox" uid="uid://0iiua1rxtfkv" path="res://styles/mouse_hover_tile_panel_style.tres" id="1_ojh3s"]
+
+[node name="MouseHoverTilePanel" type="PanelContainer"]
+anchors_preset = -1
+offset_left = 400.0
+offset_top = 400.0
+theme_override_styles/panel = ExtResource("1_ojh3s")
+script = ExtResource("1_44ucj")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Label" type="Label" parent="MarginContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14902, 0.14902, 0.14902, 1)
+theme_override_font_sizes/font_size = 12
+text = "沙漠（丘陵）
+移动力消耗：2
+防御值变更：3
+魅力：迷人的（2）
+大陆：非洲
+---------------
+1 生产力
+Hex (45, 25)"

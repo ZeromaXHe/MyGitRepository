@@ -371,6 +371,11 @@ func serialize_border_tile_info() -> String:
 	return res
 
 
+func is_in_map_tile(coord: Vector2i) -> bool:
+	var map_size: Vector2i = Map.SIZE_DICT[self.size]
+	return coord.x >= 0 and coord.x < map_size.x and coord.y >= 0 and coord.y < map_size.y
+
+
 func change_map_tile_info(coord: Vector2i, tile_info: TileInfo) -> void:
 	_map_tile_info[coord.x][coord.y] = tile_info
 

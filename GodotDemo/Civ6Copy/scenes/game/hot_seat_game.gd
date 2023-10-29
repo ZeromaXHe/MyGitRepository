@@ -2,17 +2,34 @@ class_name HotSeatGame
 extends Node2D
 
 
+var unit_scene: PackedScene = preload("res://scenes/game/unit.tscn")
 # 记录地图
 var _map: Map
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
+# 鼠标悬浮的图块坐标和时间
+var _mouse_hover_tile_coord: Vector2i = GlobalScript.NULL_COORD
+var _mouse_hover_tile_time: float = 0
 
 @onready var map_shower: MapShower = $MapShower
+@onready var units: Node2D = $Units
 @onready var camera: CameraManager = $Camera2D
+@onready var game_gui: GameGUI = $GameGUI
+
 
 func _ready() -> void:
 	load_map()
 	initialize_camera(_map.size)
+	
+	var settler: Unit = unit_scene.instantiate()
+	units.add_child(settler)
+	settler.initiate(Unit.Type.SETTLER, GlobalScript.get_current_player())
+	settler.global_position = map_shower.map_coord_to_global_position(Vector2i(22, 13))
+	
+	var warrior: Unit = unit_scene.instantiate()
+	units.add_child(warrior)
+	warrior.initiate(Unit.Type.WARRIOR, GlobalScript.get_current_player())
+	warrior.global_position = map_shower.map_coord_to_global_position(Vector2i(21, 13))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -31,6 +48,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		# 拖拽镜头过程中
 		get_viewport().set_input_as_handled()
 		camera.drag(event.position)
+
+
+func _process(delta: float) -> void:
+	handle_mouse_hover_tile(delta)
+
+
+func handle_mouse_hover_tile(delta: float) -> bool:
+	var map_coord: Vector2i = map_shower.get_map_coord()
+	if map_coord == _mouse_hover_tile_coord:
+		_mouse_hover_tile_time += delta
+		if not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and _map.is_in_map_tile(map_coord):
+			game_gui.show_mouse_hover_tile_info(map_coord, _map.get_map_tile_info_at(map_coord))
+		return false
+	_mouse_hover_tile_coord = map_coord
+	_mouse_hover_tile_time = 0
+	game_gui.hide_mouse_hover_tile_info()
+	return true
 
 
 func load_map() -> void:

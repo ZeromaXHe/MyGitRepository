@@ -1,7 +1,8 @@
-[gd_scene load_steps=59 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=58 format=3 uid="uid://dfpeq8ikcp1wc"]
 
 [ext_resource type="Script" path="res://scenes/gui/game_gui.gd" id="1_heuwt"]
 [ext_resource type="Texture2D" uid="uid://bbuwimgeo1bf6" path="res://assets/civ6_origin/core/webp_32x32/core_science.webp" id="2_25l65"]
+[ext_resource type="StyleBox" uid="uid://bc4g1w73a30v" path="res://styles/top_gradient_black_blue_bar.tres" id="2_pmpx5"]
 [ext_resource type="Texture2D" uid="uid://batagftcmuypd" path="res://assets/civ6_origin/core/webp_32x32/core_culture.webp" id="3_d2g8n"]
 [ext_resource type="Texture2D" uid="uid://mro7bq6p1jub" path="res://assets/civ6_origin/core/webp_32x32/core_faith.webp" id="4_k3p5i"]
 [ext_resource type="Texture2D" uid="uid://onqbvvq12y21" path="res://assets/civ6_origin/core/webp_32x32/core_gold.webp" id="5_160m0"]
@@ -30,16 +31,7 @@
 [ext_resource type="Texture2D" uid="uid://6xgc8c08sapv" path="res://assets/icon_park/下一步_next.svg" id="17_ueq3g"]
 [ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="18_6wc45"]
 [ext_resource type="PackedScene" uid="uid://6rscixmykdb1" path="res://scenes/gui/panel/wiki_panel.tscn" id="29_dio20"]
-
-[sub_resource type="Gradient" id="Gradient_cfe8u"]
-colors = PackedColorArray(0.0352941, 0.0705882, 0.12549, 1, 0.0588235, 0.196078, 0.321569, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_lhnjw"]
-gradient = SubResource("Gradient_cfe8u")
-fill_to = Vector2(0, 0.99495)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pl32i"]
-texture = SubResource("GradientTexture2D_lhnjw")
+[ext_resource type="PackedScene" uid="uid://babhwv4eoh1kt" path="res://scenes/gui/mouse_hover_tile_panel.tscn" id="32_7g8tl"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_femrp"]
 bg_color = Color(0.0666667, 0.462745, 0.643137, 1)
@@ -143,7 +135,7 @@ grow_vertical = 2
 [node name="TopPanel" type="PanelContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxTexture_pl32i")
+theme_override_styles/panel = ExtResource("2_pmpx5")
 
 [node name="TopLeftHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel"]
 layout_mode = 2
@@ -666,5 +658,8 @@ fill_mode = 2
 show_percentage = false
 
 [node name="WikiPanelContainer" parent="." instance=ExtResource("29_dio20")]
+
+[node name="MouseHoverTilePanel" parent="." instance=ExtResource("32_7g8tl")]
+anchors_preset = 0
 
 [connection signal="pressed" from="VBoxContainer/TopPanel/TopRightHBox/CivPediaButton" to="." method="_on_civ_pedia_button_pressed"]

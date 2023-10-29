@@ -10,6 +10,8 @@ script = ExtResource("1_7qv8v")
 
 [node name="MapShower" parent="." instance=ExtResource("1_e6n88")]
 
+[node name="Units" type="Node2D" parent="."]
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
 rotation_smoothing_enabled = true

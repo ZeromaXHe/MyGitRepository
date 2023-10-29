@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://bkha51g6aylr1"]
+
+[ext_resource type="Script" path="res://scenes/game/unit.gd" id="1_k4u4h"]
+[ext_resource type="Texture2D" uid="uid://3jlynv3h1q73" path="res://assets/self_made_svg/unit_background/unit_citizen_background.svg" id="1_la2jy"]
+[ext_resource type="Texture2D" uid="uid://61tqu8ntxtx2" path="res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp" id="3_js0qj"]
+
+[node name="Unit" type="Node2D"]
+script = ExtResource("1_k4u4h")
+
+[node name="BackgroundSprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.894118, 0.639216, 0.156863, 1)
+texture = ExtResource("1_la2jy")
+
+[node name="IconSprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.678431, 0.0901961, 0.101961, 1)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("3_js0qj")

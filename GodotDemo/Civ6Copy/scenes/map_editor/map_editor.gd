@@ -10,18 +10,16 @@ enum TileChangeType {
 	CONTINENT,
 }
 
-const NULL_COORD := Vector2i(-10000, -10000)
-
 
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
 # 格位模式下选择的图块
-var _grid_chosen_coord: Vector2i = NULL_COORD
+var _grid_chosen_coord: Vector2i = GlobalScript.NULL_COORD
 # 鼠标悬浮的图块坐标和时间
-var _mouse_hover_tile_coord: Vector2i = NULL_COORD
+var _mouse_hover_tile_coord: Vector2i = GlobalScript.NULL_COORD
 var _mouse_hover_tile_time: float = 0
 # 鼠标悬浮的边界坐标
-var _mouse_hover_border_coord: Vector2i = NULL_COORD
+var _mouse_hover_border_coord: Vector2i = GlobalScript.NULL_COORD
 # 记录地图
 var _map: Map
 # 恢复和取消，记录操作的栈
@@ -134,8 +132,8 @@ func initialize_camera(map_size: Map.Size) -> void:
 
 
 func handle_gui_rt_tab_changed(tab: int) -> void:
-	_mouse_hover_tile_coord = NULL_COORD
-	_mouse_hover_border_coord = NULL_COORD
+	_mouse_hover_tile_coord = GlobalScript.NULL_COORD
+	_mouse_hover_border_coord = GlobalScript.NULL_COORD
 	clear_pre_mouse_hover_tile_chosen()
 	clear_pre_mouse_hover_border_chosen()
 
@@ -208,7 +206,7 @@ func handle_mouse_hover_tile(delta: float) -> bool:
 	var map_coord: Vector2i = map_shower.get_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if not gui.mouse_hover_info_showed and _mouse_hover_tile_time > 2 and is_in_map_tile(map_coord):
+		if not gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and _map.is_in_map_tile(map_coord):
 			gui.show_mouse_hover_tile_info(map_coord, _map.get_map_tile_info_at(map_coord))
 		return false
 	clear_pre_mouse_hover_tile_chosen()
@@ -273,14 +271,9 @@ func paint_new_chosen_area(renew: bool = false) -> void:
 				map_shower.paint_chosen_tile_area(coord, self.is_continent_placeable)
 
 
-func is_in_map_tile(coord: Vector2i) -> bool:
-	var map_size: Vector2i = Map.SIZE_DICT[_map.size]
-	return coord.x >= 0 and coord.x < map_size.x and coord.y >= 0 and coord.y < map_size.y
-
-
 func is_landscape_placeable(tile_coord: Vector2i, landscape: Map.LandscapeType) -> bool:
 	# 超出地图范围的不处理
-	if not is_in_map_tile(tile_coord):
+	if not _map.is_in_map_tile(tile_coord):
 		return false
 	if not is_landscape_placeable_terrain(landscape, _map.get_map_tile_info_at(tile_coord).type):
 		return false
@@ -366,7 +359,7 @@ func is_rainforest_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
 
 func is_village_placeable(tile_coord: Vector2i) -> bool:
 	# 超出地图范围的不处理
-	if not is_in_map_tile(tile_coord):
+	if not _map.is_in_map_tile(tile_coord):
 		return false
 	return is_village_placeable_terrain(_map.get_map_tile_info_at(tile_coord).type)
 
@@ -381,7 +374,7 @@ func is_village_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
 
 func is_resource_placeable(tile_coord: Vector2i, type: Map.ResourceType) -> bool:
 	# 超出地图范围的不处理
-	if not is_in_map_tile(tile_coord):
+	if not _map.is_in_map_tile(tile_coord):
 		return false
 	var tile_info: Map.TileInfo = _map.get_map_tile_info_at(tile_coord)
 	return is_resource_placeable_terrain_and_landscape(type, tile_info.type, tile_info.landscape)
@@ -552,7 +545,7 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 
 func is_continent_placeable(tile_coord: Vector2i) -> bool:
 	# 超出地图范围的不处理
-	if not is_in_map_tile(tile_coord):
+	if not _map.is_in_map_tile(tile_coord):
 		return false
 	return is_continent_placeable_terrain(_map.get_map_tile_info_at(tile_coord).type)
 
@@ -566,7 +559,7 @@ func is_river_placeable(border_coord: Vector2i) -> bool:
 		return false
 	var neighbor_tile_coords: Array[Vector2i] = Map.get_neighbor_tile_of_border(border_coord)
 	for coord in neighbor_tile_coords:
-		if not is_in_map_tile(coord):
+		if not _map.is_in_map_tile(coord):
 			continue
 		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
 		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
@@ -574,7 +567,7 @@ func is_river_placeable(border_coord: Vector2i) -> bool:
 			return false
 	var end_tile_coords: Array[Vector2i] = Map.get_end_tile_of_border(border_coord)
 	for coord in end_tile_coords:
-		if not is_in_map_tile(coord):
+		if not _map.is_in_map_tile(coord):
 			continue
 		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
 		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
@@ -665,7 +658,7 @@ func paint_map() -> void:
 			var inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
 			for coord in inside:
 				# 超出地图范围的不处理
-				if not is_in_map_tile(coord):
+				if not _map.is_in_map_tile(coord):
 					continue
 				if _map.get_map_tile_info_at(coord).type == gui.terrain_type:
 					continue
@@ -675,7 +668,7 @@ func paint_map() -> void:
 				var out_ring: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist + 1, false)
 				for coord in out_ring:
 					# 超出地图范围的不处理
-					if not is_in_map_tile(coord):
+					if not _map.is_in_map_tile(coord):
 						continue
 					# 仅深海需要改为浅海
 					if _map.get_map_tile_info_at(coord).type != Map.TerrainType.OCEAN:
