@@ -7,6 +7,7 @@ signal cancel_btn_pressed
 signal save_map_btn_pressed
 signal place_continent_btn_pressed
 signal place_other_btn_pressed
+signal rt_tab_changed(tab: int)
 
 enum TabStatus {
 	PLACE,
@@ -128,6 +129,8 @@ var mouse_hover_info_showed: bool = false
 
 @onready var info_label: Label = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/InfoLabel
 @onready var rt_tab: TabContainer = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer
+# 右边格位面板相关
+@onready var grid_coord_label: Label = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer/CoordLabel"
 # 左上角的选择放置模式的按钮
 @onready var terrain_button: Button = $MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer/TerrainButton
 @onready var landscape_button: Button = $MarginContainer/LeftTopPanelContainer/VBoxContainer/GridContainer/LandscapeButton
@@ -185,6 +188,7 @@ func _ready() -> void:
 	resource_type_group.pressed.connect(handle_resource_type_group_pressed)
 	# 初始为放置面板
 	rt_tab.current_tab = 0
+	rt_tab.tab_changed.connect(handle_rt_tab_changed)
 	# 初始化右下角放置界面
 	disvisible_all_place_container()
 	terrain_container.visible = true
@@ -218,6 +222,19 @@ func disvisible_all_place_container() -> void:
 	cliff_container.visible = false
 	resource_container.visible = false
 	village_container.visible = false
+
+
+func handle_rt_tab_changed(tab: int) -> void:
+	rt_tab_changed.emit(tab)
+	if tab == 0:
+		# 切换放置，格位相关信息需要还原
+		grid_coord_label.text = "无"
+		# TODO: 其他格位信息
+
+
+func update_grid_info(coord: Vector2i, tile_info: Map.TileInfo) -> void:
+	grid_coord_label.text = str(coord)
+	# TODO: 其他格位信息
 
 
 func show_mouse_hover_tile_info(map_coord: Vector2i, tile_info: Map.TileInfo) -> void:

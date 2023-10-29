@@ -15,6 +15,8 @@ const NULL_COORD := Vector2i(-10000, -10000)
 
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
+# 格位模式下选择的图块
+var _grid_chosen_coord: Vector2i = NULL_COORD
 # 鼠标悬浮的图块坐标和时间
 var _mouse_hover_tile_coord: Vector2i = NULL_COORD
 var _mouse_hover_tile_time: float = 0
@@ -45,9 +47,13 @@ func _ready() -> void:
 	# 控制大洲滤镜的显示与否
 	gui.place_other_btn_pressed.connect(map_shower.hide_continent_layer)
 	gui.place_continent_btn_pressed.connect(map_shower.show_continent_layer)
+	# 切换放置和格位
+	gui.rt_tab_changed.connect(handle_gui_rt_tab_changed)
 
 
 func _process(delta: float) -> void:
+	if gui.get_rt_tab_status() == MapEditorGUI.TabStatus.GRID:
+		return
 	var tile_moved: bool = handle_mouse_hover_tile(delta)
 	var border_moved: bool = handle_mouse_hover_border(delta)
 	if tile_moved or border_moved:
@@ -125,6 +131,13 @@ func initialize_camera(map_size: Map.Size) -> void:
 	camera.set_min_y(0)
 	# 摄像头默认居中
 	camera.global_position = Vector2(max_x / 2, max_y / 2)
+
+
+func handle_gui_rt_tab_changed(tab: int) -> void:
+	_mouse_hover_tile_coord = NULL_COORD
+	_mouse_hover_border_coord = NULL_COORD
+	clear_pre_mouse_hover_tile_chosen()
+	clear_pre_mouse_hover_border_chosen()
 
 
 func handle_restore() -> void:
@@ -390,7 +403,7 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 		Map.ResourceType.COCOA_BEAN:
 			return landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.COFFEE:
-			return terrain == Map.TerrainType.GRASS and landscape == Map.LandscapeType.RAINFOREST
+			return terrain == Map.TerrainType.GRASS or landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.MARBLE:
 			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
 					or terrain == Map.TerrainType.PLAIN_HILL) \
@@ -417,18 +430,19 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 					or ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
 					and landscape == Map.LandscapeType.EMPTY)
 		Map.ResourceType.MERCURY:
-			# FIXME: 网上百科里的判定条件怪怪的
 			return terrain == Map.TerrainType.PLAIN \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.WRECKAGE:
 			return terrain == Map.TerrainType.SHORE \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.TOBACCO:
-			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
-					and (landscape == Map.LandscapeType.FOREST or landscape == Map.LandscapeType.RAINFOREST)
+			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.EMPTY) \
+					or landscape == Map.LandscapeType.FOREST or landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.COAL:
 			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL) \
-					and landscape == Map.LandscapeType.FOREST
+					and landscape == Map.LandscapeType.EMPTY
+					# or landscape == Map.LandscapeType.FOREST 原版不支持
 		Map.ResourceType.INCENSE:
 			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.PLAIN) \
 					and landscape == Map.LandscapeType.EMPTY
@@ -444,7 +458,7 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 		Map.ResourceType.PEARL:
 			return terrain == Map.TerrainType.SHORE and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.FUR:
-			return terrain == Map.TerrainType.TUNDRA and landscape == Map.LandscapeType.FOREST
+			return terrain == Map.TerrainType.TUNDRA or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.SALT:
 			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.PLAIN \
 					or terrain == Map.TerrainType.TUNDRA) \
@@ -456,17 +470,17 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 			return ((terrain == Map.TerrainType.SHORE or terrain == Map.TerrainType.DESERT \
 					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.SNOW) \
 					and landscape == Map.LandscapeType.EMPTY) \
-					or (terrain == Map.TerrainType.DESERT and landscape == Map.LandscapeType.FLOOD) \
 					or landscape == Map.LandscapeType.SWAMP
+					# or (terrain == Map.TerrainType.DESERT and landscape == Map.LandscapeType.FLOOD) 原版不支持
 		Map.ResourceType.GYPSUM:
 			return (terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.PLAIN_HILL \
 					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.SALTPETER:
-			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
-					and (landscape == Map.LandscapeType.EMPTY or landscape == Map.LandscapeType.FLOOD)) \
-					or ((terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.TUNDRA) \
-					and landscape == Map.LandscapeType.EMPTY)
+			# 注意原版和其他判定不一样
+			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN \
+					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.DESERT) \
+					and landscape == Map.LandscapeType.EMPTY) or landscape == Map.LandscapeType.FLOOD
 		Map.ResourceType.SUGAR:
 			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN \
 					or terrain == Map.TerrainType.DESERT) \
@@ -479,30 +493,29 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL) \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.WINE:
-			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
-					and landscape == Map.LandscapeType.FOREST
+			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
+					and landscape == Map.LandscapeType.EMPTY) or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.HONEY:
 			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN) \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.CRAB:
 			return terrain == Map.TerrainType.SHORE and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.IVORY:
-			# FIXME: 这里条件是不是有问题？沙漠貌似无法满足
-			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.PLAIN \
-					or terrain == Map.TerrainType.PLAIN_HILL) \
-					and (landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST)
+			return ((terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.PLAIN \
+					or terrain == Map.TerrainType.PLAIN_HILL) and landscape == Map.LandscapeType.EMPTY) \
+					or landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.DIAMOND:
-			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
+			return ((terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
 					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
-					and landscape == Map.LandscapeType.RAINFOREST
+					and landscape == Map.LandscapeType.EMPTY) or landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.URANIUM:
-			# FIXME: 沙漠和雪地和森林雨林冲突
-			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
+			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
 					or terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.PLAIN_HILL \
 					or terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
 					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL \
 					or terrain == Map.TerrainType.SNOW or terrain == Map.TerrainType.SNOW_HILL) \
-					and (landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST)
+					and landscape == Map.LandscapeType.EMPTY) \
+					or landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.IRON:
 			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
 					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
@@ -513,10 +526,9 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 					or terrain == Map.TerrainType.SNOW_HILL) \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.ALUMINIUM:
-			# FIXME: 这里条件是不是有问题？沙漠、沙漠丘陵貌似无法满足
 			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
-					or terrain == Map.TerrainType.PLAIN) \
-					and landscape == Map.LandscapeType.RAINFOREST
+					or terrain == Map.TerrainType.PLAIN) and landscape == Map.LandscapeType.EMPTY
+					# or landscape == Map.LandscapeType.RAINFOREST 风云变幻的条件，原版不行
 		Map.ResourceType.SILVER:
 			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
 					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL) \
@@ -533,8 +545,8 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 		Map.ResourceType.WHALE:
 			return terrain == Map.TerrainType.SHORE and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.DEER:
-			return (terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL) \
-					and landscape == Map.LandscapeType.FOREST
+			return ((terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL) \
+					and landscape == Map.LandscapeType.EMPTY) or landscape == Map.LandscapeType.FOREST
 	return false
 
 
@@ -637,6 +649,14 @@ func depaint_map() -> void:
 
 
 func paint_map() -> void:
+	# 格位模式下只绘制选择绿块
+	if gui.get_rt_tab_status() == MapEditorGUI.TabStatus.GRID:
+		var coord: Vector2i = map_shower.get_map_coord()
+		map_shower.clear_tile_chosen()
+		_grid_chosen_coord = coord
+		map_shower.paint_tile_chosen_placeable(coord)
+		gui.update_grid_info(coord, _map.get_map_tile_info_at(coord))
+		return
 	var step: PaintStep = PaintStep.new()
 	match gui.place_mode:
 		MapEditorGUI.PlaceMode.TERRAIN:
