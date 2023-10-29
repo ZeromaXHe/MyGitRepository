@@ -1,6 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://ws5la286dpvv"]
+[gd_scene load_steps=10 format=3 uid="uid://ws5la286dpvv"]
 
 [ext_resource type="Script" path="res://scenes/menu/create_map_menu.gd" id="1_ei4x3"]
+[ext_resource type="Texture2D" uid="uid://b3xssty38wbtc" path="res://assets/civ6_origin/background/Background_A.png" id="2_5mcpc"]
+[ext_resource type="StyleBox" uid="uid://bsqe2a5x22usi" path="res://scenes/menu/menu_panel.tres" id="3_h08bw"]
+[ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://scenes/menu/menu_deep_blue_button_normal.tres" id="4_q85a3"]
+[ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://scenes/menu/menu_deep_blue_button_hover.tres" id="5_y55lb"]
+[ext_resource type="StyleBox" uid="uid://dqr84amdys5ut" path="res://scenes/menu/menu_deep_blue_button_press.tres" id="6_pwdv5"]
+[ext_resource type="StyleBox" uid="uid://bk4uskdh5f524" path="res://scenes/menu/menu_green_button_normal.tres" id="7_i26vs"]
+[ext_resource type="StyleBox" uid="uid://thjgmu6f1tf7" path="res://scenes/menu/menu_green_button_hover.tres" id="8_5qr7g"]
+[ext_resource type="StyleBox" uid="uid://ca0m4iqs1f2uv" path="res://scenes/menu/menu_green_button_press.tres" id="9_cbcqw"]
 
 [node name="CreateMap" type="Control"]
 layout_mode = 3
@@ -10,6 +18,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ei4x3")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -8.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_5mcpc")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -22,6 +41,7 @@ grow_vertical = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
 layout_mode = 2
+theme_override_styles/panel = ExtResource("3_h08bw")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
 layout_mode = 2
@@ -47,6 +67,10 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 0
 tooltip_text = "将所有参数恢复到默认值。"
+theme_override_colors/font_color = Color(0.427451, 0.752941, 0.870588, 1)
+theme_override_styles/normal = ExtResource("4_q85a3")
+theme_override_styles/hover = ExtResource("5_y55lb")
+theme_override_styles/pressed = ExtResource("6_pwdv5")
 text = "恢复默认设置"
 
 [node name="CreateMapTitle" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
@@ -59,6 +83,10 @@ vertical_alignment = 1
 [node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 8
+theme_override_colors/font_color = Color(0.427451, 0.752941, 0.870588, 1)
+theme_override_styles/normal = ExtResource("4_q85a3")
+theme_override_styles/hover = ExtResource("5_y55lb")
+theme_override_styles/pressed = ExtResource("6_pwdv5")
 text = "返回"
 
 [node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
@@ -73,6 +101,7 @@ layout_mode = 2
 
 [node name="RuleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.215686, 0.580392, 0.788235, 1)
 text = "选择规则集"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -88,6 +117,7 @@ popup/item_0/id = 0
 
 [node name="TypeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.215686, 0.580392, 0.788235, 1)
 text = "选择地图类型"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -98,6 +128,7 @@ text = "空白类型"
 
 [node name="SizeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.215686, 0.580392, 0.788235, 1)
 text = "选择地图尺寸"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -113,12 +144,14 @@ popup/item_0/id = 0
 
 [node name="ModeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.215686, 0.580392, 0.788235, 1)
 text = "游戏模式"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/MainVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.215686, 0.580392, 0.788235, 1)
 text = "无可用游戏模式"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -236,6 +269,10 @@ layout_mode = 2
 [node name="AdvancedOptionsButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
 layout_mode = 2
 size_flags_vertical = 8
+theme_override_colors/font_color = Color(0.427451, 0.752941, 0.870588, 1)
+theme_override_styles/normal = ExtResource("4_q85a3")
+theme_override_styles/hover = ExtResource("5_y55lb")
+theme_override_styles/pressed = ExtResource("6_pwdv5")
 text = "高级设置"
 
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
@@ -244,6 +281,9 @@ size_flags_vertical = 8
 
 [node name="CreateButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer"]
 layout_mode = 2
+theme_override_styles/normal = ExtResource("7_i26vs")
+theme_override_styles/hover = ExtResource("8_5qr7g")
+theme_override_styles/pressed = ExtResource("9_cbcqw")
 text = "生成"
 
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MarginContainer/BackButton" to="." method="_on_back_button_pressed"]

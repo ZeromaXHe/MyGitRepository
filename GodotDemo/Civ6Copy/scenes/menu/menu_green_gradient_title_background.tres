@@ -1,0 +1,11 @@
+[gd_resource type="StyleBoxTexture" load_steps=3 format=3 uid="uid://fpxjje2joomq"]
+
+[sub_resource type="Gradient" id="Gradient_ajpd5"]
+offsets = PackedFloat32Array(0, 0.413462, 0.620567, 1)
+colors = PackedColorArray(0.0588235, 0.196078, 0.321569, 1, 0.0588235, 0.278431, 0.309804, 1, 0.0588235, 0.278431, 0.309804, 1, 0.0588235, 0.196078, 0.321569, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_g7050"]
+gradient = SubResource("Gradient_ajpd5")
+
+[resource]
+texture = SubResource("GradientTexture2D_g7050")

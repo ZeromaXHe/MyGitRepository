@@ -183,6 +183,8 @@ func _ready() -> void:
 	continent_option_button.item_selected.connect(handle_continent_item_selected)
 	resource_type_group = silk_button.button_group
 	resource_type_group.pressed.connect(handle_resource_type_group_pressed)
+	# 初始为放置面板
+	rt_tab.current_tab = 0
 	# 初始化右下角放置界面
 	disvisible_all_place_container()
 	terrain_container.visible = true

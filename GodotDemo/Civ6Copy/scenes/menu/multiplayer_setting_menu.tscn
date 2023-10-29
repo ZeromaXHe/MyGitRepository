@@ -1,6 +1,21 @@
-[gd_scene load_steps=2 format=3 uid="uid://c2sypgoilitpf"]
+[gd_scene load_steps=15 format=3 uid="uid://c2sypgoilitpf"]
 
 [ext_resource type="Script" path="res://scenes/menu/multiplayer_setting_menu.gd" id="1_qmcuf"]
+[ext_resource type="Texture2D" uid="uid://b3xssty38wbtc" path="res://assets/civ6_origin/background/Background_A.png" id="2_cyff6"]
+[ext_resource type="StyleBox" uid="uid://bj7xx7wnoe7vd" path="res://scenes/menu/menu_blue_button_normal.tres" id="3_e347m"]
+[ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://scenes/menu/menu_deep_blue_button_normal.tres" id="3_jfh1n"]
+[ext_resource type="StyleBox" uid="uid://bsqe2a5x22usi" path="res://scenes/menu/menu_panel.tres" id="3_pnuet"]
+[ext_resource type="StyleBox" uid="uid://b4xkboxi50vdl" path="res://scenes/menu/menu_blue_button_hover.tres" id="4_332xf"]
+[ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://scenes/menu/menu_deep_blue_button_hover.tres" id="4_rityb"]
+[ext_resource type="StyleBox" uid="uid://dqr84amdys5ut" path="res://scenes/menu/menu_deep_blue_button_press.tres" id="5_p8sjy"]
+[ext_resource type="StyleBox" uid="uid://c6jfyt57bjnn0" path="res://scenes/menu/menu_blue_button_press.tres" id="5_tl266"]
+[ext_resource type="StyleBox" uid="uid://bk4uskdh5f524" path="res://scenes/menu/menu_green_button_normal.tres" id="6_agpdp"]
+[ext_resource type="StyleBox" uid="uid://thjgmu6f1tf7" path="res://scenes/menu/menu_green_button_hover.tres" id="7_1pymu"]
+[ext_resource type="StyleBox" uid="uid://ca0m4iqs1f2uv" path="res://scenes/menu/menu_green_button_press.tres" id="8_w2xc8"]
+[ext_resource type="StyleBox" uid="uid://fpxjje2joomq" path="res://scenes/menu/menu_green_gradient_title_background.tres" id="10_ovk17"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6w0bw"]
+bg_color = Color(0.0392157, 0.611765, 0.603922, 1)
 
 [node name="MultiplayerSettingMenu" type="Control"]
 layout_mode = 3
@@ -10,6 +25,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_qmcuf")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_cyff6")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -22,6 +46,7 @@ grow_vertical = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
 layout_mode = 2
+theme_override_styles/panel = ExtResource("3_pnuet")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
 layout_mode = 2
@@ -47,6 +72,10 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 0
 tooltip_text = "将所有参数恢复到默认值。"
+theme_override_colors/font_color = Color(0.427451, 0.752941, 0.870588, 1)
+theme_override_styles/normal = ExtResource("3_jfh1n")
+theme_override_styles/hover = ExtResource("4_rityb")
+theme_override_styles/pressed = ExtResource("5_p8sjy")
 text = "恢复默认设置"
 
 [node name="MultiPlayerSettingTitle" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
@@ -59,6 +88,10 @@ vertical_alignment = 1
 [node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 8
+theme_override_colors/font_color = Color(0.427451, 0.752941, 0.870588, 1)
+theme_override_styles/normal = ExtResource("3_jfh1n")
+theme_override_styles/hover = ExtResource("4_rityb")
+theme_override_styles/pressed = ExtResource("5_p8sjy")
 text = "返回"
 
 [node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
@@ -69,17 +102,21 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 0
 tooltip_text = "将所有参数恢复到默认值。"
+theme_override_styles/normal = ExtResource("3_e347m")
+theme_override_styles/hover = ExtResource("4_332xf")
+theme_override_styles/pressed = ExtResource("5_tl266")
 text = "额外内容"
 
-[node name="BackButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
+[node name="SettingLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "游戏设置"
+theme_override_colors/font_color = Color(0.0980392, 0.25098, 0.364706, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_6w0bw")
+text = "            游戏设置            "
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-scroll_vertical = 100
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer"]
 custom_minimum_size = Vector2(200, 0)
@@ -91,11 +128,19 @@ theme_override_constants/margin_right = 100
 [node name="GameSettingVBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer"]
 layout_mode = 2
 
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+
 [node name="MapOptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("10_ovk17")
 text = "地图选项"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
 
 [node name="OptionsGridContainer" type="GridContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 custom_minimum_size = Vector2(200, 0)
@@ -105,6 +150,7 @@ columns = 2
 
 [node name="RuleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "规则"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -119,6 +165,7 @@ popup/item_0/id = 0
 
 [node name="GameNameLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "游戏名称"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -129,6 +176,7 @@ text = "Kenny not KennyS[CN] 的游戏"
 
 [node name="TurnLimitLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "回合时间限制"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -143,6 +191,7 @@ popup/item_0/id = 0
 
 [node name="StartEraLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "开始时代"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -157,6 +206,7 @@ popup/item_0/id = 0
 
 [node name="CityStateLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "城邦"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -168,6 +218,7 @@ value = 9.0
 
 [node name="SpeedLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "游戏速度"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -182,6 +233,7 @@ popup/item_0/id = 0
 
 [node name="MapLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地图"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -196,6 +248,7 @@ popup/item_0/id = 0
 
 [node name="SizeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地图尺寸"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -210,6 +263,7 @@ popup/item_0/id = 0
 
 [node name="LeaderPool1Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "领袖池1"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -220,6 +274,7 @@ text = "全选"
 
 [node name="LeaderPool2Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "领袖池2"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -230,6 +285,7 @@ text = "全选"
 
 [node name="WorldEraLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "世界纪元"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -244,6 +300,7 @@ popup/item_0/id = 0
 
 [node name="CityStatePoolLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "选择城邦"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -254,6 +311,7 @@ text = "全选"
 
 [node name="WonderPoolLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "选择自然奇观"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -264,6 +322,7 @@ text = "全选"
 
 [node name="ResourceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "资源"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -278,6 +337,7 @@ popup/item_0/id = 0
 
 [node name="SpawnLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "启动位置"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -292,6 +352,7 @@ popup/item_0/id = 0
 
 [node name="TemperatureLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "温度"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -306,6 +367,7 @@ popup/item_0/id = 0
 
 [node name="RainfallLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "降雨量"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -320,6 +382,7 @@ popup/item_0/id = 0
 
 [node name="SeaLevelLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "海平面"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -332,11 +395,19 @@ selected = 0
 popup/item_0/text = "标准"
 popup/item_0/id = 0
 
+[node name="HSeparator3" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+
 [node name="GameModeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("10_ovk17")
 text = "游戏模式"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HSeparator4" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
 
 [node name="ModeRandomCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 layout_mode = 2
@@ -363,11 +434,19 @@ layout_mode = 2
 text = "英雄与传奇模式"
 alignment = 1
 
+[node name="HSeparator5" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+
 [node name="WinLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("10_ovk17")
 text = "胜利条件"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HSeparator6" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
 
 [node name="WinScoreCheckBox" type="CheckBox" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 layout_mode = 2
@@ -399,11 +478,19 @@ button_pressed = true
 text = "宗教胜利"
 alignment = 1
 
+[node name="HSeparator7" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
+
 [node name="AdvanceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("10_ovk17")
 text = "高级选项"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HSeparator8" type="HSeparator" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
+layout_mode = 2
 
 [node name="TurnLimitHBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer"]
 layout_mode = 2
@@ -411,6 +498,7 @@ alignment = 1
 
 [node name="TurnLimitLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/TurnLimitHBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "回合数限制"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -462,6 +550,7 @@ alignment = 1
 
 [node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/GameRandHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "游戏随机种子"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -476,6 +565,7 @@ alignment = 1
 
 [node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/ScrollContainer/MarginContainer/GameSettingVBoxContainer/MapRandHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地图随机种子"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -494,21 +584,33 @@ layout_mode = 2
 [node name="LoadGameButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/normal = ExtResource("3_e347m")
+theme_override_styles/hover = ExtResource("4_332xf")
+theme_override_styles/pressed = ExtResource("5_tl266")
 text = "加载游戏"
 
 [node name="LoadConfigButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/normal = ExtResource("3_e347m")
+theme_override_styles/hover = ExtResource("4_332xf")
+theme_override_styles/pressed = ExtResource("5_tl266")
 text = "加载配置"
 
 [node name="SaveConfigButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/normal = ExtResource("3_e347m")
+theme_override_styles/hover = ExtResource("4_332xf")
+theme_override_styles/pressed = ExtResource("5_tl266")
 text = "保存配置"
 
 [node name="ConfirmButton" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/normal = ExtResource("6_agpdp")
+theme_override_styles/hover = ExtResource("7_1pymu")
+theme_override_styles/pressed = ExtResource("8_w2xc8")
 text = "确认设置"
 
 [connection signal="pressed" from="MarginContainer/PanelContainer/VBoxContainer/MarginContainer/BackButton" to="." method="_on_back_button_pressed"]

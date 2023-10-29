@@ -1,15 +1,19 @@
-[gd_scene load_steps=34 format=3 uid="uid://cw4d6w6b4mr0o"]
+[gd_scene load_steps=38 format=3 uid="uid://cw4d6w6b4mr0o"]
 
 [ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="1_gwgln"]
 [ext_resource type="Script" path="res://scenes/gui/map_editor_gui.gd" id="1_lwefg"]
 [ext_resource type="Texture2D" uid="uid://x3lg83lirlhc" path="res://assets/icon_park/地图_map-draw.svg" id="2_05a4t"]
 [ext_resource type="ButtonGroup" uid="uid://ck2cfmt42etn6" path="res://scenes/gui/place_mode_btn_group.tres" id="2_ah4ra"]
-[ext_resource type="StyleBox" uid="uid://dgk23451gpgek" path="res://scenes/map_editor/map_editor_gui_panel_style_box_flat.tres" id="2_ps6yy"]
+[ext_resource type="StyleBox" uid="uid://bsqe2a5x22usi" path="res://scenes/menu/menu_panel.tres" id="2_brhqg"]
 [ext_resource type="Texture2D" uid="uid://b1di533muewx2" path="res://assets/icon_park/全屏播放_full-screen-play.svg" id="3_8b823"]
 [ext_resource type="ButtonGroup" uid="uid://dcck466yvknxb" path="res://scenes/gui/terrain_mode_place_btn_group.tres" id="4_axx52"]
 [ext_resource type="ButtonGroup" uid="uid://25ektawcibr" path="res://scenes/gui/painter_size_btn_group.tres" id="4_xnhqu"]
+[ext_resource type="StyleBox" uid="uid://fpxjje2joomq" path="res://scenes/menu/menu_green_gradient_title_background.tres" id="5_jv863"]
 [ext_resource type="ButtonGroup" uid="uid://chjyaxgfkotgt" path="res://scenes/gui/landscape_mode_place_btn_group.tres" id="6_u002j"]
 [ext_resource type="ButtonGroup" uid="uid://byp27x6033aly" path="res://scenes/gui/resource_mode_place_btn_group.tres" id="7_bf14j"]
+[ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://scenes/menu/menu_deep_blue_button_normal.tres" id="12_uvgt8"]
+[ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://scenes/menu/menu_deep_blue_button_hover.tres" id="13_3l8rw"]
+[ext_resource type="StyleBox" uid="uid://dqr84amdys5ut" path="res://scenes/menu/menu_deep_blue_button_press.tres" id="14_e8q32"]
 
 [sub_resource type="InputEventKey" id="InputEventKey_xks68"]
 device = -1
@@ -98,6 +102,11 @@ bg_color = Color(0.133333, 0.133333, 0.133333, 0.901961)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dypht"]
 bg_color = Color(0.0666667, 0.14902, 0.243137, 0.933333)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.803922, 0.698039, 0.501961, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rwq4m"]
 bg_color = Color(1, 1, 1, 0.8)
@@ -116,7 +125,7 @@ grow_vertical = 2
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
-theme_override_styles/panel = ExtResource("2_ps6yy")
+theme_override_styles/panel = ExtResource("2_brhqg")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/LeftTopPanelContainer"]
 layout_mode = 2
@@ -219,7 +228,7 @@ custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
-theme_override_styles/panel = ExtResource("2_ps6yy")
+theme_override_styles/panel = ExtResource("2_brhqg")
 
 [node name="RtVBoxContainer" type="VBoxContainer" parent="MarginContainer/RightTopPanelContainer"]
 layout_mode = 2
@@ -263,6 +272,8 @@ layout_mode = 2
 
 [node name="PlaceLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("5_jv863")
 text = "放置格位"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -945,6 +956,8 @@ layout_mode = 2
 
 [node name="GridLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("5_jv863")
 text = "格位选择器"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -959,6 +972,7 @@ columns = 2
 [node name="ChosenLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "已选格位："
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -972,6 +986,7 @@ vertical_alignment = 1
 
 [node name="TerrainLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地形"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -1018,6 +1033,7 @@ popup/item_16/id = 16
 
 [node name="LandscapeLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "特征"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -1032,6 +1048,7 @@ popup/item_0/id = 0
 
 [node name="ResourceLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "资源"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -1046,6 +1063,7 @@ popup/item_0/id = 0
 
 [node name="ResourceCountLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "资源数量"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -1056,6 +1074,7 @@ editable = false
 
 [node name="RotationLabel" type="Label" parent="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地貌旋转"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -1122,10 +1141,10 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_dypht")
 
 [node name="MenuMarginContainer" type="MarginContainer" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
+theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
 
 [node name="MenuVBoxContainer" type="VBoxContainer" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer"]
 custom_minimum_size = Vector2(80, 200)
@@ -1142,7 +1161,10 @@ layout_mode = 2
 
 [node name="ReturnButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
 layout_mode = 2
-text = "返回到地图"
+theme_override_styles/normal = ExtResource("12_uvgt8")
+theme_override_styles/hover = ExtResource("13_3l8rw")
+theme_override_styles/pressed = ExtResource("14_e8q32")
+text = "   返回到地图   "
 
 [node name="EmptyLabel" type="Label" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
 layout_mode = 2
@@ -1151,18 +1173,30 @@ vertical_alignment = 1
 
 [node name="SaveButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
 layout_mode = 2
+theme_override_styles/normal = ExtResource("12_uvgt8")
+theme_override_styles/hover = ExtResource("13_3l8rw")
+theme_override_styles/pressed = ExtResource("14_e8q32")
 text = "保存地图"
 
 [node name="OptionButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
 layout_mode = 2
+theme_override_styles/normal = ExtResource("12_uvgt8")
+theme_override_styles/hover = ExtResource("13_3l8rw")
+theme_override_styles/pressed = ExtResource("14_e8q32")
 text = "选项"
 
 [node name="MainMenuButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
 layout_mode = 2
+theme_override_styles/normal = ExtResource("12_uvgt8")
+theme_override_styles/hover = ExtResource("13_3l8rw")
+theme_override_styles/pressed = ExtResource("14_e8q32")
 text = "返回主菜单"
 
 [node name="DesktopButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
 layout_mode = 2
+theme_override_styles/normal = ExtResource("12_uvgt8")
+theme_override_styles/hover = ExtResource("13_3l8rw")
+theme_override_styles/pressed = ExtResource("14_e8q32")
 text = "返回桌面"
 
 [node name="MouseHoverTilePanel" type="PanelContainer" parent="."]
