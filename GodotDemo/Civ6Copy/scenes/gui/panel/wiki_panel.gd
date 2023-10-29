@@ -26,7 +26,7 @@ var chosen_top_btn: Button = null
 # 左边按钮树
 @onready var left_tree: Tree = $MainVBoxContainer/MainHBoxContainer/LeftVBoxContainer/LeftScrollContainer/LeftTree
 # 右边滚动条栏
-@onready var right_scroll_container: ScrollContainer = $MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/RightScrollContainer
+@onready var right_scroll_container: ScrollContainer = $MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/RightPanelContainer/RightScrollContainer
 
 
 func _ready() -> void:
@@ -124,3 +124,7 @@ func handle_top_btn_group_pressed(button: BaseButton) -> void:
 		_:
 			printerr("unknow button or no need to handle")
 
+
+## 按下右上角的 X
+func _on_close_button_pressed() -> void:
+	self.visible = false

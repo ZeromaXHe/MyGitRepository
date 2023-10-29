@@ -43,7 +43,7 @@ func end_drag():
 func drag(to_position: Vector2):
 	if not _move_camera:
 		return
-	position += _previous_position - to_position
+	position += (_previous_position - to_position) / zoom.x
 	# 限制镜头移动范围
 	var diff_x = get_viewport().size.x / zoom.x / 2
 	var diff_y = get_viewport().size.y / zoom.y / 2

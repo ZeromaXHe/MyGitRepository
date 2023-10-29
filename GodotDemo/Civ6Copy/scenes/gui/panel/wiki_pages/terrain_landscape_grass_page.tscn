@@ -11,6 +11,7 @@ size_flags_vertical = 3
 
 [node name="TitleLabel" type="Label" parent="."]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 text = "草原"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -29,6 +30,7 @@ size_flags_stretch_ratio = 3.0
 
 [node name="HistoryBackgroundLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 text = "历史背景"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -40,6 +42,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 12
 text = "草原上有丰富肥沃的土壤，曾是很多城市的中心。它能提供食物与对外扩张而言必需的开放边界。不幸的是，蛮族也意识到了它的好，因此几个世纪以来，草原上的血迹随处可见。"
 autowrap_mode = 3
@@ -53,6 +56,7 @@ size_flags_horizontal = 3
 
 [node name="FeatureLabel" type="Label" parent="HBoxContainer/RightVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 text = "特点"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -64,6 +68,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 12
 text = "+2 食物"
 autowrap_mode = 3
@@ -75,6 +80,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 12
 text = "有效资源：
 茶叶

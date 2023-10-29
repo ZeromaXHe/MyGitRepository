@@ -341,7 +341,7 @@ func serialize_map_tile_info() -> String:
 			if res != "" and not res.ends_with(";"):
 				res += ","
 			var tile_info := elem as TileInfo
-			if tile_info.continent != ContinentType.AFRICA:
+			if tile_info.continent != ContinentType.EMPTY:
 				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
 						+ str(tile_info.village) + "|" + str(tile_info.resource) \
 						+ "|" + str(tile_info.continent)

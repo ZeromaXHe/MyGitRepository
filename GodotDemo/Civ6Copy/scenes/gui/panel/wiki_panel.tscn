@@ -1,10 +1,54 @@
-[gd_scene load_steps=4 format=3 uid="uid://6rscixmykdb1"]
+[gd_scene load_steps=26 format=3 uid="uid://6rscixmykdb1"]
 
 [ext_resource type="Script" path="res://scenes/gui/panel/wiki_panel.gd" id="1_rhyfl"]
 [ext_resource type="ButtonGroup" uid="uid://d2vfjykfdnuoq" path="res://scenes/gui/wiki_button_group.tres" id="1_wupj1"]
 [ext_resource type="PackedScene" uid="uid://bebsw57fm7qow" path="res://scenes/gui/panel/wiki_pages/terrain_landscape_grass_page.tscn" id="3_r1yh8"]
+[ext_resource type="Texture2D" uid="uid://b2npagbyji7dm" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_concepts.webp" id="3_v77jo"]
+[ext_resource type="Texture2D" uid="uid://ckxaja2thdwg0" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_civilizations.webp" id="4_dbo4j"]
+[ext_resource type="Texture2D" uid="uid://cc4ktf86ads3r" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_citystates.webp" id="5_tx31p"]
+[ext_resource type="Texture2D" uid="uid://b13d7xsu4dc3y" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_districts.webp" id="6_fhuyv"]
+[ext_resource type="Texture2D" uid="uid://dnfug2ofh0fpo" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_buildings.webp" id="7_uh2ty"]
+[ext_resource type="Texture2D" uid="uid://bdji2cwxybeh3" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_wonders.webp" id="8_8ckpc"]
+[ext_resource type="Texture2D" uid="uid://cf545b0pr5x48" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_units.webp" id="9_k8t4n"]
+[ext_resource type="Texture2D" uid="uid://bdoy1ue8qhmyv" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_unitpromotions.webp" id="10_xo5vu"]
+[ext_resource type="Texture2D" uid="uid://y32as8cnncqp" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_greatpeople.webp" id="11_pbuff"]
+[ext_resource type="Texture2D" uid="uid://cj6upht3ltowy" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_technologies.webp" id="12_ex76b"]
+[ext_resource type="Texture2D" uid="uid://xk56xkgym5tj" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_civics.webp" id="13_tedxq"]
+[ext_resource type="Texture2D" uid="uid://bx6cfrxvou4vg" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_governments.webp" id="14_w4cnb"]
+[ext_resource type="Texture2D" uid="uid://b3exjj5y0oomy" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_religions.webp" id="15_k0kh8"]
+[ext_resource type="Texture2D" uid="uid://c2544kyxiwwg7" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_features.webp" id="16_m2qhy"]
+[ext_resource type="Texture2D" uid="uid://dayqubdjs35aw" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_resources.webp" id="17_kr7q5"]
+[ext_resource type="Texture2D" uid="uid://ctqxppllqf0uk" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_improvements.webp" id="18_w0105"]
+[ext_resource type="Texture2D" uid="uid://d2cdfrtna6tfc" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_governors.webp" id="19_doelx"]
+[ext_resource type="Texture2D" uid="uid://b76ifpi18yn0p" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_historic_moments.webp" id="20_gvbs4"]
+
+[sub_resource type="Gradient" id="Gradient_kp6br"]
+offsets = PackedFloat32Array(0, 0.0609319, 0.140312, 0.150334, 1)
+colors = PackedColorArray(0.00784314, 0.0980392, 0.180392, 1, 0.0470588, 0.211765, 0.341176, 1, 0.0470588, 0.211765, 0.345098, 1, 0.180392, 0.0627451, 0.0784314, 1, 0.180392, 0.0627451, 0.0784314, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_7acdm"]
+gradient = SubResource("Gradient_kp6br")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_t3b24"]
+texture = SubResource("GradientTexture2D_7acdm")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ayl5g"]
+bg_color = Color(0.72549, 0.682353, 0.611765, 1)
 
 [node name="WikiPanelContainer" type="PanelContainer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -394.0
+offset_top = -254.0
+offset_right = 394.0
+offset_bottom = 254.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_t3b24")
 script = ExtResource("1_rhyfl")
 
 [node name="MainVBoxContainer" type="VBoxContainer" parent="."]
@@ -17,6 +61,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.760784, 0.803922, 0.831373, 1)
 text = "文明百科"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -35,7 +80,7 @@ theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_pressed = true
 button_group = ExtResource("1_wupj1")
-text = "概念"
+icon = ExtResource("3_v77jo")
 
 [node name="CultureLeaderButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -43,8 +88,7 @@ tooltip_text = "文明/领袖"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "文明/
-领袖"
+icon = ExtResource("4_dbo4j")
 
 [node name="CityStateButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -52,7 +96,7 @@ tooltip_text = "城邦"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "城邦"
+icon = ExtResource("5_tx31p")
 
 [node name="RegionButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -60,7 +104,7 @@ tooltip_text = "区域"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "区域"
+icon = ExtResource("6_fhuyv")
 
 [node name="BuildingButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -68,7 +112,7 @@ tooltip_text = "建筑"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "建筑"
+icon = ExtResource("7_uh2ty")
 
 [node name="WonderProjectButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -76,8 +120,7 @@ tooltip_text = "奇观和项目"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "奇观
-和项目"
+icon = ExtResource("8_8ckpc")
 
 [node name="UnitButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -85,7 +128,7 @@ tooltip_text = "单位"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "单位"
+icon = ExtResource("9_k8t4n")
 
 [node name="PowerUpButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -93,8 +136,7 @@ tooltip_text = "单位强化"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "单位
-强化"
+icon = ExtResource("10_xo5vu")
 
 [node name="GreatPersonButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -102,7 +144,7 @@ tooltip_text = "伟人"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "伟人"
+icon = ExtResource("11_pbuff")
 
 [node name="TechnologyButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -110,7 +152,7 @@ tooltip_text = "科技"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "科技"
+icon = ExtResource("12_ex76b")
 
 [node name="MunicipalityButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -118,7 +160,7 @@ tooltip_text = "市政"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "市政"
+icon = ExtResource("13_tedxq")
 
 [node name="PolicyButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -126,8 +168,7 @@ tooltip_text = "政体和政策"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "政体
-和政策"
+icon = ExtResource("14_w4cnb")
 
 [node name="ReligonButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -135,7 +176,7 @@ tooltip_text = "宗教"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "宗教"
+icon = ExtResource("15_k0kh8")
 
 [node name="TerrainLandscapeButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -143,8 +184,7 @@ tooltip_text = "地形和地貌"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "地形
-和地貌"
+icon = ExtResource("16_m2qhy")
 
 [node name="ResourceButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -152,7 +192,7 @@ tooltip_text = "资源"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "资源"
+icon = ExtResource("17_kr7q5")
 
 [node name="FacilityRouteButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -160,8 +200,7 @@ tooltip_text = "改良设施和路线"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "改良设施
-和路线"
+icon = ExtResource("18_w0105")
 
 [node name="GovernerButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -169,7 +208,7 @@ tooltip_text = "建筑"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "总督"
+icon = ExtResource("19_doelx")
 
 [node name="HistoricalTimeButton" type="Button" parent="MainVBoxContainer/BtnHBoxContainer"]
 layout_mode = 2
@@ -177,8 +216,7 @@ tooltip_text = "历史时刻"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 button_group = ExtResource("1_wupj1")
-text = "历史
-时刻"
+icon = ExtResource("20_gvbs4")
 
 [node name="MainHBoxContainer" type="HBoxContainer" parent="MainVBoxContainer"]
 layout_mode = 2
@@ -224,10 +262,17 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "->"
 
-[node name="RightScrollContainer" type="ScrollContainer" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer"]
+[node name="RightPanelContainer" type="PanelContainer" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_ayl5g")
+
+[node name="RightScrollContainer" type="ScrollContainer" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/RightPanelContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="TerrainLandscapeGrassPageVBox" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/RightScrollContainer" instance=ExtResource("3_r1yh8")]
+[node name="TerrainLandscapeGrassPageVBox" parent="MainVBoxContainer/MainHBoxContainer/RightVBoxContainer/RightPanelContainer/RightScrollContainer" instance=ExtResource("3_r1yh8")]
 visible = false
 layout_mode = 2
+
+[connection signal="pressed" from="MainVBoxContainer/TitleHBoxContainer/CloseButton" to="." method="_on_close_button_pressed"]

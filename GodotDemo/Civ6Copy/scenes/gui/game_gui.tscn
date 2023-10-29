@@ -1,12 +1,13 @@
-[gd_scene load_steps=40 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=59 format=3 uid="uid://dfpeq8ikcp1wc"]
 
-[ext_resource type="Texture2D" uid="uid://btmpkdbgm3hs2" path="res://assets/icon_park/实验_experiment.svg" id="1_0g47u"]
-[ext_resource type="Texture2D" uid="uid://dkia1xx5vuk4x" path="res://assets/icon_park/音乐_music-one.svg" id="2_wa2tf"]
-[ext_resource type="Texture2D" uid="uid://drjeomv13ps30" path="res://assets/icon_park/鸽子_pigeon.svg" id="3_iasj3"]
-[ext_resource type="Texture2D" uid="uid://8eptkp2y1hdr" path="res://assets/icon_park/理财_financing.svg" id="4_m8wj3"]
-[ext_resource type="Texture2D" uid="uid://bmc8jjvgijhou" path="res://assets/icon_park/奖杯_trophy.svg" id="5_v11p0"]
-[ext_resource type="Texture2D" uid="uid://b6w72q7hdc1pw" path="res://assets/icon_park/兑换1_exchange-one.svg" id="6_12pvb"]
+[ext_resource type="Script" path="res://scenes/gui/game_gui.gd" id="1_heuwt"]
+[ext_resource type="Texture2D" uid="uid://bbuwimgeo1bf6" path="res://assets/civ6_origin/core/webp_32x32/core_science.webp" id="2_25l65"]
+[ext_resource type="Texture2D" uid="uid://batagftcmuypd" path="res://assets/civ6_origin/core/webp_32x32/core_culture.webp" id="3_d2g8n"]
+[ext_resource type="Texture2D" uid="uid://mro7bq6p1jub" path="res://assets/civ6_origin/core/webp_32x32/core_faith.webp" id="4_k3p5i"]
+[ext_resource type="Texture2D" uid="uid://onqbvvq12y21" path="res://assets/civ6_origin/core/webp_32x32/core_gold.webp" id="5_160m0"]
+[ext_resource type="Texture2D" uid="uid://dtl12mb8rswks" path="res://assets/civ6_origin/core/webp_32x32/core_favor.webp" id="6_2f78w"]
 [ext_resource type="Texture2D" uid="uid://ohlgqatk4nat" path="res://assets/icon_park/帮助_help.svg" id="7_lrsjr"]
+[ext_resource type="Texture2D" uid="uid://djx6780jfdrbs" path="res://assets/civ6_origin/core/webp_32x32/core_envoy.webp" id="7_pulun"]
 [ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="8_fvvrv"]
 [ext_resource type="Texture2D" uid="uid://duwxecohirtpr" path="res://assets/icon_park/镜子2_mirror-two.svg" id="9_11lm6"]
 [ext_resource type="Texture2D" uid="uid://61demjx51mfs" path="res://assets/icon_park/圆形连接_six-circular-connection.svg" id="9_bd2lx"]
@@ -30,23 +31,86 @@
 [ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="18_6wc45"]
 [ext_resource type="PackedScene" uid="uid://6rscixmykdb1" path="res://scenes/gui/panel/wiki_panel.tscn" id="29_dio20"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_38obw"]
-bg_color = Color(0, 0.00784314, 0.537255, 1)
+[sub_resource type="Gradient" id="Gradient_cfe8u"]
+colors = PackedColorArray(0.0352941, 0.0705882, 0.12549, 1, 0.0588235, 0.196078, 0.321569, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v3py8"]
-bg_color = Color(0.435294, 0.00392157, 0.435294, 1)
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_lhnjw"]
+gradient = SubResource("Gradient_cfe8u")
+fill_to = Vector2(0, 0.99495)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5cv5u"]
-bg_color = Color(0.294118, 0.294118, 0.294118, 1)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pl32i"]
+texture = SubResource("GradientTexture2D_lhnjw")
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cjx7x"]
-bg_color = Color(0.490196, 0.490196, 0, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_femrp"]
+bg_color = Color(0.0666667, 0.462745, 0.643137, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_an877"]
-bg_color = Color(0.521569, 0.243137, 0, 1)
+[sub_resource type="Gradient" id="Gradient_qebul"]
+colors = PackedColorArray(0.0196078, 0.12549, 0.172549, 1, 0.0352941, 0.235294, 0.329412, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vajus"]
+gradient = SubResource("Gradient_qebul")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_xxdq3"]
+texture = SubResource("GradientTexture2D_vajus")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e5y11"]
+bg_color = Color(0.458824, 0.137255, 0.572549, 1)
+
+[sub_resource type="Gradient" id="Gradient_wuuxx"]
+offsets = PackedFloat32Array(0, 0.961538)
+colors = PackedColorArray(0.109804, 0.0470588, 0.156863, 1, 0.231373, 0.0980392, 0.333333, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_60xv8"]
+gradient = SubResource("Gradient_wuuxx")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_du5ns"]
+texture = SubResource("GradientTexture2D_60xv8")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ftkgq"]
+bg_color = Color(0.0745098, 0.490196, 0.678431, 1)
+
+[sub_resource type="Gradient" id="Gradient_sdwj7"]
+offsets = PackedFloat32Array(0, 0.961538)
+colors = PackedColorArray(0.0156863, 0.113725, 0.156863, 1, 0.0352941, 0.235294, 0.329412, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ro8q7"]
+gradient = SubResource("Gradient_sdwj7")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5hv8u"]
+texture = SubResource("GradientTexture2D_ro8q7")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h5wvy"]
+bg_color = Color(0.847059, 0.792157, 0.247059, 1)
+
+[sub_resource type="Gradient" id="Gradient_4wv24"]
+offsets = PackedFloat32Array(0, 0.990385)
+colors = PackedColorArray(0.152941, 0.141176, 0.0431373, 1, 0.407843, 0.376471, 0.117647, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_g620g"]
+gradient = SubResource("Gradient_4wv24")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wb3ps"]
+texture = SubResource("GradientTexture2D_g620g")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bmay6"]
+bg_color = Color(0.447059, 0.341176, 0.203922, 1)
+
+[sub_resource type="Gradient" id="Gradient_07dkh"]
+colors = PackedColorArray(0.0980392, 0.0745098, 0.0431373, 1, 0.211765, 0.160784, 0.0941176, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_u12go"]
+gradient = SubResource("Gradient_07dkh")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_81lbc"]
+texture = SubResource("GradientTexture2D_u12go")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ymy8"]
-bg_color = Color(1, 1, 1, 0)
+bg_color = Color(0.027451, 0.101961, 0.168627, 1)
 
 [sub_resource type="Gradient" id="Gradient_wp4d0"]
 offsets = PackedFloat32Array(0, 0.509677, 0.567742)
@@ -67,6 +131,7 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 
 [node name="GameGUI" type="CanvasLayer"]
+script = ExtResource("1_heuwt")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 anchors_preset = 15
@@ -78,203 +143,246 @@ grow_vertical = 2
 [node name="TopPanel" type="PanelContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_pl32i")
 
 [node name="TopLeftHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel"]
 layout_mode = 2
 size_flags_horizontal = 0
+size_flags_vertical = 4
 
-[node name="SciMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+[node name="SciOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_femrp")
+
+[node name="SciMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
 
-[node name="SciPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr"]
+[node name="SciPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline/SciMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_38obw")
+theme_override_styles/panel = SubResource("StyleBoxTexture_xxdq3")
 
-[node name="SciHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel"]
+[node name="SciHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel/SciHBox"]
-modulate = Color(0, 0.4, 1, 1)
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel/SciHBox"]
 layout_mode = 2
-texture = ExtResource("1_0g47u")
+texture = ExtResource("2_25l65")
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel/SciHBox"]
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel/SciHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.317647, 0.721569, 0.792157, 1)
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/SciMarginCntnr/SciPanel/SciHBox"]
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel/SciHBox"]
 layout_mode = 2
-text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CultureMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+[node name="CultOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_e5y11")
+
+[node name="CultureMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/CultOutline"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
 
-[node name="CulPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr"]
+[node name="CulPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/CultOutline/CultureMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_v3py8")
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_du5ns")
 
-[node name="CulHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel"]
+[node name="CulHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel/CulHBox"]
-modulate = Color(0.745098, 0.4, 1, 1)
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel/CulHBox"]
 layout_mode = 2
-texture = ExtResource("2_wa2tf")
+texture = ExtResource("3_d2g8n")
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel/CulHBox"]
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel/CulHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.764706, 0.533333, 0.768627, 1)
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/CultureMarginCntnr/CulPanel/CulHBox"]
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel/CulHBox"]
 layout_mode = 2
-text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ReligionMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+[node name="RegionOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_ftkgq")
+
+[node name="ReligionMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/RegionOutline"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
 
-[node name="RegionPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr"]
+[node name="RegionPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/RegionOutline/ReligionMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_5cv5u")
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_5hv8u")
 
-[node name="RegionHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel"]
+[node name="RegionHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel/RegionHBox"]
-modulate = Color(0.713726, 0.713726, 0.713726, 1)
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
 layout_mode = 2
-texture = ExtResource("3_iasj3")
+texture = ExtResource("4_k3p5i")
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.631373, 0.698039, 0.768627, 1)
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.529412, 0.588235, 0.627451, 1)
+theme_override_font_sizes/font_size = 10
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GoldMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+[node name="GoldOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_h5wvy")
+
+[node name="GoldMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldOutline"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
 
-[node name="GoldPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr"]
+[node name="GoldPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldOutline/GoldMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_cjx7x")
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_wb3ps")
 
-[node name="GoldHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel"]
+[node name="GoldHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel/GoldHBox"]
-modulate = Color(0.839216, 0.839216, 0, 1)
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel/GoldHBox"]
 layout_mode = 2
-texture = ExtResource("4_m8wj3")
+texture = ExtResource("5_160m0")
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel/GoldHBox"]
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel/GoldHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.945098, 0.913725, 0.611765, 1)
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldMarginCntnr/GoldPanel/GoldHBox"]
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel/GoldHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.890196, 0.858824, 0.584314, 1)
+theme_override_font_sizes/font_size = 10
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DiplomacyMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+[node name="FavorOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_bmay6")
+
+[node name="FavorMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/FavorOutline"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
 
-[node name="DiplomacyPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr"]
+[node name="FavorPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/FavorOutline/FavorMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_an877")
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_81lbc")
 
-[node name="DiplomacyHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel"]
+[node name="FavorHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel/DiplomacyHBox"]
-modulate = Color(1, 0.396078, 0, 1)
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel/FavorHBox"]
 layout_mode = 2
-texture = ExtResource("5_v11p0")
+texture = ExtResource("6_2f78w")
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel/DiplomacyHBox"]
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel/FavorHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.776471, 0.623529, 0.380392, 1)
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/DiplomacyMarginCntnr/DiplomacyPanel/DiplomacyHBox"]
+[node name="Label2" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel/FavorHBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.72549, 0.584314, 0.356863, 1)
+theme_override_font_sizes/font_size = 10
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GovMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
+[node name="EnvoyMarginCntnr" type="MarginContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
 layout_mode = 2
 size_flags_horizontal = 0
+size_flags_vertical = 4
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="GovPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr"]
+[node name="EnvoyPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/EnvoyMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
+size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_1ymy8")
 
-[node name="GovHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr/GovPanel"]
+[node name="EnvoyHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/EnvoyMarginCntnr/EnvoyPanel"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr/GovPanel/GovHBox"]
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/TopPanel/TopLeftHBox/EnvoyMarginCntnr/EnvoyPanel/EnvoyHBox"]
 layout_mode = 2
-texture = ExtResource("6_12pvb")
+texture = ExtResource("7_pulun")
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/GovMarginCntnr/GovPanel/GovHBox"]
+[node name="Label" type="Label" parent="VBoxContainer/TopPanel/TopLeftHBox/EnvoyMarginCntnr/EnvoyPanel/EnvoyHBox"]
 layout_mode = 2
 text = "0"
 horizontal_alignment = 1
@@ -557,12 +665,6 @@ value = 4.0
 fill_mode = 2
 show_percentage = false
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="WikiPanelContainer" parent="." instance=ExtResource("29_dio20")]
 
-[node name="WikiPanelContainer" parent="CenterContainer" instance=ExtResource("29_dio20")]
-layout_mode = 2
+[connection signal="pressed" from="VBoxContainer/TopPanel/TopRightHBox/CivPediaButton" to="." method="_on_civ_pedia_button_pressed"]
