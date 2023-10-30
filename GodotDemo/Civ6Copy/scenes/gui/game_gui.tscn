@@ -660,6 +660,5 @@ show_percentage = false
 [node name="WikiPanelContainer" parent="." instance=ExtResource("29_dio20")]
 
 [node name="MouseHoverTilePanel" parent="." instance=ExtResource("32_7g8tl")]
-anchors_preset = 0
 
 [connection signal="pressed" from="VBoxContainer/TopPanel/TopRightHBox/CivPediaButton" to="." method="_on_civ_pedia_button_pressed"]

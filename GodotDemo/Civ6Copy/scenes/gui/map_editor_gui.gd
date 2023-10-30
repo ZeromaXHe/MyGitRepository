@@ -203,15 +203,6 @@ func _ready() -> void:
 	mouse_hover_tile_panel.anchors_preset = -1
 
 
-func _process(delta: float) -> void:
-	if mouse_hover_tile_panel.visible:
-		var mouse_posi: Vector2 = get_viewport().get_mouse_position()
-		# TODO: 目前如果只在右下角显示的话，当鼠标在窗口右下角可能看不到提示。
-		# 未来可以加个根据坐标相对窗口的位置决定悬浮面板位置的逻辑
-		mouse_hover_tile_panel.offset_left = mouse_posi.x + 10
-		mouse_hover_tile_panel.offset_top = mouse_posi.y + 10
-
-
 func disvisible_all_place_container() -> void:
 	terrain_container.visible = false
 	landscape_container.visible = false

@@ -33,17 +33,19 @@ func _ready() -> void:
 	
 	# 临时测试视野范围显示
 	var map_size: Vector2i = _map.get_map_tile_size()
-	var unseen_cells: Array[Vector2i] = []
 	for i in range(0, map_size.x):
 		for j in range(0, map_size.y):
-			unseen_cells.append(Vector2i(i, j))
-	map_shower.paint_sight_tile_areas(unseen_cells, Map.SightType.UNSEEN)
-	var seen_cells: Array[Vector2i] = [Vector2i(21, 11), Vector2i(20, 11), Vector2i(18, 13),]
-	map_shower.paint_sight_tile_areas(seen_cells, Map.SightType.SEEN)
+			map_shower.paint_out_sight_tile_areas(Vector2i(i, j), Map.SightType.UNSEEN)
+	
+	map_shower.paint_out_sight_tile_areas(Vector2i(21, 11), Map.SightType.SEEN)
+	map_shower.paint_out_sight_tile_areas(Vector2i(20, 11), Map.SightType.SEEN)
+	map_shower.paint_out_sight_tile_areas(Vector2i(18, 13), Map.SightType.SEEN)
+	
 	var in_sight_cells: Array[Vector2i] = [Vector2i(19, 13), Vector2i(20, 13), Vector2i(21, 13), \
 			Vector2i(22, 13), Vector2i(23, 13), Vector2i(20, 12), Vector2i(21, 12), \
 			Vector2i(22, 12), Vector2i(20, 14), Vector2i(21, 14), Vector2i(22, 14), ]
-	map_shower.paint_sight_tile_areas(in_sight_cells, Map.SightType.IN_SIGHT)
+	map_shower.paint_in_sight_tile_areas(in_sight_cells)
+	
 	# 临时测试移动范围显示
 	var move_cells: Array[Vector2i] = [Vector2i(20, 13), Vector2i(21, 13), \
 			Vector2i(22, 13), Vector2i(22, 12), Vector2i(21, 12), Vector2i(21, 15),\

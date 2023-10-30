@@ -9,8 +9,9 @@ const TILE_VILLAGE_LAYER_IDX: int = 2
 const TILE_CONTINENT_LAYER_IDX: int = 3
 const TILE_CHOSEN_LAYER_IDX: int = 4
 const TILE_RESOURCE_LAYER_IDX: int = 5
-const TILE_SIGHT_LAYER_IDX: int = 6
-const TILE_MOVE_LAYER_IDX: int = 7
+const TILE_OUT_SIGHT_LAYER_IDX: int = 6
+const TILE_IN_SIGHT_LAYER_IDX: int = 7
+const TILE_MOVE_LAYER_IDX: int = 8
 # 地形集索引
 const TERRAIN_SET_IDX: int = 0
 const MOVE_TERRAIN_IDX: int = 0
@@ -131,16 +132,19 @@ func map_coord_to_global_position(map_coord: Vector2i) -> Vector2:
 	return tile_map.to_global(tile_map.map_to_local(map_coord))
 
 
-func paint_sight_tile_areas(cells: Array[Vector2i], type: Map.SightType) -> void:
+func paint_out_sight_tile_areas(coord: Vector2i, type: Map.SightType) -> void:
 	match type:
 		Map.SightType.UNSEEN:
-			for cell in cells:
-				tile_map.set_cell(TILE_SIGHT_LAYER_IDX, cell, 31, Vector2i.ZERO)
+			tile_map.set_cell(TILE_OUT_SIGHT_LAYER_IDX, coord, 31, Vector2i.ZERO)
 		Map.SightType.SEEN:
-			for cell in cells:
-				tile_map.set_cell(TILE_SIGHT_LAYER_IDX, cell, 30, Vector2i.ZERO)
-		Map.SightType.IN_SIGHT:
-			tile_map.set_cells_terrain_connect(TILE_SIGHT_LAYER_IDX, cells, TERRAIN_SET_IDX, SIGHT_TERRAIN_IDX)
+			tile_map.set_cell(TILE_OUT_SIGHT_LAYER_IDX, coord, 30, Vector2i.ZERO)
+	tile_map.erase_cell(TILE_IN_SIGHT_LAYER_IDX, coord)
+
+
+func paint_in_sight_tile_areas(cells: Array[Vector2i]) -> void:
+	tile_map.set_cells_terrain_connect(TILE_IN_SIGHT_LAYER_IDX, cells, TERRAIN_SET_IDX, SIGHT_TERRAIN_IDX)
+	for coord in cells:
+		tile_map.erase_cell(TILE_OUT_SIGHT_LAYER_IDX, coord)
 
 
 func paint_move_tile_areas(cells: Array[Vector2i]) -> void:

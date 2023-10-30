@@ -4,6 +4,16 @@ extends PanelContainer
 
 @onready var label: Label = $MarginContainer/Label
 
+
+func _process(delta: float) -> void:
+	if self.visible:
+		var mouse_posi: Vector2 = get_viewport().get_mouse_position()
+		# TODO: 目前如果只在右下角显示的话，当鼠标在窗口右下角可能看不到提示。
+		# 未来可以加个根据坐标相对窗口的位置决定悬浮面板位置的逻辑
+		self.offset_left = mouse_posi.x + 10
+		self.offset_top = mouse_posi.y + 10
+
+
 func show_info(map_coord: Vector2i, tile_info: Map.TileInfo) -> void:
 	label.text = Map.TERRAIN_TYPE_TO_NAME_DICT[tile_info.type]
 	if tile_info.landscape != Map.LandscapeType.EMPTY:

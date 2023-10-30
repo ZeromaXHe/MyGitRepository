@@ -1198,7 +1198,6 @@ theme_override_styles/pressed = ExtResource("14_bhfgr")
 text = "返回桌面"
 
 [node name="MouseHoverTilePanel" parent="." instance=ExtResource("15_jf40g")]
-anchors_preset = 0
 
 [connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/MarginContainer/MenuButton" to="." method="_on_menu_button_pressed"]
 [connection signal="pressed" from="MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/放置/EditGridContainer/CancelButton" to="." method="_on_cancel_button_pressed"]

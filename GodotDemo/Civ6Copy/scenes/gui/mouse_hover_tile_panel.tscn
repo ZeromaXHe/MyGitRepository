@@ -4,7 +4,6 @@
 [ext_resource type="StyleBox" uid="uid://0iiua1rxtfkv" path="res://styles/mouse_hover_tile_panel_style.tres" id="1_ojh3s"]
 
 [node name="MouseHoverTilePanel" type="PanelContainer"]
-anchors_preset = -1
 offset_left = 400.0
 offset_top = 400.0
 theme_override_styles/panel = ExtResource("1_ojh3s")
