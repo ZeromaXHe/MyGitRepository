@@ -9,6 +9,12 @@ const TILE_VILLAGE_LAYER_IDX: int = 2
 const TILE_CONTINENT_LAYER_IDX: int = 3
 const TILE_CHOSEN_LAYER_IDX: int = 4
 const TILE_RESOURCE_LAYER_IDX: int = 5
+const TILE_SIGHT_LAYER_IDX: int = 6
+const TILE_MOVE_LAYER_IDX: int = 7
+# 地形集索引
+const TERRAIN_SET_IDX: int = 0
+const MOVE_TERRAIN_IDX: int = 0
+const SIGHT_TERRAIN_IDX: int = 1
 # BorderTileMap 层索引
 const BORDER_TILE_LAYER_IDX: int = 0
 const BORDER_CHOSEN_LAYER_IDX: int = 1
@@ -123,6 +129,22 @@ func global_position_to_map_coord(global_posi: Vector2) -> Vector2i:
 
 func map_coord_to_global_position(map_coord: Vector2i) -> Vector2:
 	return tile_map.to_global(tile_map.map_to_local(map_coord))
+
+
+func paint_sight_tile_areas(cells: Array[Vector2i], type: Map.SightType) -> void:
+	match type:
+		Map.SightType.UNSEEN:
+			for cell in cells:
+				tile_map.set_cell(TILE_SIGHT_LAYER_IDX, cell, 31, Vector2i.ZERO)
+		Map.SightType.SEEN:
+			for cell in cells:
+				tile_map.set_cell(TILE_SIGHT_LAYER_IDX, cell, 30, Vector2i.ZERO)
+		Map.SightType.IN_SIGHT:
+			tile_map.set_cells_terrain_connect(TILE_SIGHT_LAYER_IDX, cells, TERRAIN_SET_IDX, SIGHT_TERRAIN_IDX)
+
+
+func paint_move_tile_areas(cells: Array[Vector2i]) -> void:
+	tile_map.set_cells_terrain_connect(TILE_MOVE_LAYER_IDX, cells, TERRAIN_SET_IDX, MOVE_TERRAIN_IDX)
 
 
 func paint_chosen_tile_area(map_coord: Vector2i, placeable: Callable) -> void:
@@ -349,7 +371,7 @@ func get_tile_coord_to_rim_bool_dict(map_coord: Vector2i, dist: int) -> Dictiona
 			dict[k] = false
 	return dict
 
-func get_map_tile_size() -> Vector2i:
+func get_map_tile_xy() -> Vector2i:
 	return tile_map.tile_set.tile_size
 
 

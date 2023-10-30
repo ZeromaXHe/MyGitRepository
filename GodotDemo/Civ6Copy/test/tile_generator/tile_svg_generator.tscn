@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://ehyhf8kxaoio"]
+
+[ext_resource type="Script" path="res://test/tile_generator/tile_svg_generator.gd" id="1_kgbxw"]
+
+[node name="TileSvgGenerator" type="Node2D"]
+script = ExtResource("1_kgbxw")

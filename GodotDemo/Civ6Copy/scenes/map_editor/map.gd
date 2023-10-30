@@ -138,6 +138,12 @@ enum ResourceType {
 	DEER, # 鹿
 }
 
+enum SightType {
+	UNSEEN, # 未见过
+	SEEN, # 见过
+	IN_SIGHT, # 视野范围内
+}
+
 enum BorderDirection {
 	LEFT_TOP,
 	RIGHT_TOP,
@@ -289,7 +295,7 @@ const RESOURCE_TYPE_TO_NAME_DICT: Dictionary = {
 
 # 地图尺寸和格子数的映射字典
 const SIZE_DICT: Dictionary = {
-	0: Vector2i(44, 26),
+	Size.DUAL: Vector2i(44, 26),
 }
 
 var size: Size
@@ -303,17 +309,28 @@ func _init() -> void:
 	size = Size.DUAL
 	type = Type.BLANK
 
-	var map_size: Vector2i = SIZE_DICT[size]
+	var map_size: Vector2i = get_map_tile_size()
 	# 记录地图地块信息
 	for i in range(map_size.x):
 		_map_tile_info.append([])
 		for j in range(map_size.y):
 			_map_tile_info[i].append(TileInfo.new(TerrainType.OCEAN))
+	
+	var border_size: Vector2i = get_border_tile_size()
 	# 记录边界地块信息
-	for i in range(map_size.x * 2 + 2):
+	for i in range(border_size.x):
 		_border_tile_info.append([])
-		for j in range(map_size.y * 2 + 2):
+		for j in range(border_size.y):
 			_border_tile_info[i].append(BorderInfo.new(BorderTileType.EMPTY))
+
+
+func get_map_tile_size() -> Vector2i:
+	return SIZE_DICT[size]
+
+
+func get_border_tile_size() -> Vector2i:
+	var map_tile_size: Vector2i = get_map_tile_size()
+	return Vector2i(map_tile_size.x * 2 + 2, map_tile_size.y * 2 + 2)
 
 
 func save() -> void:

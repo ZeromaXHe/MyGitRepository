@@ -19,7 +19,7 @@ var _mouse_hover_tile_time: float = 0
 
 func _ready() -> void:
 	load_map()
-	initialize_camera(_map.size)
+	initialize_camera()
 	
 	var settler: Unit = unit_scene.instantiate()
 	units.add_child(settler)
@@ -30,6 +30,25 @@ func _ready() -> void:
 	units.add_child(warrior)
 	warrior.initiate(Unit.Type.WARRIOR, GlobalScript.get_current_player())
 	warrior.global_position = map_shower.map_coord_to_global_position(Vector2i(21, 13))
+	
+	# 临时测试视野范围显示
+	var map_size: Vector2i = _map.get_map_tile_size()
+	var unseen_cells: Array[Vector2i] = []
+	for i in range(0, map_size.x):
+		for j in range(0, map_size.y):
+			unseen_cells.append(Vector2i(i, j))
+	map_shower.paint_sight_tile_areas(unseen_cells, Map.SightType.UNSEEN)
+	var seen_cells: Array[Vector2i] = [Vector2i(21, 11), Vector2i(20, 11), Vector2i(18, 13),]
+	map_shower.paint_sight_tile_areas(seen_cells, Map.SightType.SEEN)
+	var in_sight_cells: Array[Vector2i] = [Vector2i(19, 13), Vector2i(20, 13), Vector2i(21, 13), \
+			Vector2i(22, 13), Vector2i(23, 13), Vector2i(20, 12), Vector2i(21, 12), \
+			Vector2i(22, 12), Vector2i(20, 14), Vector2i(21, 14), Vector2i(22, 14), ]
+	map_shower.paint_sight_tile_areas(in_sight_cells, Map.SightType.IN_SIGHT)
+	# 临时测试移动范围显示
+	var move_cells: Array[Vector2i] = [Vector2i(20, 13), Vector2i(21, 13), \
+			Vector2i(22, 13), Vector2i(22, 12), Vector2i(21, 12), Vector2i(21, 15),\
+			Vector2i(21, 11), Vector2i(22, 14), Vector2i(21, 14)]
+	map_shower.paint_move_tile_areas(move_cells)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -72,24 +91,27 @@ func load_map() -> void:
 	if _map == null:
 		printerr("you have no map save")
 		return
-	var size: Vector2i = Map.SIZE_DICT[_map.size]
+	
+	var size: Vector2i = _map.get_map_tile_size()
 	# 读取地块
 	for i in range(0, size.x):
 		for j in range(0, size.y):
 			var coord := Vector2i(i, j)
 			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
 			map_shower.paint_tile(coord, tile_info)
+	
+	var border_size: Vector2i = _map.get_border_tile_size()
 	# 读取边界
-	for i in range(size.x * 2 + 2):
-		for j in range(size.y * 2 + 2):
+	for i in range(border_size.x):
+		for j in range(border_size.y):
 			var coord := Vector2i(i, j)
 			map_shower.paint_border(coord, _map.get_border_tile_info_at(coord).type)
 
 
-func initialize_camera(map_size: Map.Size) -> void:
-	var size: Vector2i = Map.SIZE_DICT[map_size]
-	var tile_x: int = map_shower.get_map_tile_size().x
-	var tile_y: int = map_shower.get_map_tile_size().y
+func initialize_camera() -> void:
+	var size: Vector2i = _map.get_map_tile_size()
+	var tile_x: int = map_shower.get_map_tile_xy().x
+	var tile_y: int = map_shower.get_map_tile_xy().y
 	# 小心 int 溢出
 	var max_x = size.x * tile_x + (tile_x / 2)
 	var max_y = (size.y * tile_y * 3 + tile_y)/ 4
