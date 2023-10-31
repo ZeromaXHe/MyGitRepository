@@ -40,8 +40,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	initialize_map()
-	initialize_camera()
+	map_shower.initialize(_map)
+	camera.initialize(_map.get_map_tile_size(), map_shower.get_map_tile_xy())
 	
 	gui.restore_btn_pressed.connect(handle_restore)
 	gui.cancel_btn_pressed.connect(handle_cancel)
@@ -94,44 +94,6 @@ func load_map() -> void:
 	_map = Map.load_from_save()
 	if _map == null:
 		_map = Map.new()
-
-
-func initialize_map() -> void:
-	GlobalScript.record_time()
-	var size: Vector2i = _map.get_map_tile_size()
-	
-	# 读取地块
-	GlobalScript.load_info = "填涂地图地块..."
-	for i in range(0, size.x):
-		for j in range(0, size.y):
-			var coord := Vector2i(i, j)
-			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
-			map_shower.paint_tile(coord, tile_info)
-	GlobalScript.log_used_time_from_last_record("initialize_map", "painting map tiles")
-	
-	var border_size: Vector2i = _map.get_border_tile_size()
-	# 读取边界
-	GlobalScript.load_info = "填涂地图边界块..."
-	for i in range(border_size.x):
-		for j in range(border_size.y):
-			var coord := Vector2i(i, j)
-			map_shower.paint_border(coord, _map.get_border_tile_info_at(coord).type)
-	GlobalScript.log_used_time_from_last_record("initialize_map", "painting border tiles")
-
-
-func initialize_camera() -> void:
-	var size: Vector2i = _map.get_map_tile_size()
-	var tile_x: int = map_shower.get_map_tile_xy().x
-	var tile_y: int = map_shower.get_map_tile_xy().y
-	# 小心 int 溢出
-	var max_x = size.x * tile_x + (tile_x / 2)
-	var max_y = (size.y * tile_y * 3 + tile_y)/ 4
-	camera.set_max_x(max_x)
-	camera.set_min_x(0)
-	camera.set_max_y(max_y)
-	camera.set_min_y(0)
-	# 摄像头默认居中
-	camera.global_position = Vector2(max_x / 2, max_y / 2)
 
 
 func handle_gui_rt_tab_changed(tab: int) -> void:

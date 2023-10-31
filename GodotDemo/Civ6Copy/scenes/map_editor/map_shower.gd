@@ -100,6 +100,29 @@ func _ready() -> void:
 	hide_continent_layer()
 
 
+func initialize(map: Map) -> void:
+	GlobalScript.record_time()
+	
+	var size: Vector2i = map.get_map_tile_size()
+	# 读取地块
+	GlobalScript.load_info = "填涂地图地块..."
+	for i in range(0, size.x):
+		for j in range(0, size.y):
+			var coord := Vector2i(i, j)
+			var tile_info: Map.TileInfo = map.get_map_tile_info_at(coord)
+			paint_tile(coord, tile_info)
+	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting map tiles")
+	
+	var border_size: Vector2i = map.get_border_tile_size()
+	# 读取边界
+	GlobalScript.load_info = "填涂地图边界块..."
+	for i in range(border_size.x):
+		for j in range(border_size.y):
+			var coord := Vector2i(i, j)
+			paint_border(coord, map.get_border_tile_info_at(coord).type)
+	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting border tiles")
+
+
 func hide_continent_layer() -> void:
 	tile_map.set_layer_enabled(MapShower.TILE_CONTINENT_LAYER_IDX, false)
 

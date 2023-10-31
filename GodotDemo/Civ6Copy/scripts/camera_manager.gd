@@ -30,6 +30,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			tween.tween_property(self, "zoom", _final_zoom, 0.1)
 
 
+func initialize(map_size: Vector2i, tile_xy: Vector2i) -> void:
+	var tile_x: int = tile_xy.x
+	var tile_y: int = tile_xy.y
+	# 小心 int 溢出
+	var max_x = map_size.x * tile_x + (tile_x / 2)
+	var max_y = (map_size.y * tile_y * 3 + tile_y)/ 4
+	set_max_x(max_x)
+	set_min_x(0)
+	set_max_y(max_y)
+	set_min_y(0)
+	# 摄像头默认居中
+	global_position = Vector2(max_x / 2, max_y / 2)
+
+
 func start_drag(start_position: Vector2):
 	_previous_position = start_position
 	_move_camera = true
