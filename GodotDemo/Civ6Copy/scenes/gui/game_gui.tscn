@@ -144,6 +144,7 @@ size_flags_vertical = 4
 
 [node name="SciOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
 layout_mode = 2
+size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_femrp")
 
@@ -159,6 +160,7 @@ theme_override_constants/margin_bottom = 2
 [node name="SciPanel" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline/SciMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
+size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxTexture_xxdq3")
 
 [node name="SciHBox" type="HBoxContainer" parent="VBoxContainer/TopPanel/TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel"]
@@ -183,6 +185,7 @@ vertical_alignment = 1
 
 [node name="CultOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
 layout_mode = 2
+size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_e5y11")
 
@@ -223,6 +226,7 @@ vertical_alignment = 1
 
 [node name="RegionOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
 layout_mode = 2
+size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_ftkgq")
 
@@ -266,6 +270,7 @@ vertical_alignment = 1
 
 [node name="GoldOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
 layout_mode = 2
+size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_h5wvy")
 
@@ -310,6 +315,7 @@ vertical_alignment = 1
 [node name="FavorOutline" type="PanelContainer" parent="VBoxContainer/TopPanel/TopLeftHBox"]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_bmay6")
 

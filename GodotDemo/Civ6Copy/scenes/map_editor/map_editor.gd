@@ -32,11 +32,15 @@ var _after_step_stack: Array[PaintStep] = []
 @onready var gui: MapEditorGUI = $MapEditorGUI
 
 
-func _ready() -> void:
+func _init() -> void:
 	if GlobalScript.load_map:
 		load_map()
 	else:
-		initialize_map()
+		_map = Map.new()
+
+
+func _ready() -> void:
+	initialize_map()
 	initialize_camera()
 	
 	gui.restore_btn_pressed.connect(handle_restore)
@@ -89,33 +93,30 @@ func handle_save_map() -> void:
 func load_map() -> void:
 	_map = Map.load_from_save()
 	if _map == null:
-		initialize_map()
-		return
+		_map = Map.new()
+
+
+func initialize_map() -> void:
+	GlobalScript.record_time()
 	var size: Vector2i = _map.get_map_tile_size()
+	
 	# 读取地块
+	GlobalScript.load_info = "填涂地图地块..."
 	for i in range(0, size.x):
 		for j in range(0, size.y):
 			var coord := Vector2i(i, j)
 			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
 			map_shower.paint_tile(coord, tile_info)
+	GlobalScript.log_used_time_from_last_record("initialize_map", "painting map tiles")
 	
 	var border_size: Vector2i = _map.get_border_tile_size()
 	# 读取边界
+	GlobalScript.load_info = "填涂地图边界块..."
 	for i in range(border_size.x):
 		for j in range(border_size.y):
 			var coord := Vector2i(i, j)
 			map_shower.paint_border(coord, _map.get_border_tile_info_at(coord).type)
-
-
-func initialize_map() -> void:
-	_map = Map.new()
-	if _map.type == Map.Type.BLANK:
-		# 修改 TileMap 图块
-		var size: Vector2i = _map.get_map_tile_size()
-		for i in range(0, size.x, 1):
-			for j in range(0, size.y, 1):
-				var coord := Vector2i(i, j)
-				map_shower.paint_tile(coord, _map.get_map_tile_info_at(coord))
+	GlobalScript.log_used_time_from_last_record("initialize_map", "painting border tiles")
 
 
 func initialize_camera() -> void:

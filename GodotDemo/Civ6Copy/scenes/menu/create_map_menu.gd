@@ -34,4 +34,7 @@ func _on_advanced_options_button_pressed() -> void:
 
 func _on_create_button_pressed() -> void:
 	GlobalScript.load_map = false
-	get_tree().change_scene_to_file("res://scenes/map_editor/map_editor.tscn")
+	# 加载页面配置
+	GlobalScript.load_scene_path = "res://scenes/map_editor/map_editor.tscn"
+	GlobalScript.jump_to_other_scene = false
+	get_tree().change_scene_to_file("res://scenes/menu/loading_screen.tscn")

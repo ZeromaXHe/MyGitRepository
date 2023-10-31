@@ -306,11 +306,13 @@ var _border_tile_info: Array = []
 
 
 func _init() -> void:
+	GlobalScript.load_info = "生成新地图..."
 	size = Size.DUAL
 	type = Type.BLANK
 
 	var map_size: Vector2i = get_map_tile_size()
 	# 记录地图地块信息
+	GlobalScript.load_info = "生成新地图地块..."
 	for i in range(map_size.x):
 		_map_tile_info.append([])
 		for j in range(map_size.y):
@@ -318,6 +320,7 @@ func _init() -> void:
 	
 	var border_size: Vector2i = get_border_tile_size()
 	# 记录边界地块信息
+	GlobalScript.load_info = "生成新地图边界块..."
 	for i in range(border_size.x):
 		_border_tile_info.append([])
 		for j in range(border_size.y):
@@ -410,24 +413,35 @@ func get_border_tile_info_at(coord: Vector2i) -> BorderInfo:
 
 
 static func load_from_save() -> Map:
+	GlobalScript.record_time()
+	GlobalScript.load_info = "读取地图存档..."
 	var res: Map = null
 	if not FileAccess.file_exists("user://map.save"):
-		printerr("load | Error! We don't have a save to load.")
+		printerr("load_from_save | Error! We don't have a save to load.")
 		return res
 	var save_map: FileAccess = FileAccess.open("user://map.save", FileAccess.READ)
 	while save_map.get_position() < save_map.get_length():
+		# 目前正常情况只有一行
 		var json_string: String = save_map.get_line()
+		GlobalScript.log_used_time_from_last_record("load_from_save", "reading file line")
+		
 		var json := JSON.new()
 		var parse_result: Error = json.parse(json_string)
 		if not parse_result == OK:
-			printerr("load | JSON Parse Error: ", json.get_error_message(), " in ", json_string, " at line ", json.get_error_line())
+			printerr("load_from_save | JSON Parse Error: ", json.get_error_message(), " in ", json_string, " at line ", json.get_error_line())
 			continue
 		var node_data: Variant = json.get_data()
+		GlobalScript.log_used_time_from_last_record("load_from_save", "handling json")
+		
+		GlobalScript.load_info = "解析地图存档..."
 		res = Map.new()
 		res.size = node_data["size"]
 		res.type = node_data["type"]
 		res._map_tile_info = deserialize_map_tile_info(node_data["map_tile_info"])
+		GlobalScript.log_used_time_from_last_record("load_from_save", "deserializing map")
+		
 		res._border_tile_info = deserialize_border_tile_info(node_data["border_tile_info"])
+		GlobalScript.log_used_time_from_last_record("load_from_save", "deserializing border")
 	return res
 
 

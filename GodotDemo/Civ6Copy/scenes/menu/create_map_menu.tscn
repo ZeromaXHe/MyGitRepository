@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://ws5la286dpvv"]
+[gd_scene load_steps=11 format=3 uid="uid://ws5la286dpvv"]
 
 [ext_resource type="Script" path="res://scenes/menu/create_map_menu.gd" id="1_ei4x3"]
 [ext_resource type="Texture2D" uid="uid://b3xssty38wbtc" path="res://assets/civ6_origin/background/Background_A.png" id="2_5mcpc"]
@@ -6,6 +6,7 @@
 [ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://styles/menu_deep_blue_button_normal.tres" id="4_cbaqt"]
 [ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://styles/menu_deep_blue_button_hover.tres" id="5_ckryu"]
 [ext_resource type="StyleBox" uid="uid://dqr84amdys5ut" path="res://styles/menu_deep_blue_button_press.tres" id="6_xyegy"]
+[ext_resource type="StyleBox" uid="uid://fpxjje2joomq" path="res://styles/menu_green_gradient_title_background.tres" id="7_0gh22"]
 [ext_resource type="StyleBox" uid="uid://bk4uskdh5f524" path="res://styles/menu_green_button_normal.tres" id="7_hnc46"]
 [ext_resource type="StyleBox" uid="uid://thjgmu6f1tf7" path="res://styles/menu_green_button_hover.tres" id="8_tbsyq"]
 [ext_resource type="StyleBox" uid="uid://ca0m4iqs1f2uv" path="res://styles/menu_green_button_press.tres" id="9_sxf6x"]
@@ -162,6 +163,8 @@ layout_mode = 2
 
 [node name="OptionLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("7_0gh22")
 text = "选项"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -174,6 +177,7 @@ columns = 2
 
 [node name="RuleLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "规则"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -188,6 +192,7 @@ popup/item_0/id = 0
 
 [node name="TypeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地图"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -198,6 +203,7 @@ text = "空白地图"
 
 [node name="SizeLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地图尺寸"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -212,6 +218,7 @@ popup/item_0/id = 0
 
 [node name="ResourceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "资源"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -226,6 +233,7 @@ popup/item_0/id = 0
 
 [node name="SpawnLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/OptionsGridContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "启动位置"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -240,6 +248,8 @@ popup/item_0/id = 0
 
 [node name="AdvanceLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
+theme_override_styles/normal = ExtResource("7_0gh22")
 text = "高级选项"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -258,6 +268,7 @@ alignment = 1
 
 [node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/MarginContainer2/AdvancedOptionVBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.615686, 0.596078, 1)
 text = "地图随机种子"
 horizontal_alignment = 2
 vertical_alignment = 1

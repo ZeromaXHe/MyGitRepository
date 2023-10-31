@@ -17,10 +17,15 @@ var _mouse_hover_tile_time: float = 0
 @onready var game_gui: GameGUI = $GameGUI
 
 
-func _ready() -> void:
+func _init() -> void:
 	load_map()
+
+
+func _ready() -> void:
+	initialize_map()
 	initialize_camera()
 	
+	GlobalScript.load_info = "初始化单位..."
 	var settler: Unit = unit_scene.instantiate()
 	units.add_child(settler)
 	settler.initiate(Unit.Type.SETTLER, GlobalScript.get_current_player())
@@ -93,21 +98,29 @@ func load_map() -> void:
 	if _map == null:
 		printerr("you have no map save")
 		return
+
+
+func initialize_map() -> void:
+	GlobalScript.record_time()
 	
 	var size: Vector2i = _map.get_map_tile_size()
 	# 读取地块
+	GlobalScript.load_info = "填涂地图地块..."
 	for i in range(0, size.x):
 		for j in range(0, size.y):
 			var coord := Vector2i(i, j)
 			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
 			map_shower.paint_tile(coord, tile_info)
+	GlobalScript.log_used_time_from_last_record("initialize_map", "painting map tiles")
 	
 	var border_size: Vector2i = _map.get_border_tile_size()
 	# 读取边界
+	GlobalScript.load_info = "填涂地图边界块..."
 	for i in range(border_size.x):
 		for j in range(border_size.y):
 			var coord := Vector2i(i, j)
 			map_shower.paint_border(coord, _map.get_border_tile_info_at(coord).type)
+	GlobalScript.log_used_time_from_last_record("initialize_map", "painting border tiles")
 
 
 func initialize_camera() -> void:
