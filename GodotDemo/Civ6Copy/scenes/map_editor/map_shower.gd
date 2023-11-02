@@ -162,6 +162,15 @@ func paint_out_sight_tile_areas(coord: Vector2i, type: Map.SightType) -> void:
 		Map.SightType.SEEN:
 			tile_map.set_cell(TILE_OUT_SIGHT_LAYER_IDX, coord, 30, Vector2i.ZERO)
 	tile_map.erase_cell(TILE_IN_SIGHT_LAYER_IDX, coord)
+	# 更新周围视野范围内受影响的地块
+	var surroundings: Array[Vector2i] = tile_map.get_surrounding_cells(coord)
+	var cells: Array[Vector2i] = []
+	for surround in surroundings:
+		if is_in_sight_tile_area(surround):
+			cells.append(surround)
+			tile_map.erase_cell(TILE_IN_SIGHT_LAYER_IDX, surround)
+	if not cells.is_empty():
+		tile_map.set_cells_terrain_connect(TILE_IN_SIGHT_LAYER_IDX, cells, TERRAIN_SET_IDX, SIGHT_TERRAIN_IDX)
 
 
 func paint_in_sight_tile_areas(cells: Array[Vector2i]) -> void:
@@ -170,8 +179,20 @@ func paint_in_sight_tile_areas(cells: Array[Vector2i]) -> void:
 		tile_map.erase_cell(TILE_OUT_SIGHT_LAYER_IDX, coord)
 
 
+func is_in_sight_tile_area(coord: Vector2i) -> bool:
+	return tile_map.get_cell_source_id(TILE_IN_SIGHT_LAYER_IDX, coord) != -1
+
+
 func paint_move_tile_areas(cells: Array[Vector2i]) -> void:
 	tile_map.set_cells_terrain_connect(TILE_MOVE_LAYER_IDX, cells, TERRAIN_SET_IDX, MOVE_TERRAIN_IDX)
+
+
+func clear_move_tile_areas() -> void:
+	tile_map.clear_layer(TILE_MOVE_LAYER_IDX)
+
+
+func is_in_move_tile_areas(coord: Vector2i) -> bool:
+	return tile_map.get_cell_source_id(TILE_MOVE_LAYER_IDX, coord) != -1
 
 
 func paint_chosen_tile_area(map_coord: Vector2i, placeable: Callable) -> void:

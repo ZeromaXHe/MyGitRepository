@@ -275,7 +275,7 @@ func is_landscape_placeable_terrain(landscape: Map.LandscapeType, terrain_type: 
 
 
 func is_ice_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
-	return terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN
+	return Map.is_sea_terrain_type(terrain_type)
 
 
 func is_forest_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
@@ -330,11 +330,7 @@ func is_village_placeable(tile_coord: Vector2i) -> bool:
 
 
 func is_village_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
-	return terrain_type == Map.TerrainType.GRASS or terrain_type == Map.TerrainType.GRASS_HILL \
-			or terrain_type == Map.TerrainType.PLAIN or terrain_type == Map.TerrainType.PLAIN_HILL \
-			or terrain_type == Map.TerrainType.DESERT or terrain_type == Map.TerrainType.DESERT_HILL \
-			or terrain_type == Map.TerrainType.TUNDRA or terrain_type == Map.TerrainType.TUNDRA_HILL \
-			or terrain_type == Map.TerrainType.SNOW or terrain_type == Map.TerrainType.SNOW_HILL
+	return Map.is_no_mountain_land_terrain_type(terrain_type)
 
 
 func is_resource_placeable(tile_coord: Vector2i, type: Map.ResourceType) -> bool:
@@ -353,11 +349,7 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 		Map.ResourceType.SILK:
 			return landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.RELIC:
-			return terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
-					or terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.PLAIN_HILL \
-					or terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
-					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL \
-					or terrain == Map.TerrainType.SNOW or terrain == Map.TerrainType.SNOW_HILL
+			return Map.is_no_mountain_land_terrain_type(terrain)
 		Map.ResourceType.COCOA_BEAN:
 			return landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.COFFEE:
@@ -436,16 +428,14 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.SALTPETER:
 			# 注意原版和其他判定不一样
-			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN \
-					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.DESERT) \
+			return (terrain != Map.TerrainType.SNOW and Map.is_flat_land_terrain_type(terrain) \
 					and landscape == Map.LandscapeType.EMPTY) or landscape == Map.LandscapeType.FLOOD
 		Map.ResourceType.SUGAR:
 			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.PLAIN \
 					or terrain == Map.TerrainType.DESERT) \
 					and (landscape == Map.LandscapeType.FLOOD or landscape == Map.LandscapeType.SWAMP)
 		Map.ResourceType.SHEEP:
-			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
-					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
+			return terrain != Map.TerrainType.SNOW_HILL and Map.is_hill_land_terrain_type(terrain) \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.TEA:
 			return (terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL) \
@@ -463,26 +453,16 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 					or terrain == Map.TerrainType.PLAIN_HILL) and landscape == Map.LandscapeType.EMPTY) \
 					or landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.DIAMOND:
-			return ((terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
-					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
+			return (terrain != Map.TerrainType.SNOW_HILL and Map.is_hill_land_terrain_type(terrain) \
 					and landscape == Map.LandscapeType.EMPTY) or landscape == Map.LandscapeType.RAINFOREST
 		Map.ResourceType.URANIUM:
-			return ((terrain == Map.TerrainType.GRASS or terrain == Map.TerrainType.GRASS_HILL \
-					or terrain == Map.TerrainType.PLAIN or terrain == Map.TerrainType.PLAIN_HILL \
-					or terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
-					or terrain == Map.TerrainType.TUNDRA or terrain == Map.TerrainType.TUNDRA_HILL \
-					or terrain == Map.TerrainType.SNOW or terrain == Map.TerrainType.SNOW_HILL) \
-					and landscape == Map.LandscapeType.EMPTY) \
+			return (Map.is_no_mountain_land_terrain_type(terrain) and landscape == Map.LandscapeType.EMPTY) \
 					or landscape == Map.LandscapeType.RAINFOREST or landscape == Map.LandscapeType.FOREST
 		Map.ResourceType.IRON:
-			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
-					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL) \
+			return terrain != Map.TerrainType.SNOW_HILL and Map.is_hill_land_terrain_type(terrain) \
 					and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.COPPER:
-			return (terrain == Map.TerrainType.GRASS_HILL or terrain == Map.TerrainType.PLAIN_HILL \
-					or terrain == Map.TerrainType.DESERT_HILL or terrain == Map.TerrainType.TUNDRA_HILL \
-					or terrain == Map.TerrainType.SNOW_HILL) \
-					and landscape == Map.LandscapeType.EMPTY
+			return Map.is_hill_land_terrain_type(terrain) and landscape == Map.LandscapeType.EMPTY
 		Map.ResourceType.ALUMINIUM:
 			return (terrain == Map.TerrainType.DESERT or terrain == Map.TerrainType.DESERT_HILL \
 					or terrain == Map.TerrainType.PLAIN) and landscape == Map.LandscapeType.EMPTY
@@ -516,7 +496,7 @@ func is_continent_placeable(tile_coord: Vector2i) -> bool:
 
 
 func is_continent_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
-	return terrain_type != Map.TerrainType.SHORE and terrain_type != Map.TerrainType.OCEAN
+	return Map.is_land_terrain_type(terrain_type)
 
 
 func is_river_placeable(border_coord: Vector2i) -> bool:
@@ -527,7 +507,7 @@ func is_river_placeable(border_coord: Vector2i) -> bool:
 		if not _map.is_in_map_tile(coord):
 			continue
 		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
-		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
+		if Map.is_sea_terrain_type(terrain_type):
 			# 和浅海或者深海相邻
 			return false
 	var end_tile_coords: Array[Vector2i] = Map.get_end_tile_of_border(border_coord)
@@ -535,7 +515,7 @@ func is_river_placeable(border_coord: Vector2i) -> bool:
 		if not _map.is_in_map_tile(coord):
 			continue
 		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
-		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
+		if Map.is_sea_terrain_type(terrain_type):
 			# 末端是浅海或者深海
 			return true
 	var connect_border_coords: Array[Vector2i] = Map.get_connect_border_of_border(border_coord)
@@ -555,7 +535,7 @@ func is_cliff_placeable(border_coord: Vector2i) -> bool:
 	var neighbor_land: bool = false
 	for coord in neighbor_tile_coords:
 		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
-		if terrain_type == Map.TerrainType.SHORE or terrain_type == Map.TerrainType.OCEAN:
+		if Map.is_sea_terrain_type(terrain_type):
 			# 和浅海或者深海相邻
 			neighbor_sea = true
 		else:
@@ -640,11 +620,7 @@ func paint_map() -> void:
 						continue
 					paint_terrain(coord, step, Map.TerrainType.SHORE)
 			# 如果地块是丘陵，需要在周围沿海边界放置悬崖
-			if gui.terrain_type == Map.TerrainType.GRASS_HILL \
-					or gui.terrain_type == Map.TerrainType.PLAIN_HILL \
-					or gui.terrain_type == Map.TerrainType.DESERT_HILL \
-					or gui.terrain_type == Map.TerrainType.TUNDRA_HILL \
-					or gui.terrain_type == Map.TerrainType.SNOW_HILL:
+			if Map.is_hill_land_terrain_type(gui.terrain_type):
 				var borders: Array[Vector2i] = map_shower.get_surrounding_borders(map_coord, dist)
 				for border in borders:
 					if is_cliff_placeable(border):

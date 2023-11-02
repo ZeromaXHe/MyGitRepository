@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://bkha51g6aylr1"]
+[gd_scene load_steps=5 format=3 uid="uid://bkha51g6aylr1"]
 
 [ext_resource type="Script" path="res://scenes/game/unit.gd" id="1_k4u4h"]
 [ext_resource type="Texture2D" uid="uid://3jlynv3h1q73" path="res://assets/self_made_svg/unit_background/unit_citizen_background.svg" id="1_la2jy"]
 [ext_resource type="Texture2D" uid="uid://61tqu8ntxtx2" path="res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp" id="3_js0qj"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pcaot"]
+radius = 50.0
 
 [node name="Unit" type="Node2D"]
 script = ExtResource("1_k4u4h")
@@ -15,3 +18,10 @@ texture = ExtResource("1_la2jy")
 modulate = Color(0.678431, 0.0901961, 0.101961, 1)
 scale = Vector2(0.8, 0.8)
 texture = ExtResource("3_js0qj")
+
+[node name="ClickArea2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ClickArea2D"]
+shape = SubResource("CircleShape2D_pcaot")
+
+[connection signal="input_event" from="ClickArea2D" to="." method="_on_click_area_2d_input_event"]

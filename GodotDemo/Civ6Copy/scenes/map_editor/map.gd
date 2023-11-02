@@ -303,6 +303,9 @@ var type: Type
 # 记录地图图块数据
 var _map_tile_info: Array = []
 var _border_tile_info: Array = []
+# A* 算法
+var move_astar: MapMoveAStar2D
+var sight_astar: MapSightAStar2D
 
 
 func _init() -> void:
@@ -325,6 +328,36 @@ func _init() -> void:
 		_border_tile_info.append([])
 		for j in range(border_size.y):
 			_border_tile_info[i].append(BorderInfo.new(BorderTileType.EMPTY))
+	
+	GlobalScript.load_info = "初始化移动区域 A* 算法..."
+	move_astar = MapMoveAStar2D.new(self)
+	for i in range(map_size.x):
+		for j in range(map_size.y):
+			var point_id: int = i * map_size.y + j
+			move_astar.add_point(point_id, Vector2(i, j))
+			if j > 0:
+				move_astar.connect_points(point_id, point_id - 1)
+				if j % 2 == 0:
+					move_astar.connect_points(point_id, point_id - map_size.y - 1)
+			if i > 0:
+				move_astar.connect_points(point_id, point_id - map_size.y)
+			if j % 2 == 0 and j < map_size.y - 1:
+				move_astar.connect_points(point_id, point_id - map_size.y + 1)
+	
+	GlobalScript.load_info = "初始化视野区域 A* 算法..."
+	sight_astar = MapSightAStar2D.new(self)
+	for i in range(map_size.x):
+		for j in range(map_size.y):
+			var point_id: int = i * map_size.y + j
+			sight_astar.add_point(point_id, Vector2(i, j))
+			if j > 0:
+				sight_astar.connect_points(point_id, point_id - 1)
+				if j % 2 == 0:
+					sight_astar.connect_points(point_id, point_id - map_size.y - 1)
+			if i > 0:
+				sight_astar.connect_points(point_id, point_id - map_size.y)
+			if j % 2 == 0 and j < map_size.y - 1:
+				sight_astar.connect_points(point_id, point_id - map_size.y + 1)
 
 
 func get_map_tile_size() -> Vector2i:
@@ -410,6 +443,40 @@ func get_map_tile_info_at(coord: Vector2i) -> TileInfo:
 
 func get_border_tile_info_at(coord: Vector2i) -> BorderInfo:
 	return _border_tile_info[coord.x][coord.y]
+
+
+static func is_land_terrain_type(type: TerrainType) -> bool:
+	return type != TerrainType.SHORE and type != TerrainType.OCEAN
+
+
+static func is_flat_land_terrain_type(type: TerrainType) -> bool:
+	return type == TerrainType.GRASS or type == TerrainType.PLAIN \
+			or type == TerrainType.DESERT or type == TerrainType.TUNDRA \
+			or type == TerrainType.SNOW
+
+
+static func is_hill_land_terrain_type(type: TerrainType) -> bool:
+	return type == TerrainType.GRASS_HILL or type == TerrainType.PLAIN_HILL \
+			or type == TerrainType.DESERT_HILL or type == TerrainType.TUNDRA_HILL \
+			or type == TerrainType.SNOW_HILL
+
+
+static func is_mountain_land_terrain_type(type: TerrainType) -> bool:
+	return type == TerrainType.GRASS_MOUNTAIN or type == TerrainType.PLAIN_MOUNTAIN \
+			or type == TerrainType.DESERT_MOUNTAIN or type == TerrainType.TUNDRA_MOUNTAIN \
+			or type == TerrainType.SNOW_MOUNTAIN
+
+
+static func is_no_mountain_land_terrain_type(type: TerrainType) -> bool:
+	return type == TerrainType.GRASS or type == TerrainType.GRASS_HILL \
+			or type == TerrainType.PLAIN or type == TerrainType.PLAIN_HILL \
+			or type == TerrainType.DESERT or type == TerrainType.DESERT_HILL \
+			or type == TerrainType.TUNDRA or type == TerrainType.TUNDRA_HILL \
+			or type == TerrainType.SNOW or type == TerrainType.SNOW_HILL
+
+
+static func is_sea_terrain_type(type: TerrainType) -> bool:
+	return type == TerrainType.SHORE or type == TerrainType.OCEAN
 
 
 static func load_from_save() -> Map:
@@ -688,12 +755,37 @@ static func test_get_tile_coord_directed_border() -> void:
 	print("hexagon ", Vector2i(0, 1), "'s right down is ", get_tile_coord_directed_border(Vector2i(0, 1), BorderDirection.RIGHT_DOWN)) # (2,4)
 
 
+static func get_in_map_surrounding_coords(coord: Vector2i, map_size: Vector2i) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	if coord.y > 0:
+		result.append(coord + Vector2i(0, -1))
+	if coord.y + 1 < map_size.y:
+		result.append(coord + Vector2i(0, 1))
+	if coord.x > 0:
+		result.append(coord + Vector2i(-1, 0))
+		if coord.y % 2 == 0:
+			if coord.y > 0:
+				result.append(coord + Vector2i(-1, -1))
+			if coord.y + 1 < map_size.y:
+				result.append(coord + Vector2i(-1, 1))
+	if coord.x + 1 < map_size.x:
+		result.append(coord + Vector2i(1, 0))
+		if coord.y % 2 == 1:
+			if coord.y > 0:
+				result.append(coord + Vector2i(1, -1))
+			if coord.y + 1 < map_size.y:
+				result.append(coord + Vector2i(1, 1))
+	return result
+
+
 class TileInfo:
 	var type: TerrainType = TerrainType.OCEAN
 	var landscape: LandscapeType = LandscapeType.EMPTY
 	var village: int = 0 # 0 表示没有，1 表示有
 	var resource: ResourceType = ResourceType.EMPTY
 	var continent: ContinentType = ContinentType.EMPTY
+	var units: Array[Unit] = []
+	
 	
 	func _init(type: TerrainType) -> void:
 		self.type = type
@@ -713,3 +805,91 @@ class BorderInfo:
 	
 	func _init(type: BorderTileType) -> void:
 		self.type = type
+
+
+class MapAStar2D extends AStar2D:
+	const UNREACHABLE_COST: float = 1e100
+	
+	var map: Map
+	
+	func _init(map: Map) -> void:
+		self.map = map
+	
+	
+	func _compute_cost(from_id: int, to_id: int) -> float:
+		return cost_by_id(from_id, to_id)
+	
+	
+	func _estimate_cost(from_id: int, to_id: int) -> float:
+		return cost_by_id(from_id, to_id)
+	
+	
+	func cost_by_id(from_id: int, to_id: int) -> float:
+		var from_coord := Vector2i(get_point_position(from_id))
+		var to_coord := Vector2i(get_point_position(to_id))
+		return cost_by_coord(from_coord, to_coord)
+	
+	
+	func cost_by_coord(from_coord: Vector2i, to_coord: Vector2i) -> float:
+		# 抽象父类，必须被继承并且重写本方法
+		printerr("please override cost_by_coord() if you extends MapAStar2D")
+		return UNREACHABLE_COST
+	
+	
+	func is_coord_path_unreachable(coord_path: PackedVector2Array) -> bool:
+		for i in range(coord_path.size() - 1):
+			if cost_by_coord(Vector2i(coord_path[i]), Vector2i(coord_path[i + 1])) == UNREACHABLE_COST:
+				return false
+		return true
+	
+	
+	func coord_path_cost_sum(coord_path: PackedVector2Array) -> float:
+		var cost_sum: float = 0.0
+		for i in range(coord_path.size() - 1):
+			cost_sum += cost_by_coord(Vector2i(coord_path[i]), Vector2i(coord_path[i + 1]))
+		return cost_sum
+	
+	
+	func get_in_range_coords_to_cost_dict(coord: Vector2i, range: int, dict: Dictionary = {coord: 0.0}) -> Dictionary:
+		var map_size: Vector2i = map.get_map_tile_size()
+		var surroundings: Array[Vector2i] = Map.get_in_map_surrounding_coords(coord, map_size)
+		for surround in surroundings:
+			if dict.has(surround):
+				continue
+			var cost: float = cost_by_coord(coord, surround)
+			if cost <= range:
+				# FIXME: 目前在 range 较大，一个地块有多条到达路径时可能会有 bug（发现新的低 cost 路径后不会刷新其他地块）
+				dict[surround] = min(dict.get(surround, UNREACHABLE_COST), dict[coord] + cost)
+				if cost < range:
+					get_in_range_coords_to_cost_dict(surround, range - cost, dict)
+		return dict
+
+
+class MapMoveAStar2D extends MapAStar2D:
+	func cost_by_coord(from_coord: Vector2i, to_coord: Vector2i) -> float:
+		var from_tile: TileInfo = map.get_map_tile_info_at(from_coord)
+		var to_tile: TileInfo = map.get_map_tile_info_at(to_coord)
+		# 无法前往山脉和冰
+		if Map.is_mountain_land_terrain_type(to_tile.type) or to_tile.landscape == LandscapeType.ICE:
+			return UNREACHABLE_COST
+		# FIXME: 暂时让所有单位都在地块上互斥
+		if not map.get_map_tile_info_at(to_coord).units.is_empty():
+			return UNREACHABLE_COST
+		# FIXME: 暂时先让跨越陆海分隔的路线成本为无法到达
+		if Map.is_land_terrain_type(from_tile.type) and Map.is_sea_terrain_type(to_tile.type):
+			return UNREACHABLE_COST
+		if Map.is_sea_terrain_type(from_tile.type) and Map.is_land_terrain_type(to_tile.type):
+			return UNREACHABLE_COST
+		# FIXME: 暂时没考虑跨河惩罚
+		if Map.is_hill_land_terrain_type(to_tile.type):
+			return 2
+		return 1
+
+
+class MapSightAStar2D extends MapAStar2D:
+	func cost_by_coord(from_coord: Vector2i, to_coord: Vector2i) -> float:
+		var from_tile: TileInfo = map.get_map_tile_info_at(from_coord)
+		var to_tile: TileInfo = map.get_map_tile_info_at(to_coord)
+		if Map.is_hill_land_terrain_type(to_tile.type) or Map.is_mountain_land_terrain_type(to_tile.type):
+			return 2
+		return 1

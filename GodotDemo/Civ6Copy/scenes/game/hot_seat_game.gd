@@ -3,6 +3,7 @@ extends Node2D
 
 
 var unit_scene: PackedScene = preload("res://scenes/game/unit.tscn")
+var chosen_unit: Unit = null
 # 记录地图
 var _map: Map
 # 左键点击开始时相对镜头的本地坐标
@@ -24,19 +25,32 @@ func _init() -> void:
 func _ready() -> void:
 	map_shower.initialize(_map)
 	camera.initialize(_map.get_map_tile_size(), map_shower.get_map_tile_xy())
-	testPaintUnit()
+	initialize_sight_tile()
+	# 增加测试单位
+	test_add_unit()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			get_viewport().set_input_as_handled()
+			# get_viewport().set_input_as_handled()
 			if event.is_pressed():
 				#print("clicked mouse left button")
 				# 开始拖拽镜头
 				camera.start_drag(event.position)
 				# 选取图块
 				_from_camera_position = camera.to_local(get_global_mouse_position())
+				# 移动单位
+				if chosen_unit != null:
+					var click_coord: Vector2i = map_shower.get_map_coord()
+					if click_coord == chosen_unit.coord:
+						return
+					if map_shower.is_in_move_tile_areas(click_coord):
+						map_shower.clear_move_tile_areas()
+						chosen_unit.move_to(click_coord, _map, map_shower)
+					else:
+						map_shower.clear_move_tile_areas()
+					chosen_unit = null
 			else:
 				camera.end_drag()
 	elif event is InputEventMouseMotion:
@@ -49,38 +63,45 @@ func _process(delta: float) -> void:
 	handle_mouse_hover_tile(delta)
 
 
-func testPaintUnit() -> void:
-	GlobalScript.load_info = "初始化单位..."
-	var settler: Unit = unit_scene.instantiate()
-	units.add_child(settler)
-	settler.initiate(Unit.Type.SETTLER, GlobalScript.get_current_player())
-	settler.global_position = map_shower.map_coord_to_global_position(Vector2i(22, 13))
-	
-	var warrior: Unit = unit_scene.instantiate()
-	units.add_child(warrior)
-	warrior.initiate(Unit.Type.WARRIOR, GlobalScript.get_current_player())
-	warrior.global_position = map_shower.map_coord_to_global_position(Vector2i(21, 13))
-	
+func initialize_sight_tile() -> void:
 	# 临时测试视野范围显示
+	var player: Player = GlobalScript.get_current_player()
 	var map_size: Vector2i = _map.get_map_tile_size()
-	for i in range(0, map_size.x):
-		for j in range(0, map_size.y):
-			map_shower.paint_out_sight_tile_areas(Vector2i(i, j), Map.SightType.UNSEEN)
-	
-	map_shower.paint_out_sight_tile_areas(Vector2i(21, 11), Map.SightType.SEEN)
-	map_shower.paint_out_sight_tile_areas(Vector2i(20, 11), Map.SightType.SEEN)
-	map_shower.paint_out_sight_tile_areas(Vector2i(18, 13), Map.SightType.SEEN)
-	
-	var in_sight_cells: Array[Vector2i] = [Vector2i(19, 13), Vector2i(20, 13), Vector2i(21, 13), \
-			Vector2i(22, 13), Vector2i(23, 13), Vector2i(20, 12), Vector2i(21, 12), \
-			Vector2i(22, 12), Vector2i(20, 14), Vector2i(21, 14), Vector2i(22, 14), ]
-	map_shower.paint_in_sight_tile_areas(in_sight_cells)
-	
-	# 临时测试移动范围显示
-	var move_cells: Array[Vector2i] = [Vector2i(20, 13), Vector2i(21, 13), \
-			Vector2i(22, 13), Vector2i(22, 12), Vector2i(21, 12), Vector2i(21, 15),\
-			Vector2i(21, 11), Vector2i(22, 14), Vector2i(21, 14)]
-	map_shower.paint_move_tile_areas(move_cells)
+	player.map_sight_info.initialize(map_size)
+	paint_player_sight(player)
+
+
+func paint_player_sight(player: Player) -> void:
+	for coord in player.map_sight_info.unseen_dict:
+		map_shower.paint_out_sight_tile_areas(coord, Map.SightType.UNSEEN)
+	for coord in player.map_sight_info.seen_dict:
+		map_shower.paint_out_sight_tile_areas(coord, Map.SightType.SEEN)
+	map_shower.paint_in_sight_tile_areas(player.map_sight_info.get_in_sight_cells())
+
+
+func test_add_unit() -> void:
+	GlobalScript.load_info = "初始化单位..."
+	var settler: Unit = add_unit(Unit.Type.SETTLER, Vector2i(22, 13))
+	var warrior: Unit = add_unit(Unit.Type.WARRIOR, Vector2i(21, 13))
+
+
+func add_unit(type: Unit.Type, coord: Vector2i) -> Unit:
+	var unit: Unit = unit_scene.instantiate()
+	units.add_child(unit)
+	unit.initiate(type, GlobalScript.get_current_player(), coord, _map, map_shower)
+	unit.unit_clicked.connect(handle_unit_clicked)
+	return unit
+
+
+func handle_unit_clicked(unit: Unit) -> void:
+	print("handle_unit_clicked | ", unit.coord, " is clicked")
+	if chosen_unit != null:
+		print("handle_unit_clicked | hide chosen_unit move range", chosen_unit.coord)
+		map_shower.clear_move_tile_areas()
+	# 显示移动框
+	unit.show_move_range(_map, map_shower)
+	# TODO: 显示右下角信息栏
+	chosen_unit = unit
 
 
 func handle_mouse_hover_tile(delta: float) -> bool:
