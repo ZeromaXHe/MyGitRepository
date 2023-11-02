@@ -8,6 +8,7 @@
 radius = 50.0
 
 [node name="Unit" type="Node2D"]
+z_index = 5
 script = ExtResource("1_k4u4h")
 
 [node name="BackgroundSprite2D" type="Sprite2D" parent="."]
