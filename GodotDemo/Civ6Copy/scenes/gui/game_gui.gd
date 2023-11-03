@@ -55,7 +55,7 @@ func show_unit_info(unit: Unit) -> void:
 			name_label.text = "开拓者"
 		Unit.Type.WARRIOR:
 			name_label.text = "勇士"
-	move_label.text = "%d/2 移动" % unit.move_capability
+	move_label.text = "%d/%d 移动" % [unit.move_capability, unit.get_move_range()]
 
 
 func hide_unit_info() -> void:
