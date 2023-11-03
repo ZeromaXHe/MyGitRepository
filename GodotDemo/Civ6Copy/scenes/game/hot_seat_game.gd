@@ -3,7 +3,13 @@ extends Node2D
 
 
 var unit_scene: PackedScene = preload("res://scenes/game/unit.tscn")
-var chosen_unit: Unit = null
+var chosen_unit: Unit = null:
+	set(unit):
+		chosen_unit = unit
+		if unit == null:
+			game_gui.hide_unit_info()
+		else:
+			game_gui.show_unit_info(unit)
 # 记录地图
 var _map: Map
 # 左键点击开始时相对镜头的本地坐标
@@ -11,6 +17,9 @@ var _from_camera_position := Vector2(-1, -1)
 # 鼠标悬浮的图块坐标和时间
 var _mouse_hover_tile_coord: Vector2i = GlobalScript.NULL_COORD
 var _mouse_hover_tile_time: float = 0
+# 回合相关
+var turn_num: int = 1
+var turn_year: int = -4000
 
 @onready var map_shower: MapShower = $MapShower
 @onready var units: Node2D = $Units
@@ -28,6 +37,8 @@ func _ready() -> void:
 	initialize_sight_tile()
 	# 增加测试单位
 	test_add_unit()
+	# 处理回合按钮信号
+	game_gui.turn_button_clicked.connect(handle_turn_button_clicked)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -35,11 +46,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			# get_viewport().set_input_as_handled()
 			if event.is_pressed():
-				#print("clicked mouse left button")
-				# 开始拖拽镜头
-				camera.start_drag(event.position)
 				# 选取图块
 				_from_camera_position = camera.to_local(get_global_mouse_position())
+			elif event.is_released():
 				# 移动单位
 				if chosen_unit != null:
 					var click_coord: Vector2i = map_shower.get_map_coord()
@@ -51,12 +60,6 @@ func _unhandled_input(event: InputEvent) -> void:
 					else:
 						map_shower.clear_move_tile_areas()
 					chosen_unit = null
-			else:
-				camera.end_drag()
-	elif event is InputEventMouseMotion:
-		# 拖拽镜头过程中
-		get_viewport().set_input_as_handled()
-		camera.drag(event.position)
 
 
 func _process(delta: float) -> void:
@@ -89,8 +92,42 @@ func add_unit(type: Unit.Type, coord: Vector2i) -> Unit:
 	var unit: Unit = unit_scene.instantiate()
 	units.add_child(unit)
 	unit.initiate(type, GlobalScript.get_current_player(), coord, _map, map_shower)
+	# 将单位记录在玩家中
+	GlobalScript.get_current_player().units.append(unit)
+	# 处理单位信号
 	unit.unit_clicked.connect(handle_unit_clicked)
+	unit.unit_move_capability_depleted.connect(handle_unit_move_capability_depleted)
 	return unit
+
+
+func handle_turn_button_clicked(end_turn: bool) -> void:
+	if end_turn:
+		chosen_unit = null
+		# 增加回合数
+		turn_num += 1
+		turn_year += 100
+		game_gui.update_turn_and_year_label(turn_num, turn_year)
+		# 刷新单位移动力
+		GlobalScript.get_current_player().refresh_units_move_capabilities()
+		game_gui.show_turn_unit_need_move()
+	else:
+		var player: Player = GlobalScript.get_current_player()
+		if player.units[0].move_capability > 0:
+			chose_unit_and_camera_focus(player.units[0])
+		else:
+			chose_unit_and_camera_focus(player.get_next_movable_unit(player.units[0]))
+
+
+func handle_unit_move_capability_depleted(unit: Unit) -> void:
+	# 当玩家所有单位的移动力都耗尽了，则可以下一回合
+	if GlobalScript.get_current_player().get_next_movable_unit(unit) == null:
+		game_gui.show_turn_end_turn()
+	chosen_unit = null
+
+
+func chose_unit_and_camera_focus(unit: Unit):
+	handle_unit_clicked(unit)
+	camera.global_position = map_shower.map_coord_to_global_position(unit.coord)
 
 
 func handle_unit_clicked(unit: Unit) -> void:

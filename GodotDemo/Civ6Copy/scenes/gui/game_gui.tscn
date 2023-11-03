@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=63 format=3 uid="uid://dfpeq8ikcp1wc"]
 
 [ext_resource type="Script" path="res://scenes/gui/game_gui.gd" id="1_heuwt"]
 [ext_resource type="Texture2D" uid="uid://bbuwimgeo1bf6" path="res://assets/civ6_origin/core/webp_32x32/core_science.webp" id="2_25l65"]
@@ -32,6 +32,9 @@
 [ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="18_6wc45"]
 [ext_resource type="PackedScene" uid="uid://6rscixmykdb1" path="res://scenes/gui/panel/wiki_panel.tscn" id="29_dio20"]
 [ext_resource type="PackedScene" uid="uid://babhwv4eoh1kt" path="res://scenes/gui/mouse_hover_tile_panel.tscn" id="32_7g8tl"]
+[ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://styles/menu_deep_blue_button_normal.tres" id="33_4g664"]
+[ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://styles/menu_deep_blue_button_hover.tres" id="34_aeh5d"]
+[ext_resource type="StyleBox" uid="uid://dqr84amdys5ut" path="res://styles/menu_deep_blue_button_press.tres" id="35_ltdyn"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_femrp"]
 bg_color = Color(0.0666667, 0.462745, 0.643137, 1)
@@ -121,6 +124,17 @@ colors = PackedColorArray(1, 0.501961, 1, 1, 1, 0.501961, 1, 1, 1, 1, 1, 0)
 gradient = SubResource("Gradient_mvnas")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iwk70"]
+bg_color = Color(0.133333, 0.133333, 0.133333, 0.901961)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ikan1"]
+bg_color = Color(0.0666667, 0.14902, 0.243137, 0.933333)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.803922, 0.698039, 0.501961, 1)
 
 [node name="GameGUI" type="CanvasLayer"]
 script = ExtResource("1_heuwt")
@@ -664,7 +678,124 @@ fill_mode = 2
 show_percentage = false
 
 [node name="WikiPanelContainer" parent="." instance=ExtResource("29_dio20")]
+visible = false
 
 [node name="MouseHoverTilePanel" parent="." instance=ExtResource("32_7g8tl")]
 
+[node name="MenuOverlay" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_iwk70")
+
+[node name="MenuCenterContainer" type="CenterContainer" parent="MenuOverlay"]
+layout_mode = 2
+
+[node name="MenuPanelContainer" type="PanelContainer" parent="MenuOverlay/MenuCenterContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ikan1")
+
+[node name="MenuMarginContainer" type="MarginContainer" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="MenuVBoxContainer" type="VBoxContainer" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer"]
+custom_minimum_size = Vector2(120, 200)
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+text = "菜单"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+
+[node name="ReturnButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "返回游戏"
+
+[node name="EmptyLabel" type="Label" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="QuickSaveButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "快速保存游戏"
+
+[node name="SaveButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "保存游戏"
+
+[node name="LoadButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "读取游戏"
+
+[node name="NewContentButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "新内容"
+
+[node name="OptionButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "选项"
+
+[node name="FadeButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "隐退"
+
+[node name="RestartButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "重新开始"
+
+[node name="MainMenuButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "返回主菜单"
+
+[node name="DesktopButton" type="Button" parent="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("33_4g664")
+theme_override_styles/hover = ExtResource("34_aeh5d")
+theme_override_styles/pressed = ExtResource("35_ltdyn")
+text = "返回桌面"
+
 [connection signal="pressed" from="VBoxContainer/TopPanel/TopRightHBox/CivPediaButton" to="." method="_on_civ_pedia_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/TopPanel/TopRightHBox/MenuButton" to="." method="_on_menu_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DownMargin/RightDownHBox/TurnPanel/TurnVBox/HBoxContainer/TurnButton" to="." method="_on_turn_button_pressed"]
+[connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/ReturnButton" to="." method="_on_return_button_pressed"]
+[connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
+[connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/DesktopButton" to="." method="_on_desktop_button_pressed"]

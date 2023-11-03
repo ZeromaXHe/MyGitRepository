@@ -5,6 +5,25 @@ var p_name: String = "默认玩家名"
 var main_color: Color = Color.BLACK
 var second_color: Color = Color.WHITE
 var map_sight_info: MapSightInfo = MapSightInfo.new()
+var units: Array[Unit] = []
+
+
+func get_next_movable_unit(unit: Unit) -> Unit:
+	var idx = units.find(unit)
+	if idx == -1:
+		printerr("get_next_movable_unit | unit unfound in units")
+		return null
+	var i = (idx + 1) % units.size()
+	while i != idx:
+		if units[i].move_capability > 0:
+			return units[i]
+		i = (i + 1) % units.size()
+	return null
+
+
+func refresh_units_move_capabilities() -> void:
+	for unit in units:
+		unit.move_capability = unit.get_move_range()
 
 
 class MapSightInfo:

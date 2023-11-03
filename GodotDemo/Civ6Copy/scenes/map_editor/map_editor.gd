@@ -67,23 +67,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			get_viewport().set_input_as_handled()
 			if event.is_pressed():
-				#print("clicked mouse left button")
-				# 开始拖拽镜头
-				camera.start_drag(event.position)
 				# 选取图块
 				_from_camera_position = camera.to_local(get_global_mouse_position())
 			else:
-				camera.end_drag()
 				if camera.to_local(get_global_mouse_position()).distance_to(_from_camera_position) < 20:
 					paint_map()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			if event.is_released():
 				get_viewport().set_input_as_handled()
 				depaint_map()
-	elif event is InputEventMouseMotion:
-		# 拖拽镜头过程中
-		get_viewport().set_input_as_handled()
-		camera.drag(event.position)
 
 
 func handle_save_map() -> void:

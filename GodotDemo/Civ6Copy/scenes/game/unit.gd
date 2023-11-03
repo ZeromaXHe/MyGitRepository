@@ -3,6 +3,7 @@ extends Node2D
 
 
 signal unit_clicked(unit: Unit)
+signal unit_move_capability_depleted(unit: Unit)
 
 enum Category {
 	GROUND_FORCE, # 地面部队
@@ -32,6 +33,7 @@ var category: Category
 var type: Type
 var player: Player
 var coord: Vector2i
+var move_capability: int
 
 @onready var background: Sprite2D = $BackgroundSprite2D
 @onready var icon: Sprite2D = $IconSprite2D
@@ -43,6 +45,7 @@ func initiate(type: Type, player: Player, coord: Vector2i, map: Map, map_shower:
 	self.player = player
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
+	self.move_capability = get_move_range()
 	# 绘制图标图像
 	initiate_icon()
 	# 更新玩家视野
@@ -105,13 +108,19 @@ func update_out_sight(map: Map, map_shower: MapShower) -> void:
 
 
 func show_move_range(map: Map, map_shower: MapShower) -> void:
-	var dict: Dictionary = map.move_astar.get_in_range_coords_to_cost_dict(coord, get_move_range())
+	if move_capability == 0:
+		return
+	var dict: Dictionary = map.move_astar.get_in_range_coords_to_cost_dict(coord, move_capability)
 	var cells: Array[Vector2i] = []
 	cells.append_array(dict.keys())
 	map_shower.paint_move_tile_areas(cells)
 
 
 func move_to(coord: Vector2i, map: Map, map_shower: MapShower) -> void:
+	self.move_capability = max(0, self.move_capability \
+			- map.move_astar.coord_path_cost_sum(map.move_astar.get_point_path_by_coord(self.coord, coord)))
+	if self.move_capability == 0 :
+		unit_move_capability_depleted.emit(self)
 	update_out_sight(map, map_shower)
 	# 将单位移出地图原坐标
 	map.get_map_tile_info_at(self.coord).units.erase(self)
@@ -135,6 +144,6 @@ func get_move_range() -> int:
 ## 鼠标点击 ClickArea2D 的信号处理
 func _on_click_area_2d_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.is_pressed():
+		if event.button_index == MOUSE_BUTTON_LEFT and event.is_released():
 			print("_on_click_area_2d_input_event | clicked on unit")
 			unit_clicked.emit(self)

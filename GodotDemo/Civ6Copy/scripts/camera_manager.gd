@@ -16,7 +16,13 @@ var _final_zoom: Vector2 = zoom
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.is_pressed():
+				# 开始拖拽镜头
+				start_drag(event.position)
+			else:
+				end_drag()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			# 镜头放大
 			get_viewport().set_input_as_handled()
 			_final_zoom = clamp(_final_zoom + Vector2(0.05, 0.05), MIN_ZOOM, MAX_ZOOM)
@@ -28,6 +34,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_final_zoom = clamp(_final_zoom - Vector2(0.05, 0.05), MIN_ZOOM, MAX_ZOOM)
 			var tween = get_tree().create_tween()
 			tween.tween_property(self, "zoom", _final_zoom, 0.1)
+	elif event is InputEventMouseMotion:
+		# 拖拽镜头过程中
+		get_viewport().set_input_as_handled()
+		drag(event.position)
 
 
 func initialize(map_size: Vector2i, tile_xy: Vector2i) -> void:

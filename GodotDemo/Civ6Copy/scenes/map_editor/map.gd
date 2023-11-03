@@ -333,8 +333,9 @@ func _init() -> void:
 	move_astar = MapMoveAStar2D.new(self)
 	for i in range(map_size.x):
 		for j in range(map_size.y):
-			var point_id: int = i * map_size.y + j
-			move_astar.add_point(point_id, Vector2(i, j))
+			var coord := Vector2i(i, j)
+			var point_id: int = move_astar.coord_to_id(coord)
+			move_astar.add_point(point_id, coord)
 			if j > 0:
 				move_astar.connect_points(point_id, point_id - 1)
 				if j % 2 == 0:
@@ -348,8 +349,9 @@ func _init() -> void:
 	sight_astar = MapSightAStar2D.new(self)
 	for i in range(map_size.x):
 		for j in range(map_size.y):
-			var point_id: int = i * map_size.y + j
-			sight_astar.add_point(point_id, Vector2(i, j))
+			var coord := Vector2i(i, j)
+			var point_id: int = sight_astar.coord_to_id(coord)
+			sight_astar.add_point(point_id, coord)
 			if j > 0:
 				sight_astar.connect_points(point_id, point_id - 1)
 				if j % 2 == 0:
@@ -824,6 +826,10 @@ class MapAStar2D extends AStar2D:
 		return cost_by_id(from_id, to_id)
 	
 	
+	func coord_to_id(coord: Vector2i):
+		return coord.x * map.get_map_tile_size().y + coord.y
+	
+	
 	func cost_by_id(from_id: int, to_id: int) -> float:
 		var from_coord := Vector2i(get_point_position(from_id))
 		var to_coord := Vector2i(get_point_position(to_id))
@@ -834,6 +840,10 @@ class MapAStar2D extends AStar2D:
 		# 抽象父类，必须被继承并且重写本方法
 		printerr("please override cost_by_coord() if you extends MapAStar2D")
 		return UNREACHABLE_COST
+	
+	
+	func get_point_path_by_coord(from_coord: Vector2i, to_coord: Vector2i) -> PackedVector2Array:
+		return get_point_path(coord_to_id(from_coord), coord_to_id(to_coord))
 	
 	
 	func is_coord_path_unreachable(coord_path: PackedVector2Array) -> bool:
