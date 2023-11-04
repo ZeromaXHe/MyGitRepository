@@ -787,6 +787,7 @@ class TileInfo:
 	var resource: ResourceType = ResourceType.EMPTY
 	var continent: ContinentType = ContinentType.EMPTY
 	var units: Array[Unit] = []
+	var city: City = null
 	
 	
 	func _init(type: TerrainType) -> void:

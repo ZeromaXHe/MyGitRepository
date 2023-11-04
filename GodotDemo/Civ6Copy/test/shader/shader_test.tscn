@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://1blrj0woarww"]
 
-[ext_resource type="Shader" path="res://test/shader/test_shader.gdshader" id="1_4yp4t"]
+[ext_resource type="Shader" path="res://shaders/replace_color_shader.gdshader" id="1_4yp4t"]
 [ext_resource type="Texture2D" uid="uid://ducbluwofubp2" path="res://icon.svg" id="2_ebod6"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gipu7"]

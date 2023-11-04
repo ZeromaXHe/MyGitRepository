@@ -1,6 +1,16 @@
-[gd_scene load_steps=4 format=3 uid="uid://cr5uuxjtlmmre"]
+[gd_scene load_steps=7 format=3 uid="uid://bm6mc5jnswgla"]
 
+[ext_resource type="Shader" path="res://shaders/replace_color_shader.gdshader" id="1_c6qwb"]
 [ext_resource type="Texture2D" uid="uid://dmtauxs0ti58" path="res://assets/self_made_svg/view_tile/territory_border_hexagons.svg" id="1_y8frc"]
+[ext_resource type="Script" path="res://scenes/game/territory_border_tile_map.gd" id="3_f3v2q"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wib8o"]
+shader = ExtResource("1_c6qwb")
+shader_parameter/from1 = Color(0, 0, 0, 1)
+shader_parameter/from2 = Color(1, 1, 1, 1)
+shader_parameter/to1 = Color(0, 0, 0, 1)
+shader_parameter/to2 = Color(1, 1, 1, 1)
+shader_parameter/threshold = 0.1
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_7gxj7"]
 texture = ExtResource("1_y8frc")
@@ -787,5 +797,9 @@ terrain_set_0/terrain_1/color = Color(0.266667, 0.372549, 0.921569, 1)
 sources/0 = SubResource("TileSetAtlasSource_7gxj7")
 
 [node name="TerritoryBorderTileMap" type="TileMap"]
+material = SubResource("ShaderMaterial_wib8o")
 tile_set = SubResource("TileSet_ihuxu")
 format = 2
+layer_0/name = "边界层"
+layer_0/z_index = 5
+script = ExtResource("3_f3v2q")

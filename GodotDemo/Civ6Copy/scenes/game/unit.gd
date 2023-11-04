@@ -46,12 +46,14 @@ func initiate(type: Type, player: Player, coord: Vector2i, map: Map, map_shower:
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
 	self.move_capability = get_move_range()
+	# 将单位记入地图信息
+	map.get_map_tile_info_at(coord).units.append(self)
+	# 将单位记录在玩家中
+	GlobalScript.get_current_player().units.append(self)
 	# 绘制图标图像
 	initiate_icon()
 	# 更新玩家视野
 	update_sight(map, map_shower)
-	# 将单位记入地图信息
-	map.get_map_tile_info_at(coord).units.append(self)
 
 
 func initiate_icon() -> void:
@@ -87,6 +89,14 @@ func initiate_icon() -> void:
 	
 	background.modulate = player.main_color
 	icon.modulate = player.second_color
+
+
+func delete(map: Map) -> void:
+	# 将单位从地图信息中删除
+	map.get_map_tile_info_at(coord).units.erase(self)
+	# 将单位从玩家拥有的单位列表中删除
+	GlobalScript.get_current_player().units.erase(self)
+	queue_free()
 
 
 func update_sight(map: Map, map_shower: MapShower) -> void:

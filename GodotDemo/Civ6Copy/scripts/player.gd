@@ -1,11 +1,21 @@
 class_name Player
 
 
+const territory_border_scene: PackedScene = preload("res://scenes/game/territory_border_tile_map.tscn")
+
 var p_name: String = "默认玩家名"
-var main_color: Color = Color.BLACK
-var second_color: Color = Color.WHITE
+var main_color: Color = Color.BLACK:
+	set(color):
+		main_color = color
+		(territory_border.material as ShaderMaterial).set_shader_parameter("to1", color)
+var second_color: Color = Color.WHITE:
+	set(color):
+		second_color = color
+		(territory_border.material as ShaderMaterial).set_shader_parameter("to2", color)
 var map_sight_info: MapSightInfo = MapSightInfo.new()
 var units: Array[Unit] = []
+var cities: Array[City] = []
+var territory_border: TerritoryBorderTileMap = territory_border_scene.instantiate()
 
 
 func get_next_movable_unit(unit: Unit) -> Unit:

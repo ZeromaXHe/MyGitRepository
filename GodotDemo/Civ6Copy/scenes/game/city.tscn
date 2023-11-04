@@ -1,0 +1,115 @@
+[gd_scene load_steps=9 format=3 uid="uid://ckelrkn7bfs8k"]
+
+[ext_resource type="Script" path="res://scenes/game/city.gd" id="1_w8b0e"]
+[ext_resource type="Texture2D" uid="uid://b8rquj0vdsw3o" path="res://assets/civ6_origin/core/webp_32x32/core_capital.webp" id="1_xex08"]
+[ext_resource type="Texture2D" uid="uid://i32td8k8350b" path="res://assets/civ6_origin/unit/webp_64x64/icon_unit_scout.webp" id="2_4oxv1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p2gf4"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8id0i"]
+bg_color = Color(0.14902, 0.12549, 0.105882, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uwswv"]
+bg_color = Color(0.254902, 0.784314, 0.278431, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xk146"]
+bg_color = Color(0.172549, 0.172549, 0.172549, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45un1"]
+bg_color = Color(0.839216, 0.662745, 0.243137, 1)
+
+[node name="City" type="Node2D"]
+z_index = 5
+script = ExtResource("1_w8b0e")
+
+[node name="CityMainPanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -109.0
+offset_right = 120.0
+offset_bottom = -79.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(120, 15)
+theme_override_styles/panel = SubResource("StyleBoxFlat_p2gf4")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CityMainPanelContainer"]
+layout_mode = 2
+
+[node name="GrowthTurnLabel" type="Label" parent="CityMainPanelContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.254902, 0.784314, 0.278431, 1)
+text = "6"
+
+[node name="GrowthProgressBar" type="ProgressBar" parent="CityMainPanelContainer/HBoxContainer"]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_styles/background = SubResource("StyleBoxFlat_8id0i")
+theme_override_styles/fill = SubResource("StyleBoxFlat_uwswv")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="LevelLabel" type="Label" parent="CityMainPanelContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "1"
+
+[node name="CapitalTextureRect" type="TextureRect" parent="CityMainPanelContainer/HBoxContainer"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("1_xex08")
+expand_mode = 1
+
+[node name="NameLabel" type="Label" parent="CityMainPanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "城市名字"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ProductPanelContainer" type="PanelContainer" parent="CityMainPanelContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_xk146")
+
+[node name="ProductTextureRect" type="TextureRect" parent="CityMainPanelContainer/HBoxContainer/ProductPanelContainer"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 8
+texture = ExtResource("2_4oxv1")
+expand_mode = 4
+
+[node name="ProductProgressBar" type="ProgressBar" parent="CityMainPanelContainer/HBoxContainer"]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_styles/background = SubResource("StyleBoxFlat_8id0i")
+theme_override_styles/fill = SubResource("StyleBoxFlat_45un1")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="ProductTurnLabel" type="Label" parent="CityMainPanelContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.819608, 0.647059, 0.239216, 1)
+text = "2"
+
+[node name="DefensePanelContainer" type="PanelContainer" parent="."]
+offset_left = -20.0
+offset_top = -129.0
+offset_right = 20.0
+offset_bottom = -109.0
+pivot_offset = Vector2(20, 10)
+
+[node name="DefenceLabel" type="Label" parent="DefensePanelContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "防: 13"
+horizontal_alignment = 1
+vertical_alignment = 1

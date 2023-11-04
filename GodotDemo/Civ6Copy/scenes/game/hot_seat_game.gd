@@ -2,7 +2,9 @@ class_name HotSeatGame
 extends Node2D
 
 
-var unit_scene: PackedScene = preload("res://scenes/game/unit.tscn")
+const UNIT_SCENE: PackedScene = preload("res://scenes/game/unit.tscn")
+const CITY_SCENE: PackedScene = preload("res://scenes/game/city.tscn")
+
 var chosen_unit: Unit = null:
 	set(unit):
 		chosen_unit = unit
@@ -22,7 +24,9 @@ var turn_num: int = 1
 var turn_year: int = -4000
 
 @onready var map_shower: MapShower = $MapShower
+@onready var territory_borders: Node2D = $TerritoryBorders
 @onready var units: Node2D = $Units
+@onready var cities: Node2D = $Cities
 @onready var camera: CameraManager = $Camera2D
 @onready var game_gui: GameGUI = $GameGUI
 
@@ -37,8 +41,13 @@ func _ready() -> void:
 	initialize_sight_tile()
 	# 增加测试单位
 	test_add_unit()
+	# 将所有玩家的领土 TileMap 放到场景中
+	for player in GlobalScript.player_arr:
+		territory_borders.add_child(player.territory_border)
 	# 处理回合按钮信号
 	game_gui.turn_button_clicked.connect(handle_turn_button_clicked)
+	# 处理建立城市按钮的信号
+	game_gui.city_button_pressed.connect(handle_city_button_pressed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -89,15 +98,31 @@ func test_add_unit() -> void:
 
 
 func add_unit(type: Unit.Type, coord: Vector2i) -> Unit:
-	var unit: Unit = unit_scene.instantiate()
+	var unit: Unit = UNIT_SCENE.instantiate()
 	units.add_child(unit)
 	unit.initiate(type, GlobalScript.get_current_player(), coord, _map, map_shower)
-	# 将单位记录在玩家中
-	GlobalScript.get_current_player().units.append(unit)
 	# 处理单位信号
 	unit.unit_clicked.connect(handle_unit_clicked)
 	unit.unit_move_capability_depleted.connect(handle_unit_move_capability_depleted)
 	return unit
+
+
+func build_city(coord: Vector2i) -> void:
+	var city: City = CITY_SCENE.instantiate()
+	cities.add_child(city)
+	city.initiate(coord, _map, map_shower)
+	# 显示城市领土
+	var territory_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 1, true)
+	GlobalScript.get_current_player().territory_border.paint_dash_border(territory_cells)
+
+
+func handle_city_button_pressed() -> void:
+	# 建立城市
+	build_city(chosen_unit.coord)
+	# 删除开拓者
+	chosen_unit.delete(_map)
+	chosen_unit = null
+	map_shower.clear_move_tile_areas()
 
 
 func handle_turn_button_clicked(end_turn: bool) -> void:

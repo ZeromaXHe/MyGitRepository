@@ -3,6 +3,7 @@ extends CanvasLayer
 
 
 signal turn_button_clicked(end_turn: bool)
+signal city_button_pressed
 
 # 右上角回合数和年数显示
 @onready var turn_and_year_label: Label = $VBoxContainer/TopPanel/TopRightHBox/TurnAndYearLabel
@@ -14,6 +15,8 @@ signal turn_button_clicked(end_turn: bool)
 @onready var mouse_hover_tile_panel: MouseHoverTilePanel = $MouseHoverTilePanel
 # 右下角信息栏
 @onready var info_panel: PanelContainer = $VBoxContainer/DownMargin/RightDownHBox/InfoPanel
+@onready var unit_texture_rect: TextureRect = $VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox/UnitTextureRect
+@onready var city_button: Button = $VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/ButtonHBox/CityButton
 @onready var name_label: Label = $VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox/DetailVBox/NameLabel
 @onready var move_label: Label = $VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox/DetailVBox/MoveLabel
 # 右下角回合相关
@@ -38,7 +41,7 @@ func _process(delta: float) -> void:
 func update_time_label():
 	var time_dict: Dictionary = Time.get_time_dict_from_system()
 	var hour_val: int = time_dict["hour"]
-	time_label.text = "%2d:%2d %s" % [hour_val if hour_val <= 12 else (hour_val - 12), \
+	time_label.text = "%02d:%02d %s" % [hour_val if hour_val <= 12 else (hour_val - 12), \
 			time_dict["minute"], " AM" if hour_val <= 12 else " PM"]
 
 
@@ -53,8 +56,12 @@ func show_unit_info(unit: Unit) -> void:
 	match unit.type:
 		Unit.Type.SETTLER:
 			name_label.text = "开拓者"
+			city_button.visible = true
+			unit_texture_rect.texture = load("res://assets/civ6_origin/unit/png_200/unit_settler.png")
 		Unit.Type.WARRIOR:
 			name_label.text = "勇士"
+			city_button.visible = false
+			unit_texture_rect.texture = load("res://assets/civ6_origin/unit/png_200/unit_warrior.png")
 	move_label.text = "%d/%d 移动" % [unit.move_capability, unit.get_move_range()]
 
 
@@ -115,3 +122,8 @@ func _on_turn_button_pressed() -> void:
 		turn_button_clicked.emit(true)
 	else:
 		turn_button_clicked.emit(false)
+
+
+## 点击单位的建造城市按钮
+func _on_city_button_pressed() -> void:
+	city_button_pressed.emit()

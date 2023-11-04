@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=109 format=3 uid="uid://bde1bs78up61k"]
+[gd_resource type="TileSet" load_steps=111 format=3 uid="uid://bde1bs78up61k"]
 
 [ext_resource type="Texture2D" uid="uid://fyq8m32mnwdi" path="res://assets/civ6_origin/tile/tile_grass.png" id="1_nmgkw"]
 [ext_resource type="Texture2D" uid="uid://csgj6bq84m1xl" path="res://assets/civ6_origin/tile/tile_grass_hill.png" id="2_ll6ai"]
@@ -76,6 +76,7 @@
 [ext_resource type="Texture2D" uid="uid://buo28ux8oq3uu" path="res://assets/self_made_svg/view_tile/sight_hexagons.svg" id="67_5pegq"]
 [ext_resource type="Texture2D" uid="uid://mu80udnymbki" path="res://assets/self_made_svg/view_tile/seen_hexagon.svg" id="69_mmcxp"]
 [ext_resource type="Texture2D" uid="uid://bxtsbkvimirmk" path="res://assets/self_made_svg/view_tile/unseen_hexagon.svg" id="70_3gxjj"]
+[ext_resource type="Texture2D" uid="uid://dhxqsyx8irqec" path="res://assets/civ6_origin/tile/on_city.png" id="71_rllk2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_22jfd"]
 texture = ExtResource("1_nmgkw")
@@ -1076,6 +1077,11 @@ texture = ExtResource("70_3gxjj")
 texture_region_size = Vector2i(184, 215)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_h0gnv"]
+texture = ExtResource("71_rllk2")
+texture_region_size = Vector2i(184, 215)
+0:0/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1v66o"]
 texture = ExtResource("14_d4sco")
 texture_region_size = Vector2i(184, 215)
@@ -1150,4 +1156,5 @@ sources/28 = SubResource("TileSetAtlasSource_hhxxq")
 sources/29 = SubResource("TileSetAtlasSource_eh1xd")
 sources/30 = SubResource("TileSetAtlasSource_0ppbi")
 sources/31 = SubResource("TileSetAtlasSource_lu6d5")
+sources/32 = SubResource("TileSetAtlasSource_h0gnv")
 tile_proxies/source_level = [0, 0]

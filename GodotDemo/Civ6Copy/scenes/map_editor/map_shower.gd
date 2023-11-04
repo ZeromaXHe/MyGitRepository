@@ -306,6 +306,13 @@ func paint_village(tile_coord: Vector2i, type: int):
 		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, 25, Vector2i.ZERO)
 
 
+func paint_city(tile_coord: Vector2i, type: int):
+	if type == 0:
+		tile_map.erase_cell(TILE_VILLAGE_LAYER_IDX, tile_coord)
+	else:
+		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, 32, Vector2i.ZERO)
+
+
 func paint_resource(tile_coord: Vector2i, type: Map.ResourceType) -> void:
 	# 清除原来的资源图标
 	if _coord_to_resource_icon_dict.has(tile_coord):

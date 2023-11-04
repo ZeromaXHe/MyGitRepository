@@ -1,4 +1,4 @@
-[gd_scene load_steps=63 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=65 format=3 uid="uid://dfpeq8ikcp1wc"]
 
 [ext_resource type="Script" path="res://scenes/gui/game_gui.gd" id="1_heuwt"]
 [ext_resource type="Texture2D" uid="uid://bbuwimgeo1bf6" path="res://assets/civ6_origin/core/webp_32x32/core_science.webp" id="2_25l65"]
@@ -31,6 +31,7 @@
 [ext_resource type="Texture2D" uid="uid://6xgc8c08sapv" path="res://assets/icon_park/下一步_next.svg" id="17_ueq3g"]
 [ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="18_6wc45"]
 [ext_resource type="PackedScene" uid="uid://6rscixmykdb1" path="res://scenes/gui/panel/wiki_panel.tscn" id="29_dio20"]
+[ext_resource type="Texture2D" uid="uid://d4eirmtmehyf2" path="res://assets/civ6_origin/unit/png_200/unit_settler.png" id="30_85i44"]
 [ext_resource type="PackedScene" uid="uid://babhwv4eoh1kt" path="res://scenes/gui/mouse_hover_tile_panel.tscn" id="32_7g8tl"]
 [ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://styles/menu_deep_blue_button_normal.tres" id="33_4g664"]
 [ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://styles/menu_deep_blue_button_hover.tres" id="34_aeh5d"]
@@ -124,6 +125,9 @@ colors = PackedColorArray(1, 0.501961, 1, 1, 1, 0.501961, 1, 1, 1, 1, 1, 0)
 gradient = SubResource("Gradient_mvnas")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tk5f3"]
+bg_color = Color(0.0627451, 0.909804, 0.294118, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iwk70"]
 bg_color = Color(0.133333, 0.133333, 0.133333, 0.901961)
@@ -622,10 +626,19 @@ alignment = 2
 [node name="HpBar" type="ProgressBar" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(10, 100)
 layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_tk5f3")
 value = 80.0
 
+[node name="UnitTextureRect" type="TextureRect" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("30_85i44")
+expand_mode = 1
+
 [node name="DetailVBox" type="VBoxContainer" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox"]
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
 [node name="NameLabel" type="Label" parent="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/DetailHBox/DetailVBox"]
@@ -795,6 +808,7 @@ text = "返回桌面"
 
 [connection signal="pressed" from="VBoxContainer/TopPanel/TopRightHBox/CivPediaButton" to="." method="_on_civ_pedia_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/TopPanel/TopRightHBox/MenuButton" to="." method="_on_menu_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/DownMargin/RightDownHBox/InfoPanel/InfoVBox/ButtonHBox/CityButton" to="." method="_on_city_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/DownMargin/RightDownHBox/TurnPanel/TurnVBox/HBoxContainer/TurnButton" to="." method="_on_turn_button_pressed"]
 [connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/ReturnButton" to="." method="_on_return_button_pressed"]
 [connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
