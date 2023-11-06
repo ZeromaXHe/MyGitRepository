@@ -111,16 +111,13 @@ func build_city(coord: Vector2i) -> void:
 	var city: City = CITY_SCENE.instantiate()
 	cities.add_child(city)
 	city.initiate(coord, _map, map_shower)
-	# 显示城市领土
-	var territory_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 1, true)
-	GlobalScript.get_current_player().territory_border.paint_dash_border(territory_cells)
 
 
 func handle_city_button_pressed() -> void:
 	# 建立城市
 	build_city(chosen_unit.coord)
 	# 删除开拓者
-	chosen_unit.delete(_map)
+	chosen_unit.delete(_map, map_shower)
 	chosen_unit = null
 	map_shower.clear_move_tile_areas()
 

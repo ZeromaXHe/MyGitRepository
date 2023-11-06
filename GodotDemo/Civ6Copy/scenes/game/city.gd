@@ -8,6 +8,9 @@ var capital: bool = false
 var level: int = 1
 var growth: int = 0
 var defense: int = 13
+var player: Player
+var territory_coords: Array[Vector2i] = []
+var sight_coords: Array[Vector2i] = []
 
 @onready var city_main_panel: PanelContainer = $CityMainPanelContainer
 @onready var growth_turn_label: Label = $CityMainPanelContainer/HBoxContainer/GrowthTurnLabel
@@ -26,11 +29,12 @@ func initiate(coord: Vector2i, map: Map, map_shower: MapShower) -> void:
 	name_label.text = city_name
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
+	self.player = GlobalScript.get_current_player()
 	# 配置颜色
-	set_main_color()
-	set_second_color()
+	set_main_color(player.main_color)
+	set_second_color(player.second_color)
 	# 是否首都
-	if GlobalScript.get_current_player().cities.is_empty():
+	if player.cities.is_empty():
 		capital = true
 	capital_texture_rect.visible = capital
 	# 绘制城市
@@ -38,15 +42,23 @@ func initiate(coord: Vector2i, map: Map, map_shower: MapShower) -> void:
 	# 将城市记录到地图信息里
 	map.get_map_tile_info_at(coord).city = self
 	# 将城市记录到玩家城市列表里
-	GlobalScript.get_current_player().cities.append(self)
+	player.cities.append(self)
+	# 初始化城市领土（周围一圈）
+	var territory_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 1, true).filter(map.is_in_map_tile)
+	self.territory_coords.append_array(territory_cells)
+	player.territory_border.paint_dash_border(territory_cells)
+	# 城市视野（周围两格）
+	var sight_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 2, true).filter(map.is_in_map_tile)
+	self.sight_coords.append_array(sight_cells)
+	for in_sight_coord in sight_cells:
+		player.map_sight_info.in_sight(in_sight_coord)
+	map_shower.paint_in_sight_tile_areas(sight_cells)
 
 
-func set_main_color() -> void:
-	var main_color: Color = GlobalScript.get_current_player().main_color
+func set_main_color(main_color: Color) -> void:
 	city_main_panel.get("theme_override_styles/panel").set("bg_color", main_color)
 
 
-func set_second_color() -> void:
-	var second_color: Color = GlobalScript.get_current_player().second_color
+func set_second_color(second_color: Color) -> void:
 	level_label.add_theme_color_override("font_color", second_color)
 	name_label.add_theme_color_override("font_color", second_color)

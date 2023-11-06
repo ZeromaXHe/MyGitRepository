@@ -91,11 +91,13 @@ func initiate_icon() -> void:
 	icon.modulate = player.second_color
 
 
-func delete(map: Map) -> void:
+func delete(map: Map, map_shower: MapShower) -> void:
 	# 将单位从地图信息中删除
 	map.get_map_tile_info_at(coord).units.erase(self)
 	# 将单位从玩家拥有的单位列表中删除
 	GlobalScript.get_current_player().units.erase(self)
+	# 清理单位视野
+	update_out_sight(map, map_shower)
 	queue_free()
 
 
