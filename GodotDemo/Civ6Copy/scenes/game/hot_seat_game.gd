@@ -12,8 +12,6 @@ var chosen_unit: Unit = null:
 			game_gui.hide_unit_info()
 		else:
 			game_gui.show_unit_info(unit)
-# 记录地图
-var _map: Map
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
 # 鼠标悬浮的图块坐标和时间
@@ -31,13 +29,9 @@ var turn_year: int = -4000
 @onready var game_gui: GameGUI = $GameGUI
 
 
-func _init() -> void:
-	load_map()
-
-
 func _ready() -> void:
-	map_shower.initialize(_map)
-	camera.initialize(_map.get_map_tile_size(), map_shower.get_map_tile_xy())
+	map_shower.initialize()
+	camera.initialize(map_shower._map.get_map_tile_size(), map_shower.get_map_tile_xy())
 	initialize_sight_tile()
 	# 增加测试单位
 	test_add_unit()
@@ -65,7 +59,7 @@ func _unhandled_input(event: InputEvent) -> void:
 						return
 					if map_shower.is_in_move_tile_areas(click_coord):
 						map_shower.clear_move_tile_areas()
-						chosen_unit.move_to(click_coord, _map, map_shower)
+						chosen_unit.move_to(click_coord, map_shower)
 					else:
 						map_shower.clear_move_tile_areas()
 					chosen_unit = null
@@ -78,7 +72,7 @@ func _process(delta: float) -> void:
 func initialize_sight_tile() -> void:
 	# 临时测试视野范围显示
 	var player: Player = GlobalScript.get_current_player()
-	var map_size: Vector2i = _map.get_map_tile_size()
+	var map_size: Vector2i = map_shower._map.get_map_tile_size()
 	player.map_sight_info.initialize(map_size)
 	paint_player_sight(player)
 
@@ -100,7 +94,7 @@ func test_add_unit() -> void:
 func add_unit(type: Unit.Type, coord: Vector2i) -> Unit:
 	var unit: Unit = UNIT_SCENE.instantiate()
 	units.add_child(unit)
-	unit.initiate(type, GlobalScript.get_current_player(), coord, _map, map_shower)
+	unit.initiate(type, GlobalScript.get_current_player(), coord, map_shower)
 	# 处理单位信号
 	unit.unit_clicked.connect(handle_unit_clicked)
 	unit.unit_move_capability_depleted.connect(handle_unit_move_capability_depleted)
@@ -110,14 +104,14 @@ func add_unit(type: Unit.Type, coord: Vector2i) -> Unit:
 func build_city(coord: Vector2i) -> void:
 	var city: City = CITY_SCENE.instantiate()
 	cities.add_child(city)
-	city.initiate(coord, _map, map_shower)
+	city.initiate(coord, map_shower)
 
 
 func handle_city_button_pressed() -> void:
 	# 建立城市
 	build_city(chosen_unit.coord)
 	# 删除开拓者
-	chosen_unit.delete(_map, map_shower)
+	chosen_unit.delete(map_shower)
 	chosen_unit = null
 	map_shower.clear_move_tile_areas()
 
@@ -158,7 +152,7 @@ func handle_unit_clicked(unit: Unit) -> void:
 		print("handle_unit_clicked | hide chosen_unit move range", chosen_unit.coord)
 		map_shower.clear_move_tile_areas()
 	# 显示移动框
-	unit.show_move_range(_map, map_shower)
+	unit.show_move_range(map_shower)
 	# TODO: 显示右下角信息栏
 	chosen_unit = unit
 
@@ -167,18 +161,11 @@ func handle_mouse_hover_tile(delta: float) -> bool:
 	var map_coord: Vector2i = map_shower.get_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and _map.is_in_map_tile(map_coord):
-			game_gui.show_mouse_hover_tile_info(map_coord, _map.get_map_tile_info_at(map_coord))
+		if not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and map_shower._map.is_in_map_tile(map_coord):
+			game_gui.show_mouse_hover_tile_info(map_coord, map_shower._map.get_map_tile_info_at(map_coord))
 		return false
 	_mouse_hover_tile_coord = map_coord
 	_mouse_hover_tile_time = 0
 	game_gui.hide_mouse_hover_tile_info()
 	return true
-
-
-func load_map() -> void:
-	_map = Map.load_from_save()
-	if _map == null:
-		printerr("you have no map save")
-		return
 

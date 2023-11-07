@@ -90,36 +90,53 @@ var _terrain_type_to_tile_dict : Dictionary = {
 }
 # 记录 TileMap 坐标到资源图标的映射的字典
 var _coord_to_resource_icon_dict: Dictionary = {}
+# 记录地图
+var _map: Map
 
 @onready var border_tile_map: TileMap = $BorderTileMap
 @onready var tile_map: TileMap = $TileMap
 @onready var resource_icons: Node2D = $ResourceIcons
 
 
+func _init() -> void:
+	if GlobalScript.load_map:
+		load_map()
+	else:
+		_map = Map.new()
+
+
 func _ready() -> void:
 	hide_continent_layer()
 
 
-func initialize(map: Map) -> void:
+func load_map() -> void:
+	_map = Map.load_from_save()
+	if _map == null:
+		printerr("you have no map save")
+		_map = Map.new()
+		return
+
+
+func initialize() -> void:
 	GlobalScript.record_time()
 	
-	var size: Vector2i = map.get_map_tile_size()
+	var size: Vector2i = _map.get_map_tile_size()
 	# 读取地块
 	GlobalScript.load_info = "填涂地图地块..."
 	for i in range(0, size.x):
 		for j in range(0, size.y):
 			var coord := Vector2i(i, j)
-			var tile_info: Map.TileInfo = map.get_map_tile_info_at(coord)
+			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
 			paint_tile(coord, tile_info)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting map tiles")
 	
-	var border_size: Vector2i = map.get_border_tile_size()
+	var border_size: Vector2i = _map.get_border_tile_size()
 	# 读取边界
 	GlobalScript.load_info = "填涂地图边界块..."
 	for i in range(border_size.x):
 		for j in range(border_size.y):
 			var coord := Vector2i(i, j)
-			paint_border(coord, map.get_border_tile_info_at(coord).type)
+			paint_border(coord, _map.get_border_tile_info_at(coord).type)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting border tiles")
 
 

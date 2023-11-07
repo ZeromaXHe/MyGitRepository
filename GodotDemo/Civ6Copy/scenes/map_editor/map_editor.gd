@@ -20,8 +20,6 @@ var _mouse_hover_tile_coord: Vector2i = GlobalScript.NULL_COORD
 var _mouse_hover_tile_time: float = 0
 # 鼠标悬浮的边界坐标
 var _mouse_hover_border_coord: Vector2i = GlobalScript.NULL_COORD
-# 记录地图
-var _map: Map
 # 恢复和取消，记录操作的栈
 var _before_step_stack: Array[PaintStep] = []
 var _after_step_stack: Array[PaintStep] = []
@@ -32,16 +30,9 @@ var _after_step_stack: Array[PaintStep] = []
 @onready var gui: MapEditorGUI = $MapEditorGUI
 
 
-func _init() -> void:
-	if GlobalScript.load_map:
-		load_map()
-	else:
-		_map = Map.new()
-
-
 func _ready() -> void:
-	map_shower.initialize(_map)
-	camera.initialize(_map.get_map_tile_size(), map_shower.get_map_tile_xy())
+	map_shower.initialize()
+	camera.initialize(map_shower._map.get_map_tile_size(), map_shower.get_map_tile_xy())
 	
 	gui.restore_btn_pressed.connect(handle_restore)
 	gui.cancel_btn_pressed.connect(handle_cancel)
@@ -79,13 +70,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func handle_save_map() -> void:
-	_map.save()
-
-
-func load_map() -> void:
-	_map = Map.load_from_save()
-	if _map == null:
-		_map = Map.new()
+	map_shower._map.save()
 
 
 func handle_gui_rt_tab_changed(tab: int) -> void:
@@ -116,12 +101,12 @@ func handle_restore() -> void:
 				TileChangeType.CONTINENT:
 					map_shower.paint_continent(change.coord, change.after.continent)
 			# 恢复地图地块信息
-			_map.change_map_tile_info(change.coord, change.after)
+			map_shower._map.change_map_tile_info(change.coord, change.after)
 		else:
 			# 恢复 BorderTileMap 到操作后的状态
 			map_shower.paint_border(change.coord, change.after_border.type)
 			# 恢复地图地块信息
-			_map.change_border_tile_info(change.coord, change.after_border)
+			map_shower._map.change_border_tile_info(change.coord, change.after_border)
 	# 把操作存到之前的取消栈中
 	_before_step_stack.push_back(step)
 	gui.set_cancel_button_disable(false)
@@ -148,12 +133,12 @@ func handle_cancel() -> void:
 				TileChangeType.CONTINENT:
 					map_shower.paint_continent(change.coord, change.before.continent)
 			# 还原地图地块信息
-			_map.change_map_tile_info(change.coord, change.before)
+			map_shower._map.change_map_tile_info(change.coord, change.before)
 		else:
 			# 恢复 BorderTileMap 到操作前的状态
 			map_shower.paint_border(change.coord, change.before_border.type)
 			# 恢复地图地块信息
-			_map.change_border_tile_info(change.coord, change.before_border)
+			map_shower._map.change_border_tile_info(change.coord, change.before_border)
 	# 把操作存到之后的恢复栈中
 	_after_step_stack.push_back(step)
 	gui.set_restore_button_disable(false)
@@ -163,8 +148,8 @@ func handle_mouse_hover_tile(delta: float) -> bool:
 	var map_coord: Vector2i = map_shower.get_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if not gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and _map.is_in_map_tile(map_coord):
-			gui.show_mouse_hover_tile_info(map_coord, _map.get_map_tile_info_at(map_coord))
+		if not gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and map_shower._map.is_in_map_tile(map_coord):
+			gui.show_mouse_hover_tile_info(map_coord, map_shower._map.get_map_tile_info_at(map_coord))
 		return false
 	clear_pre_mouse_hover_tile_chosen()
 	_mouse_hover_tile_coord = map_coord
@@ -230,9 +215,9 @@ func paint_new_chosen_area(renew: bool = false) -> void:
 
 func is_landscape_placeable(tile_coord: Vector2i, landscape: Map.LandscapeType) -> bool:
 	# 超出地图范围的不处理
-	if not _map.is_in_map_tile(tile_coord):
+	if not map_shower._map.is_in_map_tile(tile_coord):
 		return false
-	if not is_landscape_placeable_terrain(landscape, _map.get_map_tile_info_at(tile_coord).type):
+	if not is_landscape_placeable_terrain(landscape, map_shower._map.get_map_tile_info_at(tile_coord).type):
 		return false
 	match landscape:
 		Map.LandscapeType.FLOOD:
@@ -287,7 +272,7 @@ func is_flood_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
 func is_flood_placeable_borders(tile_coord: Vector2i) -> bool:
 	var borders: Array[Vector2i] = Map.get_all_tile_border(tile_coord, false)
 	for border in borders:
-		if _map.get_border_tile_info_at(border).type == Map.BorderTileType.RIVER:
+		if map_shower._map.get_border_tile_info_at(border).type == Map.BorderTileType.RIVER:
 			return true
 	return false
 
@@ -299,7 +284,7 @@ func is_oasis_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
 func is_oasis_placeable_surroundings(tile_coord: Vector2i) -> bool:
 	var surroundings: Array[Vector2i] = map_shower.get_surrounding_cells(tile_coord, 1, false)
 	for surrounding in surroundings:
-		var tile_info: Map.TileInfo = _map.get_map_tile_info_at(surrounding)
+		var tile_info: Map.TileInfo = map_shower._map.get_map_tile_info_at(surrounding)
 		if tile_info.type != Map.TerrainType.DESERT \
 				and tile_info.type != Map.TerrainType.DESERT_HILL \
 				and tile_info.type != Map.TerrainType.DESERT_MOUNTAIN:
@@ -316,9 +301,9 @@ func is_rainforest_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
 
 func is_village_placeable(tile_coord: Vector2i) -> bool:
 	# 超出地图范围的不处理
-	if not _map.is_in_map_tile(tile_coord):
+	if not map_shower._map.is_in_map_tile(tile_coord):
 		return false
-	return is_village_placeable_terrain(_map.get_map_tile_info_at(tile_coord).type)
+	return is_village_placeable_terrain(map_shower._map.get_map_tile_info_at(tile_coord).type)
 
 
 func is_village_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
@@ -327,9 +312,9 @@ func is_village_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
 
 func is_resource_placeable(tile_coord: Vector2i, type: Map.ResourceType) -> bool:
 	# 超出地图范围的不处理
-	if not _map.is_in_map_tile(tile_coord):
+	if not map_shower._map.is_in_map_tile(tile_coord):
 		return false
-	var tile_info: Map.TileInfo = _map.get_map_tile_info_at(tile_coord)
+	var tile_info: Map.TileInfo = map_shower._map.get_map_tile_info_at(tile_coord)
 	return is_resource_placeable_terrain_and_landscape(type, tile_info.type, tile_info.landscape)
 
 
@@ -482,9 +467,9 @@ func is_resource_placeable_terrain_and_landscape(resource: Map.ResourceType, \
 
 func is_continent_placeable(tile_coord: Vector2i) -> bool:
 	# 超出地图范围的不处理
-	if not _map.is_in_map_tile(tile_coord):
+	if not map_shower._map.is_in_map_tile(tile_coord):
 		return false
-	return is_continent_placeable_terrain(_map.get_map_tile_info_at(tile_coord).type)
+	return is_continent_placeable_terrain(map_shower._map.get_map_tile_info_at(tile_coord).type)
 
 
 func is_continent_placeable_terrain(terrain_type: Map.TerrainType) -> bool:
@@ -496,23 +481,23 @@ func is_river_placeable(border_coord: Vector2i) -> bool:
 		return false
 	var neighbor_tile_coords: Array[Vector2i] = Map.get_neighbor_tile_of_border(border_coord)
 	for coord in neighbor_tile_coords:
-		if not _map.is_in_map_tile(coord):
+		if not map_shower._map.is_in_map_tile(coord):
 			continue
-		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
+		var terrain_type: Map.TerrainType = map_shower._map.get_map_tile_info_at(coord).type
 		if Map.is_sea_terrain_type(terrain_type):
 			# 和浅海或者深海相邻
 			return false
 	var end_tile_coords: Array[Vector2i] = Map.get_end_tile_of_border(border_coord)
 	for coord in end_tile_coords:
-		if not _map.is_in_map_tile(coord):
+		if not map_shower._map.is_in_map_tile(coord):
 			continue
-		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
+		var terrain_type: Map.TerrainType = map_shower._map.get_map_tile_info_at(coord).type
 		if Map.is_sea_terrain_type(terrain_type):
 			# 末端是浅海或者深海
 			return true
 	var connect_border_coords: Array[Vector2i] = Map.get_connect_border_of_border(border_coord)
 	for coord in connect_border_coords:
-		var border_tile_type: Map.BorderTileType = _map.get_border_tile_info_at(coord).type
+		var border_tile_type: Map.BorderTileType = map_shower._map.get_border_tile_info_at(coord).type
 		if border_tile_type == Map.BorderTileType.RIVER:
 			# 连接的边界有河流
 			return true
@@ -526,7 +511,7 @@ func is_cliff_placeable(border_coord: Vector2i) -> bool:
 	var neighbor_sea: bool = false
 	var neighbor_land: bool = false
 	for coord in neighbor_tile_coords:
-		var terrain_type: Map.TerrainType = _map.get_map_tile_info_at(coord).type
+		var terrain_type: Map.TerrainType = map_shower._map.get_map_tile_info_at(coord).type
 		if Map.is_sea_terrain_type(terrain_type):
 			# 和浅海或者深海相邻
 			neighbor_sea = true
@@ -540,35 +525,35 @@ func depaint_map() -> void:
 	match gui.place_mode:
 		MapEditorGUI.PlaceMode.CLIFF:
 			var border_coord: Vector2i = map_shower.get_border_coord()
-			if _map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.CLIFF:
+			if map_shower._map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.CLIFF:
 				return
 			paint_border(border_coord, step, Map.BorderTileType.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RIVER:
 			var border_coord: Vector2i = map_shower.get_border_coord()
-			if _map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.RIVER:
+			if map_shower._map.get_border_tile_info_at(border_coord).type != Map.BorderTileType.RIVER:
 				return
 			paint_border(border_coord, step, Map.BorderTileType.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
 			var tile_coord: Vector2i = map_shower.get_map_coord()
-			if _map.get_map_tile_info_at(tile_coord).landscape == Map.LandscapeType.EMPTY:
+			if map_shower._map.get_map_tile_info_at(tile_coord).landscape == Map.LandscapeType.EMPTY:
 				return
 			paint_landscape(tile_coord, step, Map.LandscapeType.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
 			var tile_coord: Vector2i = map_shower.get_map_coord()
-			if _map.get_map_tile_info_at(tile_coord).village == 0:
+			if map_shower._map.get_map_tile_info_at(tile_coord).village == 0:
 				return
 			paint_village(tile_coord, step, 0)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var tile_coord: Vector2i = map_shower.get_map_coord()
-			if _map.get_map_tile_info_at(tile_coord).resource == Map.ResourceType.EMPTY:
+			if map_shower._map.get_map_tile_info_at(tile_coord).resource == Map.ResourceType.EMPTY:
 				# FIXME: 4.1 现在的场景 TileMap bug，需要等待 4.2 发布解决。目前先打日志说明一下
 #				print("tile map ", tile_coord, " is empty. (if you see a icon, it's because 4.1's bug. Wait for 4.2 update to fix it)")
 				return
@@ -585,7 +570,7 @@ func paint_map() -> void:
 		map_shower.clear_tile_chosen()
 		_grid_chosen_coord = coord
 		map_shower.paint_tile_chosen_placeable(coord)
-		gui.update_grid_info(coord, _map.get_map_tile_info_at(coord))
+		gui.update_grid_info(coord, map_shower._map.get_map_tile_info_at(coord))
 		return
 	var step: PaintStep = PaintStep.new()
 	match gui.place_mode:
@@ -595,9 +580,9 @@ func paint_map() -> void:
 			var inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
 			for coord in inside:
 				# 超出地图范围的不处理
-				if not _map.is_in_map_tile(coord):
+				if not map_shower._map.is_in_map_tile(coord):
 					continue
-				if _map.get_map_tile_info_at(coord).type == gui.terrain_type:
+				if map_shower._map.get_map_tile_info_at(coord).type == gui.terrain_type:
 					continue
 				paint_terrain(coord, step, gui.terrain_type)
 			# 围绕陆地地块绘制浅海
@@ -605,10 +590,10 @@ func paint_map() -> void:
 				var out_ring: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist + 1, false)
 				for coord in out_ring:
 					# 超出地图范围的不处理
-					if not _map.is_in_map_tile(coord):
+					if not map_shower._map.is_in_map_tile(coord):
 						continue
 					# 仅深海需要改为浅海
-					if _map.get_map_tile_info_at(coord).type != Map.TerrainType.OCEAN:
+					if map_shower._map.get_map_tile_info_at(coord).type != Map.TerrainType.OCEAN:
 						continue
 					paint_terrain(coord, step, Map.TerrainType.SHORE)
 			# 如果地块是丘陵，需要在周围沿海边界放置悬崖
@@ -623,7 +608,7 @@ func paint_map() -> void:
 			var coord: Vector2i = map_shower.get_map_coord()
 			if not is_landscape_placeable(coord, gui.landscape_type):
 				return
-			if _map.get_map_tile_info_at(coord).landscape == gui.landscape_type:
+			if map_shower._map.get_map_tile_info_at(coord).landscape == gui.landscape_type:
 				return
 			paint_landscape(coord, step, gui.landscape_type)
 			# 强制重绘选择区域
@@ -632,7 +617,7 @@ func paint_map() -> void:
 			var coord: Vector2i = map_shower.get_map_coord()
 			if not is_village_placeable(coord):
 				return
-			if _map.get_map_tile_info_at(coord).village == 1:
+			if map_shower._map.get_map_tile_info_at(coord).village == 1:
 				return
 			paint_village(coord, step, 1)
 			# 强制重绘选择区域
@@ -641,7 +626,7 @@ func paint_map() -> void:
 			var coord: Vector2i = map_shower.get_map_coord()
 			if not is_resource_placeable(coord, gui.resource_type):
 				return
-			if _map.get_map_tile_info_at(coord).resource == gui.resource_type:
+			if map_shower._map.get_map_tile_info_at(coord).resource == gui.resource_type:
 				return
 			paint_resource(coord, step, gui.resource_type)
 			# 强制重绘选择区域
@@ -653,7 +638,7 @@ func paint_map() -> void:
 			for coord in inside:
 				if not is_continent_placeable(coord):
 					continue
-				if _map.get_map_tile_info_at(coord).continent == gui.continent_type:
+				if map_shower._map.get_map_tile_info_at(coord).continent == gui.continent_type:
 					continue
 				paint_continent(coord, step, gui.continent_type)
 			# 强制重绘选择区域
@@ -662,7 +647,7 @@ func paint_map() -> void:
 			var border_coord: Vector2i = map_shower.get_border_coord()
 			if not is_cliff_placeable(border_coord):
 				return
-			if _map.get_border_tile_info_at(border_coord).type == Map.BorderTileType.CLIFF:
+			if map_shower._map.get_border_tile_info_at(border_coord).type == Map.BorderTileType.CLIFF:
 				return
 			# 绘制边界悬崖
 			paint_border(border_coord, step, Map.BorderTileType.CLIFF)
@@ -672,7 +657,7 @@ func paint_map() -> void:
 			var border_coord: Vector2i = map_shower.get_border_coord()
 			if not is_river_placeable(border_coord):
 				return
-			if _map.get_border_tile_info_at(border_coord).type == Map.BorderTileType.RIVER:
+			if map_shower._map.get_border_tile_info_at(border_coord).type == Map.BorderTileType.RIVER:
 				return
 			# 绘制边界河流
 			paint_border(border_coord, step, Map.BorderTileType.RIVER)
@@ -719,14 +704,14 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: Map.TerrainTy
 	step.changed_arr.append(change)
 	
 	# 记录地图地块信息
-	_map.change_map_tile_info(coord, change.after)
+	map_shower._map.change_map_tile_info(coord, change.after)
 	# 重新绘制整个 TileMap 地块
 	map_shower.paint_tile(coord, change.after)
 	
 	# 对周围一圈边界进行校验，不符合的边界需要重置为空
 	var borders: Array[Vector2i] = Map.get_all_tile_border(coord, false)
 	for border in borders:
-		var border_info: Map.BorderInfo = _map.get_border_tile_info_at(border)
+		var border_info: Map.BorderInfo = map_shower._map.get_border_tile_info_at(border)
 		if border_info.type == Map.BorderTileType.CLIFF:
 			if not is_cliff_placeable(border):
 				paint_border(border, step, Map.BorderTileType.EMPTY)
@@ -747,7 +732,7 @@ func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: Map.LandscapeT
 	
 	step.changed_arr.append(change)
 	# 记录地图地块信息
-	_map.change_map_tile_info(tile_coord, change.after)
+	map_shower._map.change_map_tile_info(tile_coord, change.after)
 	# 真正绘制地貌
 	map_shower.paint_landscape(tile_coord, type)
 
@@ -758,7 +743,7 @@ func paint_village(tile_coord: Vector2i, step: PaintStep, type: int) -> void:
 	change.after.village = type
 	step.changed_arr.append(change)
 	# 记录地图地块信息
-	_map.change_map_tile_info(tile_coord, change.after)
+	map_shower._map.change_map_tile_info(tile_coord, change.after)
 	# 真正绘制村庄
 	map_shower.paint_village(tile_coord, type)
 
@@ -769,7 +754,7 @@ func paint_resource(tile_coord: Vector2i, step: PaintStep, type: Map.ResourceTyp
 	change.after.resource = type
 	step.changed_arr.append(change)
 	# 记录地图地块信息
-	_map.change_map_tile_info(tile_coord, change.after)
+	map_shower._map.change_map_tile_info(tile_coord, change.after)
 	# 真正绘制资源
 	map_shower.paint_resource(tile_coord, type)
 
@@ -780,7 +765,7 @@ func paint_continent(tile_coord: Vector2i, step: PaintStep, type: Map.ContinentT
 	change.after.continent = type
 	step.changed_arr.append(change)
 	# 记录地图地块信息
-	_map.change_map_tile_info(tile_coord, change.after)
+	map_shower._map.change_map_tile_info(tile_coord, change.after)
 	# 真正绘制大洲
 	map_shower.paint_continent(tile_coord, type)
 
@@ -790,7 +775,7 @@ func paint_border(border_coord: Vector2i, step: PaintStep, type: Map.BorderTileT
 	var change: PaintChange = build_change_of_border(border_coord, type)
 	step.changed_arr.append(change)
 	# 记录地图地块信息
-	_map.change_border_tile_info(border_coord, change.after_border)
+	map_shower._map.change_border_tile_info(border_coord, change.after_border)
 	# 真正绘制边界
 	map_shower.paint_border(border_coord, type)
 
@@ -800,7 +785,7 @@ func build_change_of_tile(tile_coord: Vector2i, type: TileChangeType) -> PaintCh
 	change.coord = tile_coord
 	change.tile_change = true
 	change.tile_change_type = type
-	change.before = _map.get_map_tile_info_at(tile_coord)
+	change.before = map_shower._map.get_map_tile_info_at(tile_coord)
 	change.after = Map.TileInfo.copy(change.before)
 	return change
 	
@@ -809,7 +794,7 @@ func build_change_of_border(border_coord: Vector2i, type: Map.BorderTileType) ->
 	var change: PaintChange = PaintChange.new()
 	change.coord = border_coord
 	change.tile_change = false
-	change.before_border = _map.get_border_tile_info_at(border_coord)
+	change.before_border = map_shower._map.get_border_tile_info_at(border_coord)
 	change.after_border = Map.BorderInfo.new(type)
 	return change
 

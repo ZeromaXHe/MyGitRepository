@@ -39,7 +39,7 @@ var move_capability: int
 @onready var icon: Sprite2D = $IconSprite2D
 
 
-func initiate(type: Type, player: Player, coord: Vector2i, map: Map, map_shower: MapShower) -> void:
+func initiate(type: Type, player: Player, coord: Vector2i, map_shower: MapShower) -> void:
 	self.type = type
 	self.category = TYPE_TO_CATEGORY_DICT[type]
 	self.player = player
@@ -47,13 +47,13 @@ func initiate(type: Type, player: Player, coord: Vector2i, map: Map, map_shower:
 	self.global_position = map_shower.map_coord_to_global_position(coord)
 	self.move_capability = get_move_range()
 	# 将单位记入地图信息
-	map.get_map_tile_info_at(coord).units.append(self)
+	map_shower._map.get_map_tile_info_at(coord).units.append(self)
 	# 将单位记录在玩家中
 	GlobalScript.get_current_player().units.append(self)
 	# 绘制图标图像
 	initiate_icon()
 	# 更新玩家视野
-	update_sight(map, map_shower)
+	update_sight(map_shower)
 
 
 func initiate_icon() -> void:
@@ -91,18 +91,18 @@ func initiate_icon() -> void:
 	icon.modulate = player.second_color
 
 
-func delete(map: Map, map_shower: MapShower) -> void:
+func delete(map_shower: MapShower) -> void:
 	# 将单位从地图信息中删除
-	map.get_map_tile_info_at(coord).units.erase(self)
+	map_shower._map.get_map_tile_info_at(coord).units.erase(self)
 	# 将单位从玩家拥有的单位列表中删除
 	GlobalScript.get_current_player().units.erase(self)
 	# 清理单位视野
-	update_out_sight(map, map_shower)
+	update_out_sight(map_shower)
 	queue_free()
 
 
-func update_sight(map: Map, map_shower: MapShower) -> void:
-	var dict: Dictionary = map.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
+func update_sight(map_shower: MapShower) -> void:
+	var dict: Dictionary = map_shower._map.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
 	for in_sight_coord in dict.keys():
 		player.map_sight_info.in_sight(in_sight_coord)
 	var cells: Array[Vector2i] = []
@@ -110,8 +110,8 @@ func update_sight(map: Map, map_shower: MapShower) -> void:
 	map_shower.paint_in_sight_tile_areas(cells)
 
 
-func update_out_sight(map: Map, map_shower: MapShower) -> void:
-	var dict: Dictionary = map.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
+func update_out_sight(map_shower: MapShower) -> void:
+	var dict: Dictionary = map_shower._map.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
 	var cells: Array[Vector2i] = []
 	for out_sight_coord in dict.keys():
 		player.map_sight_info.out_sight(out_sight_coord)
@@ -119,28 +119,28 @@ func update_out_sight(map: Map, map_shower: MapShower) -> void:
 			map_shower.paint_out_sight_tile_areas(out_sight_coord, Map.SightType.SEEN)
 
 
-func show_move_range(map: Map, map_shower: MapShower) -> void:
+func show_move_range(map_shower: MapShower) -> void:
 	if move_capability == 0:
 		return
-	var dict: Dictionary = map.move_astar.get_in_range_coords_to_cost_dict(coord, move_capability)
+	var dict: Dictionary = map_shower._map.move_astar.get_in_range_coords_to_cost_dict(coord, move_capability)
 	var cells: Array[Vector2i] = []
 	cells.append_array(dict.keys())
 	map_shower.paint_move_tile_areas(cells)
 
 
-func move_to(coord: Vector2i, map: Map, map_shower: MapShower) -> void:
+func move_to(coord: Vector2i, map_shower: MapShower) -> void:
 	self.move_capability = max(0, self.move_capability \
-			- map.move_astar.coord_path_cost_sum(map.move_astar.get_point_path_by_coord(self.coord, coord)))
+			- map_shower._map.move_astar.coord_path_cost_sum(map_shower._map.move_astar.get_point_path_by_coord(self.coord, coord)))
 	if self.move_capability == 0 :
 		unit_move_capability_depleted.emit(self)
-	update_out_sight(map, map_shower)
+	update_out_sight(map_shower)
 	# 将单位移出地图原坐标
-	map.get_map_tile_info_at(self.coord).units.erase(self)
+	map_shower._map.get_map_tile_info_at(self.coord).units.erase(self)
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
-	update_sight(map, map_shower)
+	update_sight(map_shower)
 	# 将单位移入地图新坐标
-	map.get_map_tile_info_at(self.coord).units.append(self)
+	map_shower._map.get_map_tile_info_at(self.coord).units.append(self)
 
 
 func get_sight_range() -> int:

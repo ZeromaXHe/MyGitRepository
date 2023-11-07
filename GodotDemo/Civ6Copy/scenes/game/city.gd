@@ -23,7 +23,7 @@ var sight_coords: Array[Vector2i] = []
 @onready var product_turn_label: Label = $CityMainPanelContainer/HBoxContainer/ProductTurnLabel
 
 
-func initiate(coord: Vector2i, map: Map, map_shower: MapShower) -> void:
+func initiate(coord: Vector2i, map_shower: MapShower) -> void:
 	# FIXME: 先随便给城市取个名字
 	city_name = "罗马"
 	name_label.text = city_name
@@ -40,15 +40,15 @@ func initiate(coord: Vector2i, map: Map, map_shower: MapShower) -> void:
 	# 绘制城市
 	map_shower.paint_city(coord, 1) 
 	# 将城市记录到地图信息里
-	map.get_map_tile_info_at(coord).city = self
+	map_shower._map.get_map_tile_info_at(coord).city = self
 	# 将城市记录到玩家城市列表里
 	player.cities.append(self)
 	# 初始化城市领土（周围一圈）
-	var territory_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 1, true).filter(map.is_in_map_tile)
+	var territory_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 1, true).filter(map_shower._map.is_in_map_tile)
 	self.territory_coords.append_array(territory_cells)
 	player.territory_border.paint_dash_border(territory_cells)
 	# 城市视野（周围两格）
-	var sight_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 2, true).filter(map.is_in_map_tile)
+	var sight_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 2, true).filter(map_shower._map.is_in_map_tile)
 	self.sight_coords.append_array(sight_cells)
 	for in_sight_coord in sight_cells:
 		player.map_sight_info.in_sight(in_sight_coord)
