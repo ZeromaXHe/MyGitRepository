@@ -10,12 +10,10 @@
 [ext_resource type="StyleBox" uid="uid://b4xkboxi50vdl" path="res://styles/menu_blue_button_hover.tres" id="8_w2ccn"]
 [ext_resource type="StyleBox" uid="uid://c6jfyt57bjnn0" path="res://styles/menu_blue_button_press.tres" id="9_aghgn"]
 [ext_resource type="StyleBox" uid="uid://fpxjje2joomq" path="res://styles/menu_green_gradient_title_background.tres" id="10_e3b8x"]
+[ext_resource type="StyleBox" uid="uid://cucjkim8l0fiq" path="res://styles/lime_green_title_style.tres" id="10_pj88v"]
 [ext_resource type="StyleBox" uid="uid://bk4uskdh5f524" path="res://styles/menu_green_button_normal.tres" id="11_v4xh6"]
 [ext_resource type="StyleBox" uid="uid://thjgmu6f1tf7" path="res://styles/menu_green_button_hover.tres" id="12_8pp4g"]
 [ext_resource type="StyleBox" uid="uid://ca0m4iqs1f2uv" path="res://styles/menu_green_button_press.tres" id="13_8f8kf"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6w0bw"]
-bg_color = Color(0.0392157, 0.611765, 0.603922, 1)
 
 [node name="MultiplayerSettingMenu" type="Control"]
 layout_mode = 3
@@ -111,7 +109,7 @@ text = "额外内容"
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.0980392, 0.25098, 0.364706, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_6w0bw")
+theme_override_styles/normal = ExtResource("10_pj88v")
 text = "            游戏设置            "
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]

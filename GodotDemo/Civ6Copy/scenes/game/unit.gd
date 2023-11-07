@@ -91,6 +91,36 @@ func initiate_icon() -> void:
 	icon.modulate = player.second_color
 
 
+static func get_unit_pic_webp_256x256(type: Type) -> Texture2D:
+	match type:
+		Type.SETTLER:
+			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_settler.webp")
+		Type.BUILDER:
+			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_builder.webp")
+		Type.SCOUT:
+			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_scout.webp")
+		Type.WARRIOR:
+			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_warrior.webp")
+		_:
+			printerr("get_unit_pic_webp_256x256 | no pic for type: ", type)
+			return null
+
+
+static func get_unit_name(type: Type) -> String:
+	match type:
+		Type.SETTLER:
+			return "开拓者"
+		Type.BUILDER:
+			return "建造者"
+		Type.SCOUT:
+			return "侦察兵"
+		Type.WARRIOR:
+			return "勇士"
+		_:
+			printerr("get_unit_name | no name for type: ", type)
+			return ""
+
+
 func delete(map_shower: MapShower) -> void:
 	# 将单位从地图信息中删除
 	map_shower._map.get_map_tile_info_at(coord).units.erase(self)
@@ -158,4 +188,6 @@ func _on_click_area_2d_input_event(_viewport: Node, event: InputEvent, _shape_id
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.is_released():
 			print("_on_click_area_2d_input_event | clicked on unit")
+			# TODO: 可能的 bug - 如果在别处点击，这里释放的话，吞掉输入事件可能有 bug
+			get_viewport().set_input_as_handled()
 			unit_clicked.emit(self)

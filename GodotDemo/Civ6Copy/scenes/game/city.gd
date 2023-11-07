@@ -2,6 +2,8 @@ class_name City
 extends Node2D
 
 
+signal city_clicked(city: City)
+
 var city_name: String
 var coord: Vector2i
 var capital: bool = false
@@ -11,6 +13,16 @@ var defense: int = 13
 var player: Player
 var territory_coords: Array[Vector2i] = []
 var sight_coords: Array[Vector2i] = []
+# 回合产量相关
+var yield_culture: float = 0.0
+var yield_food: float = 0.0
+var yield_product: float = 0.0
+var yield_science: float = 0.0
+var yield_religion: float = 0.0
+var yield_gold: float = 0.0
+# 生产相关
+var production_val: float = 0.0
+var producing_unit_type: Unit.Type = -1
 
 @onready var city_main_panel: PanelContainer = $CityMainPanelContainer
 @onready var growth_turn_label: Label = $CityMainPanelContainer/HBoxContainer/GrowthTurnLabel
@@ -30,6 +42,14 @@ func initiate(coord: Vector2i, map_shower: MapShower) -> void:
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
 	self.player = GlobalScript.get_current_player()
+	# 初始化产量
+	# TODO: 先写死，之后补逻辑
+	self.yield_culture = 1.4
+	self.yield_food = 4.3
+	self.yield_product = 5.7
+	self.yield_science = 3.1
+	self.yield_religion = 0.0
+	self.yield_gold = 5.7
 	# 配置颜色
 	set_main_color(player.main_color)
 	set_second_color(player.second_color)
@@ -62,3 +82,12 @@ func set_main_color(main_color: Color) -> void:
 func set_second_color(second_color: Color) -> void:
 	level_label.add_theme_color_override("font_color", second_color)
 	name_label.add_theme_color_override("font_color", second_color)
+
+
+func _on_click_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.is_released():
+			print("_on_click_area_2d_input_event | clicked on city")
+			# TODO: 可能的 bug - 如果在别处点击，这里释放的话，吞掉输入事件可能有 bug
+			get_viewport().set_input_as_handled()
+			city_clicked.emit(self)

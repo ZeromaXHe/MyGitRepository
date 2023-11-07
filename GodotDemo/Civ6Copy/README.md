@@ -4,6 +4,7 @@
 
 - Map、MapShower、Player、MapSightInfo 各类逻辑梳理与重构
   - 未来构建结构方向：MapShower 加载 Map，视野不需要 AStar2D
+- GUI、游戏控制器、数据之间的关系，目前不算符合 MVC 的关系，很多东西都杂糅在一起了。之后例如单位信息、城市信息界面这些，可以单独提取出一个场景，持有 unit 或 city 的引用，这样就可以自己绑定信号更新内容了。
 
 ## 新功能
 

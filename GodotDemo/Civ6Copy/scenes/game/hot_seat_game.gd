@@ -12,6 +12,13 @@ var chosen_unit: Unit = null:
 			game_gui.hide_unit_info()
 		else:
 			game_gui.show_unit_info(unit)
+var chosen_city: City = null:
+	set(city):
+		chosen_city = city
+		if city == null:
+			game_gui.hide_city_info()
+		else:
+			game_gui.show_city_info(city)
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
 # 鼠标悬浮的图块坐标和时间
@@ -42,6 +49,8 @@ func _ready() -> void:
 	game_gui.turn_button_clicked.connect(handle_turn_button_clicked)
 	# 处理建立城市按钮的信号
 	game_gui.city_button_pressed.connect(handle_city_button_pressed)
+	# 处理制造开拓者的信号
+	game_gui.city_product_settler_button_pressed.connect(handle_city_product_settler_button_pressed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -63,6 +72,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					else:
 						map_shower.clear_move_tile_areas()
 					chosen_unit = null
+				# 取消城市选择
+				if chosen_city != null:
+					chosen_city = null
 
 
 func _process(delta: float) -> void:
@@ -105,6 +117,7 @@ func build_city(coord: Vector2i) -> void:
 	var city: City = CITY_SCENE.instantiate()
 	cities.add_child(city)
 	city.initiate(coord, map_shower)
+	city.city_clicked.connect(handle_city_clicked)
 
 
 func handle_city_button_pressed() -> void:
@@ -114,6 +127,13 @@ func handle_city_button_pressed() -> void:
 	chosen_unit.delete(map_shower)
 	chosen_unit = null
 	map_shower.clear_move_tile_areas()
+
+
+func handle_city_product_settler_button_pressed() -> void:
+	if chosen_city == null:
+		printerr("handle_city_product_settler_button_pressed | weird, no chosen city")
+		return
+	chosen_city.producing_unit_type = Unit.Type.SETTLER
 
 
 func handle_turn_button_clicked(end_turn: bool) -> void:
@@ -146,6 +166,10 @@ func chose_unit_and_camera_focus(unit: Unit):
 	camera.global_position = map_shower.map_coord_to_global_position(unit.coord)
 
 
+func handle_city_clicked(city: City) -> void:
+	chosen_city = city
+
+
 func handle_unit_clicked(unit: Unit) -> void:
 	print("handle_unit_clicked | ", unit.coord, " is clicked")
 	if chosen_unit != null:
@@ -153,7 +177,6 @@ func handle_unit_clicked(unit: Unit) -> void:
 		map_shower.clear_move_tile_areas()
 	# 显示移动框
 	unit.show_move_range(map_shower)
-	# TODO: 显示右下角信息栏
 	chosen_unit = unit
 
 

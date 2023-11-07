@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://ckelrkn7bfs8k"]
+[gd_scene load_steps=10 format=3 uid="uid://ckelrkn7bfs8k"]
 
 [ext_resource type="Script" path="res://scenes/game/city.gd" id="1_w8b0e"]
 [ext_resource type="Texture2D" uid="uid://b8rquj0vdsw3o" path="res://assets/civ6_origin/core/webp_32x32/core_capital.webp" id="1_xex08"]
@@ -18,6 +18,9 @@ bg_color = Color(0.172549, 0.172549, 0.172549, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45un1"]
 bg_color = Color(0.839216, 0.662745, 0.243137, 1)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_le86w"]
+radius = 92.0
 
 [node name="City" type="Node2D"]
 z_index = 5
@@ -113,3 +116,10 @@ theme_override_font_sizes/font_size = 12
 text = "防: 13"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ClickArea2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ClickArea2D"]
+shape = SubResource("CircleShape2D_le86w")
+
+[connection signal="input_event" from="ClickArea2D" to="." method="_on_click_area_2d_input_event"]
