@@ -1,0 +1,202 @@
+[gd_scene load_steps=10 format=3 uid="uid://bmbo3lvy76glo"]
+
+[ext_resource type="Script" path="res://scenes/gui/panel/game_city_product_panel.gd" id="1_fpwec"]
+[ext_resource type="StyleBox" uid="uid://cucjkim8l0fiq" path="res://styles/lime_green_title_style.tres" id="1_l3xht"]
+[ext_resource type="Theme" uid="uid://bjxgqo07h5f4q" path="res://scenes/gui/theme_button_icon_max_width_15.tres" id="2_f65yp"]
+[ext_resource type="ButtonGroup" uid="uid://cn3mp5uf5s888" path="res://scenes/gui/city_product_type_btn_group.tres" id="3_ah2xb"]
+[ext_resource type="Texture2D" uid="uid://b2f3rlpq16aea" path="res://assets/civ6_origin/core/webp_32x32/core_production.webp" id="4_kxaxx"]
+[ext_resource type="Texture2D" uid="uid://onqbvvq12y21" path="res://assets/civ6_origin/core/webp_32x32/core_gold.webp" id="5_nnnlu"]
+[ext_resource type="Texture2D" uid="uid://mro7bq6p1jub" path="res://assets/civ6_origin/core/webp_32x32/core_faith.webp" id="6_sxljj"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_81wxm"]
+bg_color = Color(0.666667, 0.815686, 0.937255, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.745098, 0.623529, 0.423529, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yrykf"]
+bg_color = Color(0.478431, 0.396078, 0.254902, 1)
+
+[node name="CityProductPanel" type="PanelContainer"]
+visible = false
+custom_minimum_size = Vector2(200, 0)
+size_flags_horizontal = 8
+script = ExtResource("1_fpwec")
+
+[node name="CityProductVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TitlePanel" type="PanelContainer" parent="CityProductVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("1_l3xht")
+
+[node name="TitleLabel" type="Label" parent="CityProductVBox/TitlePanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.0588235, 0.0588235, 0.0588235, 1)
+text = "选择生产项目"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="CityProductVBox/TitlePanel"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "X"
+
+[node name="TypeHBox" type="HBoxContainer" parent="CityProductVBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="ProductionButton" type="Button" parent="CityProductVBox/TypeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_f65yp")
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_pressed = true
+button_group = ExtResource("3_ah2xb")
+text = "生产力"
+icon = ExtResource("4_kxaxx")
+
+[node name="GoldBuyButton" type="Button" parent="CityProductVBox/TypeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_f65yp")
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("3_ah2xb")
+text = "购买"
+icon = ExtResource("5_nnnlu")
+
+[node name="ReligionBuyButton" type="Button" parent="CityProductVBox/TypeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_f65yp")
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+button_group = ExtResource("3_ah2xb")
+text = "购买"
+icon = ExtResource("6_sxljj")
+
+[node name="QueueHBox" type="HBoxContainer" parent="CityProductVBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="QueueButton" type="Button" parent="CityProductVBox/QueueHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "队列（0）"
+
+[node name="MultiQueueButton" type="Button" parent="CityProductVBox/QueueHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "多队列"
+
+[node name="FilterHBox" type="HBoxContainer" parent="CityProductVBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="DistrictButton" type="Button" parent="CityProductVBox/FilterHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+text = "区域"
+
+[node name="VSeparator" type="VSeparator" parent="CityProductVBox/FilterHBox"]
+layout_mode = 2
+
+[node name="BuildingButton" type="Button" parent="CityProductVBox/FilterHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+text = "建筑"
+
+[node name="VSeparator2" type="VSeparator" parent="CityProductVBox/FilterHBox"]
+layout_mode = 2
+
+[node name="UnitButton" type="Button" parent="CityProductVBox/FilterHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+text = "单位"
+
+[node name="VSeparator3" type="VSeparator" parent="CityProductVBox/FilterHBox"]
+layout_mode = 2
+
+[node name="ProjectButton" type="Button" parent="CityProductVBox/FilterHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+toggle_mode = true
+text = "项目"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CityProductVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ProductChoiceVBox" type="VBoxContainer" parent="CityProductVBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="DistrictAndBuidlingVBox" type="VBoxContainer" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/DistrictAndBuidlingVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.0941176, 0.192157, 0.282353, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_81wxm")
+text = "区域和建筑"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CityCenterLabel" type="Label" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/DistrictAndBuidlingVBox"]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_yrykf")
+text = "     市中心                 √"
+vertical_alignment = 1
+
+[node name="MonumentButton" type="Button" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/DistrictAndBuidlingVBox"]
+layout_mode = 2
+text = "纪念碑                6"
+
+[node name="UnitVBox" type="VBoxContainer" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/UnitVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.0941176, 0.192157, 0.282353, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_81wxm")
+text = "单位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SettlerButton" type="Button" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/UnitVBox"]
+layout_mode = 2
+text = "开拓者                7"
+
+[node name="BuilderButton" type="Button" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/UnitVBox"]
+layout_mode = 2
+text = "建造者                5"
+
+[node name="ScoutButton" type="Button" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/UnitVBox"]
+layout_mode = 2
+text = "侦察兵                3"
+
+[node name="WarriorButton" type="Button" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/UnitVBox"]
+layout_mode = 2
+text = "勇士                    4"
+
+[node name="SlingerButton" type="Button" parent="CityProductVBox/ScrollContainer/ProductChoiceVBox/UnitVBox"]
+layout_mode = 2
+text = "投石兵                3"
+
+[connection signal="pressed" from="CityProductVBox/TitlePanel/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="CityProductVBox/ScrollContainer/ProductChoiceVBox/UnitVBox/SettlerButton" to="." method="_on_settler_button_pressed"]

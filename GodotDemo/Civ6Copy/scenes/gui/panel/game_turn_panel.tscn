@@ -1,0 +1,43 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfwi0qylm5dh6"]
+
+[ext_resource type="Texture2D" uid="uid://dnxhccmly6rmr" path="res://assets/icon_park/注意_attention.svg" id="1_8cqeb"]
+[ext_resource type="Script" path="res://scenes/gui/panel/game_turn_panel.gd" id="1_bth4d"]
+
+[node name="TurnPanel" type="PanelContainer"]
+size_flags_horizontal = 8
+size_flags_vertical = 8
+script = ExtResource("1_bth4d")
+
+[node name="TurnVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TurnLabel" type="Label" parent="TurnVBox"]
+layout_mode = 2
+text = "单位需要命令"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TurnVBox"]
+layout_mode = 2
+
+[node name="GoldProgress" type="ProgressBar" parent="TurnVBox/HBoxContainer"]
+custom_minimum_size = Vector2(10, 100)
+layout_mode = 2
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="TurnButton" type="Button" parent="TurnVBox/HBoxContainer"]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+icon = ExtResource("1_8cqeb")
+icon_alignment = 1
+expand_icon = true
+
+[node name="EraProgress" type="ProgressBar" parent="TurnVBox/HBoxContainer"]
+custom_minimum_size = Vector2(10, 100)
+layout_mode = 2
+max_value = 8.0
+value = 4.0
+fill_mode = 2
+show_percentage = false
+
+[connection signal="pressed" from="TurnVBox/HBoxContainer/TurnButton" to="." method="_on_turn_button_pressed"]

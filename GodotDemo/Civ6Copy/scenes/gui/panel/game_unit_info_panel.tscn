@@ -1,0 +1,79 @@
+[gd_scene load_steps=8 format=3 uid="uid://dsrkjn1ew77q0"]
+
+[ext_resource type="Script" path="res://scenes/gui/panel/game_unit_info_panel.gd" id="1_0vypd"]
+[ext_resource type="Texture2D" uid="uid://81jchr7jfvj2" path="res://assets/icon_park/城市_city.svg" id="1_di22r"]
+[ext_resource type="Texture2D" uid="uid://bv4018bitw6lp" path="res://assets/icon_park/移动_move-one.svg" id="2_x73bs"]
+[ext_resource type="Texture2D" uid="uid://6xgc8c08sapv" path="res://assets/icon_park/下一步_next.svg" id="3_f8lx0"]
+[ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="4_ocul7"]
+[ext_resource type="Texture2D" uid="uid://d4eirmtmehyf2" path="res://assets/civ6_origin/unit/png_200/unit_settler.png" id="5_taqnt"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tk5f3"]
+bg_color = Color(0.0627451, 0.909804, 0.294118, 1)
+
+[node name="UnitInfoPanel" type="PanelContainer"]
+visible = false
+size_flags_horizontal = 8
+size_flags_vertical = 8
+script = ExtResource("1_0vypd")
+
+[node name="UnitInfoVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+alignment = 2
+
+[node name="ButtonHBox" type="HBoxContainer" parent="UnitInfoVBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="CityButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("1_di22r")
+
+[node name="MoveButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("2_x73bs")
+
+[node name="SkipButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("3_f8lx0")
+
+[node name="SleepButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+layout_mode = 2
+icon = ExtResource("4_ocul7")
+
+[node name="DetailHBox" type="HBoxContainer" parent="UnitInfoVBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="HpBar" type="ProgressBar" parent="UnitInfoVBox/DetailHBox"]
+custom_minimum_size = Vector2(10, 100)
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_styles/fill = SubResource("StyleBoxFlat_tk5f3")
+value = 80.0
+fill_mode = 3
+
+[node name="UnitTextureRect" type="TextureRect" parent="UnitInfoVBox/DetailHBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("5_taqnt")
+expand_mode = 1
+
+[node name="DetailVBox" type="VBoxContainer" parent="UnitInfoVBox/DetailHBox"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="UnitInfoVBox/DetailHBox/DetailVBox"]
+layout_mode = 2
+text = "开拓者"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MoveLabel" type="Label" parent="UnitInfoVBox/DetailHBox/DetailVBox"]
+layout_mode = 2
+text = "2/2 移动"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="pressed" from="UnitInfoVBox/ButtonHBox/CityButton" to="." method="_on_city_button_pressed"]

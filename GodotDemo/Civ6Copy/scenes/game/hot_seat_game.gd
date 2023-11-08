@@ -2,30 +2,52 @@ class_name HotSeatGame
 extends Node2D
 
 
+signal turn_changed(num: int, year: int)
+signal chosen_unit_changed(unit: Unit)
+signal chosen_city_changed(city: City)
+signal turn_status_changed(stats: TurnStatus)
+
+
+enum TurnStatus {
+	END_TURN,
+	UNIT_NEED_MOVE,
+	CITY_NEED_PRODUCT,
+}
+
 const UNIT_SCENE: PackedScene = preload("res://scenes/game/unit.tscn")
 const CITY_SCENE: PackedScene = preload("res://scenes/game/city.tscn")
 
 var chosen_unit: Unit = null:
 	set(unit):
 		chosen_unit = unit
+		chosen_unit_changed.emit(unit)
 		if unit == null:
 			game_gui.hide_unit_info()
 		else:
-			game_gui.show_unit_info(unit)
+			game_gui.show_unit_info()
 var chosen_city: City = null:
 	set(city):
 		chosen_city = city
+		chosen_city_changed.emit(city)
 		if city == null:
 			game_gui.hide_city_info()
 		else:
-			game_gui.show_city_info(city)
+			game_gui.show_city_info()
 # 左键点击开始时相对镜头的本地坐标
 var _from_camera_position := Vector2(-1, -1)
 # 鼠标悬浮的图块坐标和时间
 var _mouse_hover_tile_coord: Vector2i = GlobalScript.NULL_COORD
 var _mouse_hover_tile_time: float = 0
 # 回合相关
-var turn_num: int = 1
+var turn_status: TurnStatus = TurnStatus.END_TURN:
+	set(status):
+		turn_status = status
+		turn_status_changed.emit(status)
+var turn_num: int = 1:
+	set(turn):
+		turn_num = turn
+		turn_year = -4100 + 100 * turn
+		turn_changed.emit(turn_num, turn_year)
 var turn_year: int = -4000
 
 @onready var map_shower: MapShower = $MapShower
@@ -39,18 +61,16 @@ var turn_year: int = -4000
 func _ready() -> void:
 	map_shower.initialize()
 	camera.initialize(map_shower._map.get_map_tile_size(), map_shower.get_map_tile_xy())
-	initialize_sight_tile()
-	# 增加测试单位
-	test_add_unit()
+	# 绑定 game_gui 和游戏之间的所有信号（双向）
+	game_gui.signal_binding_with_game(self)
 	# 将所有玩家的领土 TileMap 放到场景中
 	for player in GlobalScript.player_arr:
 		territory_borders.add_child(player.territory_border)
-	# 处理回合按钮信号
-	game_gui.turn_button_clicked.connect(handle_turn_button_clicked)
-	# 处理建立城市按钮的信号
-	game_gui.city_button_pressed.connect(handle_city_button_pressed)
-	# 处理制造开拓者的信号
-	game_gui.city_product_settler_button_pressed.connect(handle_city_product_settler_button_pressed)
+	initialize_sight_tile()
+	# 增加测试单位
+	test_add_unit()
+	# 初始化回合状态
+	initialize_turn_status()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -81,8 +101,14 @@ func _process(delta: float) -> void:
 	handle_mouse_hover_tile(delta)
 
 
+func initialize_turn_status() -> void:
+	if GlobalScript.get_current_player().get_next_movable_unit() != null:
+		turn_status = TurnStatus.UNIT_NEED_MOVE
+	else:
+		turn_status = TurnStatus.END_TURN
+
+
 func initialize_sight_tile() -> void:
-	# 临时测试视野范围显示
 	var player: Player = GlobalScript.get_current_player()
 	var map_size: Vector2i = map_shower._map.get_map_tile_size()
 	player.map_sight_info.initialize(map_size)
@@ -136,22 +162,21 @@ func handle_city_product_settler_button_pressed() -> void:
 	chosen_city.producing_unit_type = Unit.Type.SETTLER
 
 
-func handle_turn_button_clicked(end_turn: bool) -> void:
-	if end_turn:
-		chosen_unit = null
-		# 增加回合数
-		turn_num += 1
-		turn_year += 100
-		game_gui.update_turn_and_year_label(turn_num, turn_year)
-		# 刷新单位移动力
-		GlobalScript.get_current_player().refresh_units_move_capabilities()
-		game_gui.show_turn_unit_need_move()
-	else:
-		var player: Player = GlobalScript.get_current_player()
-		if player.units[0].move_capability > 0:
-			chose_unit_and_camera_focus(player.units[0])
-		else:
-			chose_unit_and_camera_focus(player.get_next_movable_unit(player.units[0]))
+func handle_turn_button_clicked() -> void:
+	match turn_status:
+		TurnStatus.END_TURN:
+			chosen_unit = null
+			# 增加回合数
+			turn_num += 1
+			# 刷新单位移动力
+			GlobalScript.get_current_player().refresh_units_move_capabilities()
+			initialize_turn_status()
+		TurnStatus.UNIT_NEED_MOVE:
+			var movable_unit: Unit = GlobalScript.get_current_player().get_next_movable_unit()
+			if movable_unit == null:
+				printerr("handle_turn_button_clicked | UNIT_NEED_MOVE | no movable unit found")
+			else:
+				chose_unit_and_camera_focus(movable_unit)
 
 
 func handle_unit_move_capability_depleted(unit: Unit) -> void:

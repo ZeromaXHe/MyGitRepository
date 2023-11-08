@@ -3,6 +3,14 @@ extends Node2D
 
 
 signal city_clicked(city: City)
+signal producing_unit_type_changed(type: Unit.Type)
+signal production_val_changed(val: float)
+signal yield_culture_changed(val: float)
+signal yield_food_changed(val: float)
+signal yield_product_changed(val: float)
+signal yield_science_changed(val: float)
+signal yield_religion_changed(val: float)
+signal yield_gold_changed(val: float)
 
 var city_name: String
 var coord: Vector2i
@@ -14,15 +22,39 @@ var player: Player
 var territory_coords: Array[Vector2i] = []
 var sight_coords: Array[Vector2i] = []
 # 回合产量相关
-var yield_culture: float = 0.0
-var yield_food: float = 0.0
-var yield_product: float = 0.0
-var yield_science: float = 0.0
-var yield_religion: float = 0.0
-var yield_gold: float = 0.0
+var yield_culture: float = 0.0:
+	set(val):
+		yield_culture = val
+		yield_culture_changed.emit(val)
+var yield_food: float = 0.0:
+	set(val):
+		yield_food = val
+		yield_food_changed.emit(val)
+var yield_product: float = 0.0:
+	set(val):
+		yield_product = val
+		yield_product_changed.emit(val)
+var yield_science: float = 0.0:
+	set(val):
+		yield_science = val
+		yield_science_changed.emit(val)
+var yield_religion: float = 0.0:
+	set(val):
+		yield_religion = val
+		yield_religion_changed.emit(val)
+var yield_gold: float = 0.0:
+	set(val):
+		yield_gold = val
+		yield_gold_changed.emit(val)
 # 生产相关
-var production_val: float = 0.0
-var producing_unit_type: Unit.Type = -1
+var production_val: float = 0.0:
+	set(val):
+		production_val = val
+		production_val_changed.emit(val)
+var producing_unit_type: Unit.Type = -1:
+	set(type):
+		producing_unit_type = type
+		producing_unit_type_changed.emit(type)
 
 @onready var city_main_panel: PanelContainer = $CityMainPanelContainer
 @onready var growth_turn_label: Label = $CityMainPanelContainer/HBoxContainer/GrowthTurnLabel

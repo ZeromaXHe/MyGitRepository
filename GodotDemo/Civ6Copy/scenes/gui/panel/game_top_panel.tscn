@@ -1,0 +1,365 @@
+[gd_scene load_steps=32 format=3 uid="uid://cuqtin2smf42h"]
+
+[ext_resource type="StyleBox" uid="uid://bc4g1w73a30v" path="res://styles/top_gradient_black_blue_bar.tres" id="1_h8bf4"]
+[ext_resource type="Script" path="res://scenes/gui/panel/game_top_panel.gd" id="2_kycm7"]
+[ext_resource type="Texture2D" uid="uid://bbuwimgeo1bf6" path="res://assets/civ6_origin/core/webp_32x32/core_science.webp" id="2_o7hi2"]
+[ext_resource type="Texture2D" uid="uid://batagftcmuypd" path="res://assets/civ6_origin/core/webp_32x32/core_culture.webp" id="3_w8idt"]
+[ext_resource type="Texture2D" uid="uid://mro7bq6p1jub" path="res://assets/civ6_origin/core/webp_32x32/core_faith.webp" id="4_b2dnh"]
+[ext_resource type="Texture2D" uid="uid://onqbvvq12y21" path="res://assets/civ6_origin/core/webp_32x32/core_gold.webp" id="5_vot8e"]
+[ext_resource type="Texture2D" uid="uid://dtl12mb8rswks" path="res://assets/civ6_origin/core/webp_32x32/core_favor.webp" id="6_ubqsa"]
+[ext_resource type="Texture2D" uid="uid://djx6780jfdrbs" path="res://assets/civ6_origin/core/webp_32x32/core_envoy.webp" id="7_lxtr3"]
+[ext_resource type="Texture2D" uid="uid://ohlgqatk4nat" path="res://assets/icon_park/帮助_help.svg" id="8_ot0so"]
+[ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="9_a32j1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_femrp"]
+bg_color = Color(0.0666667, 0.462745, 0.643137, 1)
+
+[sub_resource type="Gradient" id="Gradient_qebul"]
+colors = PackedColorArray(0.0196078, 0.12549, 0.172549, 1, 0.0352941, 0.235294, 0.329412, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vajus"]
+gradient = SubResource("Gradient_qebul")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_xxdq3"]
+texture = SubResource("GradientTexture2D_vajus")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e5y11"]
+bg_color = Color(0.458824, 0.137255, 0.572549, 1)
+
+[sub_resource type="Gradient" id="Gradient_wuuxx"]
+offsets = PackedFloat32Array(0, 0.961538)
+colors = PackedColorArray(0.109804, 0.0470588, 0.156863, 1, 0.231373, 0.0980392, 0.333333, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_60xv8"]
+gradient = SubResource("Gradient_wuuxx")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_du5ns"]
+texture = SubResource("GradientTexture2D_60xv8")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ftkgq"]
+bg_color = Color(0.0745098, 0.490196, 0.678431, 1)
+
+[sub_resource type="Gradient" id="Gradient_sdwj7"]
+offsets = PackedFloat32Array(0, 0.961538)
+colors = PackedColorArray(0.0156863, 0.113725, 0.156863, 1, 0.0352941, 0.235294, 0.329412, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ro8q7"]
+gradient = SubResource("Gradient_sdwj7")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5hv8u"]
+texture = SubResource("GradientTexture2D_ro8q7")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h5wvy"]
+bg_color = Color(0.847059, 0.792157, 0.247059, 1)
+
+[sub_resource type="Gradient" id="Gradient_4wv24"]
+offsets = PackedFloat32Array(0, 0.990385)
+colors = PackedColorArray(0.152941, 0.141176, 0.0431373, 1, 0.407843, 0.376471, 0.117647, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_g620g"]
+gradient = SubResource("Gradient_4wv24")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wb3ps"]
+texture = SubResource("GradientTexture2D_g620g")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bmay6"]
+bg_color = Color(0.447059, 0.341176, 0.203922, 1)
+
+[sub_resource type="Gradient" id="Gradient_07dkh"]
+colors = PackedColorArray(0.0980392, 0.0745098, 0.0431373, 1, 0.211765, 0.160784, 0.0941176, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_u12go"]
+gradient = SubResource("Gradient_07dkh")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_81lbc"]
+texture = SubResource("GradientTexture2D_u12go")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ymy8"]
+bg_color = Color(0.027451, 0.101961, 0.168627, 1)
+
+[node name="TopPanel" type="PanelContainer"]
+size_flags_vertical = 0
+theme_override_styles/panel = ExtResource("1_h8bf4")
+script = ExtResource("2_kycm7")
+
+[node name="TopLeftHBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="SciOutline" type="PanelContainer" parent="TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_femrp")
+
+[node name="SciMarginCntnr" type="MarginContainer" parent="TopLeftHBox/SciOutline"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="SciPanel" type="PanelContainer" parent="TopLeftHBox/SciOutline/SciMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_xxdq3")
+
+[node name="SciHBox" type="HBoxContainer" parent="TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel/SciHBox"]
+layout_mode = 2
+texture = ExtResource("2_o7hi2")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel/SciHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.317647, 0.721569, 0.792157, 1)
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="TopLeftHBox/SciOutline/SciMarginCntnr/SciPanel/SciHBox"]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CultOutline" type="PanelContainer" parent="TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_e5y11")
+
+[node name="CultureMarginCntnr" type="MarginContainer" parent="TopLeftHBox/CultOutline"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="CulPanel" type="PanelContainer" parent="TopLeftHBox/CultOutline/CultureMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_du5ns")
+
+[node name="CulHBox" type="HBoxContainer" parent="TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel/CulHBox"]
+layout_mode = 2
+texture = ExtResource("3_w8idt")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel/CulHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.764706, 0.533333, 0.768627, 1)
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="TopLeftHBox/CultOutline/CultureMarginCntnr/CulPanel/CulHBox"]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RegionOutline" type="PanelContainer" parent="TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_ftkgq")
+
+[node name="ReligionMarginCntnr" type="MarginContainer" parent="TopLeftHBox/RegionOutline"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="RegionPanel" type="PanelContainer" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_5hv8u")
+
+[node name="RegionHBox" type="HBoxContainer" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+layout_mode = 2
+texture = ExtResource("4_b2dnh")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.631373, 0.698039, 0.768627, 1)
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529412, 0.588235, 0.627451, 1)
+theme_override_font_sizes/font_size = 10
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GoldOutline" type="PanelContainer" parent="TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_h5wvy")
+
+[node name="GoldMarginCntnr" type="MarginContainer" parent="TopLeftHBox/GoldOutline"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="GoldPanel" type="PanelContainer" parent="TopLeftHBox/GoldOutline/GoldMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_wb3ps")
+
+[node name="GoldHBox" type="HBoxContainer" parent="TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel/GoldHBox"]
+layout_mode = 2
+texture = ExtResource("5_vot8e")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel/GoldHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.945098, 0.913725, 0.611765, 1)
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="TopLeftHBox/GoldOutline/GoldMarginCntnr/GoldPanel/GoldHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.890196, 0.858824, 0.584314, 1)
+theme_override_font_sizes/font_size = 10
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FavorOutline" type="PanelContainer" parent="TopLeftHBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_bmay6")
+
+[node name="FavorMarginCntnr" type="MarginContainer" parent="TopLeftHBox/FavorOutline"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="FavorPanel" type="PanelContainer" parent="TopLeftHBox/FavorOutline/FavorMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_81lbc")
+
+[node name="FavorHBox" type="HBoxContainer" parent="TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel/FavorHBox"]
+layout_mode = 2
+texture = ExtResource("6_ubqsa")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel/FavorHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.776471, 0.623529, 0.380392, 1)
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="TopLeftHBox/FavorOutline/FavorMarginCntnr/FavorPanel/FavorHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72549, 0.584314, 0.356863, 1)
+theme_override_font_sizes/font_size = 10
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EnvoyMarginCntnr" type="MarginContainer" parent="TopLeftHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="EnvoyPanel" type="PanelContainer" parent="TopLeftHBox/EnvoyMarginCntnr"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_1ymy8")
+
+[node name="EnvoyHBox" type="HBoxContainer" parent="TopLeftHBox/EnvoyMarginCntnr/EnvoyPanel"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/EnvoyMarginCntnr/EnvoyPanel/EnvoyHBox"]
+layout_mode = 2
+texture = ExtResource("7_lxtr3")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TopLeftHBox/EnvoyMarginCntnr/EnvoyPanel/EnvoyHBox"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TopRightHBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 8
+alignment = 2
+
+[node name="TurnAndYearLabel" type="Label" parent="TopRightHBox"]
+layout_mode = 2
+text = "回合 1/500
+公元前4000年"
+
+[node name="VSeparator" type="VSeparator" parent="TopRightHBox"]
+layout_mode = 2
+
+[node name="TimeLabel" type="Label" parent="TopRightHBox"]
+layout_mode = 2
+text = "11:30 AM"
+
+[node name="VSeparator2" type="VSeparator" parent="TopRightHBox"]
+layout_mode = 2
+
+[node name="CivPediaButton" type="Button" parent="TopRightHBox"]
+layout_mode = 2
+icon = ExtResource("8_ot0so")
+
+[node name="MenuButton" type="Button" parent="TopRightHBox"]
+layout_mode = 2
+icon = ExtResource("9_a32j1")

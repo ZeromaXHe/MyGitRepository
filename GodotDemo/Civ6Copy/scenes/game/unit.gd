@@ -4,6 +4,7 @@ extends Node2D
 
 signal unit_clicked(unit: Unit)
 signal unit_move_capability_depleted(unit: Unit)
+signal move_capability_changed(move_capability: int)
 
 enum Category {
 	GROUND_FORCE, # 地面部队
@@ -33,7 +34,10 @@ var category: Category
 var type: Type
 var player: Player
 var coord: Vector2i
-var move_capability: int
+var move_capability: int:
+	set(move):
+		move_capability = move
+		move_capability_changed.emit(move)
 
 @onready var background: Sprite2D = $BackgroundSprite2D
 @onready var icon: Sprite2D = $IconSprite2D

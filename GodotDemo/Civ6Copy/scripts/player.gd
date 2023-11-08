@@ -18,7 +18,13 @@ var cities: Array[City] = []
 var territory_border: TerritoryBorderTileMap = territory_border_scene.instantiate()
 
 
-func get_next_movable_unit(unit: Unit) -> Unit:
+func get_next_movable_unit(unit: Unit = null) -> Unit:
+	if unit == null:
+		var movable = units.filter(func(u): return u.move_capability > 0)
+		if movable.is_empty():
+			return null
+		return movable[0]
+	
 	var idx = units.find(unit)
 	if idx == -1:
 		printerr("get_next_movable_unit | unit unfound in units")
