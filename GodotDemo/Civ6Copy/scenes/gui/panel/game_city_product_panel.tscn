@@ -21,6 +21,10 @@ bg_color = Color(0.478431, 0.396078, 0.254902, 1)
 
 [node name="CityProductPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(200, 0)
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 167.0
+grow_vertical = 2
 size_flags_horizontal = 8
 script = ExtResource("1_fpwec")
 

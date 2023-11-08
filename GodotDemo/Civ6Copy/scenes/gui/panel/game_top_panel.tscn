@@ -83,6 +83,10 @@ texture = SubResource("GradientTexture2D_u12go")
 bg_color = Color(0.027451, 0.101961, 0.168627, 1)
 
 [node name="TopPanel" type="PanelContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 52.0
+grow_horizontal = 2
 size_flags_vertical = 0
 theme_override_styles/panel = ExtResource("1_h8bf4")
 script = ExtResource("2_kycm7")
