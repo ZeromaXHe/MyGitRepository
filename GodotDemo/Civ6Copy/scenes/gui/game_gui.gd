@@ -39,6 +39,9 @@ func signal_binding_with_game(game: HotSeatGame) -> void:
 	game.chosen_unit_changed.connect(handle_chosen_unit_changed)
 	game.chosen_city_changed.connect(handle_chosen_city_changed)
 	game.turn_status_changed.connect(turn_panel.handle_turn_status_changed)
+	# 处理顶部面板信号
+	top_panel.civpedia_button_pressed.connect(handle_civpedia_button_pressed)
+	top_panel.menu_button_pressed.connect(handle_menu_button_pressed)
 	# 处理回合按钮信号
 	turn_panel.turn_button_clicked.connect(game.handle_turn_button_clicked)
 	# 处理建立城市按钮的信号
@@ -82,6 +85,14 @@ func hide_mouse_hover_tile_info() -> void:
 	mouse_hover_tile_panel.hide_info()
 
 
+func handle_civpedia_button_pressed() -> void:
+	wiki_panel.show()
+
+
+func handle_menu_button_pressed() -> void:
+	menu_overlay.show()
+
+
 func handle_chosen_unit_changed(unit: Unit) -> void:
 	unit_info_panel.handle_chosen_unit_changed(unit)
 
@@ -103,16 +114,6 @@ func handle_city_info_production_button_toggled(button_pressed: bool) -> void:
 func handle_city_product_panel_close_button_pressed() -> void:
 	hide_city_product_panel()
 	city_info_panel.set_product_button_pressed(false)
-
-
-## 点击右上角文明百科按钮
-func _on_civ_pedia_button_pressed() -> void:
-	wiki_panel.visible = true
-
-
-## 点击右上角菜单按钮
-func _on_menu_button_pressed() -> void:
-	menu_overlay.visible = true
 
 
 ## 点击菜单中的“返回游戏”

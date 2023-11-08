@@ -363,3 +363,6 @@ icon = ExtResource("8_ot0so")
 [node name="MenuButton" type="Button" parent="TopRightHBox"]
 layout_mode = 2
 icon = ExtResource("9_a32j1")
+
+[connection signal="pressed" from="TopRightHBox/CivPediaButton" to="." method="_on_civ_pedia_button_pressed"]
+[connection signal="pressed" from="TopRightHBox/MenuButton" to="." method="_on_menu_button_pressed"]
