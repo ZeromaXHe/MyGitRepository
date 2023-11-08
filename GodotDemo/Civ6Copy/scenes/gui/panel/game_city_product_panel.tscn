@@ -20,7 +20,6 @@ border_color = Color(0.745098, 0.623529, 0.423529, 1)
 bg_color = Color(0.478431, 0.396078, 0.254902, 1)
 
 [node name="CityProductPanel" type="PanelContainer"]
-visible = false
 custom_minimum_size = Vector2(200, 0)
 size_flags_horizontal = 8
 script = ExtResource("1_fpwec")

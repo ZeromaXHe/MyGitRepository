@@ -11,7 +11,6 @@
 bg_color = Color(0.0627451, 0.909804, 0.294118, 1)
 
 [node name="UnitInfoPanel" type="PanelContainer"]
-visible = false
 size_flags_horizontal = 8
 size_flags_vertical = 8
 script = ExtResource("1_0vypd")
@@ -77,3 +76,4 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [connection signal="pressed" from="UnitInfoVBox/ButtonHBox/CityButton" to="." method="_on_city_button_pressed"]
+[connection signal="pressed" from="UnitInfoVBox/ButtonHBox/SkipButton" to="." method="_on_skip_button_pressed"]

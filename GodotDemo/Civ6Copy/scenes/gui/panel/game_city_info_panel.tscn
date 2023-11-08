@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://dsvabdnd8uany"]
+[gd_scene load_steps=18 format=3 uid="uid://dsvabdnd8uany"]
 
 [ext_resource type="Theme" uid="uid://bjxgqo07h5f4q" path="res://scenes/gui/theme_button_icon_max_width_15.tres" id="1_aany7"]
 [ext_resource type="Script" path="res://scenes/gui/panel/game_city_info_panel.gd" id="1_n2ks8"]
@@ -23,11 +23,14 @@ bg_color = Color(0, 0, 0, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6p4mt"]
 bg_color = Color(0.027451, 0.454902, 0.133333, 1)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_q1h03"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aq6hc"]
 bg_color = Color(0.564706, 0.223529, 0.168627, 1)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_v11nb"]
+
 [node name="CityInfoPanel" type="PanelContainer"]
-visible = false
 size_flags_horizontal = 8
 size_flags_vertical = 8
 script = ExtResource("1_n2ks8")
@@ -232,17 +235,39 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="GrowthBar" type="ProgressBar" parent="CityInfoVBox/ProgressHBox"]
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("StyleBoxFlat_6p4mt")
 value = 50.0
+show_percentage = false
+
+[node name="GrowthTurnLabel" type="Label" parent="CityInfoVBox/ProgressHBox/GrowthBar"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxEmpty_q1h03")
+text = "6 回合后增长"
+vertical_alignment = 1
 
 [node name="ProductBar" type="ProgressBar" parent="CityInfoVBox/ProgressHBox"]
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("StyleBoxFlat_aq6hc")
 value = 50.0
+show_percentage = false
+
+[node name="ProductTurnLabel" type="Label" parent="CityInfoVBox/ProgressHBox/ProductBar"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxEmpty_v11nb")
+text = "0 回合后完成"
+vertical_alignment = 1
 
 [connection signal="toggled" from="CityInfoVBox/ButtonHBox/ProductButton" to="." method="_on_product_button_toggled"]

@@ -223,15 +223,18 @@ size_flags_horizontal = 8
 alignment = 2
 
 [node name="UnitInfoPanel" parent="VBoxContainer/MainMargin/RightDownHBox" instance=ExtResource("18_r0akp")]
+visible = false
 layout_mode = 2
 
 [node name="CityInfoPanel" parent="VBoxContainer/MainMargin/RightDownHBox" instance=ExtResource("19_karjy")]
+visible = false
 layout_mode = 2
 
 [node name="TurnPanel" parent="VBoxContainer/MainMargin/RightDownHBox" instance=ExtResource("20_7b5h4")]
 layout_mode = 2
 
 [node name="CityProductPanel" parent="VBoxContainer/MainMargin/RightDownHBox" instance=ExtResource("21_pw5r8")]
+visible = false
 layout_mode = 2
 
 [node name="WikiPanelContainer" parent="." instance=ExtResource("29_dio20")]

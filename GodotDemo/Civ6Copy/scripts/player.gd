@@ -18,12 +18,15 @@ var cities: Array[City] = []
 var territory_border: TerritoryBorderTileMap = territory_border_scene.instantiate()
 
 
-func get_next_movable_unit(unit: Unit = null) -> Unit:
+func get_next_movable_unit(unit: Unit = null, return_input: bool = true) -> Unit:
 	if unit == null:
 		var movable = units.filter(func(u): return u.move_capability > 0)
 		if movable.is_empty():
 			return null
 		return movable[0]
+	
+	if return_input and unit.move_capability > 0:
+		return unit
 	
 	var idx = units.find(unit)
 	if idx == -1:
@@ -40,6 +43,33 @@ func get_next_movable_unit(unit: Unit = null) -> Unit:
 func refresh_units_move_capabilities() -> void:
 	for unit in units:
 		unit.move_capability = unit.get_move_range()
+
+
+func get_next_productable_city(city: City = null, return_input: bool = true) -> City:
+	if city == null:
+		var productable = cities.filter(func(c): return c.producing_unit_type == -1)
+		if productable.is_empty():
+			return null
+		return productable[0]
+	
+	if return_input and city.producing_unit_type == -1:
+		return city
+	
+	var idx = cities.find(city)
+	if idx == -1:
+		printerr("get_next_productable_city | city unfound in cities")
+		return null
+	var i = (idx + 1) % cities.size()
+	while i != idx:
+		if cities[i].producing_unit_type == -1:
+			return cities[i]
+		i = (i + 1) % cities.size()
+	return null
+
+
+func update_citys_product_val() -> void:
+	for city in cities:
+		city.update_product_val()
 
 
 class MapSightInfo:

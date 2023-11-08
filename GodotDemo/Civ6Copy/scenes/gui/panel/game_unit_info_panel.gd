@@ -26,12 +26,14 @@ func show_info() -> void:
 		showing_unit = chosen_unit
 		# 刷新内容
 		unit_name_label.text = Unit.get_unit_name(showing_unit.type)
+		if showing_unit.type == Unit.Type.SETTLER:
+			unit_city_button.show()
+		else:
+			unit_city_button.hide()
 		match showing_unit.type:
 			Unit.Type.SETTLER:
-				unit_city_button.show()
 				unit_texture_rect.texture = load("res://assets/civ6_origin/unit/png_200/unit_settler.png")
 			Unit.Type.WARRIOR:
-				unit_city_button.hide()
 				unit_texture_rect.texture = load("res://assets/civ6_origin/unit/png_200/unit_warrior.png")
 		handle_unit_move_capability_changed(showing_unit.move_capability)
 	# 绑定信号，方便后续更新信息
@@ -42,6 +44,7 @@ func show_info() -> void:
 
 func hide_info() -> void:
 	disconnect_showing_unit_signals()
+	showing_unit = null
 	hide()
 
 
@@ -70,3 +73,9 @@ func handle_chosen_unit_changed(unit: Unit) -> void:
 ## 点击单位的建造城市按钮
 func _on_city_button_pressed() -> void:
 	city_button_pressed.emit()
+
+
+## 点击单位的跳过按钮
+func _on_skip_button_pressed() -> void:
+	# 目前先将移动力直接置为 0
+	showing_unit.move_capability = 0

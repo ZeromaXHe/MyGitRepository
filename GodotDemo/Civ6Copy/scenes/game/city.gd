@@ -5,12 +5,15 @@ extends Node2D
 signal city_clicked(city: City)
 signal producing_unit_type_changed(type: Unit.Type)
 signal production_val_changed(val: float)
+# 单位产量变化
 signal yield_culture_changed(val: float)
 signal yield_food_changed(val: float)
 signal yield_product_changed(val: float)
 signal yield_science_changed(val: float)
 signal yield_religion_changed(val: float)
 signal yield_gold_changed(val: float)
+# 新单位建成
+signal product_completed(unit_type: Unit.Type, city: City)
 
 var city_name: String
 var coord: Vector2i
@@ -30,7 +33,7 @@ var yield_food: float = 0.0:
 	set(val):
 		yield_food = val
 		yield_food_changed.emit(val)
-var yield_product: float = 0.0:
+var yield_product: float = 1.0:
 	set(val):
 		yield_product = val
 		yield_product_changed.emit(val)
@@ -51,10 +54,18 @@ var production_val: float = 0.0:
 	set(val):
 		production_val = val
 		production_val_changed.emit(val)
+		# TODO: 暂时只用开拓者成本的计算
+		product_progress_bar.value = production_val * 100.0 / 80.0
+		product_turn_label.text = str(ceili((80.0 - production_val) / yield_product))
 var producing_unit_type: Unit.Type = -1:
 	set(type):
 		producing_unit_type = type
 		producing_unit_type_changed.emit(type)
+		if type == -1:
+			product_texture_rect.texture = null
+			product_turn_label.text = "-"
+		else:
+			product_texture_rect.texture = Unit.get_unit_pic_webp_64x64(type)
 
 @onready var city_main_panel: PanelContainer = $CityMainPanelContainer
 @onready var growth_turn_label: Label = $CityMainPanelContainer/HBoxContainer/GrowthTurnLabel
@@ -78,7 +89,7 @@ func initiate(coord: Vector2i, map_shower: MapShower) -> void:
 	# TODO: 先写死，之后补逻辑
 	self.yield_culture = 1.4
 	self.yield_food = 4.3
-	self.yield_product = 5.7
+	self.yield_product = 5.7 * 4 # 测试稍微调整一下生产速度。估计当时截图也是选了“联机”速度，造单位会更快
 	self.yield_science = 3.1
 	self.yield_religion = 0.0
 	self.yield_gold = 5.7
@@ -114,6 +125,15 @@ func set_main_color(main_color: Color) -> void:
 func set_second_color(second_color: Color) -> void:
 	level_label.add_theme_color_override("font_color", second_color)
 	name_label.add_theme_color_override("font_color", second_color)
+
+
+func update_product_val() -> void:
+	if production_val + yield_product > 80.0:
+		product_completed.emit(producing_unit_type, self)
+		producing_unit_type = -1
+		production_val += yield_product - 80.0
+	else:
+		production_val += yield_product
 
 
 func _on_click_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:

@@ -38,6 +38,8 @@ var move_capability: int:
 	set(move):
 		move_capability = move
 		move_capability_changed.emit(move)
+		if move == 0:
+			unit_move_capability_depleted.emit(self)
 
 @onready var background: Sprite2D = $BackgroundSprite2D
 @onready var icon: Sprite2D = $IconSprite2D
@@ -61,18 +63,11 @@ func initiate(type: Type, player: Player, coord: Vector2i, map_shower: MapShower
 
 
 func initiate_icon() -> void:
-	match self.type:
+	icon.texture = get_unit_pic_webp_64x64(type)
+	match type:
 		Type.SETTLER:
-			icon.texture = load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_settler.webp")
 			icon.scale = Vector2(0.2, 0.2)
-		Type.BUILDER:
-			icon.texture = load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_builder.webp")
-			icon.scale = Vector2(0.8, 0.8)
-		Type.SCOUT:
-			icon.texture = load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_scout.webp")
-			icon.scale = Vector2(0.8, 0.8)
-		Type.WARRIOR:
-			icon.texture = load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp")
+		_:
 			icon.scale = Vector2(0.8, 0.8)
 	
 	match self.category:
@@ -107,6 +102,22 @@ static func get_unit_pic_webp_256x256(type: Type) -> Texture2D:
 			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_warrior.webp")
 		_:
 			printerr("get_unit_pic_webp_256x256 | no pic for type: ", type)
+			return null
+
+
+static func get_unit_pic_webp_64x64(type: Type) -> Texture2D:
+	match type:
+		Type.SETTLER:
+			# 开拓者目前没有 64x64 的图
+			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_settler.webp")
+		Type.BUILDER:
+			return load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_builder.webp")
+		Type.SCOUT:
+			return load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_scout.webp")
+		Type.WARRIOR:
+			return load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp")
+		_:
+			printerr("get_unit_pic_webp_64x64 | no pic for type: ", type)
 			return null
 
 
@@ -165,8 +176,6 @@ func show_move_range(map_shower: MapShower) -> void:
 func move_to(coord: Vector2i, map_shower: MapShower) -> void:
 	self.move_capability = max(0, self.move_capability \
 			- map_shower._map.move_astar.coord_path_cost_sum(map_shower._map.move_astar.get_point_path_by_coord(self.coord, coord)))
-	if self.move_capability == 0 :
-		unit_move_capability_depleted.emit(self)
 	update_out_sight(map_shower)
 	# 将单位移出地图原坐标
 	map_shower._map.get_map_tile_info_at(self.coord).units.erase(self)

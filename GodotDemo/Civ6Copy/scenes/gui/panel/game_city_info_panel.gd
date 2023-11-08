@@ -28,6 +28,7 @@ var showing_city: City = null
 @onready var city_data_label: Label = $CityInfoVBox/DetailHBox/RightVBox/DataLabel
 @onready var city_intro_label: Label = $CityInfoVBox/DetailHBox/RightVBox/IntroLabel
 @onready var city_product_progress: ProgressBar = $CityInfoVBox/ProgressHBox/ProductBar
+@onready var city_product_turn_label: Label = $CityInfoVBox/ProgressHBox/ProductBar/ProductTurnLabel
 
 
 func show_info() -> void:
@@ -88,7 +89,6 @@ func disconnect_showing_city_signals() -> void:
 		showing_city.yield_religion_changed.disconnect(handle_city_yield_religion_changed)
 	if showing_city.yield_gold_changed.is_connected(handle_city_yield_gold_changed):
 		showing_city.yield_gold_changed.disconnect(handle_city_yield_gold_changed)
-		
 
 
 func connect_showing_city_signals() -> void:
@@ -114,6 +114,7 @@ func connect_showing_city_signals() -> void:
 
 func hide_info() -> void:
 	disconnect_showing_city_signals()
+	showing_city = null
 	hide()
 
 
@@ -126,15 +127,15 @@ func handle_chosen_city_changed(city: City) -> void:
 
 
 func handle_city_producing_unit_type_changed(type: Unit.Type) -> void:
-	if showing_city.producing_unit_type == -1:
+	if type == -1:
 		city_product_texture_rect.texture = null
 		city_producing_label.text = "没有生产任何东西"
 		city_data_label.text = ""
 		city_intro_label.text = ""
 	else:
-		city_product_texture_rect.texture = Unit.get_unit_pic_webp_256x256(showing_city.producing_unit_type)
-		city_producing_label.text = Unit.get_unit_name(showing_city.producing_unit_type)
-		# TODO: 单位数据
+		city_product_texture_rect.texture = Unit.get_unit_pic_webp_256x256(type)
+		city_producing_label.text = Unit.get_unit_name(type)
+		# TODO: 单位数据和简介
 		city_data_label.text = "移动力：2"
 		city_intro_label.text = "这是正在制造一个" + city_producing_label.text + "的简介"
 
@@ -142,6 +143,10 @@ func handle_city_producing_unit_type_changed(type: Unit.Type) -> void:
 func handle_city_production_val_changed(val: float) -> void:
 	# TODO: 先全部按开拓者的生产计算
 	city_product_progress.value = val * 100.0 / 80.0
+	if showing_city.producing_unit_type == -1:
+		city_product_turn_label.text = "0 回合后完成"
+	else:
+		city_product_turn_label.text = str(ceili((80.0 - val) / showing_city.yield_product)) + " 回合后完成"
 
 
 func handle_city_yield_culture_changed(val: float) -> void:
