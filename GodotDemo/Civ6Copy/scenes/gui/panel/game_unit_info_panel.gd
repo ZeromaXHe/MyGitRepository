@@ -3,6 +3,8 @@ extends PanelContainer
 
 
 signal city_button_pressed
+signal skip_button_pressed
+signal sleep_button_pressed
 
 
 var chosen_unit: Unit = null
@@ -77,5 +79,9 @@ func _on_city_button_pressed() -> void:
 
 ## 点击单位的跳过按钮
 func _on_skip_button_pressed() -> void:
-	# 目前先将移动力直接置为 0
-	showing_unit.move_capability = 0
+	skip_button_pressed.emit()
+
+
+## 点击单位的睡眠按钮
+func _on_sleep_button_pressed() -> void:
+	sleep_button_pressed.emit()

@@ -42,7 +42,9 @@ func signal_binding_with_game(game: HotSeatGame) -> void:
 	# 处理回合按钮信号
 	turn_panel.turn_button_clicked.connect(game.handle_turn_button_clicked)
 	# 处理建立城市按钮的信号
-	unit_info_panel.city_button_pressed.connect(game.handle_city_button_pressed)
+	unit_info_panel.city_button_pressed.connect(game.handle_unit_city_button_pressed)
+	unit_info_panel.skip_button_pressed.connect(game.handle_unit_skip_button_pressed)
+	unit_info_panel.sleep_button_pressed.connect(game.handle_unit_sleep_button_pressed)
 	# 处理城市信息界面生产按钮的按下状态修改的信号
 	city_info_panel.production_button_toggled.connect(handle_city_info_production_button_toggled)
 	# 处理城市生产界面的信号

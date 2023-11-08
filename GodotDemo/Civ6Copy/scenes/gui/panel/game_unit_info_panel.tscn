@@ -77,3 +77,4 @@ vertical_alignment = 1
 
 [connection signal="pressed" from="UnitInfoVBox/ButtonHBox/CityButton" to="." method="_on_city_button_pressed"]
 [connection signal="pressed" from="UnitInfoVBox/ButtonHBox/SkipButton" to="." method="_on_skip_button_pressed"]
+[connection signal="pressed" from="UnitInfoVBox/ButtonHBox/SleepButton" to="." method="_on_sleep_button_pressed"]

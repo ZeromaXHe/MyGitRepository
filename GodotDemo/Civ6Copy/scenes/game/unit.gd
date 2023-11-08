@@ -40,6 +40,8 @@ var move_capability: int:
 		move_capability_changed.emit(move)
 		if move == 0:
 			unit_move_capability_depleted.emit(self)
+var skip_flag: bool = false
+var sleep_flag: bool = false
 
 @onready var background: Sprite2D = $BackgroundSprite2D
 @onready var icon: Sprite2D = $IconSprite2D

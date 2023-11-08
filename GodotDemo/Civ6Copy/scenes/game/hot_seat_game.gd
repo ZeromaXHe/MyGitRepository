@@ -94,7 +94,7 @@ func refresh_turn_status() -> void:
 	var player: Player = GlobalScript.get_current_player()
 	if player.get_next_productable_city(chosen_city) != null:
 		turn_status = TurnStatus.CITY_NEED_PRODUCT
-	elif player.get_next_movable_unit(chosen_unit) != null:
+	elif player.get_next_need_move_unit(chosen_unit) != null:
 		turn_status = TurnStatus.UNIT_NEED_MOVE
 	else:
 		turn_status = TurnStatus.END_TURN
@@ -180,6 +180,8 @@ func set_chosen_unit(unit: Unit) -> void:
 	if unit == null:
 		game_gui.hide_unit_info()
 	else:
+		unit.skip_flag = false
+		unit.sleep_flag = false
 		game_gui.show_unit_info()
 
 
@@ -187,13 +189,27 @@ func handle_city_product_completed(unit_type: Unit.Type, city: City) -> void:
 	add_unit(unit_type, city.coord)
 
 
-func handle_city_button_pressed() -> void:
+func handle_unit_city_button_pressed() -> void:
 	# 建立城市
 	build_city(chosen_unit.coord)
 	# 删除开拓者
 	chosen_unit.delete(map_shower)
 	chosen_unit = null
 	map_shower.clear_move_tile_areas()
+
+
+func handle_unit_skip_button_pressed() -> void:
+	chosen_unit.skip_flag = true
+	chosen_unit = null
+	# 跳过后可能没有单位需要移动了，需要更新回合状态
+	refresh_turn_status()
+
+
+func handle_unit_sleep_button_pressed() -> void:
+	chosen_unit.sleep_flag = true
+	chosen_unit = null
+	# 睡眠后可能没有单位需要移动了，需要更新回合状态
+	refresh_turn_status()
 
 
 func handle_city_product_settler_button_pressed() -> void:
@@ -210,13 +226,13 @@ func handle_turn_button_clicked() -> void:
 			chosen_unit = null
 			# 增加回合数
 			turn_num += 1
-			# 刷新单位移动力
-			player.refresh_units_move_capabilities()
+			# 刷新单位移动力、跳过状态等
+			player.refresh_units()
 			# 更新城市生产进度
 			player.update_citys_product_val()
 			refresh_turn_status()
 		TurnStatus.UNIT_NEED_MOVE:
-			var movable_unit: Unit = player.get_next_movable_unit(chosen_unit)
+			var movable_unit: Unit = player.get_next_need_move_unit(chosen_unit)
 			if movable_unit == null:
 				printerr("handle_turn_button_clicked | UNIT_NEED_MOVE | no movable unit found")
 			else:
