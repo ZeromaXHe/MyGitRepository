@@ -132,6 +132,7 @@ func handle_city_producing_unit_type_changed(type: Unit.Type) -> void:
 		city_producing_label.text = "没有生产任何东西"
 		city_data_label.text = ""
 		city_intro_label.text = ""
+		city_product_turn_label.text = "0 回合后完成"
 	else:
 		city_product_texture_rect.texture = Unit.get_unit_pic_webp_256x256(type)
 		city_producing_label.text = Unit.get_unit_name(type)

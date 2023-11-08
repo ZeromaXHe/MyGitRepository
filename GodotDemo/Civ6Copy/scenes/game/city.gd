@@ -56,7 +56,10 @@ var production_val: float = 0.0:
 		production_val_changed.emit(val)
 		# TODO: 暂时只用开拓者成本的计算
 		product_progress_bar.value = production_val * 100.0 / 80.0
-		product_turn_label.text = str(ceili((80.0 - production_val) / yield_product))
+		if producing_unit_type == -1:
+			product_turn_label.text = "-"
+		else:
+			product_turn_label.text = str(ceili((80.0 - production_val) / yield_product))
 var producing_unit_type: Unit.Type = -1:
 	set(type):
 		producing_unit_type = type
