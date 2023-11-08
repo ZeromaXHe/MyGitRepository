@@ -126,7 +126,7 @@ func add_unit(type: Unit.Type, coord: Vector2i) -> Unit:
 	units.add_child(unit)
 	unit.initiate(type, GlobalScript.get_current_player(), coord, map_shower)
 	# 处理单位信号
-	unit.unit_clicked.connect(set_chosen_unit)
+	unit.unit_clicked.connect(handle_unit_clicked)
 	unit.unit_move_capability_depleted.connect(handle_unit_move_capability_depleted)
 	# 新的单位需要移动，更新一下回合状态
 	refresh_turn_status()
@@ -137,34 +137,32 @@ func build_city(coord: Vector2i) -> void:
 	var city: City = CITY_SCENE.instantiate()
 	cities.add_child(city)
 	city.initiate(coord, map_shower)
-	city.city_clicked.connect(set_chosen_city)
+	city.city_clicked.connect(handle_city_clicked)
 	city.product_completed.connect(handle_city_product_completed)
 	# 新的城市需要选择建造项目，更新一下回合状态
 	refresh_turn_status()
 
 
 func chose_unit_and_camera_focus(unit: Unit):
-	chosen_unit = unit
+	handle_unit_clicked(unit)
 	camera.global_position = map_shower.map_coord_to_global_position(unit.coord)
 
 
 func chose_city_and_camera_focus(city: City):
-	chosen_city = city
+	handle_city_clicked(city)
 	camera.global_position = map_shower.map_coord_to_global_position(city.coord)
 
 
 func set_chosen_city(city: City) -> void:
 	print("set_chosen_city | ", (city.coord if city != null else "null"), " is being set")
-	if chosen_city != null and chosen_city.producing_unit_type_changed.is_connected(handle_chosen_city_producing_unit_type_changed):
-		chosen_city.producing_unit_type_changed.disconnect(handle_chosen_city_producing_unit_type_changed)
+	if chosen_city != null:
+		if chosen_city.producing_unit_type_changed.is_connected(handle_chosen_city_producing_unit_type_changed):
+			chosen_city.producing_unit_type_changed.disconnect(handle_chosen_city_producing_unit_type_changed)
 	chosen_city = city
 	chosen_city_changed.emit(city)
-	if city == null:
-		game_gui.hide_city_info()
-	else:
+	if city != null:
 		if not city.producing_unit_type_changed.is_connected(handle_chosen_city_producing_unit_type_changed):
 			city.producing_unit_type_changed.connect(handle_chosen_city_producing_unit_type_changed)
-		game_gui.show_city_info()
 
 
 func set_chosen_unit(unit: Unit) -> void:
@@ -177,12 +175,19 @@ func set_chosen_unit(unit: Unit) -> void:
 		unit.show_move_range(map_shower)
 	chosen_unit = unit
 	chosen_unit_changed.emit(unit)
-	if unit == null:
-		game_gui.hide_unit_info()
-	else:
+	if unit != null:
 		unit.skip_flag = false
 		unit.sleep_flag = false
-		game_gui.show_unit_info()
+
+
+func handle_city_clicked(city: City) -> void:
+	chosen_city = city
+	chosen_unit = null
+
+
+func handle_unit_clicked(unit: Unit) -> void:
+	chosen_city = null
+	chosen_unit = unit
 
 
 func handle_city_product_completed(unit_type: Unit.Type, city: City) -> void:

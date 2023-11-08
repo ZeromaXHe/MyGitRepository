@@ -27,8 +27,8 @@ func _ready() -> void:
 	wiki_panel.hide()
 	menu_overlay.hide()
 	# 右下角面板初始化
-	hide_unit_info()
-	hide_city_info()
+	unit_info_panel.hide()
+	city_info_panel.hide()
 	hide_city_product_panel()
 	# 鼠标悬停面板初始不显示
 	hide_mouse_hover_tile_info()
@@ -36,8 +36,8 @@ func _ready() -> void:
 
 func signal_binding_with_game(game: HotSeatGame) -> void:
 	game.turn_changed.connect(top_panel.handle_turn_changed)
-	game.chosen_unit_changed.connect(unit_info_panel.handle_chosen_unit_changed)
-	game.chosen_city_changed.connect(city_info_panel.handle_chosen_city_changed)
+	game.chosen_unit_changed.connect(handle_chosen_unit_changed)
+	game.chosen_city_changed.connect(handle_chosen_city_changed)
 	game.turn_status_changed.connect(turn_panel.handle_turn_status_changed)
 	# 处理回合按钮信号
 	turn_panel.turn_button_clicked.connect(game.handle_turn_button_clicked)
@@ -50,15 +50,6 @@ func signal_binding_with_game(game: HotSeatGame) -> void:
 	# 处理城市生产界面的信号
 	city_product_panel.settler_button_pressed.connect(game.handle_city_product_settler_button_pressed)
 	city_product_panel.close_button_pressed.connect(handle_city_product_panel_close_button_pressed)
-
-
-func show_city_info() -> void:
-	hide_unit_info()
-	city_info_panel.show_info()
-
-func hide_city_info() -> void:
-	city_info_panel.hide_info()
-	hide_city_product_panel()
 
 
 func show_city_product_panel() -> void:
@@ -79,15 +70,6 @@ func hide_turn_panel() -> void:
 	turn_panel.hide()
 
 
-func show_unit_info() -> void:
-	hide_city_info()
-	unit_info_panel.show_info()
-
-
-func hide_unit_info() -> void:
-	unit_info_panel.hide_info()
-
-
 func is_mouse_hover_info_shown() -> bool:
 	return mouse_hover_tile_panel.visible
 
@@ -98,6 +80,16 @@ func show_mouse_hover_tile_info(map_coord: Vector2i, tile_info: Map.TileInfo) ->
 
 func hide_mouse_hover_tile_info() -> void:
 	mouse_hover_tile_panel.hide_info()
+
+
+func handle_chosen_unit_changed(unit: Unit) -> void:
+	unit_info_panel.handle_chosen_unit_changed(unit)
+
+
+func handle_chosen_city_changed(city: City) -> void:
+	city_info_panel.handle_chosen_city_changed(city)
+	if city == null:
+		hide_city_product_panel()
 
 
 func handle_city_info_production_button_toggled(button_pressed: bool) -> void:

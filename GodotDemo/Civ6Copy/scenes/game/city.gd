@@ -69,6 +69,8 @@ var producing_unit_type: Unit.Type = -1:
 			product_turn_label.text = "-"
 		else:
 			product_texture_rect.texture = Unit.get_unit_pic_webp_64x64(type)
+			product_turn_label.text = str(ceili((80.0 - production_val) / yield_product))
+		product_progress_bar.value = production_val * 100.0 / 80.0
 
 @onready var city_main_panel: PanelContainer = $CityMainPanelContainer
 @onready var growth_turn_label: Label = $CityMainPanelContainer/HBoxContainer/GrowthTurnLabel
@@ -81,9 +83,13 @@ var producing_unit_type: Unit.Type = -1:
 @onready var product_turn_label: Label = $CityMainPanelContainer/HBoxContainer/ProductTurnLabel
 
 
+func _ready() -> void:
+	product_progress_bar.value = 0.0
+
+
 func initiate(coord: Vector2i, map_shower: MapShower) -> void:
 	# FIXME: 先随便给城市取个名字
-	city_name = "罗马"
+	city_name = "罗马" + str(coord)
 	name_label.text = city_name
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)

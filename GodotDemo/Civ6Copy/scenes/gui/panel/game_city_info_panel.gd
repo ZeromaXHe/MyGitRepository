@@ -4,8 +4,15 @@ extends PanelContainer
 
 signal production_button_toggled(button_pressed: bool)
 
-var chosen_city: City = null
-var showing_city: City = null
+var showing_city: City = null:
+	set(city):
+		if showing_city != null:
+			disconnect_showing_city_signals()
+		showing_city = city
+		if city == null:
+			hide()
+		else:
+			show_info()
 
 # 产出选择按钮
 @onready var culture_check_box: CheckBox = $CityInfoVBox/YieldHBox/CultureCheckBox
@@ -31,30 +38,32 @@ var showing_city: City = null
 @onready var city_product_turn_label: Label = $CityInfoVBox/ProgressHBox/ProductBar/ProductTurnLabel
 
 
+func _ready() -> void:
+	city_product_progress.value = 0.0
+
+
 func show_info() -> void:
-	if chosen_city == null:
-		printerr("GameCityInfoPanel | show_info | weird, no chosen city, but show")
+	if showing_city == null:
+		printerr("GameCityInfoPanel | show_info | weird, no showing city, but show")
 		return
-	if showing_city != chosen_city:
-		showing_city = chosen_city
-		# 刷新内容
-		city_name_label.text = showing_city.city_name
-		capital_texture_rect.visible = showing_city.capital
-		# 城市所属玩家颜色
-		city_texture_rect.modulate = showing_city.player.second_color
-		city_name_label.add_theme_color_override("font_color", showing_city.player.second_color)
-		city_name_panel.get("theme_override_styles/panel").set("bg_color", showing_city.player.main_color)
-		city_pic_panel.get("theme_override_styles/panel").set("bg_color", showing_city.player.main_color)
-		# 产量显示
-		handle_city_yield_culture_changed(showing_city.yield_culture)
-		handle_city_yield_food_changed(showing_city.yield_food)
-		handle_city_yield_product_changed(showing_city.yield_product)
-		handle_city_yield_science_changed(showing_city.yield_science)
-		handle_city_yield_religion_changed(showing_city.yield_religion)
-		handle_city_yield_gold_changed(showing_city.yield_gold)
-		# 生产单位显示
-		handle_city_producing_unit_type_changed(showing_city.producing_unit_type)
-		handle_city_production_val_changed(showing_city.production_val)
+	
+	# 刷新内容
+	city_name_label.text = showing_city.city_name
+	capital_texture_rect.visible = showing_city.capital
+	# 城市所属玩家颜色
+	city_texture_rect.modulate = showing_city.player.second_color
+	city_name_label.add_theme_color_override("font_color", showing_city.player.second_color)
+	city_name_panel.get("theme_override_styles/panel").set("bg_color", showing_city.player.main_color)
+	city_pic_panel.get("theme_override_styles/panel").set("bg_color", showing_city.player.main_color)
+	# 产量显示
+	handle_city_yield_culture_changed(showing_city.yield_culture)
+	handle_city_yield_food_changed(showing_city.yield_food)
+	handle_city_yield_product_changed(showing_city.yield_product)
+	handle_city_yield_science_changed(showing_city.yield_science)
+	handle_city_yield_religion_changed(showing_city.yield_religion)
+	handle_city_yield_gold_changed(showing_city.yield_gold)
+	# 生产单位显示
+	handle_city_producing_unit_type_changed(showing_city.producing_unit_type)
 	# 绑定信号，方便后续更新信息
 	connect_showing_city_signals()
 	# 展示出来
@@ -71,8 +80,6 @@ func yield_text(val: float) -> String:
 
 
 func disconnect_showing_city_signals() -> void:
-	if showing_city == null:
-		return
 	if showing_city.producing_unit_type_changed.is_connected(handle_city_producing_unit_type_changed):
 		showing_city.producing_unit_type_changed.disconnect(handle_city_producing_unit_type_changed)
 	if showing_city.production_val_changed.is_connected(handle_city_production_val_changed):
@@ -92,8 +99,6 @@ func disconnect_showing_city_signals() -> void:
 
 
 func connect_showing_city_signals() -> void:
-	if showing_city == null:
-		return
 	if not showing_city.producing_unit_type_changed.is_connected(handle_city_producing_unit_type_changed):
 		showing_city.producing_unit_type_changed.connect(handle_city_producing_unit_type_changed)
 	if not showing_city.production_val_changed.is_connected(handle_city_production_val_changed):
@@ -112,18 +117,12 @@ func connect_showing_city_signals() -> void:
 		showing_city.yield_gold_changed.connect(handle_city_yield_gold_changed)
 
 
-func hide_info() -> void:
-	disconnect_showing_city_signals()
-	showing_city = null
-	hide()
-
-
 func set_product_button_pressed(button_pressed: bool) -> void:
 	city_production_button.button_pressed = button_pressed
 
 
 func handle_chosen_city_changed(city: City) -> void:
-	chosen_city = city
+	showing_city = city
 
 
 func handle_city_producing_unit_type_changed(type: Unit.Type) -> void:
@@ -139,6 +138,8 @@ func handle_city_producing_unit_type_changed(type: Unit.Type) -> void:
 		# TODO: 单位数据和简介
 		city_data_label.text = "移动力：2"
 		city_intro_label.text = "这是正在制造一个" + city_producing_label.text + "的简介"
+	# 选择新生产单位时强制刷新进度条
+	handle_city_production_val_changed(showing_city.production_val)
 
 
 func handle_city_production_val_changed(val: float) -> void:
