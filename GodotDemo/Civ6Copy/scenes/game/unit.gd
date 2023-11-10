@@ -171,8 +171,13 @@ func show_move_range(map_shower: MapShower) -> void:
 		return
 	var dict: Dictionary = map_shower._map.move_astar.get_in_range_coords_to_cost_dict(coord, move_capability)
 	var cells: Array[Vector2i] = []
-	cells.append_array(dict.keys())
+	# FIXME: 暂时让所有单位都在地块上互斥
+	cells.append_array(dict.keys().filter(func(coord): return is_no_unit_on_tile(coord, map_shower)))
 	map_shower.paint_move_tile_areas(cells)
+
+
+func is_no_unit_on_tile(coord: Vector2i, map_shower: MapShower) -> bool:
+	return map_shower._map.get_map_tile_info_at(coord).units.is_empty()
 
 
 func move_to(coord: Vector2i, map_shower: MapShower) -> void:

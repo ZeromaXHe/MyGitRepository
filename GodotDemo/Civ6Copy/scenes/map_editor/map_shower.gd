@@ -391,57 +391,30 @@ func paint_river(border_coord: Vector2i) -> void:
 
 
 func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool) -> Array[Vector2i]:
-	if dist < 0:
-		return []
-	# 从坐标到是否边缘的布尔值的映射
-	var dict: Dictionary = get_tile_coord_to_rim_bool_dict(map_coord, dist)
+	# Godot 这个假范型，真垃圾…… 还得这样脱裤子放屁拐一下，不然后面 .map() 返回的是 Array
 	var result: Array[Vector2i] = []
-	for k in dict:
-		if not include_inside and not dict[k]:
-			continue
-		result.append(k)
+	if dist < 0:
+		return result
+	var oddr: HexagonUtils.OffsetCoord = HexagonUtils.OffsetCoord.odd_r(map_coord.x, map_coord.y)
+	if include_inside:
+		result.append_array(oddr.to_axial().spiral(dist) \
+				.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))
+	else:
+		result.append_array(oddr.to_axial().ring(dist) \
+				.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))
 	return result
 
 
-## TODO: 目前获取边界效率比较低，未来可以重构这个逻辑
 func get_surrounding_borders(map_coord: Vector2i, dist: int) -> Array[Vector2i]:
-	if dist < 0:
-		return []
-	# 从坐标到是否边缘的布尔值的映射
-	var dict: Dictionary = get_tile_coord_to_rim_bool_dict(map_coord, dist)
 	var result: Array[Vector2i] = []
-	for coord in dict:
-		if not dict[coord]:
-			# 非边缘的直接跳过
-			continue
-		var borders: Array[Vector2i] = Map.get_all_tile_border(coord, false)
-		for border in borders:
-			var neighbors: Array[Vector2i] = Map.get_neighbor_tile_of_border(border)
-			var count_out: int = 0
-			for neighbor in neighbors:
-				if not dict.has(neighbor):
-					count_out += 1
-			if count_out == 1:
-				result.append(border)
+	if dist < 0:
+		return result
+	var center: Vector2i = Map.get_tile_coord_directed_border(map_coord, Map.BorderDirection.CENTER)
+	var oddr: HexagonUtils.OffsetCoord = HexagonUtils.OffsetCoord.odd_r(center.x, center.y)
+	result.append_array(oddr.to_axial().ring(dist * 2 + 1) \
+			.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))
 	return result
 
-
-## TODO: 目前基于 TileMap 既有 API 实现的，所以效率比较低，未来可以自己实现这个逻辑
-func get_tile_coord_to_rim_bool_dict(map_coord: Vector2i, dist: int) -> Dictionary:
-	# 从坐标到是否边缘的布尔值的映射
-	var dict: Dictionary = {map_coord: true}
-	for i in range(0, dist):
-		var dup_dict: Dictionary = dict.duplicate()
-		for k in dup_dict:
-			if not dict[k]:
-				continue
-			var surroundings: Array[Vector2i] = tile_map.get_surrounding_cells(k)
-			for surround in surroundings:
-				if dict.has(surround):
-					continue
-				dict[surround] = true
-			dict[k] = false
-	return dict
 
 func get_map_tile_xy() -> Vector2i:
 	return tile_map.tile_set.tile_size

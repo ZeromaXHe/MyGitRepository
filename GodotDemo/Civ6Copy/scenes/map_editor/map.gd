@@ -758,25 +758,13 @@ static func test_get_tile_coord_directed_border() -> void:
 
 
 static func get_in_map_surrounding_coords(coord: Vector2i, map_size: Vector2i) -> Array[Vector2i]:
+	var oddr: HexagonUtils.OffsetCoord = HexagonUtils.OffsetCoord.odd_r(coord.x, coord.y)
 	var result: Array[Vector2i] = []
-	if coord.y > 0:
-		result.append(coord + Vector2i(0, -1))
-	if coord.y + 1 < map_size.y:
-		result.append(coord + Vector2i(0, 1))
-	if coord.x > 0:
-		result.append(coord + Vector2i(-1, 0))
-		if coord.y % 2 == 0:
-			if coord.y > 0:
-				result.append(coord + Vector2i(-1, -1))
-			if coord.y + 1 < map_size.y:
-				result.append(coord + Vector2i(-1, 1))
-	if coord.x + 1 < map_size.x:
-		result.append(coord + Vector2i(1, 0))
-		if coord.y % 2 == 1:
-			if coord.y > 0:
-				result.append(coord + Vector2i(1, -1))
-			if coord.y + 1 < map_size.y:
-				result.append(coord + Vector2i(1, 1))
+	for direction in HexagonUtils.Direction.values():
+		var neighbor_coord: Vector2i = oddr.neighbor(direction).to_vec2i()
+		if neighbor_coord.y >= 0 and neighbor_coord.y < map_size.y \
+				and neighbor_coord.x >= 0 and neighbor_coord.x < map_size.x:
+			result.append(neighbor_coord)
 	return result
 
 
@@ -865,12 +853,13 @@ class MapAStar2D extends AStar2D:
 		var map_size: Vector2i = map.get_map_tile_size()
 		var surroundings: Array[Vector2i] = Map.get_in_map_surrounding_coords(coord, map_size)
 		for surround in surroundings:
-			if dict.has(surround):
-				continue
 			var cost: float = cost_by_coord(coord, surround)
 			if cost <= range:
-				# FIXME: 目前在 range 较大，一个地块有多条到达路径时可能会有 bug（发现新的低 cost 路径后不会刷新其他地块）
-				dict[surround] = min(dict.get(surround, UNREACHABLE_COST), dict[coord] + cost)
+				# 如果访问过地块，并且目前的路径消耗的行动力不会更少，则直接返回
+				if dict.get(surround, UNREACHABLE_COST) <= dict[coord] + cost:
+					continue
+				dict[surround] = dict[coord] + cost
+				# 如果还可以移动，则继续判断
 				if cost < range:
 					get_in_range_coords_to_cost_dict(surround, range - cost, dict)
 		return dict
@@ -882,9 +871,6 @@ class MapMoveAStar2D extends MapAStar2D:
 		var to_tile: TileInfo = map.get_map_tile_info_at(to_coord)
 		# 无法前往山脉和冰
 		if Map.is_mountain_land_terrain_type(to_tile.type) or to_tile.landscape == LandscapeType.ICE:
-			return UNREACHABLE_COST
-		# FIXME: 暂时让所有单位都在地块上互斥
-		if not map.get_map_tile_info_at(to_coord).units.is_empty():
 			return UNREACHABLE_COST
 		# FIXME: 暂时先让跨越陆海分隔的路线成本为无法到达
 		if Map.is_land_terrain_type(from_tile.type) and Map.is_sea_terrain_type(to_tile.type):

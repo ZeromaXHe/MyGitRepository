@@ -46,7 +46,7 @@ class OffsetCoord:
 	static var oddr_direction_differences: Array[Array] = [
 		[ # 偶数行
 			odd_r(1, 0), odd_r(0, -1), odd_r(-1, -1), # 右, 右上, 左上
-			odd_r(-1, 0), odd_r(1, 1), odd_r(0, 1), # 左, 左下, 右下
+			odd_r(-1, 0), odd_r(-1, 1), odd_r(0, 1), # 左, 左下, 右下
 		],
 		[ # 奇数行
 			odd_r(1, 0), odd_r(1, -1), odd_r(0, -1), # 右, 右上, 左上
@@ -220,18 +220,18 @@ class OffsetCoord:
 		var q: int = col
 		var r: int = row - (col + (col & 1)) / 2
 		return Hex.new(q, r)
+	
+	
+	func to_vec2i() -> Vector2i:
+		return Vector2i(col, row)
 
 ## =======================================================
 #						轴坐标系
 ## =======================================================
 class Hex:
 	static var axial_direction_vectors: Array[Hex] = [
-		Hex.new(1, 0), # 右
-		Hex.new(1, -1), # 右上
-		Hex.new(0, -1), # 左上
-		Hex.new(-1, 0), # 左
-		Hex.new(-1, 1), # 左下
-		Hex.new(0, 1), # 右下
+		Hex.new(1, 0), Hex.new(1, -1), Hex.new(0, -1), # 右，右上，左上
+		Hex.new(-1, 0), Hex.new(-1, 1), Hex.new(0, 1), # 左，左下，右下
 	]
 	
 	var q: int
@@ -328,12 +328,23 @@ class Hex:
 	
 	func ring(radius: int) -> Array[Hex]:
 		var result: Array[Hex] = []
-		# 对于 radius == 0 时无效
+		if radius == 0:
+			# 对于 radius == 0 时后面算法无效
+			result.append(self)
+			return result
 		var hex = add(direction_vec(Direction.LEFT_DOWN).scale(radius))
 		for i in Direction.values():
 			for j in range(radius):
 				result.append(hex)
 				hex = hex.neighbor(i)
+		return result
+	
+	
+	## 螺旋
+	func spiral(radius: int) -> Array[Hex]:
+		var result: Array[Hex] = []
+		for k in range(0, radius + 1):
+			result.append_array(ring(k))
 		return result
 	
 	
@@ -397,20 +408,12 @@ class Hex:
 class Cube:
 	# 因为有 new，貌似就没办法写成 const
 	static var cube_direction_vectors: Array[Cube] = [
-		Cube.new(1, 0, -1), # 右
-		Cube.new(1, -1, 0), # 右上
-		Cube.new(0, -1, 1), # 左上
-		Cube.new(-1, 0, 1), # 左
-		Cube.new(-1, 1, 0), # 左下
-		Cube.new(0, 1, -1), # 右下
+		Cube.new(1, 0, -1), Cube.new(1, -1, 0), Cube.new(0, -1, 1), # 右，右上，左上
+		Cube.new(-1, 0, 1), Cube.new(-1, 1, 0), Cube.new(0, 1, -1), # 左，左下，右下
 	]
 	static var cube_diagonal_vectors: Array[Cube] = [
-		Cube.new(1, 1, -2), # 右下
-		Cube.new(2, -1, -1), # 右上 
-		Cube.new(1, -2, 1), # 上
-		Cube.new(-1, -1, 2), # 左上
-		Cube.new(-2, 1, 1), # 左下
-		Cube.new(-1, 2, -1), # 下
+		Cube.new(1, 1, -2), Cube.new(2, -1, -1), Cube.new(1, -2, 1), # 右下, 右上, 上
+		Cube.new(-1, -1, 2), Cube.new(-2, 1, 1), Cube.new(-1, 2, -1), # 左上, 左下, 下
 	]
 	
 	var q: int
@@ -548,7 +551,10 @@ class Cube:
 	## 环
 	func ring(radius: int) -> Array[Cube]:
 		var result: Array[Cube] = []
-		# 对于 radius == 0 时无效
+		if radius == 0:
+			# 对于 radius == 0 时后面算法无效
+			result.append(self)
+			return result
 		var hex = add(direction_vec(Direction.LEFT_DOWN).scale(radius))
 		for i in Direction.values():
 			for j in range(radius):
@@ -560,7 +566,7 @@ class Cube:
 	## 螺旋
 	func spiral(radius: int) -> Array[Cube]:
 		var result: Array[Cube] = []
-		for k in range(1, radius + 1):
+		for k in range(0, radius + 1):
 			result.append_array(ring(k))
 		return result
 	
