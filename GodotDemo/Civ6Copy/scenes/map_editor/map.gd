@@ -768,6 +768,15 @@ static func get_in_map_surrounding_coords(coord: Vector2i, map_size: Vector2i) -
 	return result
 
 
+class TileYield:
+	var culture: int = 0
+	var food: int = 0
+	var product: int = 0
+	var science: int = 0
+	var religion: int = 0
+	var gold: int = 0
+
+
 class TileInfo:
 	var type: TerrainType = TerrainType.OCEAN
 	var landscape: LandscapeType = LandscapeType.EMPTY
@@ -789,6 +798,12 @@ class TileInfo:
 		to.resource = from.resource
 		to.continent = from.continent
 		return to
+	
+	
+	func get_yield() -> TileYield:
+		var tile_yield := TileYield.new()
+		tile_yield.food = 2
+		return tile_yield
 
 
 class BorderInfo:

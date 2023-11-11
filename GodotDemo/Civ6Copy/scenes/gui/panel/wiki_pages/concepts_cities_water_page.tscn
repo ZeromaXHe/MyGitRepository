@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://bxyj7btsk23qh"]
+
+[node name="CitiesWaterPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "水"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "水"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="Content" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "游戏中的首要决策之一是把您的城市放置在水源附近。一旦出现优良水源，会立即设定出城市最初  住房等级。不靠近水源的城市一开始最多能拥有2个  人口。位于海岸上的城市最多拥有3个  人口。靠近河流、湖泊，或绿洲的城市最多拥有5个  人口。
+
+可通过将一个水渠单元格添加至市中心附近引水。水渠必须放置在与河流、湖泊，或山脉相邻的单元格上，且河流、湖泊，或山脉需要靠近市中心。水渠区域建成后，住房大幅提升，城市  住房数量能从2增加至6——如果靠近河流、湖泊，或绿洲，数量为7，其他情况数量为6。"
+autowrap_mode = 3

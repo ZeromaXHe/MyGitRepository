@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://cuvwjx8d2r78w"]
+
+[node name="CitiesDistrictPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "区域"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "区域"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "在《文明VI》中，建筑将不再挤在城市中心，但其会作为区域的一部分遍布在整个领土上。地图对于重要战略位置的选择至关重要。放置在山脉单元格附近的学院和圣地将获得特殊提升，但前者也将受益于附近的雨林单元格。
+
+城市必须扩大 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口才能建造多个区域：
+• 1个区域需要1点 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口
+• 2个区域需要4点 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口
+• 3个区域需要7点 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口
+• 之后每个额外区域需要+3 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口
+水渠、社区、宇航中心、堤坝和运河区域无视此 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口要求。对 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口数量有特定要求的区域即为特色区域。
+
+当一座城市准备建造时，会出现选择生产项目的按钮。当某区域可用于建造时，会出现在该菜单中。点击区域，命令城市进行建设，并且打开区域滤镜。您会在此大致了解到不同的收益效果，这些效果对您市中心周围的单元格有效。同时，您还能对区域所在位置做出更好的选址决定。滤镜会向您展示可用的单元格，因为某些区域有特定的布局要求（比如，军营不能建在市中心附近）。再者，所有区域必须建在市中心3个单元格范围之内。
+
+拥有移除树林或雨林等地貌的科技后便可在这些地貌上放置区域，但建造时间加长。泛滥平原上无法建造区域。"
+fit_content = true
+scroll_active = false

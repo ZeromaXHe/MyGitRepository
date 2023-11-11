@@ -206,6 +206,9 @@ text = "1/6 住房"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="VSeparator" type="VSeparator" parent="CityInfoVBox/DetailHBox"]
+layout_mode = 2
+
 [node name="RightVBox" type="VBoxContainer" parent="CityInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
@@ -221,6 +224,9 @@ theme_override_font_sizes/font_size = 12
 [node name="IntroLabel" type="Label" parent="CityInfoVBox/DetailHBox/RightVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
+
+[node name="VSeparator2" type="VSeparator" parent="CityInfoVBox/DetailHBox"]
+layout_mode = 2
 
 [node name="ProductTextureRect" type="TextureRect" parent="CityInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(100, 100)

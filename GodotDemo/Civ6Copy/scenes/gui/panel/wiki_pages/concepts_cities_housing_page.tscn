@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://fscpdydfxsi3"]
+
+[node name="CitiesHousingPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "住房"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "住房"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="Content" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "住房代表您能在每座城市所拥有的最大数量的  公民或  人口。  住房的基本来源是水资源。
+
+大多建筑能提供  住房。研究完制陶术后，每座城市都能建造粮仓，其将增加2个  住房，随后能修建下水道，下水道也能增加2个  住房。其他区域的建筑有时也能增加  住房数量，比如军营区域的兵营，学院区域的大学，港口区域的灯塔。您首都城市的宫殿建筑也能增加1个  住房。
+
+每座农场、牧场、种植园，或营地都能供养少量  人口——每两个这样的改良设施能提供1个  住房。在工业时代之前，用这种方式供养农业  人口可支持稍大数量的  人口，之后则可使用社区区域供养人口。"
+autowrap_mode = 3

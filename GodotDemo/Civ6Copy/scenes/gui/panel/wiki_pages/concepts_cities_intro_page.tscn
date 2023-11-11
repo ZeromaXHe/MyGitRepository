@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://cmb5mtgso8qpt"]
+
+[node name="CitiesIntroPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "介绍"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "介绍"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="Content" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "城市对您的文明取得胜利至关重要。您可在此建造单位、建筑和奇观。城市还能让您研究新技术、积累财富。没有强大的、地理位置良好的城市，您根本无法获胜。"
+autowrap_mode = 3

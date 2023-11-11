@@ -1,0 +1,83 @@
+[gd_scene format=3 uid="uid://bi7666mjgneq7"]
+
+[node name="CitiesNeighborhoodCharmPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "社区和魅力"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "社区和魅力"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "社区是一种特殊区域，能让城市容纳更多 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口，并受魅力影响。“魅力”是一种特殊的相邻加成，只适用于社区，同时会通过国家公园和海滨度假区来影响文化胜利的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_tourism.webp[/img] 旅游业绩系统。
+
+惊艳的社区提供6个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_housing.webp[/img] 住房。
+
+迷人的社区提供5个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_housing.webp[/img] 住房。
+
+普通的社区提供4个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_housing.webp[/img] 住房。
+
+无吸引力的社区提供3个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_housing.webp[/img] 住房。
+
+令人厌恶的社区提供2个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_housing.webp[/img] 住房。
+
+魅力值会最终影响国家公园和海滨度假区的放置。
+
+单元格的魅力可在其提示框查看，并受到以下情况的影响：
+
++2：每座自然奇观和市立公园
+
++1：每个相邻圣地、剧院广场、娱乐中心、运河、堤坝，或奇观
+
++1：每个相邻圣地、剧院广场、娱乐中心，或奇观
+
++1：每个相邻山脉、海岸、树林，或绿洲
+
++1：每座相邻高尔夫球场、法国特色城堡和狮身人面像。
+
++1：每座相邻高尔夫球场、法国特色城堡和狮身人面像。
+
+-1：每个相邻工业区、军营、机场，或宇航中心
+
+-1：每个相邻雨林、沼泽，或泛滥平原
+
+-1：每个被掠夺的相邻单元格
+
+-1：每座相邻矿山、采石场、油井、海上石油钻机和飞机跑道"
+fit_content = true
+scroll_active = false

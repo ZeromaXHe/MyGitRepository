@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://bigwk2vlkpekt"]
+
+[node name="CitiesDevelopmentPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "发展"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "发展"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="Content" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "拥有  剩余食物，您的城市会获得发展，或增加更多  公民。超过城市  公民所需的任意数量的  食物都会被当作剩余食物，并用于产生新  公民。
+
+如果某座城市目前的人口数比城市的  住房上限低2或更多，城市会把所有  剩余食物用于发展。如果城市的  人口比  住房上限低1，其发展速度会降至50%。当  人口数量达到住房上限时，其发展速度仅为普通速度的25%。照此速度，城市能在超过其  住房上限的情况下，发展到5个  公民，随后，人口会完全停止增长。
+
+如果一座城市没有  剩余食物，其将停滞不前，无法获得进一步发展。如果城市所产生的  食物少于  公民消耗，其会忍饥挨饿，并逐渐失去  人口，直至其能再次生产足够食物为止。"
+autowrap_mode = 3

@@ -1,0 +1,168 @@
+[gd_scene format=3 uid="uid://bk11it7lu1jyf"]
+
+[node name="ConceptsMonopoliesPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "行业、垄断与公司"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="WelcomeLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "欢迎"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="WelcomeContent" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "奢侈品让人愉悦，但现在应该用它们来盈利了。在“垄断与公司”模式中，玩家可以围绕奢侈品建立行业，而行业将根据资源提供特定加成；还可以创建公司来提高这些加成，制造拥有品牌的特色产品（其作用相当于经济类巨作），并最终实现垄断。此模式在所有时期中皆有重要作用，但会在游戏后期迈向全面发展。"
+autowrap_mode = 3
+
+[node name="HSeparator2" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="CreateIndustryLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "建立行业"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator3" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="CreateIndustryContent" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "文明改良2处同类型的奢侈品资源，并解锁“货币”科技后，即可围绕该资源建立行业。如玩家是城邦的宗主国，则城邦所拥有的资源也将纳入计算。方法是在任意奢侈品资源的现有改良设施上消耗建造者的使用次数。一个城市中一次只能存在一个行业。
+
+除提供大商人点数外，行业还将根据其改良的资源为所在的城市提供特殊加成：
+- 琥珀： 信仰值产量+25%。
+- 柑橘：生产军事单位时+30%  生产力。
+- 可可豆：城市发展+20%、+3  住房。
+- 咖啡：文化值  产量+20%。
+- 棉花：生产军事单位时+30%  生产力。
+- 钻石：金币  产量+25%。
+- 染料： 信仰值产量+25%。
+- 皮草：生产平民单位时+30%  生产力。
+- 石膏：建造建筑时时+30%  生产力。
+- 蜂蜜：城市发展+20%、+3  住房。
+- 熏香： 信仰值产量+25%。
+- 象牙：生产军事单位时+30%  生产力。
+- 玉： 金币产量+25%。
+- 大理石：建造建筑时+30%  生产力。
+- 水银： 科技值产量+15%。
+- 橄榄：生产平民单位时+30%  生产力。
+- 珍珠： 信仰值产量+25%。
+- 盐：城市发展+20%、+3  住房。
+- 丝绸： 文化值产量+20%。
+- 白银： 金币产量+25%。
+- 香料： 文化值产量+20%。
+- 糖：城市发展+20%、+3  住房。
+- 茶叶： 科技值产量+15%。
+- 烟草：生产军事单位时+30%  生产力。
+- 松露： 金币产量+25%。
+- 海龟： 科技值产量+15%。
+- 鲸鱼：生产军事单位时+30%  生产力。
+- 葡萄酒： 文化值产量+20%。"
+autowrap_mode = 3
+
+[node name="HSeparator4" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="CreateCompanyLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "创立公司"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator5" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="CreateCompanyContent" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "研究完“经济学”、拥有至少3处同一种奢侈品资源并建立行业之后，便可以创建公司了。创建公司需要大商人，而非建造者；公司创建完成后，大商人便会退隐。只能在行业改良设施之上创建公司。公司能为所在城市提供双倍对应资源的行业加成。您可以随意对公司进行命名，也可以使用自动名称生成器！
+
+世界上每种奢侈品资源只对应一家公司。但如果其他玩家控制了更多资源，则能够将玩家已拥有的公司逼到破产。一旦对手牢牢掌控其他公司所需的资源后，他们就能创建自己的公司，原始拥有者的公司则会关门大吉。"
+autowrap_mode = 3
+
+[node name="HSeparator6" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="DevelopProductLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "开发产品"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator7" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="DevelopProductContent" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "围绕特定奢侈品资源建立公司后，即可开发拥有品牌的产品。产品类似于巨作，但不是保存在博物馆中，而是保存在“证券交易所”或“码头”的巨作槽位中。放置后，产品即可提供行业的益处，将原始奢侈品资源提供的加成带给新放置产品的城市。您可以将产品移至拥有对应巨作槽位的任意城市。"
+autowrap_mode = 3
+
+[node name="HSeparator8" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="AchieveMonopolyLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "实现垄断"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator9" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="AchieveMonopolyContent" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 12
+text = "资本主义会让自由贸易走向繁荣，而聪明的商人则知晓如何对付竞争者。对一种奢侈品资源的拥有量占世界总量的60%或以上后，即对此资源形成垄断。每种垄断皆能为垄断者带来  旅游业绩，具体依照已控制资源的数量和未控制已垄断资源的外国文明数量而定。形成垄断后，每回合将获得  金币：最初控制少量资源时每回合+5金币；控制75%资源时提升为每回合+10金币；而控制所有资源时每回合+25金币。垄断者当前每与一个主要文明之间存在贸易路线，则每回合+5  金币。研究“重商主义”之后，就能看到奢侈品资源的世界总量，以及每位玩家当前的控制量。你当然可以实现多个垄断，但那未免太过贪婪，不是吗？"
+autowrap_mode = 3

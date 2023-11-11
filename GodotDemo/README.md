@@ -57,6 +57,44 @@ On mobile platforms, this path is unique to the project and is not accessible by
 
 On HTML5 exports, `user://` will refer to a virtual filesystem stored on the device via IndexedDB. (Interaction with the main filesystem can still be performed through the [JavaScriptBridge](https://docs.godotengine.org/en/4.1/classes/class_javascriptbridge.html#class-javascriptbridge) singleton.)
 
+## 富文本 BBCode
+
+[BBCode in RichTextLabel](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html)
+
+
+
+| Tag                                                          | Example                                                      |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **b**Makes `{text}` use the bold (or bold italics) font of `RichTextLabel`. | `[b]{text}[/b]`                                              |
+| **i**Makes `{text}` use the italics (or bold italics) font of `RichTextLabel`. | `[i]{text}[/i]`                                              |
+| **u**Makes `{text}` underlined.                              | `[u]{text}[/u]`                                              |
+| **s**Makes `{text}` strikethrough.                           | `[s]{text}[/s]`                                              |
+| **code**Makes `{text}` use the mono font of `RichTextLabel`. | `[code]{text}[/code]`                                        |
+| **p**Adds new paragraph with `{text}`. Supports configuration options, see [Paragraph options](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-paragraph-options). | `[p]{text}[/p]``[p {options}]{text}[/p]`                     |
+| **center**Makes `{text}` horizontally centered.Same as `[p align=center]`. | `[center]{text}[/center]`                                    |
+| **left**Makes `{text}` horizontally left-aligned.Same as `[p align=left]`. | `[left]{text}[/left]`                                        |
+| **right**Makes `{text}` horizontally right-aligned.Same as `[p align=right]`. | `[right]{text}[/right]`                                      |
+| **fill**Makes `{text}` fill the full width of `RichTextLabel`.Same as `[p align=fill]`. | `[fill]{text}[/fill]`                                        |
+| **indent**Indents `{text}` once.                             | `[indent]{text}[/indent]`                                    |
+| **url**Creates a hyperlink (underlined and clickable text). Can contain optional `{text}` or display `{link}` as is.**Must be handled with the "meta_clicked" signal to have an effect,** see [Handling [url\] tag clicks](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-handling-url-tag-clicks). | `[url]{link}[/url]``[url={link}]{text}[/url]`                |
+| **hint**Creates a tooltip hint that is displayed when hovering the text with the mouse. Tooltip text should not be quoted (quotes will appear as-is in the tooltip otherwise). | `[hint={tooltip text displayed on hover}]{text}[/hint]`      |
+| **img**Inserts an image from the `{path}` (can be any valid [Texture2D](https://docs.godotengine.org/en/4.1/classes/class_texture2d.html#class-texture2d) resource).If `{width}` is provided, the image will try to fit that width maintaining the aspect ratio.If both `{width}` and `{height}` are provided, the image will be scaled to that size.If `{valign}` configuration is provided, the image will try to align to the surrounding text, see [Image vertical alignment](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-image-alignment).Supports configuration options, see [Image options](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-image-options). | `[img]{path}[/img]``[img={width}]{path}[/img]``[img={width}x{height}]{path}[/img]``[img={valign}]{path}[/img]``[img {options}]{path}[/img]` |
+| **font**Makes `{text}` use a font resource from the `{path}`.Supports configuration options, see [Font options](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-font-options). | `[font={path}]{text}[/font]``[font {options}]{text}[/font]`  |
+| **font_size**Use custom font size for `{text}`.              | `[font_size={size}]{text}[/font_size]`                       |
+| **dropcap**Use a different font size and color for `{text}`, while making the tag's contents span multiple lines if it's large enough.A [drop cap](https://www.computerhope.com/jargon/d/dropcap.htm) is typically one uppercase character, but `[dropcap]` supports containing multiple characters. `margins` values are comma-separated and can be positive, zero or negative. Negative top and bottom margins are particularly useful to allow the rest of the paragraph to display below the dropcap. | `[dropcap font_size={size} color={color} margins={left},{top},{right},{bottom}]{text}[/dropcap]` |
+| **opentype_features**Enables custom OpenType font features for `{text}`. Features must be provided as a comma-separated `{list}`. | `[opentype_features={list}]``{text}``[/opentype_features]`   |
+| **color**Changes the color of `{text}`. Color must be provided by a common name (see [Named colors](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-named-colors)) or using the HEX format (e.g. `#ff00ff`, see [Hexadecimal color codes](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-hex-colors)). | `[color={code/name}]{text}[/color]`                          |
+| **bgcolor**Draws the color behind `{text}`. This can be used to highlight text. Accepts same values as the `color` tag. | `[bgcolor={code/name}]{text}[/bgcolor]`                      |
+| **fgcolor**Draws the color in front of `{text}`. This can be used to "redact" text by using an opaque foreground color. Accepts same values as the `color` tag. | `[fgcolor={code/name}]{text}[/fgcolor]`                      |
+| **outline_size**Use custom font outline size for `{text}`.   | `[outline_size={size}]``{text}``[/outline_size]`             |
+| **outline_color**Use custom outline color for `{text}`. Accepts same values as the `color` tag. | `[outline_color={code/name}]``{text}``[/outline_color]`      |
+| **table**Creates a table with the `{number}` of columns. Use the `cell` tag to define table cells. | `[table={number}]{cells}[/table]`                            |
+| **cell**Adds a cell with `{text}` to the table.If `{ratio}` is provided, the cell will try to expand to that value proportionally to other cells and their ratio values.Supports configuration options, see [Cell options](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-cell-options). | `[cell]{text}[/cell]``[cell={ratio}]{text}[/cell]``[cell {options}]{text}[/cell]` |
+| **ul**Adds an unordered list. List `{items}` must be provided by putting one item per line of text.The bullet point can be customized using the `{bullet}` parameter, see [Unordered list bullet](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-unordered-list-bullet). | `[ul]{items}[/ul]``[ul bullet={bullet}]{items}[/ul]`         |
+| **ol**Adds an ordered (numbered) list of the given `{type}` (see [Ordered list types](https://docs.godotengine.org/en/4.1/tutorials/ui/bbcode_in_richtextlabel.html#doc-bbcode-in-richtextlabel-list-types)). List `{items}` must be provided by putting one item per line of text. | `[ol type={type}]{items}[/ol]`                               |
+| **lb**, **rb**Adds `[` and `]` respectively. Allows escaping BBCode markup.These are self-closing tags, which means you do not need to close them (and there is no `[/lb]` or `[/rb]` closing tag). | `[lb]b[rb]text[lb]/b[rb]` will display as `[b]text[/b]`.     |
+| Several Unicode control characters can be added using their own self-closing tags.This can result in easier maintenance compared to pasting thosecontrol characters directly in the text. | `[lrm]` (left-to-right mark), `[rlm]` (right-to-left mark), `[lre]` (left-to-right embedding),`[rle]` (right-to-left embedding), `[lro]` (left-to-right override), `[rlo]` (right-to-left override),`[pdf]` (pop directional formatting), `[alm]` (Arabic letter mark), `[lri]` (left-to-right isolate),`[rli]` (right-to-left isolate), `[fsi]` (first strong isolate), `[pdi]` (pop directional isolate),`[zwj]` (zero-width joiner), `[zwnj]` (zero-width non-joiner), `[wj]` (word joiner),`[shy]` (soft hyphen) |
+
 # 常用模板代码
 
 ## Tween

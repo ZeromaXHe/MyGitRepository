@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://cpaxj415pp83j"]
+
+[node name="CitiesDistrictPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "奇观"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "奇观"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "奇观是特殊类型的建筑，它填满整个格位，对游戏玩法有较大影响。和建造区域一样，从生产项目界面中选择奇观进行建造时将进入放置滤镜。多数奇观都有特殊的放置要求，可进行建造的单元格将高亮显示。所有奇观必须建在市中心的3个单元格以内。在城市中建成奇观后，城市边界将立即拓宽2个单元格。
+
+每种奇观皆独一无二。多个文明可尝试建造相同奇观，但只有率先完成建造的文明才能获得增益。未能及时完成奇观建造的文明将获得一部分 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力和 [img=20]res://assets/civ6_origin/core/webp_32x32/core_gold.webp[/img] 金币作为补偿。
+
+如需了解每种奇观的详细信息，请查阅文明百科中的“奇观和项目”章节。"
+fit_content = true
+scroll_active = false
