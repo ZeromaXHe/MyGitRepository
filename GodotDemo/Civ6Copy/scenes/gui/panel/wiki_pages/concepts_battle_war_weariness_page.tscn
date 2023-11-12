@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://blqtkkx0rps8s"]
+[gd_scene format=3 uid="uid://c5te7yfw1mmp7"]
 
-[node name="CitiesHowToBuildPageVBox" type="VBoxContainer"]
+[node name="BattleWarWearinessPageVBox" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -13,7 +13,7 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 24
-text = "如何建造城市"
+text = "厌战情绪"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -32,7 +32,7 @@ size_flags_stretch_ratio = 3.0
 [node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-text = "如何建造城市"
+text = "厌战情绪"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -44,6 +44,10 @@ layout_mode = 2
 theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/normal_font_size = 12
 bbcode_enabled = true
-text = "城市由开拓者单位建造而成。如果开拓者所处位置可建造城市，则会出现“建立城市”按钮。点击该按钮，开拓者会消失，取而代之的是一座新城市。"
+text = "如果国家总是处于战争状态，生产效率和人民的幸福度会降低。厌战情绪会随着每场战争而增加。战争发生在外国领土或您的单位被击杀时，情况会更糟。而使用核武器将带来最大程度的厌战情绪。不使用战争借口宣战会增加累积的厌战情绪，增加的量在每个时代也有所不同。
+
+厌战情绪会被作为一种负 [img=20]res://assets/civ6_origin/core/webp_32x32/core_amenities.webp[/img] 宜居度，应用于您每座城市之中，由此降低您城市的发展速度和生产力。长期拥有较低的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_amenities.webp[/img] 宜居度会让叛军在您的城市四处繁衍。这些敌对单位会攻击您的单位、掠夺您的单元格和区域。
+
+当您仍然处于战争状态时，厌战情绪会缓慢减少，当您不与任何玩家发生战争时，厌战情绪会极大减少。"
 fit_content = true
 scroll_active = false

@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://blqtkkx0rps8s"]
+[gd_scene format=3 uid="uid://e7cfa06rdvbo"]
 
-[node name="CitiesHowToBuildPageVBox" type="VBoxContainer"]
+[node name="BattleIntroPageVBox" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -13,7 +13,7 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 24
-text = "如何建造城市"
+text = "介绍"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -32,7 +32,7 @@ size_flags_stretch_ratio = 3.0
 [node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-text = "如何建造城市"
+text = "介绍"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -44,6 +44,6 @@ layout_mode = 2
 theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/normal_font_size = 12
 bbcode_enabled = true
-text = "城市由开拓者单位建造而成。如果开拓者所处位置可建造城市，则会出现“建立城市”按钮。点击该按钮，开拓者会消失，取而代之的是一座新城市。"
+text = "战斗发生在两个交战的政体之间。一个文明可能会同另一个文明或城邦交战。蛮族永远同所有文明和城邦处于交战状态。"
 fit_content = true
 scroll_active = false

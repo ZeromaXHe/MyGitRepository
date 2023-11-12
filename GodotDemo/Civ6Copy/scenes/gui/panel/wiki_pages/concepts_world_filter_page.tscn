@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://colbxw5on0in4"]
+
+[node name="WorldFilterPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "滤镜"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "滤镜"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "您可以使用滤镜来改变您的世界观。每个滤镜都会覆盖重要信息，这些信息将帮助您在游戏中做出战略决策。一些滤镜会自动激活，比如，当您决定从城市生产项目界面放置一个区域时。其他滤镜则需要手动点击迷你地图上的滤镜按钮进行激活。这些是您能在游戏中使用的滤镜以及它们的作用：
+
+魅力：显示每个单元格的魅力级别。
+
+大陆：显示每个大陆的地理范围。
+
+区域放置：显示奇观和区域的有效放置位置，以及可用于区域的相邻加成。试图建立区域或奇观时，它才会出现。
+
+政体：显示地图上所有政体的分布。
+
+政治：显示每个单元格的所有者。
+
+宗教：显示地图上的主流宗教和宗教信徒分布。选择一个宗教单位时，它会显现出来。
+
+开拓者：显示每个单元格上的推荐城址和可用水，另外还将显示单元格中的忠诚度减益。
+
+旅游业绩：显示单元格吸引的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_tourism.webp[/img] 旅游者数量。
+
+帝国：显示城市边境与提供相邻加成的区域位置。
+
+电力：显示城市中的电力来源，以及区域供电范围。
+
+忠诚度：显示城市的忠诚度，以及影响忠诚度的来源。"
+fit_content = true
+scroll_active = false

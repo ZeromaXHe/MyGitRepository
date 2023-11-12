@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://blqtkkx0rps8s"]
+[gd_scene format=3 uid="uid://coy7h1gvgotpu"]
 
-[node name="CitiesHowToBuildPageVBox" type="VBoxContainer"]
+[node name="CitiesPalacePageVBox" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -13,7 +13,7 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 24
-text = "如何建造城市"
+text = "宫殿"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -32,7 +32,7 @@ size_flags_stretch_ratio = 3.0
 [node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-text = "如何建造城市"
+text = "宫殿"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -44,6 +44,6 @@ layout_mode = 2
 theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/normal_font_size = 12
 bbcode_enabled = true
-text = "城市由开拓者单位建造而成。如果开拓者所处位置可建造城市，则会出现“建立城市”按钮。点击该按钮，开拓者会消失，取而代之的是一座新城市。"
+text = "宫殿是特殊建筑。一半建筑，一半奇观，宫殿会自动出现在您建造的第一座城市里，它会让这座城市成为您帝国 [img=20]res://assets/civ6_origin/core/webp_32x32/core_capital.webp[/img] 的首都。宫殿为您的文明提供少量 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_science.webp[/img] 科技值、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_gold.webp[/img] 金币和 [img=20]res://assets/civ6_origin/core/webp_32x32/core_culture.webp[/img] 文化值。如果您的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_capital.webp[/img] 首都被另一文明占领，如果您还控制着其他城市，宫殿则自动转移到另一座城市，并使所在城市成为您的新 [img=20]res://assets/civ6_origin/core/webp_32x32/core_capital.webp[/img] 首都。"
 fit_content = true
 scroll_active = false

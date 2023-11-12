@@ -117,6 +117,57 @@ func init_concept_tree() -> void:
 	
 	var child4_world = left_tree.create_item(root)
 	child4_world.set_text(0, "世界")
+	child4_world.collapsed = true
+	var child4_1_terrain_landscape = left_tree.create_item(child4_world)
+	child4_1_terrain_landscape.set_text(0, "地形和地貌")
+	var child4_2_resource = left_tree.create_item(child4_world)
+	child4_2_resource.set_text(0, "资源")
+	var child4_3_natural_wonder = left_tree.create_item(child4_world)
+	child4_3_natural_wonder.set_text(0, "自然奇观")
+	var child4_4_river = left_tree.create_item(child4_world)
+	child4_4_river.set_text(0, "河流")
+	var child4_5_village = left_tree.create_item(child4_world)
+	child4_5_village.set_text(0, "部落村庄")
+	var child4_6_barbarian = left_tree.create_item(child4_world)
+	child4_6_barbarian.set_text(0, "蛮族")
+	var child4_7_filter = left_tree.create_item(child4_world)
+	child4_7_filter.set_text(0, "滤镜")
+	
+	var child5_battle = left_tree.create_item(root)
+	child5_battle.set_text(0, "战斗")
+	child5_battle.collapsed = true
+	var child5_1_intro = left_tree.create_item(child5_battle)
+	child5_1_intro.set_text(0, "介绍")
+	var child5_2_claim_war = left_tree.create_item(child5_battle)
+	child5_2_claim_war.set_text(0, "宣战")
+	var child5_3_belligerence = left_tree.create_item(child5_battle)
+	child5_3_belligerence.set_text(0, "好战性")
+	var child5_4_end_war = left_tree.create_item(child5_battle)
+	child5_4_end_war.set_text(0, "结束战争")
+	var child5_5_unit_battle_data = left_tree.create_item(child5_battle)
+	child5_5_unit_battle_data.set_text(0, "单位战斗数据")
+	var child5_6_sight = left_tree.create_item(child5_battle)
+	child5_6_sight.set_text(0, "视线")
+	var child5_7_bonus = left_tree.create_item(child5_battle)
+	child5_7_bonus.set_text(0, "战斗加成")
+	var child5_8_exp_powerup = left_tree.create_item(child5_battle)
+	child5_8_exp_powerup.set_text(0, "经验值和强化")
+	var child5_9_city_battle = left_tree.create_item(child5_battle)
+	child5_9_city_battle.set_text(0, "城市战斗")
+	var child5_10_conquer = left_tree.create_item(child5_battle)
+	child5_10_conquer.set_text(0, "攻城略地")
+	var child5_11_team = left_tree.create_item(child5_battle)
+	child5_11_team.set_text(0, "编队")
+	var child5_12_raid = left_tree.create_item(child5_battle)
+	child5_12_raid.set_text(0, "掠夺")
+	
+	var child6_airfight = left_tree.create_item(root)
+	child6_airfight.set_text(0, "空战")
+	child6_airfight.collapsed = true
+	
+	var child7_unit_move = left_tree.create_item(root)
+	child7_unit_move.set_text(0, "单位移动力")
+	child7_unit_move.collapsed = true
 	
 	left_tree.item_selected.connect(handle_concept_tree_item_selected)
 	left_tree.set_selected(child1_intro, 0)
@@ -135,6 +186,14 @@ func handle_concept_tree_item_selected() -> void:
 				"模式":
 					selected.collapsed = false
 				"城市":
+					selected.collapsed = false
+				"世界":
+					selected.collapsed = false
+				"战斗":
+					selected.collapsed = false
+				"空战":
+					selected.collapsed = false
+				"单位移动力":
 					selected.collapsed = false
 		"模式":
 			if text == "行业、垄断与公司":
@@ -163,6 +222,58 @@ func handle_concept_tree_item_selected() -> void:
 					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_cities_building_page.tscn").instantiate()
 				"奇观":
 					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_cities_wonder_page.tscn").instantiate()
+				"宫殿":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_cities_palace_page.tscn").instantiate()
+				"公民":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_cities_citizen_page.tscn").instantiate()
+				"幸福度":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_cities_happiness_page.tscn").instantiate()
+				"宜居度来源":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_cities_amenity_src_page.tscn").instantiate()
+				"专家":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_cities_expert_page.tscn").instantiate()
+		"世界":
+			match text:
+				"地形和地貌":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_world_terrain_landscape_page.tscn").instantiate()
+				"资源":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_world_resource_page.tscn").instantiate()
+				"自然奇观":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_world_natural_wonder_page.tscn").instantiate()
+				"河流":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_world_river_page.tscn").instantiate()
+				"部落村庄":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_world_village_page.tscn").instantiate()
+				"蛮族":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_world_barbarian_page.tscn").instantiate()
+				"滤镜":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_world_filter_page.tscn").instantiate()
+		"战斗":
+			match text:
+				"介绍":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_intro_page.tscn").instantiate()
+				"宣战":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_claim_war_page.tscn").instantiate()
+				"好战性":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_belligerence_page.tscn").instantiate()
+				"结束战争":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_end_war_page.tscn").instantiate()
+				"单位战斗数据":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_unit_data_page.tscn").instantiate()
+				"视线":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_sight_page.tscn").instantiate()
+				"战斗加成":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_bonus_page.tscn").instantiate()
+				"经验值和强化":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_exp_page.tscn").instantiate()
+				"城市战斗":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_city_page.tscn").instantiate()
+				"攻城略地":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_conquer_page.tscn").instantiate()
+				"编队":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_team_page.tscn").instantiate()
+				"掠夺":
+					new_page = load("res://scenes/gui/panel/wiki_pages/concepts_battle_raid_page.tscn").instantiate()
 	
 	if new_page != null:
 		for child in right_scroll_container.get_children():

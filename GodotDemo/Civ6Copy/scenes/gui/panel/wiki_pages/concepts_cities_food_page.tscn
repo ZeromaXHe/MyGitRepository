@@ -39,13 +39,13 @@ vertical_alignment = 1
 [node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 
-[node name="Content" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 1
-theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-theme_override_font_sizes/font_size = 12
-text = "城市里的每位  公民（这是“  人口”的另一种表达方式）每回合需要2份  食物来避免饥饿。通过派遣其  公民“改良”周围土地，城市能获得  食物（以及其他收益）。城市能改良3个距离以内的任意单元格（位于文明境内且没被其他城市改良过）。城市无法改良被奇观占领的单元格。
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "城市里的每位 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民（这是“ [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口”的另一种表达方式）每回合需要2份 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物来避免饥饿。通过派遣其 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民“改良”周围土地，城市能获得 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物（以及其他收益）。城市能改良3个距离以内的任意单元格（位于文明境内且没被其他城市改良过）。城市无法改良被奇观占领的单元格。
 
-为了自给自足，城市会派遣尽可能多的  公民来获取  食物。"
-autowrap_mode = 3
+为了自给自足，城市会派遣尽可能多的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民来获取 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物。"
+fit_content = true
+scroll_active = false

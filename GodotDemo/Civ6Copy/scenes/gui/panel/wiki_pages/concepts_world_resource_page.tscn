@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://dhspsdtunn6b6"]
+
+[node name="WorldResourcePageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "资源"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "资源"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "资源是（ [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力等）不同收益的源泉，其中一些能为文明提供特殊加成。它们出现在特定格位上。有些在游戏伊始可见，有些则是在您获得特定科技后可见。在位于境内的资源格位之上修建改良设施，方可对其加以利用。资源分为三种：加成、奢侈品和战略。
+
+加成资源可提高格位的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_gold.webp[/img] 金币，或 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力产出。加成资源无法与其他文明进行交易。建造者可通过“收获”而移除资源，并为该格位所属的城市提供即时的、一次性的总 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物和 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力。
+
+奢侈品资源通过提供 [img=20]res://assets/civ6_origin/core/webp_32x32/core_amenities.webp[/img] 宜居度，以及为格位收益产出提供少量加成来提高您文明的幸福度。只有一种特殊奢侈品资源的来源能提供 [img=20]res://assets/civ6_origin/core/webp_32x32/core_amenities.webp[/img] 宜居度。
+
+在游戏伊始，战略资源并非固定可见——其中一些资源需要解锁特定科技才会显示在地图上。文明可利用战略资源训练特定的单位。在战略资源格位上建造改良设施之后，便可以在任何城市中训练需要此类资源的特殊单位。（例如火枪手需要硝石）。"
+fit_content = true
+scroll_active = false

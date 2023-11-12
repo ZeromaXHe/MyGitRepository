@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://dgwbblgw70htt"]
+
+[node name="BattleBonusPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "战斗加成"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "战斗加成"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "战争不仅依靠丰富的经验和齐全的设备。军事历史已多次证明利用高级战术、优秀领导力和有利地形可以打败数量上占优势且装备更先进的部队。在《文明VI》中，也不例外。
+
+将联合部队的适当军事组织、领导力、地形的灵活运用与您的军事力量结合起来，不论敌方军队规模大小、力量强弱，您都将战无不胜。利用地形优势，您可以在丘陵、雨林或树林上放置兵力，并且在敌人面前翻山越岭，以确保独特防御优势。观察敌人在前进途中的移动状况，借此，您能帮助自己更清楚地明白他们的战斗计划或攻击目标。
+
+地形也会对您的战斗不利；务必避免在泛滥平原和沼泽上战斗，因为它们对您的防御性有负面影响。如果您发现自己位于不可防御的地形，并觉得攻击开始后，无法击败敌人，也许建立几个堡垒将帮您击退敌人。记得攻击敌人侧翼，这是他们最薄弱的地方，此举会让您获得优势！使用带有适当地形配置的全面军事力量，同时使用一个大将军，您必胜无疑！
+
+夹击和支援加成：要成为战场中的常胜将军，重要的是以计谋制敌、让作战单位获得队友的支援。在《文明VI》中，模拟此战术的则是夹击和支援加成。完成“军事传统”市政后，军队便可获得此类加成。
+
+夹击：如在战斗中2个或以上的相邻友方近战单位包围敌方近战单位，则视为对敌方形成夹击；每个额外夹击的近战单位可使发起进攻的近战单位战斗力+2。
+
+支援：防御敌方近战攻击时，每个相邻的友方单位可使防御单位战斗力+2。"
+fit_content = true
+scroll_active = false

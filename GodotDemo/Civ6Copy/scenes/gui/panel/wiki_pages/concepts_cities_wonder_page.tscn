@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cpaxj415pp83j"]
 
-[node name="CitiesDistrictPageVBox" type="VBoxContainer"]
+[node name="CitiesWonderPageVBox" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

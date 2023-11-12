@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://dwdvabnvt6mpd"]
+
+[node name="CitiesCitizenPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "公民"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "公民"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "城市的繁荣基于周围的土地。他们的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民在国内辛苦“劳作”，从单元格上收获了 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_gold.webp[/img] 金币、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_science.webp[/img] 科技值，以及来自于单元格的其他收益。 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民能改良距离城市三个单元格，并位于您文明内的单元格。随着城市发展，会自动分配它的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民到周围土地上工作。追求平衡的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力、和 [img=20]res://assets/civ6_origin/core/webp_32x32/core_gold.webp[/img] 金币产出。您可以命令城市 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民前往其他单元格工作——比如，如果您希望某个特定城市专注于生产 [img=20]res://assets/civ6_origin/core/webp_32x32/core_gold.webp[/img] 金币，或 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力，就在城市选择面板上选择管理公民图标，以此为您的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 公民选择特殊单元格进行工作。"
+fit_content = true
+scroll_active = false

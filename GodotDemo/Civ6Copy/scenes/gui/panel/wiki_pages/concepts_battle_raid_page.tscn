@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://cwl2p2ta1qhl7"]
+
+[node name="BattleRaidPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "掠夺"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "掠夺"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "可以对区域中未驻军的改良设施和建筑进行掠夺。此行为会使其无法正常运转，并使掠夺单位获得某种形式的“战利品”。这些掠夺奖励会随着游戏时代的发展而增多，但治疗效果除外。
+
+掠夺区域将消耗3点或所有移动力。必须对区域中的每个建筑进行单独掠夺，并根据区域类型来获得不同类型的战利品。请查阅区域的页面，了解特定的掠夺收益。完成掠夺后，需等待所有者将区域修复后方能再次对其进行掠夺。（修复区域在“生产项目”菜单中进行，消耗的生产力为初次建造该建筑所需 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力的25%。）
+
+掠夺改良设施将消耗3点移动力。如果 [img=20]res://assets/civ6_origin/core/webp_32x32/core_movement.webp[/img] 移动力低于3点，则消耗掉所有移动力。此操作会将单元格上的改良设施标记为“已掠夺”。完成掠夺后，需要等待所有者将其修复后才能再次对其进行掠夺。（使用“建造者”可在一回合后完成修复，且不消耗建造次数）。请查阅改良设施的页面，了解特定的掠夺收益。"
+fit_content = true
+scroll_active = false

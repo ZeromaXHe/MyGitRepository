@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://bnlcskc4kbwo3"]
+
+[node name="BattleBelligerencePageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "好战性"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "好战性"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "对另一文明宣战后，和游戏中的其他文明进行外交时便会蒙受“好战程度”减益。其他领袖会对宣战一方的行为心存疑虑或恐惧。最常见的宣战方式是正式战争，所有的好战程度也以此为基础进行计算。需要先行谴责目标后才能对其宣布正式战争。
+
+战争并非是世界文明之间解决争端的良好方式，因此好战程度会随每个时代的发展而增加。宣布不同类型战争所获得的好战程度也有所不同。多数情况下，宣战并占领敌方城市将获得本时代标准的好战程度，而将城市夷为平地则会获得3倍于本时代标准的好战程度。特定的“战争借口”（请查阅“外交”条目下的“战争借口”部分）会对好战程度产生影响。某些行为获得的好战程度会因此而降低，或升高。此外，诸如使用核武器之类的行为也会使好战程度发生变化。
+
+另一种方法是先谴责敌对文明，然后正式宣战。通过这种途径进入战争，不会增加好战程度，并有机会使用一个战争借口来减少这些好战程度增益。然而，因为您必须首先谴责您的对手，所以，这样的计划容易“泄露”给目标，同时，你也不会具有突袭优势。"
+fit_content = true
+scroll_active = false

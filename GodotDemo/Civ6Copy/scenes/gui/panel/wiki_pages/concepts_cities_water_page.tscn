@@ -45,7 +45,15 @@ size_flags_horizontal = 3
 size_flags_vertical = 1
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 12
-text = "游戏中的首要决策之一是把您的城市放置在水源附近。一旦出现优良水源，会立即设定出城市最初  住房等级。不靠近水源的城市一开始最多能拥有2个  人口。位于海岸上的城市最多拥有3个  人口。靠近河流、湖泊，或绿洲的城市最多拥有5个  人口。
-
-可通过将一个水渠单元格添加至市中心附近引水。水渠必须放置在与河流、湖泊，或山脉相邻的单元格上，且河流、湖泊，或山脉需要靠近市中心。水渠区域建成后，住房大幅提升，城市  住房数量能从2增加至6——如果靠近河流、湖泊，或绿洲，数量为7，其他情况数量为6。"
 autowrap_mode = 3
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "游戏中的首要决策之一是把您的城市放置在水源附近。一旦出现优良水源，会立即设定出城市最初 [img=20]res://assets/civ6_origin/core/webp_32x32/core_housing.webp[/img] 住房等级。不靠近水源的城市一开始最多能拥有2个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口。位于海岸上的城市最多拥有3个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口。靠近河流、湖泊，或绿洲的城市最多拥有5个 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口。
+
+可通过将一个水渠单元格添加至市中心附近引水。水渠必须放置在与河流、湖泊，或山脉相邻的单元格上，且河流、湖泊，或山脉需要靠近市中心。水渠区域建成后，住房大幅提升，城市 [img=20]res://assets/civ6_origin/core/webp_32x32/core_housing.webp[/img] 住房数量能从2增加至6——如果靠近河流、湖泊，或绿洲，数量为7，其他情况数量为6。"
+fit_content = true
+scroll_active = false

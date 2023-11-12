@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://ckgjpata7t0vh"]
+
+[node name="BattleUnitDataPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "单位战斗数据"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "单位战斗数据"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "在《文明VI》中，军事单位有5种战斗数据：生命值、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗攻击力、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_ranged.webp[/img] 远程攻击力、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_bombard.webp[/img] 轰炸攻击力和 [img=20]res://assets/civ6_origin/core/webp_32x32/core_range.webp[/img] 射程。
+
+所有单位的生命值都为100。当单位受到伤害时，生命值减少。一旦失去所有生命值，单位即被消灭。
+
+所有军事单位都有 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗力。近战单位在攻击和防御时使用它们的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗力。远程单位在防御时使用它们的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗力。
+
+所有能够参与远程战斗的单位都拥有 [img=20]res://assets/civ6_origin/core/webp_32x32/core_ranged.webp[/img] 远程攻击力数值。该数值同目标 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗力的比值将决定攻击结果。拥有 [img=20]res://assets/civ6_origin/core/webp_32x32/core_ranged.webp[/img] 远程攻击力的陆地单位也可以攻击区域，但形成的效果不佳。
+
+[img=20]res://assets/civ6_origin/core/webp_32x32/core_bombard.webp[/img] 炮击攻击力是单位的反区域战斗力。拥有 [img=20]res://assets/civ6_origin/core/webp_32x32/core_bombard.webp[/img] 炮击攻击力的单位也可以攻击其他单位，但效果不佳。陆地单位无法同时拥有 [img=20]res://assets/civ6_origin/core/webp_32x32/core_bombard.webp[/img] 炮击和 [img=20]res://assets/civ6_origin/core/webp_32x32/core_ranged.webp[/img] 远程攻击力，但海军单位却能同时进行 [img=20]res://assets/civ6_origin/core/webp_32x32/core_bombard.webp[/img] 炮击和 [img=20]res://assets/civ6_origin/core/webp_32x32/core_ranged.webp[/img] 远程攻击。
+
+单位的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_range.webp[/img] 射程数据决定了单位能够发动一个远程攻击的距离。2 [img=20]res://assets/civ6_origin/core/webp_32x32/core_range.webp[/img] 射程意味着目标能位于一个相邻单元格或一个单元格那么远。1 [img=20]res://assets/civ6_origin/core/webp_32x32/core_range.webp[/img] 射程意味着目标肯定与攻击者相邻。
+
+部分单位拥有 [img=20]res://assets/civ6_origin/core/webp_32x32/core_antiair_large.webp[/img] 防空战斗力。这些单位可在自身的防空范围内防御空袭。[img=20]res://assets/civ6_origin/core/webp_32x32/core_antiair_large.webp[/img] 防空战斗力将判定和来袭飞机进行战斗的结果。"
+fit_content = true
+scroll_active = false

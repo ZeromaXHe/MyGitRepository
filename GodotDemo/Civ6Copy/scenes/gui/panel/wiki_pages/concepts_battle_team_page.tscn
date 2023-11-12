@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://cmpa26mwgjqai"]
+
+[node name="BattleTeamPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "编队"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "编队"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "编队让您能轻易将单位移动到一起。它对于在敌对领土上护送平民单位，或甚至在军团和军队里创建更强大的单位非常有用。军事单位能随时创建带有一个支援单位和平民单位的编队。海军军事单位也能创建编队，编队带有能上船的陆地单位。支援单位，比如攻城单位，在战斗中，与另一军事单位一起时，最有效。
+
+完成民族主义市政后，会进入工业时代，玩家可以解锁能力，将同种类型的多个军事单位联合起来形成一个更强大的单位。相同类型的两个军事单位能结合起来创建军团，为他们的基本 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗力+10。研究完动员后，相同类型的三个军事单位能结合起来形成军队，为他们的基本 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗力+7。请记住，当单位以这种方式联合在一起时，生命值不会增加。
+
+一旦形成军团或军队，这些单位不会再被分解成个人单位。创建此种类型的编队时，拥有最高经验值的单位，其经验值和强化值会被保存，因此，它有利于把新手和更有经验的单位联合起来。海军单位也可被合并成舰队和无敌舰队。"
+fit_content = true
+scroll_active = false

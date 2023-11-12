@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://blqtkkx0rps8s"]
+[gd_scene format=3 uid="uid://c100oh0wn1a3u"]
 
-[node name="CitiesHowToBuildPageVBox" type="VBoxContainer"]
+[node name="WorldTerrainLandscapePageVBox" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -13,7 +13,7 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 24
-text = "如何建造城市"
+text = "地形和地貌"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -32,7 +32,7 @@ size_flags_stretch_ratio = 3.0
 [node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-text = "如何建造城市"
+text = "地形和地貌"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -44,6 +44,8 @@ layout_mode = 2
 theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/normal_font_size = 12
 bbcode_enabled = true
-text = "城市由开拓者单位建造而成。如果开拓者所处位置可建造城市，则会出现“建立城市”按钮。点击该按钮，开拓者会消失，取而代之的是一座新城市。"
+text = "在《文明VI》中，世界是由六角形的“单元格”所组成（偶尔被称为格位和空格）。这些单元格有许多不同的“地形”——沙漠、平原、草原、丘陵等等——其中有许多也含有例如树林和雨林等“地貌”。此类元素决定了城市周围单元格的有用性及移动通过其的难易度。此外，单元格的地形及地貌还会对在其上发生的战斗产生重大影响。
+
+游戏中的每个单元格都属于一个大陆。大陆是地理边界，不一定与地块紧密相连——比如，盘古大陆的地图由几个大陆组成。通过单元格提示框或查看大陆滤镜，你可以确定单元格大陆。"
 fit_content = true
 scroll_active = false

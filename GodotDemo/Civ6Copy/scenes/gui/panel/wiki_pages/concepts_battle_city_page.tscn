@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://bhx5isgm5joi3"]
+
+[node name="BattleCityPageVBox" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/font_size = 24
+text = "城市战斗"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftVBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
+text = "城市战斗"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "城市会被军事单位攻击或占领。每座城市都有“城市战斗力”数据，该数据决定了受其他单位攻击时的战斗力大小。城市战斗力越高，越难被占领。占领一座城市需要多个回合，除非这座城市极度脆弱，或攻击单位极度强大。
+
+城墙为城市或军营增加额外保护，让其更难被占领。这种保护如同护甲一般，使城市免受攻击。近战单位仅对城墙造成它通常伤害的15%，远程单位仅对城墙造成它通常伤害的50%。只有轰炸单位才能对城墙造成它100%的伤害，因此，轰炸单位是占领坚固城市的必需之物。如果城墙遭受损害，其会不再有效，同时，每一次攻击都会让区域生命值受到少量伤害。只有使用在城市生产队列中找到的项目才能回复城墙生命值，比如修理区域建筑，如果区域连续3回合没有遭受任何伤害，则可以进行修复。城市一旦拥有城墙，便可使用“城市远程攻击”对敌方单位发动远程攻击。
+
+城市战斗力取决于您文明里最强近战单位的 [img=20]res://assets/civ6_origin/core/webp_32x32/core_strength.webp[/img] 战斗力大小，最小为10，或取决于驻军军事单位的战斗力。
+
+城市远程攻击力取决于您文明里最强 [img=20]res://assets/civ6_origin/core/webp_32x32/core_ranged.webp[/img] 远程单位的远程攻击力大小。
+
+城市所拥有的每个没被掠夺的区域会为其城市战斗力提供额外加成，使大城市更难被占领，城市也能从地形和一些其他改造者来源中获得额外加成。
+
+城市也可以被攻击单位包围。如果，城市中心和像军营这样的防御区四周的所有6个单元格都被敌方单位占领，那么，市中心和防御区由此被包围，由于山脉或自然奇观的存在，这些被包围地区会处于敌人的控制之下，或无法通行。在此情况下，该地区不会回复失去的生命值，也无法像往常一样，每回合自动治愈。"
+fit_content = true
+scroll_active = false

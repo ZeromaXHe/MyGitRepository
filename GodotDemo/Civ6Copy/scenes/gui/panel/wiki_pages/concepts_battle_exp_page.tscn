@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://blqtkkx0rps8s"]
+[gd_scene format=3 uid="uid://cob54tux1p330"]
 
-[node name="CitiesHowToBuildPageVBox" type="VBoxContainer"]
+[node name="BattleExpPageVBox" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -13,7 +13,7 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 24
-text = "如何建造城市"
+text = "经验值和强化"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -32,7 +32,7 @@ size_flags_stretch_ratio = 3.0
 [node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-text = "如何建造城市"
+text = "经验值和强化"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -44,6 +44,6 @@ layout_mode = 2
 theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/normal_font_size = 12
 bbcode_enabled = true
-text = "城市由开拓者单位建造而成。如果开拓者所处位置可建造城市，则会出现“建立城市”按钮。点击该按钮，开拓者会消失，取而代之的是一座新城市。"
+text = "战斗中幸存的单位会获得“经验值（XP）”。某单位一旦达到一定数量的经验值，便可以“升级”，升级后，数值会获得一个强化。在某些方面，强化能使单位得到提升。当选择一个强化时，单位会恢复大量生命值。在选择强化之前，单位无法继续获得更多经验值。"
 fit_content = true
 scroll_active = false

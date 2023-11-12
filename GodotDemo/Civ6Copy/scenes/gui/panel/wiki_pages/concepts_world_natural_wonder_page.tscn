@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://blqtkkx0rps8s"]
+[gd_scene format=3 uid="uid://bsgk8w5tv68ee"]
 
-[node name="CitiesHowToBuildPageVBox" type="VBoxContainer"]
+[node name="WorldNaturalWonderPageVBox" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -13,7 +13,7 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/font_size = 24
-text = "如何建造城市"
+text = "自然奇观"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -32,7 +32,7 @@ size_flags_stretch_ratio = 3.0
 [node name="SubTitleLabel" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-text = "如何建造城市"
+text = "自然奇观"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -44,6 +44,6 @@ layout_mode = 2
 theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
 theme_override_font_sizes/normal_font_size = 12
 bbcode_enabled = true
-text = "城市由开拓者单位建造而成。如果开拓者所处位置可建造城市，则会出现“建立城市”按钮。点击该按钮，开拓者会消失，取而代之的是一座新城市。"
+text = "自然奇观是大自然伟大而辉煌的创造，让我们感到无比敬畏和鼓舞。自然奇观是包括火山口湖和大堡礁在内的所有真正显示大自然宏伟美景的地方。它能为您的文明带来独特好处，有的甚至还有额外特殊影响（比如，在死海附近治愈效果能让单位生命值完全恢复）。"
 fit_content = true
 scroll_active = false

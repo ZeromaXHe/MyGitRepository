@@ -39,13 +39,13 @@ vertical_alignment = 1
 [node name="HSeparator" type="HSeparator" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
 
-[node name="Content" type="Label" parent="HBoxContainer/LeftVBoxContainer"]
+[node name="RichContent" type="RichTextLabel" parent="HBoxContainer/LeftVBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 1
-theme_override_colors/font_color = Color(0.12549, 0.12549, 0.12549, 1)
-theme_override_font_sizes/font_size = 12
-text = "城市应被建在拥有大量  食物、  生产力，并且可使用战略、奢侈品和加成资源的地方。最好把城市建在河流和海岸格位上，因为水资源对  人口增长非常重要。建在丘陵上的城市能获得防御加成，让敌人更难入侵。
+theme_override_colors/default_color = Color(0.12549, 0.12549, 0.12549, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "城市应被建在拥有大量 [img=20]res://assets/civ6_origin/core/webp_32x32/core_food.webp[/img] 食物、 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img] 生产力，并且可使用战略、奢侈品和加成资源的地方。最好把城市建在河流和海岸格位上，因为水资源对 [img=20]res://assets/civ6_origin/core/webp_32x32/core_citizen.webp[/img] 人口增长非常重要。建在丘陵上的城市能获得防御加成，让敌人更难入侵。
 
 选择开拓者后，理想的城市位置会以图标的形式显示在地图上。此外，除了您的第一个开拓者，之后每个开拓者都会显示出开拓者滤镜，由此，您可知道地图上哪些地方能为您的城市提供最好的水源，其还会指示出不可用的单元格。避开那些标有负数忠诚度图标的位置，因为此类区域均忠诚于其他文明。"
-autowrap_mode = 3
+fit_content = true
+scroll_active = false
