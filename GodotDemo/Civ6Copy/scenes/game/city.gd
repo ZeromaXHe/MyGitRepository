@@ -15,15 +15,27 @@ signal yield_gold_changed(val: float)
 # 新单位建成
 signal product_completed(unit_type: Unit.Type, city: City)
 
+
+enum Building {
+	PALACE, # 宫殿
+}
+
 var city_name: String
 var coord: Vector2i
-var capital: bool = false
-var level: int = 1
-var growth: int = 0
-var defense: int = 13
 var player: Player
+# 城市关联数组
 var territory_coords: Array[Vector2i] = []
 var sight_coords: Array[Vector2i] = []
+var buildings: Array[Building] = []
+# 城市数据
+var capital: bool = false
+var housing: int # 住房
+var housing_needed: int # 需要的住房
+var amenity: int # 宜居度
+var defense: int = 13
+# 城市累计量
+var pop: int = 1
+var food_sum: int = 0
 # 回合产量相关
 var yield_culture: float = 0.0:
 	set(val):
@@ -94,23 +106,16 @@ func initiate(coord: Vector2i, map_shower: MapShower) -> void:
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
 	self.player = GlobalScript.get_current_player()
-	# 初始化产量
-	# TODO: 先写死，之后补逻辑
-	self.yield_culture = 1.4
-	self.yield_food = 4.3
-	self.yield_product = 5.7 * 4 # 测试稍微调整一下生产速度。估计当时截图也是选了“联机”速度，造单位会更快
-	self.yield_science = 3.1
-	self.yield_religion = 0.0
-	self.yield_gold = 5.7
 	# 配置颜色
 	set_main_color(player.main_color)
 	set_second_color(player.second_color)
 	# 是否首都
 	if player.cities.is_empty():
 		capital = true
+		buildings.append(Building.PALACE)
 	capital_texture_rect.visible = capital
 	# 绘制城市
-	map_shower.paint_city(coord, 1) 
+	map_shower.paint_city(coord, 1)
 	# 将城市记录到地图信息里
 	map_shower._map.get_map_tile_info_at(coord).city = self
 	# 将城市记录到玩家城市列表里
@@ -125,6 +130,15 @@ func initiate(coord: Vector2i, map_shower: MapShower) -> void:
 	for in_sight_coord in sight_cells:
 		player.map_sight_info.in_sight(in_sight_coord)
 	map_shower.paint_in_sight_tile_areas(sight_cells)
+	# 初始化产量
+	# TODO: 先写死，之后补逻辑
+#	self.yield_culture = 1.4
+#	self.yield_food = 4.3
+#	self.yield_product = 5.7 * 4 # 测试稍微调整一下生产速度。估计当时截图也是选了“联机”速度，造单位会更快
+#	self.yield_science = 3.1
+#	self.yield_religion = 0.0
+#	self.yield_gold = 5.7
+	refresh_yield(map_shower)
 
 
 func set_main_color(main_color: Color) -> void:
@@ -134,6 +148,35 @@ func set_main_color(main_color: Color) -> void:
 func set_second_color(second_color: Color) -> void:
 	level_label.add_theme_color_override("font_color", second_color)
 	name_label.add_theme_color_override("font_color", second_color)
+
+
+func refresh_yield(map_shower: MapShower) -> void:
+	yield_culture = 0.0
+	yield_food = 0.0
+	yield_product = 0.0
+	yield_science = 0.0
+	yield_religion = 0.0
+	yield_gold = 0.0
+	# 地块产出
+	for territory in territory_coords:
+		# TODO: 需要根据公民分配的位置来判断是否加
+		var tile_info: Map.TileInfo = map_shower._map.get_map_tile_info_at(territory)
+		yield_culture += tile_info.culture
+		yield_food += tile_info.food
+		yield_product += tile_info.product
+		yield_science += tile_info.science
+		yield_religion += tile_info.religion
+		yield_gold += tile_info.gold
+	# 建筑产出
+	for building in buildings:
+		match building:
+			Building.PALACE:
+				yield_culture += 1
+				yield_gold += 5
+				yield_product += 2
+				yield_science += 2
+	# 公民产出
+	yield_science += 0.5 * pop
 
 
 func update_product_val() -> void:
@@ -152,3 +195,4 @@ func _on_click_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx:
 			# TODO: 可能的 bug - 如果在别处点击，这里释放的话，吞掉输入事件可能有 bug
 			get_viewport().set_input_as_handled()
 			city_clicked.emit(self)
+

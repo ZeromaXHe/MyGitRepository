@@ -1,7 +1,7 @@
 [gd_scene load_steps=26 format=3 uid="uid://6rscixmykdb1"]
 
 [ext_resource type="Script" path="res://scenes/gui/panel/wiki_panel.gd" id="1_rhyfl"]
-[ext_resource type="ButtonGroup" uid="uid://d2vfjykfdnuoq" path="res://scenes/gui/wiki_button_group.tres" id="1_wupj1"]
+[ext_resource type="ButtonGroup" path="res://scenes/gui/wiki_button_group.tres" id="1_wupj1"]
 [ext_resource type="Texture2D" uid="uid://b2npagbyji7dm" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_concepts.webp" id="3_v77jo"]
 [ext_resource type="Texture2D" uid="uid://ckxaja2thdwg0" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_civilizations.webp" id="4_dbo4j"]
 [ext_resource type="Texture2D" uid="uid://cc4ktf86ads3r" path="res://assets/civ6_origin/civilopedia/webp_32x32/icon_civilopedia_citystates.webp" id="5_tx31p"]

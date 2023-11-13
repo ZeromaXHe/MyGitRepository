@@ -768,27 +768,40 @@ static func get_in_map_surrounding_coords(coord: Vector2i, map_size: Vector2i) -
 	return result
 
 
-class TileYield:
+class TileInfo:
+	var type: TerrainType = TerrainType.OCEAN:
+		set(t):
+			type = t
+			update_data()
+	var landscape: LandscapeType = LandscapeType.EMPTY:
+		set(l):
+			landscape = l
+			update_data()
+	var village: int = 0 # 0 表示没有，1 表示有
+	var resource: ResourceType = ResourceType.EMPTY:
+		set(r):
+			resource = r
+			update_data()
+	var continent: ContinentType = ContinentType.EMPTY
+	var units: Array[Unit] = []
+	var city: City = null
+	# 产出
 	var culture: int = 0
 	var food: int = 0
 	var product: int = 0
 	var science: int = 0
 	var religion: int = 0
 	var gold: int = 0
-
-
-class TileInfo:
-	var type: TerrainType = TerrainType.OCEAN
-	var landscape: LandscapeType = LandscapeType.EMPTY
-	var village: int = 0 # 0 表示没有，1 表示有
-	var resource: ResourceType = ResourceType.EMPTY
-	var continent: ContinentType = ContinentType.EMPTY
-	var units: Array[Unit] = []
-	var city: City = null
+	# 变更
+	var move_cost: int = 1
+	var defence_bonus: int = 0
+	# 魅力
+	var charm: int = 0
 	
 	
 	func _init(type: TerrainType) -> void:
 		self.type = type
+		update_data()
 	
 	
 	static func copy(from: Map.TileInfo) -> Map.TileInfo:
@@ -800,10 +813,163 @@ class TileInfo:
 		return to
 	
 	
-	func get_yield() -> TileYield:
-		var tile_yield := TileYield.new()
-		tile_yield.food = 2
-		return tile_yield
+	func update_data() -> void:
+		culture = 0
+		food = 0
+		product = 0
+		science = 0
+		religion = 0
+		gold = 0
+		move_cost = 1
+		defence_bonus = 0
+		match type:
+			TerrainType.GRASS:
+				food += 2
+			TerrainType.GRASS_HILL:
+				food += 2
+				product += 1
+				defence_bonus += 3
+			TerrainType.PLAIN:
+				food += 1
+				product += 1
+			TerrainType.PLAIN_HILL:
+				food += 1
+				product += 2
+				defence_bonus += 3
+			TerrainType.DESERT_HILL:
+				product += 1
+				defence_bonus += 3
+			TerrainType.TUNDRA:
+				food += 1
+			TerrainType.TUNDRA_HILL:
+				food += 1
+				product += 1
+				defence_bonus += 3
+			TerrainType.SNOW_HILL:
+				product += 1
+				defence_bonus += 3
+			TerrainType.SHORE:
+				food += 1
+				gold += 1
+			TerrainType.OCEAN:
+				food += 1
+		match landscape:
+			LandscapeType.FLOOD:
+				food += 3
+				defence_bonus -= 2
+			LandscapeType.OASIS:
+				food += 3
+				gold += 1
+			LandscapeType.FOREST:
+				product += 1
+				move_cost += 1
+				defence_bonus += 3
+			LandscapeType.RAINFOREST:
+				product += 1
+				move_cost += 1
+				defence_bonus += 3
+			LandscapeType.SWAMP:
+				food += 1
+				move_cost += 1
+				defence_bonus -= 2
+		match resource:
+			# 加成
+			ResourceType.RICE:
+				food += 1
+			ResourceType.DEER:
+				product += 1
+			ResourceType.COW:
+				food += 1
+			ResourceType.STONE:
+				product += 1
+			ResourceType.COPPER:
+				gold += 2
+			ResourceType.BANANA:
+				food += 1
+			ResourceType.WHEAT:
+				food += 1
+			ResourceType.SHEEP:
+				food += 1
+			ResourceType.FISH:
+				food += 1
+			ResourceType.CORN:
+				gold += 2
+			ResourceType.CRAB:
+				gold += 2
+			# 奢侈品
+			ResourceType.TEA:
+				science += 1
+			ResourceType.MARBLE:
+				culture += 1
+			ResourceType.HONEY:
+				food += 2
+			ResourceType.ORANGE:
+				food += 2
+			ResourceType.WHALE:
+				product += 1
+				gold += 1
+			ResourceType.COFFEE:
+				culture += 1
+			ResourceType.COCOA_BEAN:
+				gold += 3
+			ResourceType.COTTON:
+				gold += 3
+			ResourceType.FUR:
+				food += 1
+				gold += 1
+			ResourceType.WINE:
+				food += 1
+				gold += 1
+			ResourceType.DYE:
+				religion += 1
+			ResourceType.GYPSUM:
+				product += 1
+				gold += 1
+			ResourceType.MERCURY:
+				science += 1
+			ResourceType.SILK:
+				culture += 1
+			ResourceType.TRUFFLE:
+				gold += 3
+			ResourceType.SUGAR:
+				food += 2
+			ResourceType.SPICE:
+				food += 2
+			ResourceType.IVORY:
+				product += 1
+				gold += 1
+			ResourceType.INCENSE:
+				religion += 1
+			ResourceType.TOBACCO:
+				religion += 1
+			ResourceType.SALT:
+				food += 1
+				gold += 1
+			ResourceType.SILVER:
+				gold += 3
+			ResourceType.JADE:
+				culture += 1
+			ResourceType.PEARL:
+				religion += 1
+			ResourceType.DIAMOND:
+				gold += 3
+			# 战略
+			ResourceType.ALUMINIUM:
+				science += 1
+			ResourceType.HORSE:
+				food += 1
+				product += 1
+			ResourceType.COAL:
+				product += 2
+			ResourceType.OIL:
+				product += 3
+			ResourceType.IRON:
+				science += 1
+			ResourceType.SALTPETER:
+				food += 1
+				product += 1
+			ResourceType.URANIUM:
+				product += 2
 
 
 class BorderInfo:
