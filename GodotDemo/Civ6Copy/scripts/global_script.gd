@@ -1,3 +1,4 @@
+# 自动加载的脚本需要作为场景隐藏根节点下的节点，所以必须继承 Node
 extends Node
 
 
@@ -15,8 +16,6 @@ var load_info: String = "加载中...":
 		load_info = str
 		load_info_changed.emit(str)
 var loaded_scene: PackedScene
-var jump_to_other_scene: bool = false
-var jump_scene_path: String
 # 计时相关
 var last_time_record: int
 # 游戏玩家相关

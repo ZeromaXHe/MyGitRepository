@@ -1,6 +1,5 @@
 ## 参考链接：https://www.redblobgames.com/grids/hexagons/
 class_name HexagonUtils
-extends Node
 
 
 ## 名字和注释里对应行排列(pointy top)的情形，括号里是对应列排列(flat top)的情形

@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=34 format=3 uid="uid://dfpeq8ikcp1wc"]
 
 [ext_resource type="Script" path="res://scenes/gui/game_gui.gd" id="1_heuwt"]
 [ext_resource type="PackedScene" uid="uid://cuqtin2smf42h" path="res://scenes/gui/panel/game_top_panel.tscn" id="2_4ekn0"]
@@ -21,6 +21,7 @@
 [ext_resource type="PackedScene" uid="uid://dsvabdnd8uany" path="res://scenes/gui/panel/game_city_info_panel.tscn" id="19_karjy"]
 [ext_resource type="PackedScene" uid="uid://bfwi0qylm5dh6" path="res://scenes/gui/panel/game_turn_panel.tscn" id="20_7b5h4"]
 [ext_resource type="PackedScene" uid="uid://bmbo3lvy76glo" path="res://scenes/gui/panel/game_city_product_panel.tscn" id="21_pw5r8"]
+[ext_resource type="PackedScene" uid="uid://df6kd5ngx5vm8" path="res://scenes/menu/hot_seat_changing_scene.tscn" id="27_omnpr"]
 [ext_resource type="PackedScene" uid="uid://6rscixmykdb1" path="res://scenes/gui/panel/wiki_panel.tscn" id="29_dio20"]
 [ext_resource type="PackedScene" uid="uid://babhwv4eoh1kt" path="res://scenes/gui/mouse_hover_tile_panel.tscn" id="32_7g8tl"]
 [ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://styles/menu_deep_blue_button_normal.tres" id="33_4g664"]
@@ -352,6 +353,8 @@ theme_override_styles/normal = ExtResource("33_4g664")
 theme_override_styles/hover = ExtResource("34_aeh5d")
 theme_override_styles/pressed = ExtResource("35_ltdyn")
 text = "返回桌面"
+
+[node name="HotSeatChangingScene" parent="." instance=ExtResource("27_omnpr")]
 
 [connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/ReturnButton" to="." method="_on_return_button_pressed"]
 [connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]

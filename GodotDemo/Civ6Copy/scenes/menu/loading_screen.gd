@@ -23,10 +23,7 @@ func _process(delta):
 	progress_bar.value = max(progress[0] * 100, progress_bar.value)
 	if scene_load_status == ResourceLoader.THREAD_LOAD_LOADED:
 		GlobalScript.loaded_scene = ResourceLoader.load_threaded_get(GlobalScript.load_scene_path)
-		if GlobalScript.jump_to_other_scene:
-			get_tree().change_scene_to_file(GlobalScript.jump_scene_path)
-		else:
-			get_tree().change_scene_to_packed(GlobalScript.loaded_scene)
+		get_tree().change_scene_to_packed(GlobalScript.loaded_scene)
 
 
 func handle_load_info_changed(load_info: String) -> void:

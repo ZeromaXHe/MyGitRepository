@@ -1,9 +1,27 @@
 extends Node2D
 
 
+enum EnumTest {
+	AAAA,
+	BBBB,
+	CCCC,
+}
+
+
 func _ready() -> void:
-	test_hexagon_utils_cube_ring()
-	test_map_get_in_map_surrounding_coords()
+#	test_hexagon_utils_cube_ring()
+#	test_map_get_in_map_surrounding_coords()
+	test_enum()
+
+
+func test_enum() -> void:
+	print(EnumTest.keys())
+	print(EnumTest.values())
+	
+	for k in EnumTest.keys():
+		# 不能直接写 k == EnumTest.AAAA，k 是 String，EnumTest.AAAA 是 int
+		if EnumTest[k] == EnumTest.AAAA:
+			print("find AAAA")
 
 
 func test_hexagon_utils_cube_ring() -> void:

@@ -1,5 +1,4 @@
 class_name Map
-extends Node
 
 
 # 地图类型

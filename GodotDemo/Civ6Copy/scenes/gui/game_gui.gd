@@ -21,6 +21,8 @@ signal city_product_settler_button_pressed
 @onready var city_product_panel: GameCityProductPanel = $VBoxContainer/MainMargin/RightDownHBox/CityProductPanel
 # 菜单界面相关
 @onready var menu_overlay: PanelContainer = $MenuOverlay
+# 热座模式切换玩家界面
+@onready var hot_seat_changing_scene: HotSeatChangingScene = $HotSeatChangingScene
 
 
 func _ready() -> void:
@@ -32,6 +34,8 @@ func _ready() -> void:
 	hide_city_product_panel()
 	# 鼠标悬停面板初始不显示
 	hide_mouse_hover_tile_info()
+	
+	hot_seat_changing_scene.show()
 
 
 func signal_binding_with_game(game: HotSeatGame) -> void:

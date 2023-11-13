@@ -30,6 +30,7 @@ const TYPE_TO_CATEGORY_DICT: Dictionary = {
 	Type.WARRIOR: Category.GROUND_FORCE,
 }
 
+
 var category: Category
 var type: Type
 var player: Player
