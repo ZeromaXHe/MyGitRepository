@@ -1,11 +1,9 @@
 class_name UnitTypeDO
-extends MySimSQL.DataObj
+extends MySimSQL.EnumDO
 
 
-# 类型枚举名
-var name: String
-# 视图层名字
-var view_name: String
+# 种类
+var category: UnitCategoryTable.Category
 # 64x64 图标资源路径
 var icon_64: String
 # 256x256 图标资源路径

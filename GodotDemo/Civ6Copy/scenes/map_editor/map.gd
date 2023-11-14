@@ -11,132 +11,6 @@ enum Size {
 	DUAL, # 决斗
 }
 
-enum TerrainType {
-	GRASS,
-	GRASS_HILL,
-	GRASS_MOUNTAIN,
-	PLAIN,
-	PLAIN_HILL,
-	PLAIN_MOUNTAIN,
-	DESERT,
-	DESERT_HILL,
-	DESERT_MOUNTAIN,
-	TUNDRA,
-	TUNDRA_HILL,
-	TUNDRA_MOUNTAIN,
-	SNOW,
-	SNOW_HILL,
-	SNOW_MOUNTAIN,
-	SHORE,
-	OCEAN,
-}
-
-enum LandscapeType {
-	EMPTY, # 空
-	ICE, # 冰
-	FOREST, # 森林
-	SWAMP, # 沼泽
-	FLOOD, # 泛滥平原
-	OASIS, # 绿洲
-	RAINFOREST, # 雨林
-}
-
-enum ContinentType {
-	EMPTY, # 空
-	AFRICA, # 非洲
-	AMASIA, # 阿马西亚
-	AMERICA, # 美洲
-	ANTARCTICA, # 南极洲
-	ARCTIC, # 北极大陆
-	ASIA, # 亚洲
-	ASIAMERICA, # 亚美大陆
-	ATLANTICA, # 大西洋洲
-	ATLANTIS, # 亚特兰蒂斯
-	AUSTRALIA, # 澳大利亚
-	AVALONIA, # 阿瓦隆尼亚
-	AZANIA, # 阿扎尼亚
-	BALTICA, # 波罗大陆
-	CIMMERIA, # 辛梅利亚大陆
-	COLUMBIA, # 哥伦比亚
-	CONGO_CRATON, # 刚果克拉通
-	EURAMERICA, # 欧美大陆
-	EUROPE, # 欧洲
-	GONDWANA, # 冈瓦那
-	KALAHARI, # 喀拉哈里
-	KAZAKHSTANIA, # 哈萨克大陆
-	KENORLAND, # 凯诺兰
-	KUMARI_KANDAM, # 古默里坎达
-	LAURASIA, # 劳亚古陆
-	LAURENTIA, # 劳伦古陆
-	LEMURIA, # 利莫里亚 
-	MU, # 穆大陆
-	NENA, # 妮娜大陆
-	NORTH_AMERICA, # 北美洲
-	NOVOPANGAEA, # 新盘古大陆
-	NUNA, # 努纳
-	OCEANIA, # 大洋洲
-	PANGAEA, # 盘古大陆
-	PANGAEA_ULTIMA, # 终极盘古大陆
-	PANNOTIA, # 潘诺西亚
-	RODINIA, # 罗迪尼亚
-	SIBERIA, # 西伯利亚
-	SOUTH_AMERICA, # 南美洲
-	TERRA_AUSTRALIS, # 未知的南方大陆
-	UR, # 乌尔
-	VAALBARA, # 瓦巴拉
-	VENDIAN, # 文德期
-	ZEALANDIA, # 西兰蒂亚
-}
-
-enum ResourceType {
-	EMPTY, # 空
-	SILK, # 丝绸
-	RELIC, # 历史遗迹
-	COCOA_BEAN, # 可可豆
-	COFFEE, # 咖啡
-	MARBLE, # 大理石
-	RICE, # 大米
-	WHEAT, # 小麦
-	TRUFFLE, # 松露
-	ORANGE, # 柑橘
-	DYE, # 染料
-	COTTON, # 棉花
-	MERCURY, # 水银
-	WRECKAGE, # 海难遗迹
-	TOBACCO, # 烟草
-	COAL, # 煤
-	INCENSE, # 熏香
-	COW, # 牛
-	JADE, # 玉
-	CORN, # 玉米
-	PEARL, # 珍珠
-	FUR, # 皮草
-	SALT, # 盐
-	STONE, # 石头
-	OIL, # 石油
-	GYPSUM, # 石膏
-	SALTPETER, # 硝石
-	SUGAR, # 糖
-	SHEEP, # 羊
-	TEA, # 茶
-	WINE, # 葡萄酒
-	HONEY, # 蜂蜜
-	CRAB, # 螃蟹
-	IVORY, # 象牙
-	DIAMOND, # 钻石
-	URANIUM, # 铀
-	IRON, # 铁
-	COPPER, # 铜
-	ALUMINIUM, # 铝
-	SILVER, # 银
-	SPICE, # 香料
-	BANANA, # 香蕉
-	HORSE, # 马
-	FISH, # 鱼
-	WHALE, # 鲸鱼
-	DEER, # 鹿
-}
-
 enum SightType {
 	UNSEEN, # 未见过
 	SEEN, # 见过
@@ -166,132 +40,6 @@ enum BorderTileType {
 	CLIFF,
 }
 
-const TERRAIN_TYPE_TO_NAME_DICT: Dictionary = {
-	TerrainType.GRASS: "草原",
-	TerrainType.GRASS_HILL: "草原（丘陵）",
-	TerrainType.GRASS_MOUNTAIN: "草原（山脉）",
-	TerrainType.PLAIN: "平原",
-	TerrainType.PLAIN_HILL: "平原（丘陵）",
-	TerrainType.PLAIN_MOUNTAIN: "平原（山脉）",
-	TerrainType.DESERT: "沙漠",
-	TerrainType.DESERT_HILL: "沙漠（丘陵）",
-	TerrainType.DESERT_MOUNTAIN: "沙漠（山脉）",
-	TerrainType.TUNDRA: "冻土",
-	TerrainType.TUNDRA_HILL: "冻土（丘陵）",
-	TerrainType.TUNDRA_MOUNTAIN: "冻土（山脉）",
-	TerrainType.SNOW: "雪地",
-	TerrainType.SNOW_HILL: "雪地（丘陵）",
-	TerrainType.SNOW_MOUNTAIN: "雪地（山脉）",
-	TerrainType.SHORE: "海岸与湖泊",
-	TerrainType.OCEAN: "海洋",
-}
-
-const LANDSCAPE_TYPE_TO_NAME_DICT: Dictionary = {
-	LandscapeType.EMPTY: "空",
-	LandscapeType.ICE: "冰",
-	LandscapeType.FOREST: "森林",
-	LandscapeType.SWAMP: "沼泽",
-	LandscapeType.FLOOD: "泛滥平原",
-	LandscapeType.OASIS: "绿洲",
-	LandscapeType.RAINFOREST: "雨林",
-}
-
-const CONTINENT_TYPE_TO_NAME_DICT: Dictionary = {
-	ContinentType.EMPTY: "空",
-	ContinentType.AFRICA: "非洲",
-	ContinentType.AMASIA: "阿马西亚",
-	ContinentType.AMERICA: "美洲",
-	ContinentType.ANTARCTICA: "南极洲",
-	ContinentType.ARCTIC: "北极大陆",
-	ContinentType.ASIA: "亚洲",
-	ContinentType.ASIAMERICA: "亚美大陆",
-	ContinentType.ATLANTICA: "大西洋洲",
-	ContinentType.ATLANTIS: "亚特兰蒂斯",
-	ContinentType.AUSTRALIA: "澳大利亚",
-	ContinentType.AVALONIA: "阿瓦隆尼亚",
-	ContinentType.AZANIA: "阿扎尼亚",
-	ContinentType.BALTICA: "波罗大陆",
-	ContinentType.CIMMERIA: "辛梅利亚大陆",
-	ContinentType.COLUMBIA: "哥伦比亚",
-	ContinentType.CONGO_CRATON: "刚果克拉通",
-	ContinentType.EURAMERICA: "欧美大陆",
-	ContinentType.EUROPE: "欧洲",
-	ContinentType.GONDWANA: "冈瓦那",
-	ContinentType.KALAHARI: "喀拉哈里",
-	ContinentType.KAZAKHSTANIA: "哈萨克大陆",
-	ContinentType.KENORLAND: "凯诺兰",
-	ContinentType.KUMARI_KANDAM: "古默里坎达",
-	ContinentType.LAURASIA: "劳亚古陆",
-	ContinentType.LAURENTIA: "劳伦古陆",
-	ContinentType.LEMURIA: "利莫里亚 ",
-	ContinentType.MU: "穆大陆",
-	ContinentType.NENA: "妮娜大陆",
-	ContinentType.NORTH_AMERICA: "北美洲",
-	ContinentType.NOVOPANGAEA: "新盘古大陆",
-	ContinentType.NUNA: "努纳",
-	ContinentType.OCEANIA: "大洋洲",
-	ContinentType.PANGAEA: "盘古大陆",
-	ContinentType.PANGAEA_ULTIMA: "终极盘古大陆",
-	ContinentType.PANNOTIA: "潘诺西亚",
-	ContinentType.RODINIA: "罗迪尼亚",
-	ContinentType.SIBERIA: "西伯利亚",
-	ContinentType.SOUTH_AMERICA: "南美洲",
-	ContinentType.TERRA_AUSTRALIS: "未知的南方大陆",
-	ContinentType.UR: "乌尔",
-	ContinentType.VAALBARA: "瓦巴拉",
-	ContinentType.VENDIAN: "文德期",
-	ContinentType.ZEALANDIA: "西兰蒂亚",
-}
-
-const RESOURCE_TYPE_TO_NAME_DICT: Dictionary = {
-	ResourceType.EMPTY: "空",
-	ResourceType.SILK: "丝绸",
-	ResourceType.RELIC: "历史遗迹",
-	ResourceType.COCOA_BEAN: "可可豆",
-	ResourceType.COFFEE: "咖啡",
-	ResourceType.MARBLE: "大理石",
-	ResourceType.RICE: "大米",
-	ResourceType.WHEAT: "小麦",
-	ResourceType.TRUFFLE: "松露",
-	ResourceType.ORANGE: "柑橘",
-	ResourceType.DYE: "染料",
-	ResourceType.COTTON: "棉花",
-	ResourceType.MERCURY: "水银",
-	ResourceType.WRECKAGE: "海难遗迹",
-	ResourceType.TOBACCO: "烟草",
-	ResourceType.COAL: "煤",
-	ResourceType.INCENSE: "熏香",
-	ResourceType.COW: "牛",
-	ResourceType.JADE: "玉",
-	ResourceType.CORN: "玉米",
-	ResourceType.PEARL: "珍珠",
-	ResourceType.FUR: "皮草",
-	ResourceType.SALT: "盐",
-	ResourceType.STONE: "石头",
-	ResourceType.OIL: "石油",
-	ResourceType.GYPSUM: "石膏",
-	ResourceType.SALTPETER: "硝石",
-	ResourceType.SUGAR: "糖",
-	ResourceType.SHEEP: "羊",
-	ResourceType.TEA: "茶",
-	ResourceType.WINE: "葡萄酒",
-	ResourceType.HONEY: "蜂蜜",
-	ResourceType.CRAB: "螃蟹",
-	ResourceType.IVORY: "象牙",
-	ResourceType.DIAMOND: "钻石",
-	ResourceType.URANIUM: "铀",
-	ResourceType.IRON: "铁",
-	ResourceType.COPPER: "铜",
-	ResourceType.ALUMINIUM: "铝",
-	ResourceType.SILVER: "银",
-	ResourceType.SPICE: "香料",
-	ResourceType.BANANA: "香蕉",
-	ResourceType.HORSE: "马",
-	ResourceType.FISH: "鱼",
-	ResourceType.WHALE: "鲸鱼",
-	ResourceType.DEER: "鹿",
-}
-
 # 地图尺寸和格子数的映射字典
 const SIZE_DICT: Dictionary = {
 	Size.DUAL: Vector2i(44, 26),
@@ -318,7 +66,7 @@ func _init() -> void:
 	for i in range(map_size.x):
 		_map_tile_info.append([])
 		for j in range(map_size.y):
-			_map_tile_info[i].append(TileInfo.new(TerrainType.OCEAN))
+			_map_tile_info[i].append(TileInfo.new(TerrainTable.Terrain.OCEAN))
 	
 	var border_size: Vector2i = get_border_tile_size()
 	# 记录边界地块信息
@@ -395,17 +143,17 @@ func serialize_map_tile_info() -> String:
 			if res != "" and not res.ends_with(";"):
 				res += ","
 			var tile_info := elem as TileInfo
-			if tile_info.continent != ContinentType.EMPTY:
+			if tile_info.continent != ContinentTable.Continent.EMPTY:
 				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
 						+ str(tile_info.village) + "|" + str(tile_info.resource) \
 						+ "|" + str(tile_info.continent)
-			elif tile_info.resource != ResourceType.EMPTY:
+			elif tile_info.resource != ResourceTable.ResourceType.EMPTY:
 				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
 						+ str(tile_info.village) + "|" + str(tile_info.resource)
 			elif tile_info.village != 0:
 				res += str(tile_info.type) + "|" + str(tile_info.landscape) + "|" \
 						+ str(tile_info.village)
-			elif tile_info.landscape != LandscapeType.EMPTY:
+			elif tile_info.landscape != LandscapeTable.Landscape.EMPTY:
 				res += str(tile_info.type) + "|" + str(tile_info.landscape)
 			else:
 				res += str(tile_info.type)
@@ -446,38 +194,38 @@ func get_border_tile_info_at(coord: Vector2i) -> BorderInfo:
 	return _border_tile_info[coord.x][coord.y]
 
 
-static func is_land_terrain_type(type: TerrainType) -> bool:
-	return type != TerrainType.SHORE and type != TerrainType.OCEAN
+static func is_land_terrain_type(type: TerrainTable.Terrain) -> bool:
+	return type != TerrainTable.Terrain.SHORE and type != TerrainTable.Terrain.OCEAN
 
 
-static func is_flat_land_terrain_type(type: TerrainType) -> bool:
-	return type == TerrainType.GRASS or type == TerrainType.PLAIN \
-			or type == TerrainType.DESERT or type == TerrainType.TUNDRA \
-			or type == TerrainType.SNOW
+static func is_flat_land_terrain_type(type: TerrainTable.Terrain) -> bool:
+	return type == TerrainTable.Terrain.GRASS or type == TerrainTable.Terrain.PLAIN \
+			or type == TerrainTable.Terrain.DESERT or type == TerrainTable.Terrain.TUNDRA \
+			or type == TerrainTable.Terrain.SNOW
 
 
-static func is_hill_land_terrain_type(type: TerrainType) -> bool:
-	return type == TerrainType.GRASS_HILL or type == TerrainType.PLAIN_HILL \
-			or type == TerrainType.DESERT_HILL or type == TerrainType.TUNDRA_HILL \
-			or type == TerrainType.SNOW_HILL
+static func is_hill_land_terrain_type(type: TerrainTable.Terrain) -> bool:
+	return type == TerrainTable.Terrain.GRASS_HILL or type == TerrainTable.Terrain.PLAIN_HILL \
+			or type == TerrainTable.Terrain.DESERT_HILL or type == TerrainTable.Terrain.TUNDRA_HILL \
+			or type == TerrainTable.Terrain.SNOW_HILL
 
 
-static func is_mountain_land_terrain_type(type: TerrainType) -> bool:
-	return type == TerrainType.GRASS_MOUNTAIN or type == TerrainType.PLAIN_MOUNTAIN \
-			or type == TerrainType.DESERT_MOUNTAIN or type == TerrainType.TUNDRA_MOUNTAIN \
-			or type == TerrainType.SNOW_MOUNTAIN
+static func is_mountain_land_terrain_type(type: TerrainTable.Terrain) -> bool:
+	return type == TerrainTable.Terrain.GRASS_MOUNTAIN or type == TerrainTable.Terrain.PLAIN_MOUNTAIN \
+			or type == TerrainTable.Terrain.DESERT_MOUNTAIN or type == TerrainTable.Terrain.TUNDRA_MOUNTAIN \
+			or type == TerrainTable.Terrain.SNOW_MOUNTAIN
 
 
-static func is_no_mountain_land_terrain_type(type: TerrainType) -> bool:
-	return type == TerrainType.GRASS or type == TerrainType.GRASS_HILL \
-			or type == TerrainType.PLAIN or type == TerrainType.PLAIN_HILL \
-			or type == TerrainType.DESERT or type == TerrainType.DESERT_HILL \
-			or type == TerrainType.TUNDRA or type == TerrainType.TUNDRA_HILL \
-			or type == TerrainType.SNOW or type == TerrainType.SNOW_HILL
+static func is_no_mountain_land_terrain_type(type: TerrainTable.Terrain) -> bool:
+	return type == TerrainTable.Terrain.GRASS or type == TerrainTable.Terrain.GRASS_HILL \
+			or type == TerrainTable.Terrain.PLAIN or type == TerrainTable.Terrain.PLAIN_HILL \
+			or type == TerrainTable.Terrain.DESERT or type == TerrainTable.Terrain.DESERT_HILL \
+			or type == TerrainTable.Terrain.TUNDRA or type == TerrainTable.Terrain.TUNDRA_HILL \
+			or type == TerrainTable.Terrain.SNOW or type == TerrainTable.Terrain.SNOW_HILL
 
 
-static func is_sea_terrain_type(type: TerrainType) -> bool:
-	return type == TerrainType.SHORE or type == TerrainType.OCEAN
+static func is_sea_terrain_type(type: TerrainTable.Terrain) -> bool:
+	return type == TerrainTable.Terrain.SHORE or type == TerrainTable.Terrain.OCEAN
 
 
 static func load_from_save() -> Map:
@@ -768,20 +516,20 @@ static func get_in_map_surrounding_coords(coord: Vector2i, map_size: Vector2i) -
 
 
 class TileInfo:
-	var type: TerrainType = TerrainType.OCEAN:
+	var type: TerrainTable.Terrain = TerrainTable.Terrain.OCEAN:
 		set(t):
 			type = t
 			update_data()
-	var landscape: LandscapeType = LandscapeType.EMPTY:
+	var landscape: LandscapeTable.Landscape = LandscapeTable.Landscape.EMPTY:
 		set(l):
 			landscape = l
 			update_data()
 	var village: int = 0 # 0 表示没有，1 表示有
-	var resource: ResourceType = ResourceType.EMPTY:
+	var resource: ResourceTable.ResourceType = ResourceTable.ResourceType.EMPTY:
 		set(r):
 			resource = r
 			update_data()
-	var continent: ContinentType = ContinentType.EMPTY
+	var continent: ContinentTable.Continent = ContinentTable.Continent.EMPTY
 	var units: Array[Unit] = []
 	var city: City = null
 	# 产出
@@ -798,7 +546,7 @@ class TileInfo:
 	var charm: int = 0
 	
 	
-	func _init(type: TerrainType) -> void:
+	func _init(type: TerrainTable.Terrain) -> void:
 		self.type = type
 		update_data()
 	
@@ -822,152 +570,152 @@ class TileInfo:
 		move_cost = 1
 		defence_bonus = 0
 		match type:
-			TerrainType.GRASS:
+			TerrainTable.Terrain.GRASS:
 				food += 2
-			TerrainType.GRASS_HILL:
+			TerrainTable.Terrain.GRASS_HILL:
 				food += 2
 				product += 1
 				defence_bonus += 3
-			TerrainType.PLAIN:
+			TerrainTable.Terrain.PLAIN:
 				food += 1
 				product += 1
-			TerrainType.PLAIN_HILL:
+			TerrainTable.Terrain.PLAIN_HILL:
 				food += 1
 				product += 2
 				defence_bonus += 3
-			TerrainType.DESERT_HILL:
+			TerrainTable.Terrain.DESERT_HILL:
 				product += 1
 				defence_bonus += 3
-			TerrainType.TUNDRA:
+			TerrainTable.Terrain.TUNDRA:
 				food += 1
-			TerrainType.TUNDRA_HILL:
+			TerrainTable.Terrain.TUNDRA_HILL:
 				food += 1
 				product += 1
 				defence_bonus += 3
-			TerrainType.SNOW_HILL:
+			TerrainTable.Terrain.SNOW_HILL:
 				product += 1
 				defence_bonus += 3
-			TerrainType.SHORE:
+			TerrainTable.Terrain.SHORE:
 				food += 1
 				gold += 1
-			TerrainType.OCEAN:
+			TerrainTable.Terrain.OCEAN:
 				food += 1
 		match landscape:
-			LandscapeType.FLOOD:
+			LandscapeTable.Landscape.FLOOD:
 				food += 3
 				defence_bonus -= 2
-			LandscapeType.OASIS:
+			LandscapeTable.Landscape.OASIS:
 				food += 3
 				gold += 1
-			LandscapeType.FOREST:
+			LandscapeTable.Landscape.FOREST:
 				product += 1
 				move_cost += 1
 				defence_bonus += 3
-			LandscapeType.RAINFOREST:
+			LandscapeTable.Landscape.RAINFOREST:
 				product += 1
 				move_cost += 1
 				defence_bonus += 3
-			LandscapeType.SWAMP:
+			LandscapeTable.Landscape.SWAMP:
 				food += 1
 				move_cost += 1
 				defence_bonus -= 2
 		match resource:
 			# 加成
-			ResourceType.RICE:
+			ResourceTable.ResourceType.RICE:
 				food += 1
-			ResourceType.DEER:
+			ResourceTable.ResourceType.DEER:
 				product += 1
-			ResourceType.COW:
+			ResourceTable.ResourceType.COW:
 				food += 1
-			ResourceType.STONE:
+			ResourceTable.ResourceType.STONE:
 				product += 1
-			ResourceType.COPPER:
+			ResourceTable.ResourceType.COPPER:
 				gold += 2
-			ResourceType.BANANA:
+			ResourceTable.ResourceType.BANANA:
 				food += 1
-			ResourceType.WHEAT:
+			ResourceTable.ResourceType.WHEAT:
 				food += 1
-			ResourceType.SHEEP:
+			ResourceTable.ResourceType.SHEEP:
 				food += 1
-			ResourceType.FISH:
+			ResourceTable.ResourceType.FISH:
 				food += 1
-			ResourceType.CORN:
+			ResourceTable.ResourceType.CORN:
 				gold += 2
-			ResourceType.CRAB:
+			ResourceTable.ResourceType.CRAB:
 				gold += 2
 			# 奢侈品
-			ResourceType.TEA:
+			ResourceTable.ResourceType.TEA:
 				science += 1
-			ResourceType.MARBLE:
+			ResourceTable.ResourceType.MARBLE:
 				culture += 1
-			ResourceType.HONEY:
+			ResourceTable.ResourceType.HONEY:
 				food += 2
-			ResourceType.ORANGE:
+			ResourceTable.ResourceType.ORANGE:
 				food += 2
-			ResourceType.WHALE:
+			ResourceTable.ResourceType.WHALE:
 				product += 1
 				gold += 1
-			ResourceType.COFFEE:
+			ResourceTable.ResourceType.COFFEE:
 				culture += 1
-			ResourceType.COCOA_BEAN:
+			ResourceTable.ResourceType.COCOA_BEAN:
 				gold += 3
-			ResourceType.COTTON:
+			ResourceTable.ResourceType.COTTON:
 				gold += 3
-			ResourceType.FUR:
+			ResourceTable.ResourceType.FUR:
 				food += 1
 				gold += 1
-			ResourceType.WINE:
+			ResourceTable.ResourceType.WINE:
 				food += 1
 				gold += 1
-			ResourceType.DYE:
+			ResourceTable.ResourceType.DYE:
 				religion += 1
-			ResourceType.GYPSUM:
+			ResourceTable.ResourceType.GYPSUM:
 				product += 1
 				gold += 1
-			ResourceType.MERCURY:
+			ResourceTable.ResourceType.MERCURY:
 				science += 1
-			ResourceType.SILK:
+			ResourceTable.ResourceType.SILK:
 				culture += 1
-			ResourceType.TRUFFLE:
+			ResourceTable.ResourceType.TRUFFLE:
 				gold += 3
-			ResourceType.SUGAR:
+			ResourceTable.ResourceType.SUGAR:
 				food += 2
-			ResourceType.SPICE:
+			ResourceTable.ResourceType.SPICE:
 				food += 2
-			ResourceType.IVORY:
+			ResourceTable.ResourceType.IVORY:
 				product += 1
 				gold += 1
-			ResourceType.INCENSE:
+			ResourceTable.ResourceType.INCENSE:
 				religion += 1
-			ResourceType.TOBACCO:
+			ResourceTable.ResourceType.TOBACCO:
 				religion += 1
-			ResourceType.SALT:
+			ResourceTable.ResourceType.SALT:
 				food += 1
 				gold += 1
-			ResourceType.SILVER:
+			ResourceTable.ResourceType.SILVER:
 				gold += 3
-			ResourceType.JADE:
+			ResourceTable.ResourceType.JADE:
 				culture += 1
-			ResourceType.PEARL:
+			ResourceTable.ResourceType.PEARL:
 				religion += 1
-			ResourceType.DIAMOND:
+			ResourceTable.ResourceType.DIAMOND:
 				gold += 3
 			# 战略
-			ResourceType.ALUMINIUM:
+			ResourceTable.ResourceType.ALUMINIUM:
 				science += 1
-			ResourceType.HORSE:
+			ResourceTable.ResourceType.HORSE:
 				food += 1
 				product += 1
-			ResourceType.COAL:
+			ResourceTable.ResourceType.COAL:
 				product += 2
-			ResourceType.OIL:
+			ResourceTable.ResourceType.OIL:
 				product += 3
-			ResourceType.IRON:
+			ResourceTable.ResourceType.IRON:
 				science += 1
-			ResourceType.SALTPETER:
+			ResourceTable.ResourceType.SALTPETER:
 				food += 1
 				product += 1
-			ResourceType.URANIUM:
+			ResourceTable.ResourceType.URANIUM:
 				product += 2
 
 
@@ -1050,7 +798,7 @@ class MapMoveAStar2D extends MapAStar2D:
 		var from_tile: TileInfo = map.get_map_tile_info_at(from_coord)
 		var to_tile: TileInfo = map.get_map_tile_info_at(to_coord)
 		# 无法前往山脉和冰
-		if Map.is_mountain_land_terrain_type(to_tile.type) or to_tile.landscape == LandscapeType.ICE:
+		if Map.is_mountain_land_terrain_type(to_tile.type) or to_tile.landscape == LandscapeTable.Landscape.ICE:
 			return UNREACHABLE_COST
 		# FIXME: 暂时先让跨越陆海分隔的路线成本为无法到达
 		if Map.is_land_terrain_type(from_tile.type) and Map.is_sea_terrain_type(to_tile.type):

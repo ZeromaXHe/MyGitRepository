@@ -30,15 +30,13 @@ func show_info() -> void:
 		return
 	# 刷新内容
 	unit_name_label.text = Unit.get_unit_name(showing_unit.type)
-	if showing_unit.type == Unit.Type.SETTLER:
+	if showing_unit.type == UnitTypeTable.Type.SETTLER:
 		unit_city_button.show()
 	else:
 		unit_city_button.hide()
-	match showing_unit.type:
-		Unit.Type.SETTLER:
-			unit_texture_rect.texture = load("res://assets/civ6_origin/unit/png_200/unit_settler.png")
-		Unit.Type.WARRIOR:
-			unit_texture_rect.texture = load("res://assets/civ6_origin/unit/png_200/unit_warrior.png")
+	
+	unit_texture_rect.texture = load(Unit.get_unit_pic_200(showing_unit.type))
+	
 	handle_unit_move_capability_changed(showing_unit.move_capability)
 	# 绑定信号，方便后续更新信息
 	connect_showing_unit_signals()

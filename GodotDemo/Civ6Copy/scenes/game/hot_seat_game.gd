@@ -117,11 +117,11 @@ func paint_player_sight(player: Player) -> void:
 
 func test_add_unit() -> void:
 	GlobalScript.load_info = "初始化单位..."
-	var settler: Unit = add_unit(Unit.Type.SETTLER, Vector2i(22, 13))
-	var warrior: Unit = add_unit(Unit.Type.WARRIOR, Vector2i(21, 13))
+	var settler: Unit = add_unit(UnitTypeTable.Type.SETTLER, Vector2i(22, 13))
+	var warrior: Unit = add_unit(UnitTypeTable.Type.WARRIOR, Vector2i(21, 13))
 
 
-func add_unit(type: Unit.Type, coord: Vector2i) -> Unit:
+func add_unit(type: UnitTypeTable.Type, coord: Vector2i) -> Unit:
 	var unit: Unit = UNIT_SCENE.instantiate()
 	units.add_child(unit)
 	unit.initiate(type, GlobalScript.get_current_player(), coord, map_shower)
@@ -190,7 +190,7 @@ func handle_unit_clicked(unit: Unit) -> void:
 	chosen_unit = unit
 
 
-func handle_city_product_completed(unit_type: Unit.Type, city: City) -> void:
+func handle_city_product_completed(unit_type: UnitTypeTable.Type, city: City) -> void:
 	add_unit(unit_type, city.coord)
 
 
@@ -221,7 +221,7 @@ func handle_city_product_settler_button_pressed() -> void:
 	if chosen_city == null:
 		printerr("handle_city_product_settler_button_pressed | weird, no chosen city")
 		return
-	chosen_city.producing_unit_type = Unit.Type.SETTLER
+	chosen_city.producing_unit_type = UnitTypeTable.Type.SETTLER
 
 
 func handle_turn_button_clicked() -> void:
@@ -255,7 +255,7 @@ func handle_unit_move_capability_depleted(unit: Unit) -> void:
 	refresh_turn_status()
 
 
-func handle_chosen_city_producing_unit_type_changed(type: Unit.Type) -> void:
+func handle_chosen_city_producing_unit_type_changed(type: UnitTypeTable.Type) -> void:
 	# 城市选择了新的生产项目，需要刷新一下回合状态
 	refresh_turn_status()
 

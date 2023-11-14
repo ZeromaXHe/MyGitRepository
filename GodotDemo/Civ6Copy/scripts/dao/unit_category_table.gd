@@ -1,5 +1,5 @@
 class_name UnitCategoryTable
-extends MySimSQL.Table
+extends MySimSQL.EnumTable
 
 
 enum Category {
@@ -14,10 +14,14 @@ enum Category {
 
 
 func _init() -> void:
+	super._init()
+	elem_type = UnitCategoryDO
+	
 	for k in Category.keys():
 		var do := UnitCategoryDO.new()
-		do.name = k
-		match Category[k]:
+		do.enum_name = k
+		do.enum_val = Category[k]
+		match do.enum_val:
 			Category.GROUND_FORCE:
 				do.view_name = "地面部队"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_ground_military_background.svg"
@@ -39,12 +43,4 @@ func _init() -> void:
 			Category.RELIGIOUS:
 				do.view_name = "宗教单位"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_religious_background.svg"
-		insert(do)
-
-
-func insert(d: DataObj) -> void:
-	printerr("UnitCategoryTable is a enum table, can't insert")
-
-
-func delete_by_id(id: int) -> void:
-	printerr("UnitCategoryTable is a enum table, can't delete")
+		super.init_insert(do)

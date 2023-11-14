@@ -125,7 +125,7 @@ func handle_chosen_city_changed(city: City) -> void:
 	showing_city = city
 
 
-func handle_city_producing_unit_type_changed(type: Unit.Type) -> void:
+func handle_city_producing_unit_type_changed(type: UnitTypeTable.Type) -> void:
 	if type == -1:
 		city_product_texture_rect.texture = null
 		city_producing_label.text = "没有生产任何东西"

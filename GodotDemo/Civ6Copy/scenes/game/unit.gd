@@ -6,33 +6,9 @@ signal unit_clicked(unit: Unit)
 signal unit_move_capability_depleted(unit: Unit)
 signal move_capability_changed(move_capability: int)
 
-enum Category {
-	GROUND_FORCE, # 地面部队
-	SEA_FORCE, # 海上部队
-	AIR_FORCE, # 空中部队
-	ASSISTANT_FORCE, # 支援部队
-	CITIZEN, # 平民
-	TRADER, # 商人
-	RELIGIOUS, # 宗教单位
-}
 
-enum Type {
-	SETTLER, # 开拓者
-	BUILDER, # 建造者
-	SCOUT, # 侦察兵
-	WARRIOR, # 勇士
-}
-
-const TYPE_TO_CATEGORY_DICT: Dictionary = {
-	Type.SETTLER: Category.CITIZEN,
-	Type.BUILDER: Category.CITIZEN,
-	Type.SCOUT: Category.GROUND_FORCE,
-	Type.WARRIOR: Category.GROUND_FORCE,
-}
-
-
-var category: Category
-var type: Type
+var category: UnitCategoryTable.Category
+var type: UnitTypeTable.Type
 var player: Player
 var coord: Vector2i
 var move_capability: int:
@@ -48,9 +24,9 @@ var sleep_flag: bool = false
 @onready var icon: Sprite2D = $IconSprite2D
 
 
-func initiate(type: Type, player: Player, coord: Vector2i, map_shower: MapShower) -> void:
+func initiate(type: UnitTypeTable.Type, player: Player, coord: Vector2i, map_shower: MapShower) -> void:
 	self.type = type
-	self.category = TYPE_TO_CATEGORY_DICT[type]
+	self.category = DatabaseUtils.query_unit_type_by_enum_val(type).category
 	self.player = player
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
@@ -68,75 +44,50 @@ func initiate(type: Type, player: Player, coord: Vector2i, map_shower: MapShower
 func initiate_icon() -> void:
 	icon.texture = get_unit_pic_webp_64x64(type)
 	match type:
-		Type.SETTLER:
+		UnitTypeTable.Type.SETTLER:
 			icon.scale = Vector2(0.2, 0.2)
 		_:
 			icon.scale = Vector2(0.8, 0.8)
 	
-	match self.category:
-		Category.CITIZEN:
-			background.texture = load("res://assets/self_made_svg/unit_background/unit_citizen_background.svg")
-		Category.RELIGIOUS:
-			background.texture = load("res://assets/self_made_svg/unit_background/unit_religious_background.svg")
-		Category.TRADER:
-			background.texture = load("res://assets/self_made_svg/unit_background/unit_trader_background.svg")
-		Category.GROUND_FORCE:
-			background.texture = load("res://assets/self_made_svg/unit_background/unit_ground_military_background.svg")
-		Category.AIR_FORCE:
-			background.texture = load("res://assets/self_made_svg/unit_background/unit_ground_military_background.svg")
-		Category.SEA_FORCE:
-			background.texture = load("res://assets/self_made_svg/unit_background/unit_sea_military_background.svg")
-		Category.ASSISTANT_FORCE:
-			background.texture = load("res://assets/self_made_svg/unit_background/unit_assistant_background.svg")
-	
+	var icon_path = DatabaseUtils.query_unit_category_by_enum_val(category).icon
+	background.texture = load(icon_path)
 	background.modulate = player.main_color
 	icon.modulate = player.second_color
 
 
-static func get_unit_pic_webp_256x256(type: Type) -> Texture2D:
-	match type:
-		Type.SETTLER:
-			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_settler.webp")
-		Type.BUILDER:
-			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_builder.webp")
-		Type.SCOUT:
-			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_scout.webp")
-		Type.WARRIOR:
-			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_warrior.webp")
-		_:
-			printerr("get_unit_pic_webp_256x256 | no pic for type: ", type)
-			return null
+static func get_unit_pic_webp_256x256(type: UnitTypeTable.Type) -> Texture2D:
+	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	if unit_type_do == null:
+		printerr("get_unit_pic_webp_256x256 | no pic for type: ", type)
+		return null
+	return load(unit_type_do.icon_256)
 
 
-static func get_unit_pic_webp_64x64(type: Type) -> Texture2D:
-	match type:
-		Type.SETTLER:
-			# 开拓者目前没有 64x64 的图
-			return load("res://assets/civ6_origin/unit/webp_256x256/icon_unit_settler.webp")
-		Type.BUILDER:
-			return load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_builder.webp")
-		Type.SCOUT:
-			return load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_scout.webp")
-		Type.WARRIOR:
-			return load("res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp")
-		_:
-			printerr("get_unit_pic_webp_64x64 | no pic for type: ", type)
-			return null
+static func get_unit_pic_webp_64x64(type: UnitTypeTable.Type) -> Texture2D:
+	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	if unit_type_do == null:
+		printerr("get_unit_pic_webp_64x64 | no pic for type: ", type)
+		return null
+	if type == UnitTypeTable.Type.SETTLER:
+		# 开拓者目前没有 64x64 的图
+		return load(unit_type_do.icon_256)
+	return load(unit_type_do.icon_64)
 
 
-static func get_unit_name(type: Type) -> String:
-	match type:
-		Type.SETTLER:
-			return "开拓者"
-		Type.BUILDER:
-			return "建造者"
-		Type.SCOUT:
-			return "侦察兵"
-		Type.WARRIOR:
-			return "勇士"
-		_:
-			printerr("get_unit_name | no name for type: ", type)
-			return ""
+static func get_unit_name(type: UnitTypeTable.Type) -> String:
+	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	if unit_type_do == null:
+		printerr("get_unit_name | no name for type: ", type)
+		return ""
+	return unit_type_do.view_name
+
+
+static func get_unit_pic_200(type: UnitTypeTable.Type) -> String:
+	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	if unit_type_do == null:
+		printerr("get_unit_pic_200 | no pic_200 for type: ", type)
+		return ""
+	return unit_type_do.pic_200
 
 
 func delete(map_shower: MapShower) -> void:

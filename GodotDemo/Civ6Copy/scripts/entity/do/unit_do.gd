@@ -2,8 +2,8 @@ class_name UnitDO
 extends MySimSQL.DataObj
 
 
-# 地图位置
-var coord: Vector2i
+# 所在地块 id
+var tile_id: int
 # 单位类型 id
 var type_id: int
 # 单位种类 id

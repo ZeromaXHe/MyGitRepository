@@ -3,7 +3,7 @@ extends Node2D
 
 
 signal city_clicked(city: City)
-signal producing_unit_type_changed(type: Unit.Type)
+signal producing_unit_type_changed(type: UnitTypeTable.Type)
 signal production_val_changed(val: float)
 # 单位产量变化
 signal yield_culture_changed(val: float)
@@ -13,7 +13,7 @@ signal yield_science_changed(val: float)
 signal yield_religion_changed(val: float)
 signal yield_gold_changed(val: float)
 # 新单位建成
-signal product_completed(unit_type: Unit.Type, city: City)
+signal product_completed(unit_type: UnitTypeTable.Type, city: City)
 
 
 enum Building {
@@ -72,7 +72,7 @@ var production_val: float = 0.0:
 			product_turn_label.text = "-"
 		else:
 			product_turn_label.text = str(ceili((80.0 - production_val) / yield_product))
-var producing_unit_type: Unit.Type = -1:
+var producing_unit_type: UnitTypeTable.Type = -1:
 	set(type):
 		producing_unit_type = type
 		producing_unit_type_changed.emit(type)

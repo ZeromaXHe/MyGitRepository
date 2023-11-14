@@ -15,15 +15,15 @@ func _process(delta: float) -> void:
 
 
 func show_info(map_coord: Vector2i, tile_info: Map.TileInfo) -> void:
-	label.text = Map.TERRAIN_TYPE_TO_NAME_DICT[tile_info.type]
-	if tile_info.landscape != Map.LandscapeType.EMPTY:
-		label.text += "\n" + Map.LANDSCAPE_TYPE_TO_NAME_DICT[tile_info.landscape]
+	label.text = DatabaseUtils.query_terrain_by_enum_val(tile_info.type).view_name
+	if tile_info.landscape != LandscapeTable.Landscape.EMPTY:
+		label.text += "\n" + DatabaseUtils.query_landscape_by_enum_val(tile_info.landscape).view_name
 	if tile_info.village == 1:
 		label.text += "\n部落村庄"
-	if tile_info.resource != Map.ResourceType.EMPTY:
-		label.text += "\n" + Map.RESOURCE_TYPE_TO_NAME_DICT[tile_info.resource]
-	if tile_info.type != Map.TerrainType.SHORE and tile_info.type != Map.TerrainType.OCEAN:
-		label.text += "\n大陆：" + Map.CONTINENT_TYPE_TO_NAME_DICT[tile_info.continent]
+	if tile_info.resource != ResourceTable.ResourceType.EMPTY:
+		label.text += "\n" + DatabaseUtils.query_resource_by_enum_val(tile_info.resource).view_name
+	if tile_info.type != TerrainTable.Terrain.SHORE and tile_info.type != TerrainTable.Terrain.OCEAN:
+		label.text += "\n大陆：" + DatabaseUtils.query_continent_by_enum_val(tile_info.continent).view_name
 	label.text += "\n---------------"
 	label.text += "\nHex " + str(map_coord)
 	

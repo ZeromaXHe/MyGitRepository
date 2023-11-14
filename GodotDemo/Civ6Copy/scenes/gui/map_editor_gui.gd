@@ -31,99 +31,22 @@ enum PainterSize {
 	BIG,
 }
 
-const TERRAIN_NAME_TO_TYPE_DICT: Dictionary = {
-	"草原": Map.TerrainType.GRASS,
-	"草丘": Map.TerrainType.GRASS_HILL,
-	"草山": Map.TerrainType.GRASS_MOUNTAIN,
-	"平原": Map.TerrainType.PLAIN,
-	"平丘": Map.TerrainType.PLAIN_HILL,
-	"平山": Map.TerrainType.PLAIN_MOUNTAIN,
-	"沙漠": Map.TerrainType.DESERT,
-	"沙丘": Map.TerrainType.DESERT_HILL,
-	"沙山": Map.TerrainType.DESERT_MOUNTAIN,
-	"冻土": Map.TerrainType.TUNDRA,
-	"冻丘": Map.TerrainType.TUNDRA_HILL,
-	"冻山": Map.TerrainType.TUNDRA_MOUNTAIN,
-	"雪地": Map.TerrainType.SNOW,
-	"雪丘": Map.TerrainType.SNOW_HILL,
-	"雪山": Map.TerrainType.SNOW_MOUNTAIN,
-	"浅水": Map.TerrainType.SHORE,
-	"海洋": Map.TerrainType.OCEAN,
-}
-
 const PAINTER_NAME_TO_SIZE_DICT: Dictionary = {
 	"小笔刷": PainterSize.SMALL,
 	"中笔刷": PainterSize.MID,
 	"大笔刷": PainterSize.BIG,
 }
 
-const LANDSCAPE_NAME_TO_TYPE_DICT: Dictionary = {
-	"冰块": Map.LandscapeType.ICE,
-	"森林": Map.LandscapeType.FOREST,
-	"沼泽": Map.LandscapeType.SWAMP,
-	"泛滥": Map.LandscapeType.FLOOD,
-	"绿洲": Map.LandscapeType.OASIS,
-	"雨林": Map.LandscapeType.RAINFOREST,
-}
-
-const RESOURCE_NAME_TO_TYPE_DICT: Dictionary = {
-	"丝绸": Map.ResourceType.SILK,
-	"历遗": Map.ResourceType.RELIC,
-	"可可": Map.ResourceType.COCOA_BEAN,
-	"咖啡": Map.ResourceType.COFFEE,
-	"大理": Map.ResourceType.MARBLE,
-	"大米": Map.ResourceType.RICE,
-	"小麦": Map.ResourceType.WHEAT,
-	"松露": Map.ResourceType.TRUFFLE,
-	"柑橘": Map.ResourceType.ORANGE,
-	"染料": Map.ResourceType.DYE,
-	"棉花": Map.ResourceType.COTTON,
-	"水银": Map.ResourceType.MERCURY,
-	"海遗": Map.ResourceType.WRECKAGE,
-	"烟草": Map.ResourceType.TOBACCO,
-	"煤": Map.ResourceType.COAL,
-	"熏香": Map.ResourceType.INCENSE,
-	"牛": Map.ResourceType.COW,
-	"玉": Map.ResourceType.JADE,
-	"玉米": Map.ResourceType.CORN,
-	"珍珠": Map.ResourceType.PEARL,
-	"皮草": Map.ResourceType.FUR,
-	"盐": Map.ResourceType.SALT,
-	"石头": Map.ResourceType.STONE,
-	"石油": Map.ResourceType.OIL,
-	"石膏": Map.ResourceType.GYPSUM,
-	"硝石": Map.ResourceType.SALTPETER,
-	"糖": Map.ResourceType.SUGAR,
-	"羊": Map.ResourceType.SHEEP,
-	"茶": Map.ResourceType.TEA,
-	"葡萄": Map.ResourceType.WINE,
-	"蜂蜜": Map.ResourceType.HONEY,
-	"螃蟹": Map.ResourceType.CRAB,
-	"象牙": Map.ResourceType.IVORY,
-	"钻石": Map.ResourceType.DIAMOND,
-	"铀": Map.ResourceType.URANIUM,
-	"铁": Map.ResourceType.IRON,
-	"铜": Map.ResourceType.COPPER,
-	"铝": Map.ResourceType.ALUMINIUM,
-	"银": Map.ResourceType.SILVER,
-	"香料": Map.ResourceType.SPICE,
-	"香蕉": Map.ResourceType.BANANA,
-	"马": Map.ResourceType.HORSE,
-	"鱼": Map.ResourceType.FISH,
-	"鲸鱼": Map.ResourceType.WHALE,
-	"鹿": Map.ResourceType.DEER,
-}
-
 var place_mode: PlaceMode = PlaceMode.TERRAIN
 var place_mode_group: ButtonGroup = null
-var terrain_type: Map.TerrainType = Map.TerrainType.GRASS
+var terrain_type: TerrainTable.Terrain = TerrainTable.Terrain.GRASS
 var terrain_type_group: ButtonGroup = null
 var painter_size: PainterSize = PainterSize.SMALL
 var painter_size_group: ButtonGroup = null
-var landscape_type: Map.LandscapeType = Map.LandscapeType.ICE
+var landscape_type: LandscapeTable.Landscape = LandscapeTable.Landscape.ICE
 var landscape_type_group: ButtonGroup = null
-var continent_type: Map.ContinentType = Map.ContinentType.AFRICA
-var resource_type: Map.ResourceType = Map.ResourceType.SILK
+var continent_type: ContinentTable.Continent = ContinentTable.Continent.AFRICA
+var resource_type: ResourceTable.ResourceType = ResourceTable.ResourceType.SILK
 var resource_type_group: ButtonGroup = null
 
 @onready var info_label: Label = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/InfoLabel
@@ -280,10 +203,11 @@ func handle_place_mode_group_pressed(button: BaseButton) -> void:
 
 func handle_terrain_type_group_pressed(button: BaseButton) -> void:
 	var btn := button as Button
-	if not TERRAIN_NAME_TO_TYPE_DICT.has(btn.text):
+	var terrain_do: TerrainDO = DatabaseUtils.query_terrain_by_short_name(btn.text)
+	if terrain_do == null:
 		printerr("handle_terrain_type_group_pressed | wrong button in terrain type group")
 		return
-	terrain_type = TERRAIN_NAME_TO_TYPE_DICT[btn.text]
+	terrain_type = TerrainTable.Terrain[terrain_do.enum_name]
 
 
 func handle_painter_size_group_pressed(button: BaseButton) -> void:
@@ -296,10 +220,11 @@ func handle_painter_size_group_pressed(button: BaseButton) -> void:
 
 func handle_landscape_type_group_pressed(button: BaseButton) -> void:
 	var btn := button as Button
-	if not LANDSCAPE_NAME_TO_TYPE_DICT.has(btn.text):
+	var landscape_do: LandscapeDO = DatabaseUtils.query_landscape_by_short_name(btn.text)
+	if landscape_do == null:
 		printerr("handle_landscape_type_group_pressed | wrong button in landscape type group")
 		return
-	landscape_type = LANDSCAPE_NAME_TO_TYPE_DICT[btn.text]
+	landscape_type = LandscapeTable.Landscape[landscape_do.enum_name]
 
 
 func handle_continent_item_selected(idx: int) -> void:
@@ -309,10 +234,11 @@ func handle_continent_item_selected(idx: int) -> void:
 
 func handle_resource_type_group_pressed(button: BaseButton) -> void:
 	var btn := button as Button
-	if not RESOURCE_NAME_TO_TYPE_DICT.has(btn.text):
+	var resource_do: ResourceDO = DatabaseUtils.query_resource_by_short_name(btn.text)
+	if resource_do == null:
 		printerr("handle_resource_type_group_pressed | wrong button in resource type group")
 		return
-	resource_type = RESOURCE_NAME_TO_TYPE_DICT[btn.text]
+	resource_type = ResourceTable.ResourceType[resource_do.enum_name]
 
 
 func get_painter_size_dist() -> int:
