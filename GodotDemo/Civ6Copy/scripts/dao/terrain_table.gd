@@ -118,3 +118,7 @@ func _init() -> void:
 				do.food = 1
 		super.init_insert(do)
 
+
+func query_by_short_name(short_name: String) -> TerrainDO:
+	return short_name_index.get_do(short_name)[0] as TerrainDO
+

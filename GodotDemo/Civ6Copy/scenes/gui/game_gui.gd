@@ -81,8 +81,8 @@ func is_mouse_hover_info_shown() -> bool:
 	return mouse_hover_tile_panel.visible
 
 
-func show_mouse_hover_tile_info(map_coord: Vector2i, tile_info: Map.TileInfo) -> void:
-	mouse_hover_tile_panel.show_info(map_coord, tile_info)
+func show_mouse_hover_tile_info(map_coord: Vector2i, tile_do: MapTileDO) -> void:
+	mouse_hover_tile_panel.show_info(map_coord, tile_do)
 
 
 func hide_mouse_hover_tile_info() -> void:

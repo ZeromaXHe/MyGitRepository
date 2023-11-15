@@ -26,13 +26,13 @@ var sleep_flag: bool = false
 
 func initiate(type: UnitTypeTable.Type, player: Player, coord: Vector2i, map_shower: MapShower) -> void:
 	self.type = type
-	self.category = DatabaseUtils.query_unit_type_by_enum_val(type).category
+	self.category = DatabaseUtils.unit_type_tbl.query_by_enum_val(type).category
 	self.player = player
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
 	self.move_capability = get_move_range()
 	# 将单位记入地图信息
-	map_shower._map.get_map_tile_info_at(coord).units.append(self)
+	MapService.get_map_tile_do_by_coord(coord).units.append(self)
 	# 将单位记录在玩家中
 	GlobalScript.get_current_player().units.append(self)
 	# 绘制图标图像
@@ -49,14 +49,14 @@ func initiate_icon() -> void:
 		_:
 			icon.scale = Vector2(0.8, 0.8)
 	
-	var icon_path = DatabaseUtils.query_unit_category_by_enum_val(category).icon
+	var icon_path = DatabaseUtils.unit_category_tbl.query_by_enum_val(category).icon
 	background.texture = load(icon_path)
 	background.modulate = player.main_color
 	icon.modulate = player.second_color
 
 
 static func get_unit_pic_webp_256x256(type: UnitTypeTable.Type) -> Texture2D:
-	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	var unit_type_do: UnitTypeDO = DatabaseUtils.unit_type_tbl.query_by_enum_val(type)
 	if unit_type_do == null:
 		printerr("get_unit_pic_webp_256x256 | no pic for type: ", type)
 		return null
@@ -64,7 +64,7 @@ static func get_unit_pic_webp_256x256(type: UnitTypeTable.Type) -> Texture2D:
 
 
 static func get_unit_pic_webp_64x64(type: UnitTypeTable.Type) -> Texture2D:
-	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	var unit_type_do: UnitTypeDO = DatabaseUtils.unit_type_tbl.query_by_enum_val(type)
 	if unit_type_do == null:
 		printerr("get_unit_pic_webp_64x64 | no pic for type: ", type)
 		return null
@@ -75,7 +75,7 @@ static func get_unit_pic_webp_64x64(type: UnitTypeTable.Type) -> Texture2D:
 
 
 static func get_unit_name(type: UnitTypeTable.Type) -> String:
-	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	var unit_type_do: UnitTypeDO = DatabaseUtils.unit_type_tbl.query_by_enum_val(type)
 	if unit_type_do == null:
 		printerr("get_unit_name | no name for type: ", type)
 		return ""
@@ -83,7 +83,7 @@ static func get_unit_name(type: UnitTypeTable.Type) -> String:
 
 
 static func get_unit_pic_200(type: UnitTypeTable.Type) -> String:
-	var unit_type_do: UnitTypeDO = DatabaseUtils.query_unit_type_by_enum_val(type)
+	var unit_type_do: UnitTypeDO = DatabaseUtils.unit_type_tbl.query_by_enum_val(type)
 	if unit_type_do == null:
 		printerr("get_unit_pic_200 | no pic_200 for type: ", type)
 		return ""
@@ -92,7 +92,7 @@ static func get_unit_pic_200(type: UnitTypeTable.Type) -> String:
 
 func delete(map_shower: MapShower) -> void:
 	# 将单位从地图信息中删除
-	map_shower._map.get_map_tile_info_at(coord).units.erase(self)
+	MapService.get_map_tile_do_by_coord(coord).units.erase(self)
 	# 将单位从玩家拥有的单位列表中删除
 	GlobalScript.get_current_player().units.erase(self)
 	# 清理单位视野
@@ -101,7 +101,7 @@ func delete(map_shower: MapShower) -> void:
 
 
 func update_sight(map_shower: MapShower) -> void:
-	var dict: Dictionary = map_shower._map.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
+	var dict: Dictionary = MapService.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
 	for in_sight_coord in dict.keys():
 		player.map_sight_info.in_sight(in_sight_coord)
 	var cells: Array[Vector2i] = []
@@ -110,7 +110,7 @@ func update_sight(map_shower: MapShower) -> void:
 
 
 func update_out_sight(map_shower: MapShower) -> void:
-	var dict: Dictionary = map_shower._map.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
+	var dict: Dictionary = MapService.sight_astar.get_in_range_coords_to_cost_dict(coord, get_sight_range())
 	var cells: Array[Vector2i] = []
 	for out_sight_coord in dict.keys():
 		player.map_sight_info.out_sight(out_sight_coord)
@@ -121,28 +121,28 @@ func update_out_sight(map_shower: MapShower) -> void:
 func show_move_range(map_shower: MapShower) -> void:
 	if move_capability == 0:
 		return
-	var dict: Dictionary = map_shower._map.move_astar.get_in_range_coords_to_cost_dict(coord, move_capability)
+	var dict: Dictionary = MapService.move_astar.get_in_range_coords_to_cost_dict(coord, move_capability)
 	var cells: Array[Vector2i] = []
 	# FIXME: 暂时让所有单位都在地块上互斥
-	cells.append_array(dict.keys().filter(func(coord): return is_no_unit_on_tile(coord, map_shower)))
+	cells.append_array(dict.keys().filter(func(coord): return is_no_unit_on_tile(coord)))
 	map_shower.paint_move_tile_areas(cells)
 
 
-func is_no_unit_on_tile(coord: Vector2i, map_shower: MapShower) -> bool:
-	return map_shower._map.get_map_tile_info_at(coord).units.is_empty()
+func is_no_unit_on_tile(coord: Vector2i) -> bool:
+	return MapService.get_map_tile_do_by_coord(coord).units.is_empty()
 
 
 func move_to(coord: Vector2i, map_shower: MapShower) -> void:
 	self.move_capability = max(0, self.move_capability \
-			- map_shower._map.move_astar.coord_path_cost_sum(map_shower._map.move_astar.get_point_path_by_coord(self.coord, coord)))
+			- MapService.move_astar.coord_path_cost_sum(MapService.move_astar.get_point_path_by_coord(self.coord, coord)))
 	update_out_sight(map_shower)
 	# 将单位移出地图原坐标
-	map_shower._map.get_map_tile_info_at(self.coord).units.erase(self)
+	MapService.get_map_tile_do_by_coord(self.coord).units.erase(self)
 	self.coord = coord
 	self.global_position = map_shower.map_coord_to_global_position(coord)
 	update_sight(map_shower)
 	# 将单位移入地图新坐标
-	map_shower._map.get_map_tile_info_at(self.coord).units.append(self)
+	MapService.get_map_tile_do_by_coord(self.coord).units.append(self)
 
 
 func get_sight_range() -> int:

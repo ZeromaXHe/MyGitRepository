@@ -66,3 +66,7 @@ func _init() -> void:
 				do.move_cost = 1
 				do.charm_influence = -1
 		super.init_insert(do)
+
+
+func query_by_short_name(short_name: String) -> LandscapeDO:
+	return short_name_index.get_do(short_name)[0] as LandscapeDO

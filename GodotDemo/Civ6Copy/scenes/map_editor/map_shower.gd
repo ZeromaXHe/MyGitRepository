@@ -90,54 +90,46 @@ var _terrain_type_to_tile_dict : Dictionary = {
 }
 # 记录 TileMap 坐标到资源图标的映射的字典
 var _coord_to_resource_icon_dict: Dictionary = {}
-# 记录地图
-var _map: Map
 
 @onready var border_tile_map: TileMap = $BorderTileMap
 @onready var tile_map: TileMap = $TileMap
 @onready var resource_icons: Node2D = $ResourceIcons
 
 
-func _init() -> void:
-	if GlobalScript.load_map:
-		load_map()
-	else:
-		_map = Map.new()
-
-
 func _ready() -> void:
 	hide_continent_layer()
 
 
-func load_map() -> void:
-	_map = Map.load_from_save()
-	if _map == null:
-		printerr("you have no map save")
-		_map = Map.new()
-		return
-
-
 func initialize() -> void:
-	GlobalScript.record_time()
+	if GlobalScript.load_map:
+		load_map()
+	else:
+		GlobalScript.record_time()
+		MapController.init_map()
 	
-	var size: Vector2i = _map.get_map_tile_size()
 	# 读取地块
 	GlobalScript.load_info = "填涂地图地块..."
-	for i in range(0, size.x):
-		for j in range(0, size.y):
+	var size_vec: Vector2i = MapService.get_map_tile_size_vec(MapSizeTable.Size.DUAL)
+	for i in range(size_vec.x):
+		for j in range(size_vec.y):
 			var coord := Vector2i(i, j)
-			var tile_info: Map.TileInfo = _map.get_map_tile_info_at(coord)
-			paint_tile(coord, tile_info)
+			var tile_do: MapTileDO = MapService.get_map_tile_do_by_coord(coord)
+			paint_tile(coord, tile_do)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting map tiles")
 	
-	var border_size: Vector2i = _map.get_border_tile_size()
 	# 读取边界
 	GlobalScript.load_info = "填涂地图边界块..."
-	for i in range(border_size.x):
-		for j in range(border_size.y):
+	var border_size_vec: Vector2i = MapService.get_border_tile_size_vec(MapSizeTable.Size.DUAL)
+	for i in range(border_size_vec.x):
+		for j in range(border_size_vec.y):
 			var coord := Vector2i(i, j)
-			paint_border(coord, _map.get_border_tile_info_at(coord).type)
+			paint_border(coord, MapService.get_map_border_do_by_coord(coord).tile_type)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting border tiles")
+
+
+func load_map() -> void:
+	if not MapService.load_from_save():
+		printerr("you have no map save")
 
 
 func hide_continent_layer() -> void:
@@ -230,18 +222,18 @@ func paint_tile_chosen_unplaceable(tile_coord: Vector2i) -> void:
 func paint_chosen_border_area(border_coord: Vector2i, placeable: Callable) -> void:
 	if is_in_map_border(border_coord) <= 0:
 		return
-	match Map.get_border_type(border_coord):
-		Map.BorderType.VERTICAL:
+	match MapBorderUtils.get_border_type(border_coord):
+		MapBorderTable.Type.VERTICAL:
 			if placeable.call(border_coord):
 				border_tile_map.set_cell(MapShower.BORDER_CHOSEN_LAYER_IDX, border_coord, 8, Vector2i(0, 0))
 			else:
 				border_tile_map.set_cell(MapShower.BORDER_CHOSEN_LAYER_IDX, border_coord, 11, Vector2i(0, 0))
-		Map.BorderType.SLASH:
+		MapBorderTable.Type.SLASH:
 			if placeable.call(border_coord):
 				border_tile_map.set_cell(MapShower.BORDER_CHOSEN_LAYER_IDX, border_coord, 7, Vector2i(0, 0))
 			else:
 				border_tile_map.set_cell(MapShower.BORDER_CHOSEN_LAYER_IDX, border_coord, 10, Vector2i(0, 0))
-		Map.BorderType.BACK_SLASH:
+		MapBorderTable.Type.BACK_SLASH:
 			if placeable.call(border_coord):
 				border_tile_map.set_cell(MapShower.BORDER_CHOSEN_LAYER_IDX, border_coord, 6, Vector2i(0, 0))
 			else:
@@ -258,7 +250,7 @@ func clear_border_chosen() -> void:
 
 
 func is_in_map_border(border_coord: Vector2i) -> int:
-	var neighbor_tile_coords: Array[Vector2i] = Map.get_neighbor_tile_of_border(border_coord)
+	var neighbor_tile_coords: Array[Vector2i] = MapBorderUtils.get_neighbor_tile_of_border(border_coord)
 	var count_empty: int = 0
 	var count_exist: int = 0
 	for coord in neighbor_tile_coords:
@@ -285,12 +277,12 @@ func is_in_map_border(border_coord: Vector2i) -> int:
 		return -999
 
 
-func paint_tile(coord: Vector2i, tile_info: Map.TileInfo) -> void:
-	paint_terrain(coord, tile_info.type)
-	paint_landscape(coord, tile_info.landscape)
-	paint_village(coord, tile_info.village)
-	paint_continent(coord, tile_info.continent)
-	paint_resource(coord, tile_info.resource)
+func paint_tile(coord: Vector2i, tile_do: MapTileDO) -> void:
+	paint_terrain(coord, tile_do.terrain)
+	paint_landscape(coord, tile_do.landscape)
+	paint_village(coord, tile_do.village)
+	paint_continent(coord, tile_do.continent)
+	paint_resource(coord, tile_do.resource)
 
 
 func paint_terrain(coord: Vector2i, type: TerrainTable.Terrain) -> void:
@@ -316,11 +308,11 @@ func paint_landscape(tile_coord: Vector2i, type: LandscapeTable.Landscape) -> vo
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, -1)
 
 
-func paint_village(tile_coord: Vector2i, type: int):
-	if type == 0:
-		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, -1)
-	else:
+func paint_village(tile_coord: Vector2i, village: bool):
+	if village:
 		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, 25, Vector2i.ZERO)
+	else:
+		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, -1)
 
 
 func paint_city(tile_coord: Vector2i, type: int):
@@ -359,34 +351,34 @@ func paint_continent(tile_coord: Vector2i, type: ContinentTable.Continent) -> vo
 		tile_map.set_cell(TILE_CONTINENT_LAYER_IDX, tile_coord, 26, Vector2i((type - 1) % 10, (type - 1) / 10))
 
 
-func paint_border(border_coord: Vector2i, type: Map.BorderTileType) -> void:
+func paint_border(border_coord: Vector2i, type: MapBorderTable.TileType) -> void:
 	match type:
-		Map.BorderTileType.RIVER:
+		MapBorderTable.TileType.RIVER:
 			paint_river(border_coord)
-		Map.BorderTileType.CLIFF:
+		MapBorderTable.TileType.CLIFF:
 			paint_cliff(border_coord)
-		Map.BorderTileType.EMPTY:
+		MapBorderTable.TileType.EMPTY:
 			# 真正绘制边界为空
 			border_tile_map.erase_cell(BORDER_TILE_LAYER_IDX, border_coord)
 
 
 func paint_cliff(border_coord: Vector2i) -> void:
-	match Map.get_border_type(border_coord):
-		Map.BorderType.BACK_SLASH:
+	match MapBorderUtils.get_border_type(border_coord):
+		MapBorderTable.Type.BACK_SLASH:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 0, Vector2i.ZERO)
-		Map.BorderType.SLASH:
+		MapBorderTable.Type.SLASH:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 1, Vector2i.ZERO)
-		Map.BorderType.VERTICAL:
+		MapBorderTable.Type.VERTICAL:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 2, Vector2i.ZERO)
 
 
 func paint_river(border_coord: Vector2i) -> void:
-	match Map.get_border_type(border_coord):
-		Map.BorderType.BACK_SLASH:
+	match MapBorderUtils.get_border_type(border_coord):
+		MapBorderTable.Type.BACK_SLASH:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 3, Vector2i.ZERO)
-		Map.BorderType.SLASH:
+		MapBorderTable.Type.SLASH:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 4, Vector2i.ZERO)
-		Map.BorderType.VERTICAL:
+		MapBorderTable.Type.VERTICAL:
 			border_tile_map.set_cell(BORDER_TILE_LAYER_IDX, border_coord, 5, Vector2i.ZERO)
 
 
@@ -409,7 +401,7 @@ func get_surrounding_borders(map_coord: Vector2i, dist: int) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	if dist < 0:
 		return result
-	var center: Vector2i = Map.get_tile_coord_directed_border(map_coord, Map.BorderDirection.CENTER)
+	var center: Vector2i = Map.get_tile_coord_directed_border(map_coord, MapBorderTable.Direction.CENTER)
 	var oddr: HexagonUtils.OffsetCoord = HexagonUtils.OffsetCoord.odd_r(center.x, center.y)
 	result.append_array(oddr.to_axial().ring(dist * 2 + 1) \
 			.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))

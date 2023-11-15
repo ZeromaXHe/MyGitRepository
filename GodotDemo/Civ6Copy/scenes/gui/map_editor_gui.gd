@@ -145,7 +145,7 @@ func handle_rt_tab_changed(tab: int) -> void:
 		# TODO: 其他格位信息
 
 
-func update_grid_info(coord: Vector2i, tile_info: Map.TileInfo) -> void:
+func update_grid_info(coord: Vector2i, tile_do: MapTileDO) -> void:
 	grid_coord_label.text = str(coord)
 	# TODO: 其他格位信息
 
@@ -154,8 +154,8 @@ func is_mouse_hover_info_shown() -> bool:
 	return mouse_hover_tile_panel.visible
 
 
-func show_mouse_hover_tile_info(map_coord: Vector2i, tile_info: Map.TileInfo) -> void:
-	mouse_hover_tile_panel.show_info(map_coord, tile_info)
+func show_mouse_hover_tile_info(map_coord: Vector2i, tile_do: MapTileDO) -> void:
+	mouse_hover_tile_panel.show_info(map_coord, tile_do)
 
 
 func hide_mouse_hover_tile_info() -> void:
@@ -203,7 +203,7 @@ func handle_place_mode_group_pressed(button: BaseButton) -> void:
 
 func handle_terrain_type_group_pressed(button: BaseButton) -> void:
 	var btn := button as Button
-	var terrain_do: TerrainDO = DatabaseUtils.query_terrain_by_short_name(btn.text)
+	var terrain_do: TerrainDO = DatabaseUtils.terrain_tbl.query_by_short_name(btn.text)
 	if terrain_do == null:
 		printerr("handle_terrain_type_group_pressed | wrong button in terrain type group")
 		return
@@ -220,7 +220,7 @@ func handle_painter_size_group_pressed(button: BaseButton) -> void:
 
 func handle_landscape_type_group_pressed(button: BaseButton) -> void:
 	var btn := button as Button
-	var landscape_do: LandscapeDO = DatabaseUtils.query_landscape_by_short_name(btn.text)
+	var landscape_do: LandscapeDO = DatabaseUtils.landscape_tbl.query_by_short_name(btn.text)
 	if landscape_do == null:
 		printerr("handle_landscape_type_group_pressed | wrong button in landscape type group")
 		return
@@ -234,7 +234,7 @@ func handle_continent_item_selected(idx: int) -> void:
 
 func handle_resource_type_group_pressed(button: BaseButton) -> void:
 	var btn := button as Button
-	var resource_do: ResourceDO = DatabaseUtils.query_resource_by_short_name(btn.text)
+	var resource_do: ResourceDO = DatabaseUtils.resource_tbl.query_by_short_name(btn.text)
 	if resource_do == null:
 		printerr("handle_resource_type_group_pressed | wrong button in resource type group")
 		return

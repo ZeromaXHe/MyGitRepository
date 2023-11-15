@@ -117,15 +117,15 @@ func initiate(coord: Vector2i, map_shower: MapShower) -> void:
 	# 绘制城市
 	map_shower.paint_city(coord, 1)
 	# 将城市记录到地图信息里
-	map_shower._map.get_map_tile_info_at(coord).city = self
+	MapService.get_map_tile_do_by_coord(coord).city = self
 	# 将城市记录到玩家城市列表里
 	player.cities.append(self)
 	# 初始化城市领土（周围一圈）
-	var territory_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 1, true).filter(map_shower._map.is_in_map_tile)
+	var territory_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 1, true).filter(MapService.is_in_map_tile)
 	self.territory_coords.append_array(territory_cells)
 	player.territory_border.paint_dash_border(territory_cells)
 	# 城市视野（周围两格）
-	var sight_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 2, true).filter(map_shower._map.is_in_map_tile)
+	var sight_cells: Array[Vector2i] = map_shower.get_surrounding_cells(coord, 2, true).filter(MapService.is_in_map_tile)
 	self.sight_coords.append_array(sight_cells)
 	for in_sight_coord in sight_cells:
 		player.map_sight_info.in_sight(in_sight_coord)
@@ -160,13 +160,13 @@ func refresh_yield(map_shower: MapShower) -> void:
 	# 地块产出
 	for territory in territory_coords:
 		# TODO: 需要根据公民分配的位置来判断是否加
-		var tile_info: Map.TileInfo = map_shower._map.get_map_tile_info_at(territory)
-		yield_culture += tile_info.culture
-		yield_food += tile_info.food
-		yield_product += tile_info.product
-		yield_science += tile_info.science
-		yield_religion += tile_info.religion
-		yield_gold += tile_info.gold
+		var yield_dto: YieldDTO = MapService.get_tile_yield(territory)
+		yield_culture += yield_dto.culture
+		yield_food += yield_dto.food
+		yield_product += yield_dto.production
+		yield_science += yield_dto.science
+		yield_religion += yield_dto.religion
+		yield_gold += yield_dto.gold
 	# 建筑产出
 	for building in buildings:
 		match building:

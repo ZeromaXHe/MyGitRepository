@@ -48,7 +48,9 @@ var turn_year: int = -4000
 
 func _ready() -> void:
 	map_shower.initialize()
-	camera.initialize(map_shower._map.get_map_tile_size(), map_shower.get_map_tile_xy())
+	MapService.init_move_astar(MapSizeTable.Size.DUAL)
+	MapService.init_sight_astar(MapSizeTable.Size.DUAL)
+	camera.initialize(MapService.get_map_tile_size_vec(MapSizeTable.Size.DUAL), map_shower.get_map_tile_xy())
 	# 绑定 game_gui 和游戏之间的所有信号（双向）
 	game_gui.signal_binding_with_game(self)
 	# 将所有玩家的领土 TileMap 放到场景中
@@ -102,7 +104,7 @@ func refresh_turn_status() -> void:
 
 func initialize_sight_tile() -> void:
 	var player: Player = GlobalScript.get_current_player()
-	var map_size: Vector2i = map_shower._map.get_map_tile_size()
+	var map_size: Vector2i = MapService.get_map_tile_size_vec(MapSizeTable.Size.DUAL)
 	player.map_sight_info.initialize(map_size)
 	paint_player_sight(player)
 
@@ -264,8 +266,8 @@ func handle_mouse_hover_tile(delta: float) -> bool:
 	var map_coord: Vector2i = map_shower.get_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and map_shower._map.is_in_map_tile(map_coord):
-			game_gui.show_mouse_hover_tile_info(map_coord, map_shower._map.get_map_tile_info_at(map_coord))
+		if not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and MapService.is_in_map_tile(map_coord):
+			game_gui.show_mouse_hover_tile_info(map_coord, MapService.get_map_tile_do_by_coord(map_coord))
 		return false
 	_mouse_hover_tile_coord = map_coord
 	_mouse_hover_tile_time = 0

@@ -14,16 +14,16 @@ func _process(delta: float) -> void:
 		self.offset_top = mouse_posi.y + 10
 
 
-func show_info(map_coord: Vector2i, tile_info: Map.TileInfo) -> void:
-	label.text = DatabaseUtils.query_terrain_by_enum_val(tile_info.type).view_name
-	if tile_info.landscape != LandscapeTable.Landscape.EMPTY:
-		label.text += "\n" + DatabaseUtils.query_landscape_by_enum_val(tile_info.landscape).view_name
-	if tile_info.village == 1:
+func show_info(map_coord: Vector2i, tile_do: MapTileDO) -> void:
+	label.text = DatabaseUtils.terrain_tbl.query_by_enum_val(tile_do.terrain).view_name
+	if tile_do.landscape != LandscapeTable.Landscape.EMPTY:
+		label.text += "\n" + DatabaseUtils.landscape_tbl.query_by_enum_val(tile_do.landscape).view_name
+	if tile_do.village:
 		label.text += "\n部落村庄"
-	if tile_info.resource != ResourceTable.ResourceType.EMPTY:
-		label.text += "\n" + DatabaseUtils.query_resource_by_enum_val(tile_info.resource).view_name
-	if tile_info.type != TerrainTable.Terrain.SHORE and tile_info.type != TerrainTable.Terrain.OCEAN:
-		label.text += "\n大陆：" + DatabaseUtils.query_continent_by_enum_val(tile_info.continent).view_name
+	if tile_do.resource != ResourceTable.ResourceType.EMPTY:
+		label.text += "\n" + DatabaseUtils.resource_tbl.query_by_enum_val(tile_do.resource).view_name
+	if tile_do.continent != ContinentTable.Continent.EMPTY:
+		label.text += "\n大陆：" + DatabaseUtils.continent_tbl.query_by_enum_val(tile_do.continent).view_name
 	label.text += "\n---------------"
 	label.text += "\nHex " + str(map_coord)
 	
