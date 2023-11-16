@@ -1,14 +1,21 @@
 class_name MapService
 
 
+static var size := MapSizeTable.Size.DUAL
+static var type := MapTypeTable.Type.BLANK
 # A* 算法
 static var move_astar: MapMoveAStar2D
 static var sight_astar: MapSightAStar2D
 
 
-static func init_map_tile_table(size: MapSizeTable.Size) -> void:
+static func clear_map_borders() -> void:
+	DatabaseUtils.map_border_tbl.truncate()
+
+
+static func init_map_tile_table() -> void:
+	MapTileService.clear_map_tiles()
 	# 记录地图地块信息
-	var size_vec: Vector2i = get_map_tile_size_vec(size)
+	var size_vec: Vector2i = get_map_tile_size_vec()
 	for i in range(size_vec.x):
 		for j in range(size_vec.y):
 			var map_tile_do := MapTileDO.new()
@@ -16,18 +23,19 @@ static func init_map_tile_table(size: MapSizeTable.Size) -> void:
 			DatabaseUtils.map_tile_tbl.insert(map_tile_do)
 
 
-static func init_map_border_table(size: MapSizeTable.Size) -> void:
+static func init_map_border_table() -> void:
+	MapService.clear_map_borders()
 	# 记录边界地块信息
-	var border_size_vec: Vector2i = get_border_tile_size_vec(MapSizeTable.Size.DUAL)
+	var border_size_vec: Vector2i = get_border_tile_size_vec()
 	for i in range(border_size_vec.x):
 		for j in range(border_size_vec.y):
 			var map_border_do := MapBorderDO.new()
 			map_border_do.coord = Vector2i(i, j)
-			DatabaseUtils.map_tile_tbl.insert(map_border_do)
+			DatabaseUtils.map_border_tbl.insert(map_border_do)
 
 
-static func init_move_astar(size: MapSizeTable.Size) -> void:
-	var size_vec: Vector2i = get_map_tile_size_vec(size)
+static func init_move_astar() -> void:
+	var size_vec: Vector2i = get_map_tile_size_vec()
 	move_astar = MapMoveAStar2D.new()
 	for i in range(size_vec.x):
 		for j in range(size_vec.y):
@@ -44,8 +52,8 @@ static func init_move_astar(size: MapSizeTable.Size) -> void:
 				move_astar.connect_points(point_id, point_id - size_vec.y + 1)
 
 
-static func init_sight_astar(size: MapSizeTable.Size) -> void:
-	var size_vec: Vector2i = get_map_tile_size_vec(size)
+static func init_sight_astar() -> void:
+	var size_vec: Vector2i = get_map_tile_size_vec()
 	sight_astar = MapSightAStar2D.new()
 	for i in range(size_vec.x):
 		for j in range(size_vec.y):
@@ -62,12 +70,12 @@ static func init_sight_astar(size: MapSizeTable.Size) -> void:
 				sight_astar.connect_points(point_id, point_id - size_vec.y + 1)
 
 
-static func get_map_tile_size_vec(size: MapSizeTable.Size) -> Vector2i:
+static func get_map_tile_size_vec() -> Vector2i:
 	return DatabaseUtils.map_size_tbl.query_by_enum_val(size).size_vec
 
 
-static func get_border_tile_size_vec(size: MapSizeTable.Size) -> Vector2i:
-	var map_tile_size: Vector2i = get_map_tile_size_vec(size)
+static func get_border_tile_size_vec() -> Vector2i:
+	var map_tile_size: Vector2i = get_map_tile_size_vec()
 	return 2 * (map_tile_size + Vector2i.ONE)
 
 
@@ -80,8 +88,8 @@ static func save_map() -> void:
 
 static func get_persistance_dict() -> Dictionary:
 	return {
-		"size": MapSizeTable.Size.DUAL,
-		"type": MapTypeTable.Type.BLANK,
+		"size": size,
+		"type": type,
 		"map_tile_info": serialize_map_tile_info(),
 		"border_tile_info": serialize_border_tile_info(),
 	}
@@ -169,7 +177,7 @@ static func load_from_save() -> bool:
 
 static func deserialize_map_tile_info(data_str: String) -> void:
 	# 清空原表
-	DatabaseUtils.map_tile_tbl.truncate()
+	MapTileService.clear_map_tiles()
 	var row_strs: PackedStringArray = data_str.split(";")
 	var i: int = 0
 	for row_str in row_strs:
@@ -207,7 +215,7 @@ static func deserialize_map_tile_info(data_str: String) -> void:
 
 static func deserialize_border_tile_info(data_str: String) -> void:
 	# 清空原表
-	DatabaseUtils.map_border_tbl.truncate()
+	clear_map_borders()
 	var row_strs: PackedStringArray = data_str.split(";")
 	var i: int = 0
 	for row_str in row_strs:
@@ -223,24 +231,14 @@ static func deserialize_border_tile_info(data_str: String) -> void:
 
 
 static func is_in_map_tile(coord: Vector2i) -> bool:
-	var map_size: Vector2i = DatabaseUtils.map_size_tbl.query_by_enum_val(MapSizeTable.Size.DUAL).size_vec
+	var map_size: Vector2i = DatabaseUtils.map_size_tbl.query_by_enum_val(size).size_vec
 	return coord.x >= 0 and coord.x < map_size.x and coord.y >= 0 and coord.y < map_size.y
-
-
-static func change_map_tile_info(coord: Vector2i, tile_do: MapTileDO) -> void:
-	var pre: MapTileDO = DatabaseUtils.map_tile_tbl.query_by_coord(coord)
-	tile_do.id = pre.id
-	DatabaseUtils.map_tile_tbl.update_by_id(tile_do)
 
 
 static func change_border_tile_info(coord: Vector2i, border_do: MapBorderDO) -> void:
 	var pre: MapBorderDO = DatabaseUtils.map_border_tbl.query_by_coord(coord)
 	border_do.id = pre.id
 	DatabaseUtils.map_border_tbl.update_by_id(border_do)
-
-
-static func get_map_tile_do_by_coord(coord: Vector2i) -> MapTileDO:
-	return DatabaseUtils.map_tile_tbl.query_by_coord(coord)
 
 
 static func get_map_border_do_by_coord(coord: Vector2i) -> MapBorderDO:
@@ -258,21 +256,6 @@ static func get_in_map_surrounding_coords(coord: Vector2i, map_size: Vector2i) -
 	return result
 
 
-static func get_tile_yield(coord: Vector2i) -> YieldDTO:
-	var result := YieldDTO.new()
-	var tile_do: MapTileDO = DatabaseUtils.map_tile_tbl.query_by_coord(coord)
-	var terrain_do: TerrainDO = DatabaseUtils.terrain_tbl.query_by_enum_val(tile_do.terrain)
-	var landscape_do: LandscapeDO = DatabaseUtils.landscape_tbl.query_by_enum_val(tile_do.landscape)
-	var resource_do: ResourceDO = DatabaseUtils.resource_tbl.query_by_enum_val(tile_do.resource)
-	result.culture = resource_do.culture
-	result.food = terrain_do.food + landscape_do.food + resource_do.food
-	result.production = terrain_do.production + landscape_do.production + resource_do.production
-	result.science = resource_do.science
-	result.religion = resource_do.religion
-	result.gold = terrain_do.gold + landscape_do.gold + resource_do.gold
-	return result
-
-
 class MapAStar2D extends AStar2D:
 	const UNREACHABLE_COST: float = 1e100
 	
@@ -286,7 +269,7 @@ class MapAStar2D extends AStar2D:
 	
 	
 	func coord_to_id(coord: Vector2i):
-		return coord.x * MapService.get_map_tile_size_vec(MapSizeTable.Size.DUAL).y + coord.y
+		return coord.x * MapService.get_map_tile_size_vec().y + coord.y
 	
 	
 	func cost_by_id(from_id: int, to_id: int) -> float:
@@ -320,7 +303,7 @@ class MapAStar2D extends AStar2D:
 	
 	
 	func get_in_range_coords_to_cost_dict(coord: Vector2i, range: int, dict: Dictionary = {coord: 0.0}) -> Dictionary:
-		var map_size: Vector2i = MapService.get_map_tile_size_vec(MapSizeTable.Size.DUAL)
+		var map_size: Vector2i = MapService.get_map_tile_size_vec()
 		var surroundings: Array[Vector2i] = MapService.get_in_map_surrounding_coords(coord, map_size)
 		for surround in surroundings:
 			var cost: float = cost_by_coord(coord, surround)
@@ -337,8 +320,8 @@ class MapAStar2D extends AStar2D:
 
 class MapMoveAStar2D extends MapAStar2D:
 	func cost_by_coord(from_coord: Vector2i, to_coord: Vector2i) -> float:
-		var from_tile: MapTileDO = MapService.get_map_tile_do_by_coord(from_coord)
-		var to_tile: MapTileDO = MapService.get_map_tile_do_by_coord(to_coord)
+		var from_tile: MapTileDO = MapTileService.get_map_tile_do_by_coord(from_coord)
+		var to_tile: MapTileDO = MapTileService.get_map_tile_do_by_coord(to_coord)
 		# 无法前往山脉和冰
 		if TerrainService.is_mountain_land_terrain(to_tile.terrain) \
 				or to_tile.landscape == LandscapeTable.Landscape.ICE:
@@ -358,8 +341,8 @@ class MapMoveAStar2D extends MapAStar2D:
 
 class MapSightAStar2D extends MapAStar2D:
 	func cost_by_coord(from_coord: Vector2i, to_coord: Vector2i) -> float:
-		var from_tile: MapTileDO = MapService.get_map_tile_do_by_coord(from_coord)
-		var to_tile: MapTileDO = MapService.get_map_tile_do_by_coord(to_coord)
+		var from_tile: MapTileDO = MapTileService.get_map_tile_do_by_coord(from_coord)
+		var to_tile: MapTileDO = MapTileService.get_map_tile_do_by_coord(to_coord)
 		if TerrainService.is_hill_land_terrain(to_tile.terrain) \
 				or TerrainService.is_mountain_land_terrain(to_tile.terrain):
 			return 2

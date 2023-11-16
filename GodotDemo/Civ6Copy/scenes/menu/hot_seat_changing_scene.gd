@@ -6,7 +6,7 @@ extends Control
 
 
 func _ready() -> void:
-	player_label.text = GlobalScript.get_current_player().p_name
+	player_label.text = PlayerController.get_current_player().name
 
 
 func _on_start_button_pressed() -> void:

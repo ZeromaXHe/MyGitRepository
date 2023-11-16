@@ -9,11 +9,12 @@ func _on_back_button_pressed() -> void:
 
 func _on_confirm_button_pressed() -> void:
 	# 玩家相关配置
-	var player := Player.new()
-	player.p_name = "玩家 1"
+	PlayerController.clear_players()
+	var player := PlayerDO.new()
+	player.name = "玩家 1"
 	player.main_color = Color("c71415")
 	player.second_color = Color("f5ce02")
-	GlobalScript.add_player(player)
+	PlayerController.add_player(player)
 	# 加载页面配置
 	GlobalScript.load_scene_path = "res://scenes/game/hot_seat_game.tscn"
 	# 先默认加载地图

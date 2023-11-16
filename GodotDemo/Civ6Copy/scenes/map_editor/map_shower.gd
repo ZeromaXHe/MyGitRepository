@@ -98,6 +98,7 @@ var _coord_to_resource_icon_dict: Dictionary = {}
 
 func _ready() -> void:
 	hide_continent_layer()
+	MapController.register_map_shower(self)
 
 
 func initialize() -> void:
@@ -109,26 +110,26 @@ func initialize() -> void:
 	
 	# 读取地块
 	GlobalScript.load_info = "填涂地图地块..."
-	var size_vec: Vector2i = MapService.get_map_tile_size_vec(MapSizeTable.Size.DUAL)
+	var size_vec: Vector2i = MapController.get_map_tile_size_vec()
 	for i in range(size_vec.x):
 		for j in range(size_vec.y):
 			var coord := Vector2i(i, j)
-			var tile_do: MapTileDO = MapService.get_map_tile_do_by_coord(coord)
+			var tile_do: MapTileDO = MapController.get_map_tile_do_by_coord(coord)
 			paint_tile(coord, tile_do)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting map tiles")
 	
 	# 读取边界
 	GlobalScript.load_info = "填涂地图边界块..."
-	var border_size_vec: Vector2i = MapService.get_border_tile_size_vec(MapSizeTable.Size.DUAL)
+	var border_size_vec: Vector2i = MapController.get_border_tile_size_vec()
 	for i in range(border_size_vec.x):
 		for j in range(border_size_vec.y):
 			var coord := Vector2i(i, j)
-			paint_border(coord, MapService.get_map_border_do_by_coord(coord).tile_type)
+			paint_border(coord, MapController.get_map_border_do_by_coord(coord).tile_type)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting border tiles")
 
 
 func load_map() -> void:
-	if not MapService.load_from_save():
+	if not MapController.load_from_save():
 		printerr("you have no map save")
 
 
@@ -164,11 +165,11 @@ func map_coord_to_global_position(map_coord: Vector2i) -> Vector2:
 	return tile_map.to_global(tile_map.map_to_local(map_coord))
 
 
-func paint_out_sight_tile_areas(coord: Vector2i, type: Map.SightType) -> void:
+func paint_out_sight_tile_areas(coord: Vector2i, type: PlayerSightTable.Sight) -> void:
 	match type:
-		Map.SightType.UNSEEN:
+		PlayerSightTable.Sight.UNSEEN:
 			tile_map.set_cell(TILE_OUT_SIGHT_LAYER_IDX, coord, 31, Vector2i.ZERO)
-		Map.SightType.SEEN:
+		PlayerSightTable.Sight.SEEN:
 			tile_map.set_cell(TILE_OUT_SIGHT_LAYER_IDX, coord, 30, Vector2i.ZERO)
 	tile_map.erase_cell(TILE_IN_SIGHT_LAYER_IDX, coord)
 	# 更新周围视野范围内受影响的地块
@@ -401,7 +402,7 @@ func get_surrounding_borders(map_coord: Vector2i, dist: int) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	if dist < 0:
 		return result
-	var center: Vector2i = Map.get_tile_coord_directed_border(map_coord, MapBorderTable.Direction.CENTER)
+	var center: Vector2i = MapBorderUtils.get_tile_coord_directed_border(map_coord, MapBorderTable.Direction.CENTER)
 	var oddr: HexagonUtils.OffsetCoord = HexagonUtils.OffsetCoord.odd_r(center.x, center.y)
 	result.append_array(oddr.to_axial().ring(dist * 2 + 1) \
 			.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))

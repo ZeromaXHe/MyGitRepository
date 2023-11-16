@@ -74,6 +74,11 @@ class Table:
 			index.add(d)
 	
 	
+	func update_field_by_id(id: int, field: String, val: Variant) -> void:
+		var do: DataObj = query_by_id(id)
+		do.set(field, val)
+	
+	
 	func query_by_id(id: int) -> DataObj:
 		return id_index.get(id)
 	
@@ -96,6 +101,7 @@ class Table:
 					break
 			if result == null:
 				result = query_all()
+			# TODO: 效率可能会很低，所以目前需要注意把可以快速缩小范围的索引字段的 eq 放前面
 			for w in qw.where_arr:
 				result = result.filter(func(e): return e.get(w.field) == w.val)
 		
@@ -135,10 +141,23 @@ class EnumTable extends Table:
 	
 	func insert(d: DataObj) -> void:
 		printerr("this is a enum table, can't insert")
+		return
 	
 	
 	func delete_by_id(id: int) -> void:
 		printerr("this is a enum table, can't delete")
+	
+	
+	func truncate() -> void:
+		printerr("this is a enum table, can't truncate")
+	
+	
+	func update_by_id(d: DataObj) -> void:
+		printerr("this is a enum table, can't update")
+	
+	
+	func update_field_by_id(id: int, field: String, val: Variant) -> void:
+		printerr("this is a enum table, can't update")
 	
 	
 	func query_by_enum_name(enum_name: String) -> EnumDO:
@@ -198,7 +217,7 @@ class Index:
 	
 	func get_do(col: Variant) -> Array:
 		if type == Type.NORMAL:
-			return dict.get(col)
+			return dict.get(col, [])
 		else:
 			return [dict.get(col)]
 

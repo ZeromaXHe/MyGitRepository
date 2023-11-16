@@ -4,12 +4,10 @@ extends MySimSQL.DataObj
 
 # 城市名字
 var name: String
-# 所在地块 id
-var tile_id: int
+# 所在地块坐标
+var coord: Vector2i
 # 所属玩家 id
 var player_id: int
-# 视野坐标 id
-var sight_ids: Array[int]
 # 是否首都
 var capital: bool
 # 总住房数量
@@ -24,7 +22,7 @@ var defense: int
 var pop: int
 # 粮食累计值
 var food_sum: float
-# 生产单位 id
-var producing_id: int
+# 生产单位类型
+var producing_type: UnitTypeTable.Type = -1
 # 生产力累计值
 var production_sum: float

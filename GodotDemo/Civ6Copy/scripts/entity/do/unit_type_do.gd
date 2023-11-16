@@ -4,6 +4,13 @@ extends MySimSQL.EnumDO
 
 # 种类
 var category: UnitCategoryTable.Category
+# 移动力
+var move: int
+# 劳动力
+var labor: int
+# 近战攻击力
+var melee_atk: int
+
 # 64x64 图标资源路径
 var icon_64: String
 # 256x256 图标资源路径

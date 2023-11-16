@@ -48,23 +48,32 @@ func show_info() -> void:
 		return
 	
 	# 刷新内容
-	city_name_label.text = showing_city.city_name
-	capital_texture_rect.visible = showing_city.capital
+	var city_do: CityDO = CityController.get_city_do(showing_city.id)
+	city_name_label.text = city_do.name
+	capital_texture_rect.visible = city_do.capital
 	# 城市所属玩家颜色
-	city_texture_rect.modulate = showing_city.player.second_color
-	city_name_label.add_theme_color_override("font_color", showing_city.player.second_color)
-	city_name_panel.get("theme_override_styles/panel").set("bg_color", showing_city.player.main_color)
-	city_pic_panel.get("theme_override_styles/panel").set("bg_color", showing_city.player.main_color)
+	var player_do: PlayerDO = PlayerController.get_player_do(city_do.player_id)
+	city_texture_rect.modulate = player_do.second_color
+	city_name_label.add_theme_color_override("font_color", player_do.second_color)
+	city_name_panel.get("theme_override_styles/panel").set("bg_color", player_do.main_color)
+	city_pic_panel.get("theme_override_styles/panel").set("bg_color", player_do.main_color)
 	# 产量显示
-	handle_city_yield_culture_changed(showing_city.yield_culture)
-	handle_city_yield_food_changed(showing_city.yield_food)
-	handle_city_yield_product_changed(showing_city.yield_product)
-	handle_city_yield_science_changed(showing_city.yield_science)
-	handle_city_yield_religion_changed(showing_city.yield_religion)
-	handle_city_yield_gold_changed(showing_city.yield_gold)
+	var yield_dto: YieldDTO = CityController.get_city_yield(showing_city.id)
+	showing_city.yield_culture = yield_dto.culture
+	showing_city.yield_food = yield_dto.food
+	showing_city.yield_product = yield_dto.production
+	showing_city.yield_science = yield_dto.science
+	showing_city.yield_religion = yield_dto.religion
+	showing_city.yield_gold = yield_dto.gold
+	handle_city_yield_culture_changed(yield_dto.culture)
+	handle_city_yield_food_changed(yield_dto.food)
+	handle_city_yield_product_changed(yield_dto.production)
+	handle_city_yield_science_changed(yield_dto.science)
+	handle_city_yield_religion_changed(yield_dto.religion)
+	handle_city_yield_gold_changed(yield_dto.gold)
 	# 生产单位显示
 	handle_city_producing_unit_type_changed(showing_city.producing_unit_type)
-	# 绑定信号，方便后续更新信息
+	# 绑定信号，方便后续更新信息(TODO: 目前已经全部失效了)
 	connect_showing_city_signals()
 	# 展示出来
 	show()

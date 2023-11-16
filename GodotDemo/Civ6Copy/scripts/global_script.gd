@@ -18,9 +18,6 @@ var load_info: String = "加载中...":
 var loaded_scene: PackedScene
 # 计时相关
 var last_time_record: int
-# 游戏玩家相关
-var player_idx: int = 0
-var player_arr: Array[Player] = []
 
 
 func record_time() -> void:
@@ -31,13 +28,3 @@ func log_used_time_from_last_record(method_name: String, action_name: String) ->
 	var new_time_record: int = Time.get_ticks_msec()
 	print("%s | %s cost: %d ms" % [method_name, action_name, new_time_record - last_time_record])
 	last_time_record = new_time_record
-
-
-func get_current_player() -> Player:
-	if player_arr.size() == 0:
-		add_player(Player.new())
-	return player_arr[player_idx]
-
-
-func add_player(player: Player) -> void:
-	player_arr.append(player)

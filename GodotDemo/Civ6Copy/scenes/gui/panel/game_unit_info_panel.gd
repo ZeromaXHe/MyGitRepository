@@ -29,15 +29,16 @@ func show_info() -> void:
 		printerr("GameUnitInfoPanel | show_info | weird, no showing unit, but show")
 		return
 	# 刷新内容
-	unit_name_label.text = Unit.get_unit_name(showing_unit.type)
-	if showing_unit.type == UnitTypeTable.Type.SETTLER:
+	var unit_do: UnitDO = UnitController.get_unit_do(showing_unit.id)
+	unit_name_label.text = Unit.get_unit_name(unit_do.type)
+	if unit_do.type == UnitTypeTable.Type.SETTLER:
 		unit_city_button.show()
 	else:
 		unit_city_button.hide()
 	
-	unit_texture_rect.texture = load(Unit.get_unit_pic_200(showing_unit.type))
+	unit_texture_rect.texture = load(Unit.get_unit_pic_200(unit_do.type))
 	
-	handle_unit_move_capability_changed(showing_unit.move_capability)
+	handle_unit_move_capability_changed(unit_do.move)
 	# 绑定信号，方便后续更新信息
 	connect_showing_unit_signals()
 	# 显示出来
@@ -55,7 +56,7 @@ func connect_showing_unit_signals() -> void:
 
 
 func handle_unit_move_capability_changed(move_capability: int) -> void:
-	unit_move_label.text = "%d/%d 移动" % [move_capability, showing_unit.get_move_range()]
+	unit_move_label.text = "%d/%d 移动" % [move_capability, UnitController.get_move_range(showing_unit.id)]
 
 
 func handle_chosen_unit_changed(unit: Unit) -> void:

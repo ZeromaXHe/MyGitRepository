@@ -315,3 +315,7 @@ func _init() -> void:
 func query_by_short_name(short_name: String) -> ResourceDO:
 	return short_name_index.get_do(short_name)[0] as ResourceDO
 
+
+func query_by_category(category: Category) -> Array:
+	return category_index.get_do(category)
+

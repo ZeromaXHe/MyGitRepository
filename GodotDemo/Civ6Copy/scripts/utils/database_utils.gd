@@ -19,8 +19,12 @@ static var resource_tbl := ResourceTable.new()
 static var continent_tbl := ContinentTable.new()
 # 玩家表
 static var player_tbl := PlayerTable.new()
+# 玩家视野表
+static var player_sight_tbl := PlayerSightTable.new()
 # 城市表
 static var city_tbl := CityTable.new()
+# 城市建筑表
+static var city_building_tbl := CityBuildingTable.new()
 # 单位表
 static var unit_tbl := UnitTable.new()
 # 单位类型表
