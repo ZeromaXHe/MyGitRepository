@@ -12,10 +12,11 @@ script = ExtResource("1_7qv8v")
 
 [node name="TerritoryBorders" type="Node2D" parent="."]
 
-[node name="Units" type="Node2D" parent="."]
-
 [node name="Cities" type="Node2D" parent="."]
-z_index = 2
+z_index = 5
+
+[node name="Units" type="Node2D" parent="."]
+z_index = 5
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

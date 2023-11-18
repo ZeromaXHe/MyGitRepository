@@ -72,3 +72,7 @@ static func test_map_controller_get_tile_coord_directed_border() -> void:
 	print("hexagon ", Vector2i(0, 1), "'s right is ", MapBorderUtils.get_tile_coord_directed_border(Vector2i(0, 1), MapBorderTable.Direction.RIGHT)) # (2,3)
 	print("hexagon ", Vector2i(0, 1), "'s left down is ", MapBorderUtils.get_tile_coord_directed_border(Vector2i(0, 1), MapBorderTable.Direction.LEFT_DOWN)) # (1,4)
 	print("hexagon ", Vector2i(0, 1), "'s right down is ", MapBorderUtils.get_tile_coord_directed_border(Vector2i(0, 1), MapBorderTable.Direction.RIGHT_DOWN)) # (2,4)
+
+
+func _on_button_pressed() -> void:
+	print("why can't press button under canvas layer?")

@@ -60,7 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			if event.is_pressed():
 				# 选取图块
 				_from_camera_position = camera.to_local(get_global_mouse_position())
-			else:
+			elif event.is_released():
 				if camera.to_local(get_global_mouse_position()).distance_to(_from_camera_position) < 20:
 					paint_map()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
@@ -145,7 +145,7 @@ func handle_cancel() -> void:
 
 
 func handle_mouse_hover_tile(delta: float) -> bool:
-	var map_coord: Vector2i = map_shower.get_map_coord()
+	var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
 		if not gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and MapController.is_in_map_tile(map_coord):
@@ -178,7 +178,7 @@ func clear_pre_mouse_hover_border_chosen() -> void:
 
 
 func paint_new_chosen_area(renew: bool = false) -> void:
-	var map_coord: Vector2i = map_shower.get_map_coord()
+	var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 	var border_coord: Vector2i = map_shower.get_border_coord()
 	# 只在放置模式下绘制鼠标悬浮地块
 	if gui.get_rt_tab_status() != MapEditorGUI.TabStatus.PLACE:
@@ -231,21 +231,21 @@ func depaint_map() -> void:
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
-			var tile_coord: Vector2i = map_shower.get_map_coord()
+			var tile_coord: Vector2i = map_shower.get_mouse_map_coord()
 			if MapController.get_map_tile_do_by_coord(tile_coord).landscape == LandscapeTable.Landscape.EMPTY:
 				return
 			paint_landscape(tile_coord, step, LandscapeTable.Landscape.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
-			var tile_coord: Vector2i = map_shower.get_map_coord()
+			var tile_coord: Vector2i = map_shower.get_mouse_map_coord()
 			if not MapController.get_map_tile_do_by_coord(tile_coord).village:
 				return
 			paint_village(tile_coord, step, 0)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
-			var tile_coord: Vector2i = map_shower.get_map_coord()
+			var tile_coord: Vector2i = map_shower.get_mouse_map_coord()
 			if MapController.get_map_tile_do_by_coord(tile_coord).resource == ResourceTable.ResourceType.EMPTY:
 				# FIXME: 4.1 现在的场景 TileMap bug，需要等待 4.2 发布解决。目前先打日志说明一下
 #				print("tile map ", tile_coord, " is empty. (if you see a icon, it's because 4.1's bug. Wait for 4.2 update to fix it)")
@@ -259,7 +259,7 @@ func depaint_map() -> void:
 func paint_map() -> void:
 	# 格位模式下只绘制选择绿块
 	if gui.get_rt_tab_status() == MapEditorGUI.TabStatus.GRID:
-		var coord: Vector2i = map_shower.get_map_coord()
+		var coord: Vector2i = map_shower.get_mouse_map_coord()
 		map_shower.clear_tile_chosen()
 		_grid_chosen_coord = coord
 		map_shower.paint_tile_chosen_placeable(coord)
@@ -268,7 +268,7 @@ func paint_map() -> void:
 	var step: PaintStep = PaintStep.new()
 	match gui.place_mode:
 		MapEditorGUI.PlaceMode.TERRAIN:
-			var map_coord: Vector2i = map_shower.get_map_coord()
+			var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 			var dist: int = gui.get_painter_size_dist()
 			var inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
 			for coord in inside:
@@ -298,7 +298,7 @@ func paint_map() -> void:
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
-			var coord: Vector2i = map_shower.get_map_coord()
+			var coord: Vector2i = map_shower.get_mouse_map_coord()
 			if not LandscapeController.is_landscape_placeable(coord, gui.landscape_type):
 				return
 			if MapController.get_map_tile_do_by_coord(coord).landscape == gui.landscape_type:
@@ -307,7 +307,7 @@ func paint_map() -> void:
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
-			var coord: Vector2i = map_shower.get_map_coord()
+			var coord: Vector2i = map_shower.get_mouse_map_coord()
 			if not VillageController.is_village_placeable(coord):
 				return
 			if MapController.get_map_tile_do_by_coord(coord).village:
@@ -316,7 +316,7 @@ func paint_map() -> void:
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
-			var coord: Vector2i = map_shower.get_map_coord()
+			var coord: Vector2i = map_shower.get_mouse_map_coord()
 			if not ResourceController.is_resource_placeable(coord, gui.resource_type):
 				return
 			if MapController.get_map_tile_do_by_coord(coord).resource == gui.resource_type:
@@ -325,7 +325,7 @@ func paint_map() -> void:
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.CONTINENT:
-			var map_coord: Vector2i = map_shower.get_map_coord()
+			var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 			var dist: int = gui.get_painter_size_dist()
 			var inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
 			for coord in inside:

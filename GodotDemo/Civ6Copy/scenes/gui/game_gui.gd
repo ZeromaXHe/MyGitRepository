@@ -6,19 +6,19 @@ signal city_product_settler_button_pressed
 
 
 # 顶部面板
-@onready var top_panel: GameTopPanel = $VBoxContainer/TopPanel
+@onready var top_panel: GameTopPanel = $MainVBox/TopPanel
 # 百科面板
 @onready var wiki_panel: WikiPanel = $WikiPanelContainer
 # 鼠标悬停在地块上时显示的面板
 @onready var mouse_hover_tile_panel: MouseHoverTilePanel = $MouseHoverTilePanel
 # 右下角单位信息栏
-@onready var unit_info_panel: GameUnitInfoPanel = $VBoxContainer/MainMargin/RightDownHBox/UnitInfoPanel
+@onready var unit_info_panel: GameUnitInfoPanel = $MainVBox/MainContainer/RightDownHBox/UnitInfoPanel
 # 右下角城市信息栏
-@onready var city_info_panel: GameCityInfoPanel = $VBoxContainer/MainMargin/RightDownHBox/CityInfoPanel
+@onready var city_info_panel: GameCityInfoPanel = $MainVBox/MainContainer/RightDownHBox/CityInfoPanel
 # 右下角回合相关
-@onready var turn_panel: GameTurnPanel = $VBoxContainer/MainMargin/RightDownHBox/TurnPanel
+@onready var turn_panel: GameTurnPanel = $MainVBox/MainContainer/RightDownHBox/TurnPanel
 # 右边城市生产选择界面
-@onready var city_product_panel: GameCityProductPanel = $VBoxContainer/MainMargin/RightDownHBox/CityProductPanel
+@onready var city_product_panel: GameCityProductPanel = $MainVBox/MainContainer/RightDownHBox/CityProductPanel
 # 菜单界面相关
 @onready var menu_overlay: PanelContainer = $MenuOverlay
 # 热座模式切换玩家界面
@@ -67,6 +67,13 @@ func show_city_product_panel() -> void:
 func hide_city_product_panel() -> void:
 	city_product_panel.hide()
 	show_turn_panel()
+
+
+func reverse_city_product_panel_visible() -> void:
+	if city_product_panel.visible:
+		hide_city_product_panel()
+	else:
+		show_city_product_panel()
 
 
 func show_turn_panel() -> void:

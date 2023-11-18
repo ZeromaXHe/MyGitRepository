@@ -362,10 +362,12 @@ layout_mode = 2
 
 [node name="CivPediaButton" type="Button" parent="TopRightHBox"]
 layout_mode = 2
+tooltip_text = "打开文明百科"
 icon = ExtResource("8_ot0so")
 
 [node name="MenuButton" type="Button" parent="TopRightHBox"]
 layout_mode = 2
+tooltip_text = "打开游戏菜单"
 icon = ExtResource("9_a32j1")
 
 [connection signal="pressed" from="TopRightHBox/CivPediaButton" to="." method="_on_civ_pedia_button_pressed"]

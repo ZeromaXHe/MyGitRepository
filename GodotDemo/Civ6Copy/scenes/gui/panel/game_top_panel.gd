@@ -21,6 +21,7 @@ func update_time_label():
 	var hour_val: int = time_dict["hour"]
 	time_label.text = "%02d:%02d %s" % [hour_val if hour_val <= 12 else (hour_val - 12), \
 			time_dict["minute"], " AM" if hour_val <= 12 else " PM"]
+	time_label.tooltip_text = Time.get_datetime_string_from_system()
 
 
 func handle_turn_changed(turn: int, year: int) -> void:

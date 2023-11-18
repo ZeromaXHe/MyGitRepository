@@ -92,11 +92,6 @@ func move_to(coord: Vector2i) -> void:
 	update_sight()
 
 
-## 鼠标点击 ClickArea2D 的信号处理
-func _on_click_area_2d_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.is_released():
-			print("_on_click_area_2d_input_event | clicked on unit")
-			# TODO: 可能的 bug - 如果在别处点击，这里释放的话，吞掉输入事件可能有 bug
-			get_viewport().set_input_as_handled()
-			unit_clicked.emit(self)
+func _on_unit_button_pressed() -> void:
+	print("_on_unit_button_pressed | unit clicked")
+	unit_clicked.emit(self)

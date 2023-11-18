@@ -21,6 +21,8 @@ static func get_current_player() -> PlayerDO:
 
 
 static func get_current_player_id() -> int:
+	if player_id_arr.is_empty():
+		return -1
 	return player_id_arr[player_idx]
 
 

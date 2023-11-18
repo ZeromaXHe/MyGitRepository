@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://ckelrkn7bfs8k"]
+[gd_scene load_steps=8 format=3 uid="uid://ckelrkn7bfs8k"]
 
 [ext_resource type="Script" path="res://scenes/game/city.gd" id="1_w8b0e"]
 [ext_resource type="Texture2D" uid="uid://b8rquj0vdsw3o" path="res://assets/civ6_origin/core/webp_32x32/core_capital.webp" id="1_xex08"]
@@ -18,11 +18,7 @@ bg_color = Color(0.172549, 0.172549, 0.172549, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45un1"]
 bg_color = Color(0.839216, 0.662745, 0.243137, 1)
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_le86w"]
-radius = 92.0
-
 [node name="City" type="Node2D"]
-z_index = 5
 script = ExtResource("1_w8b0e")
 
 [node name="CityMainPanelContainer" type="PanelContainer" parent="."]
@@ -63,18 +59,14 @@ layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "1"
 
-[node name="CapitalTextureRect" type="TextureRect" parent="CityMainPanelContainer/HBoxContainer"]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-texture = ExtResource("1_xex08")
-expand_mode = 1
-
-[node name="NameLabel" type="Label" parent="CityMainPanelContainer/HBoxContainer"]
+[node name="CityNameButton" type="Button" parent="CityMainPanelContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 text = "城市名字"
-horizontal_alignment = 1
-vertical_alignment = 1
+icon = ExtResource("1_xex08")
+flat = true
+expand_icon = true
 
 [node name="ProductPanelContainer" type="PanelContainer" parent="CityMainPanelContainer/HBoxContainer"]
 layout_mode = 2
@@ -85,6 +77,10 @@ custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_horizontal = 8
 expand_mode = 4
+
+[node name="ProductButton" type="Button" parent="CityMainPanelContainer/HBoxContainer/ProductPanelContainer"]
+layout_mode = 2
+flat = true
 
 [node name="ProductProgressBar" type="ProgressBar" parent="CityMainPanelContainer/HBoxContainer"]
 custom_minimum_size = Vector2(5, 0)
@@ -115,9 +111,15 @@ text = "防: 13"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickArea2D" type="Area2D" parent="."]
+[node name="CityButton" type="Button" parent="."]
+custom_minimum_size = Vector2(184, 160)
+offset_left = -92.0
+offset_top = -80.0
+offset_right = 92.0
+offset_bottom = 80.0
+mouse_filter = 1
+flat = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ClickArea2D"]
-shape = SubResource("CircleShape2D_le86w")
-
-[connection signal="input_event" from="ClickArea2D" to="." method="_on_click_area_2d_input_event"]
+[connection signal="pressed" from="CityMainPanelContainer/HBoxContainer/CityNameButton" to="." method="_on_city_name_button_pressed"]
+[connection signal="pressed" from="CityMainPanelContainer/HBoxContainer/ProductPanelContainer/ProductButton" to="." method="_on_product_button_pressed"]
+[connection signal="pressed" from="CityButton" to="." method="_on_city_button_pressed"]

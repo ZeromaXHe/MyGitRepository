@@ -6,7 +6,11 @@ extends Control
 
 
 func _ready() -> void:
-	player_label.text = PlayerController.get_current_player().name
+	var player_do: PlayerDO = PlayerController.get_current_player()
+	if player_do == null:
+		player_label.text = "测试玩家"
+	else:
+		player_label.text = PlayerController.get_current_player().name
 
 
 func _on_start_button_pressed() -> void:

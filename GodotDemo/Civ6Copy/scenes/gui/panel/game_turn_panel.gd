@@ -14,7 +14,7 @@ func _ready() -> void:
 
 
 func show_end_turn() -> void:
-	turn_label.text = "结束回合"
+	turn_label.text = "下一回合"
 	turn_button.icon = load("res://assets/icon_park/下一步_next.svg")
 
 
@@ -24,9 +24,13 @@ func show_unit_need_move() -> void:
 
 
 func show_city_need_product() -> void:
-	# TODO: 文案和图片暂时是我随便选的
-	turn_label.text = "城市需要建造"
-	turn_button.icon = load("res://assets/icon_park/注意_attention.svg")
+	turn_label.text = "选择生产项目"
+	turn_button.icon = load("res://assets/civ6_origin/core/webp_32x32/core_production.webp")
+
+
+func show_tech_need_choose() -> void:
+	turn_label.text = "选择科技"
+	turn_button.icon = load("res://assets/civ6_origin/core/webp_32x32/core_science.webp")
 
 
 func handle_turn_status_changed(status: HotSeatGame.TurnStatus) -> void:
@@ -37,6 +41,8 @@ func handle_turn_status_changed(status: HotSeatGame.TurnStatus) -> void:
 			show_unit_need_move()
 		HotSeatGame.TurnStatus.CITY_NEED_PRODUCT:
 			show_city_need_product()
+		HotSeatGame.TurnStatus.TECH_NEED_CHOOSE:
+			show_tech_need_choose()
 
 
 ## 点击右下角的回合按钮

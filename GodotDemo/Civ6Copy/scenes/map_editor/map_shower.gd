@@ -153,7 +153,7 @@ func border_coord_to_global_position(border_coord: Vector2i) -> Vector2:
 	return border_tile_map.to_global(border_tile_map.map_to_local(border_coord))
 
 
-func get_map_coord() -> Vector2i:
+func get_mouse_map_coord() -> Vector2i:
 	return global_position_to_map_coord(get_global_mouse_position())
 
 

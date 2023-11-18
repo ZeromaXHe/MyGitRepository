@@ -12,6 +12,7 @@ enum TurnStatus {
 	END_TURN,
 	UNIT_NEED_MOVE,
 	CITY_NEED_PRODUCT,
+	TECH_NEED_CHOOSE,
 }
 
 
@@ -19,8 +20,6 @@ var chosen_unit: Unit = null:
 	set = set_chosen_unit
 var chosen_city: City = null:
 	set = set_chosen_city
-# 左键点击开始时相对镜头的本地坐标
-var _from_camera_position := Vector2(-1, -1)
 # 鼠标悬浮的图块坐标和时间
 var _mouse_hover_tile_coord: Vector2i = GlobalScript.NULL_COORD
 var _mouse_hover_tile_time: float = 0
@@ -64,27 +63,15 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			# get_viewport().set_input_as_handled()
-			if event.is_pressed():
-				# 选取图块
-				_from_camera_position = camera.to_local(get_global_mouse_position())
-			elif event.is_released():
-				if chosen_unit != null:
-					var click_coord: Vector2i = map_shower.get_map_coord()
-					if click_coord == UnitController.get_unit_do(chosen_unit.id).coord:
-						return
-					if map_shower.is_in_move_tile_areas(click_coord):
-						# 移动单位
-						map_shower.clear_move_tile_areas()
-						chosen_unit.move_to(click_coord)
-					else:
-						# 取消选择
-						map_shower.clear_move_tile_areas()
-						chosen_unit = null
-				# 取消城市选择
-				if chosen_city != null:
-					chosen_city = null
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.is_released():
+				if chosen_unit == null:
+					return
+				# 移动单位
+				var click_coord: Vector2i = map_shower.get_mouse_map_coord()
+				if map_shower.is_in_move_tile_areas(click_coord):
+					map_shower.clear_move_tile_areas()
+					chosen_unit.move_to(click_coord)
 
 
 func _process(delta: float) -> void:
@@ -142,16 +129,23 @@ func build_city(coord: Vector2i) -> void:
 	cities.add_child(city)
 	city.initiate()
 	city.city_clicked.connect(handle_city_clicked)
+	city.city_name_button_pressed.connect(handle_city_clicked)
+	city.city_product_button_pressed.connect(handle_city_product_button_pressed)
 	# 新的城市需要选择建造项目，更新一下回合状态
 	refresh_turn_status()
 
 
-func chose_unit_and_camera_focus(unit: UnitDO):
+func handle_city_product_button_pressed(city: City) -> void:
+	handle_city_clicked(city)
+	game_gui.reverse_city_product_panel_visible()
+
+
+func chose_unit_and_camera_focus(unit: UnitDO) -> void:
 	handle_unit_clicked(ViewHolder.get_unit(unit.id))
 	camera.global_position = map_shower.map_coord_to_global_position(unit.coord)
 
 
-func chose_city_and_camera_focus(city: CityDO):
+func chose_city_and_camera_focus(city: CityDO) -> void:
 	handle_city_clicked(ViewHolder.get_city(city.id))
 	camera.global_position = map_shower.map_coord_to_global_position(city.coord)
 
@@ -256,7 +250,7 @@ func handle_city_production_changed(id: int) -> void:
 
 
 func handle_mouse_hover_tile(delta: float) -> bool:
-	var map_coord: Vector2i = map_shower.get_map_coord()
+	var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
 		if not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and MapController.is_in_map_tile(map_coord):

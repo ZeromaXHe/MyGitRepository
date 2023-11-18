@@ -36,7 +36,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			tween.tween_property(self, "zoom", _final_zoom, 0.1)
 	elif event is InputEventMouseMotion:
 		# 拖拽镜头过程中
-		get_viewport().set_input_as_handled()
+#		get_viewport().set_input_as_handled()
 		drag(event.position)
 
 
