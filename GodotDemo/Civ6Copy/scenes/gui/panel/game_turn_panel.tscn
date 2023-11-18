@@ -1,43 +1,78 @@
-[gd_scene load_steps=3 format=3 uid="uid://bfwi0qylm5dh6"]
+[gd_scene load_steps=8 format=3 uid="uid://bfwi0qylm5dh6"]
 
 [ext_resource type="Texture2D" uid="uid://dnxhccmly6rmr" path="res://assets/icon_park/注意_attention.svg" id="1_8cqeb"]
 [ext_resource type="Script" path="res://scenes/gui/panel/game_turn_panel.gd" id="1_bth4d"]
 
-[node name="TurnPanel" type="PanelContainer"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5o613"]
+bg_color = Color(0.0392157, 0.12549, 0.262745, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.6, 0.6, 0.6, 1)
+
+[sub_resource type="Gradient" id="Gradient_328ps"]
+offsets = PackedFloat32Array(0.627706, 0.683983, 0.813853, 0.852814, 1)
+colors = PackedColorArray(0.0470588, 0.196078, 0.380392, 1, 0.756863, 0.643137, 0.439216, 1, 0.756863, 0.643137, 0.439216, 1, 0.262745, 0.14902, 0.129412, 1, 0.262745, 0.14902, 0.129412, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ptrbx"]
+gradient = SubResource("Gradient_328ps")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.333333)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_spkqj"]
+texture = SubResource("GradientTexture2D_ptrbx")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fh4h4"]
+bg_color = Color(0.74902, 0.635294, 0.407843, 1)
+
+[node name="TurnPanel" type="VBoxContainer"]
 size_flags_horizontal = 8
 size_flags_vertical = 8
 script = ExtResource("1_bth4d")
 
-[node name="TurnVBox" type="VBoxContainer" parent="."]
+[node name="TextPanel" type="PanelContainer" parent="."]
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5o613")
 
-[node name="TurnLabel" type="Label" parent="TurnVBox"]
+[node name="TurnTextButton" type="Button" parent="TextPanel"]
 layout_mode = 2
 text = "单位需要命令"
+flat = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="TurnVBox"]
+[node name="MainPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_spkqj")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainPanel"]
 layout_mode = 2
 
-[node name="GoldProgress" type="ProgressBar" parent="TurnVBox/HBoxContainer"]
+[node name="GoldProgress" type="ProgressBar" parent="MainPanel/HBoxContainer"]
 custom_minimum_size = Vector2(10, 100)
 layout_mode = 2
-value = 50.0
+size_flags_vertical = 1
 fill_mode = 3
 show_percentage = false
 
-[node name="TurnButton" type="Button" parent="TurnVBox/HBoxContainer"]
-custom_minimum_size = Vector2(150, 150)
+[node name="TurnButton" type="Button" parent="MainPanel/HBoxContainer"]
+custom_minimum_size = Vector2(130, 150)
 layout_mode = 2
 icon = ExtResource("1_8cqeb")
+flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="EraProgress" type="ProgressBar" parent="TurnVBox/HBoxContainer"]
+[node name="EraProgress" type="ProgressBar" parent="MainPanel/HBoxContainer"]
 custom_minimum_size = Vector2(10, 100)
 layout_mode = 2
+size_flags_vertical = 1
+theme_override_styles/fill = SubResource("StyleBoxFlat_fh4h4")
 max_value = 8.0
-value = 4.0
+step = 1.0
+value = 1.0
 fill_mode = 2
 show_percentage = false
 
-[connection signal="pressed" from="TurnVBox/HBoxContainer/TurnButton" to="." method="_on_turn_button_pressed"]
+[connection signal="pressed" from="TextPanel/TurnTextButton" to="." method="_on_turn_text_button_pressed"]
+[connection signal="pressed" from="MainPanel/HBoxContainer/TurnButton" to="." method="_on_turn_button_pressed"]

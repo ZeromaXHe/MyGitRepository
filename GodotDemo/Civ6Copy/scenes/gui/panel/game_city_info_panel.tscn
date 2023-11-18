@@ -1,15 +1,23 @@
-[gd_scene load_steps=18 format=3 uid="uid://dsvabdnd8uany"]
+[gd_scene load_steps=26 format=3 uid="uid://dsvabdnd8uany"]
 
 [ext_resource type="Theme" uid="uid://bjxgqo07h5f4q" path="res://scenes/gui/theme_button_icon_max_width_15.tres" id="1_aany7"]
 [ext_resource type="Script" path="res://scenes/gui/panel/game_city_info_panel.gd" id="1_n2ks8"]
+[ext_resource type="StyleBox" uid="uid://cjmu7ccclm7ga" path="res://styles/button_blue_panel_background.tres" id="2_2l48t"]
 [ext_resource type="Texture2D" uid="uid://batagftcmuypd" path="res://assets/civ6_origin/core/webp_32x32/core_culture.webp" id="2_nquk2"]
 [ext_resource type="Texture2D" uid="uid://na1cqxfdkg2m" path="res://assets/civ6_origin/core/webp_32x32/core_food.webp" id="3_esljs"]
+[ext_resource type="StyleBox" uid="uid://cr1odivmeytvb" path="res://styles/info_blue_panel_background.tres" id="3_tfur5"]
 [ext_resource type="Texture2D" uid="uid://b2f3rlpq16aea" path="res://assets/civ6_origin/core/webp_32x32/core_production.webp" id="4_qyoj8"]
 [ext_resource type="Texture2D" uid="uid://bbuwimgeo1bf6" path="res://assets/civ6_origin/core/webp_32x32/core_science.webp" id="5_spm84"]
 [ext_resource type="Texture2D" uid="uid://mro7bq6p1jub" path="res://assets/civ6_origin/core/webp_32x32/core_faith.webp" id="6_wwmiu"]
 [ext_resource type="Texture2D" uid="uid://onqbvvq12y21" path="res://assets/civ6_origin/core/webp_32x32/core_gold.webp" id="7_sswe4"]
 [ext_resource type="Texture2D" uid="uid://b8rquj0vdsw3o" path="res://assets/civ6_origin/core/webp_32x32/core_capital.webp" id="8_pna2f"]
 [ext_resource type="Texture2D" uid="uid://b4aw8u25ju545" path="res://assets/civ6_origin/civilization/webp_256x256/icon_civilization_rome.webp" id="9_5k5eo"]
+[ext_resource type="StyleBox" uid="uid://o3mc7dw3jat8" path="res://styles/info_detail_deep_blue_panel_background.tres" id="13_ukciv"]
+[ext_resource type="Texture2D" uid="uid://c8vhutjwc7fsa" path="res://assets/icon_park/建筑_building-two.svg" id="14_8dttq"]
+[ext_resource type="Texture2D" uid="uid://bcfky6df866vk" path="res://assets/civ6_origin/core/webp_32x32/core_religion.webp" id="15_jyqoq"]
+[ext_resource type="Texture2D" uid="uid://d0ct41jtcu0rk" path="res://assets/civ6_origin/core/webp_32x32/core_amenities.webp" id="16_6t6dy"]
+[ext_resource type="Texture2D" uid="uid://ddx325q2pjqwy" path="res://assets/civ6_origin/core/webp_32x32/core_housing.webp" id="17_5jmgs"]
+[ext_resource type="Texture2D" uid="uid://cvumun1p0gxj5" path="res://assets/civ6_origin/core/webp_32x32/core_citizen.webp" id="18_qbtrd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_66ea0"]
 bg_color = Color(0, 0, 0, 1)
@@ -30,60 +38,71 @@ bg_color = Color(0.564706, 0.223529, 0.168627, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_v11nb"]
 
-[node name="CityInfoPanel" type="PanelContainer"]
+[node name="CityInfoPanel" type="VBoxContainer"]
 size_flags_horizontal = 8
 size_flags_vertical = 8
+theme_override_constants/separation = 0
 script = ExtResource("1_n2ks8")
 
-[node name="CityInfoVBox" type="VBoxContainer" parent="."]
+[node name="ButtonPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = ExtResource("2_2l48t")
+
+[node name="ButtonHBox" type="HBoxContainer" parent="ButtonPanel"]
 layout_mode = 2
 alignment = 2
 
-[node name="ButtonHBox" type="HBoxContainer" parent="CityInfoVBox"]
-layout_mode = 2
-alignment = 2
-
-[node name="InfoButton" type="Button" parent="CityInfoVBox/ButtonHBox"]
+[node name="InfoButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "详情"
 
-[node name="BuyCellButton" type="Button" parent="CityInfoVBox/ButtonHBox"]
+[node name="BuyCellButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "买地"
 
-[node name="CitizenButton" type="Button" parent="CityInfoVBox/ButtonHBox"]
+[node name="CitizenButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "市民"
 
-[node name="BuyUnitButton" type="Button" parent="CityInfoVBox/ButtonHBox"]
+[node name="BuyUnitButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "买人"
 
-[node name="ReligionUnitButton" type="Button" parent="CityInfoVBox/ButtonHBox"]
+[node name="ReligionUnitButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "信人"
 
-[node name="ProductButton" type="Button" parent="CityInfoVBox/ButtonHBox"]
+[node name="ProductButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "生产"
 
-[node name="YieldHBox" type="HBoxContainer" parent="CityInfoVBox"]
+[node name="MainPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("3_tfur5")
+
+[node name="CityInfoVBox" type="VBoxContainer" parent="MainPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 2
+
+[node name="YieldHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox"]
 layout_mode = 2
 alignment = 1
 
-[node name="CultureCheckBox" type="CheckBox" parent="CityInfoVBox/YieldHBox"]
+[node name="CultureCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
 layout_mode = 2
 theme = ExtResource("1_aany7")
 theme_override_colors/font_color = Color(0.741176, 0.392157, 0.909804, 1)
@@ -91,7 +110,7 @@ theme_override_font_sizes/font_size = 12
 text = "+1.0"
 icon = ExtResource("2_nquk2")
 
-[node name="FoodCheckBox" type="CheckBox" parent="CityInfoVBox/YieldHBox"]
+[node name="FoodCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
 layout_mode = 2
 theme = ExtResource("1_aany7")
 theme_override_colors/font_color = Color(0.439216, 0.678431, 0.215686, 1)
@@ -99,7 +118,7 @@ theme_override_font_sizes/font_size = 12
 text = "+4.0"
 icon = ExtResource("3_esljs")
 
-[node name="ProductCheckBox" type="CheckBox" parent="CityInfoVBox/YieldHBox"]
+[node name="ProductCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
 layout_mode = 2
 theme = ExtResource("1_aany7")
 theme_override_colors/font_color = Color(0.803922, 0.482353, 0.215686, 1)
@@ -107,7 +126,7 @@ theme_override_font_sizes/font_size = 12
 text = "+5.0"
 icon = ExtResource("4_qyoj8")
 
-[node name="ScienceCheckBox" type="CheckBox" parent="CityInfoVBox/YieldHBox"]
+[node name="ScienceCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
 layout_mode = 2
 theme = ExtResource("1_aany7")
 theme_override_colors/font_color = Color(0.180392, 0.537255, 0.760784, 1)
@@ -115,7 +134,7 @@ theme_override_font_sizes/font_size = 12
 text = "+3.0"
 icon = ExtResource("5_spm84")
 
-[node name="ReligionCheckBox" type="CheckBox" parent="CityInfoVBox/YieldHBox"]
+[node name="ReligionCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
 layout_mode = 2
 theme = ExtResource("1_aany7")
 theme_override_colors/font_color = Color(0.87451, 0.964706, 1, 1)
@@ -123,7 +142,7 @@ theme_override_font_sizes/font_size = 12
 text = "0"
 icon = ExtResource("6_wwmiu")
 
-[node name="GoldCheckBox" type="CheckBox" parent="CityInfoVBox/YieldHBox"]
+[node name="GoldCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
 layout_mode = 2
 theme = ExtResource("1_aany7")
 theme_override_colors/font_color = Color(0.921569, 0.866667, 0.215686, 1)
@@ -131,30 +150,44 @@ theme_override_font_sizes/font_size = 12
 text = "+5.0"
 icon = ExtResource("7_sswe4")
 
-[node name="NamePanel" type="PanelContainer" parent="CityInfoVBox"]
+[node name="NamePanel" type="PanelContainer" parent="MainPanel/CityInfoVBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_66ea0")
 
-[node name="NameHBox" type="HBoxContainer" parent="CityInfoVBox/NamePanel"]
+[node name="NameHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox/NamePanel"]
 layout_mode = 2
-alignment = 1
 
-[node name="CapitalTextureRect" type="TextureRect" parent="CityInfoVBox/NamePanel/NameHBox"]
+[node name="PreButton" type="Button" parent="MainPanel/CityInfoVBox/NamePanel/NameHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_font_sizes/font_size = 12
+text = "<="
+
+[node name="CapitalTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/NamePanel/NameHBox"]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
+size_flags_horizontal = 0
+size_flags_stretch_ratio = 0.8
 texture = ExtResource("8_pna2f")
-expand_mode = 1
+expand_mode = 2
+stretch_mode = 5
 
-[node name="NameLabel" type="Label" parent="CityInfoVBox/NamePanel/NameHBox"]
+[node name="NameLabel" type="Label" parent="MainPanel/CityInfoVBox/NamePanel/NameHBox"]
 layout_mode = 2
+size_flags_horizontal = 8
 text = "罗马"
-horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DetailHBox" type="HBoxContainer" parent="CityInfoVBox"]
+[node name="NextButton" type="Button" parent="MainPanel/CityInfoVBox/NamePanel/NameHBox"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 12
+text = "=>"
+
+[node name="DetailHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox"]
 layout_mode = 2
 
-[node name="HpBar" type="ProgressBar" parent="CityInfoVBox/DetailHBox"]
+[node name="HpBar" type="ProgressBar" parent="MainPanel/CityInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(10, 100)
 layout_mode = 2
 size_flags_vertical = 1
@@ -162,11 +195,12 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_tk5f3")
 value = 80.0
 fill_mode = 3
 
-[node name="CityPicPanel" type="PanelContainer" parent="CityInfoVBox/DetailHBox"]
+[node name="CityPicPanel" type="PanelContainer" parent="MainPanel/CityInfoVBox/DetailHBox"]
 layout_mode = 2
+size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_1vl61")
 
-[node name="CityTextureRect" type="TextureRect" parent="CityInfoVBox/DetailHBox/CityPicPanel"]
+[node name="CityTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/DetailHBox/CityPicPanel"]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -174,106 +208,220 @@ size_flags_vertical = 4
 texture = ExtResource("9_5k5eo")
 expand_mode = 1
 
-[node name="LeftVBox" type="VBoxContainer" parent="CityInfoVBox/DetailHBox"]
+[node name="LeftVBox" type="VBoxContainer" parent="MainPanel/CityInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
+alignment = 1
 
-[node name="BuildingLabel" type="Label" parent="CityInfoVBox/DetailHBox/LeftVBox"]
+[node name="BuildingPanel" type="PanelContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "1 建筑"
-horizontal_alignment = 1
+theme_override_styles/panel = ExtResource("13_ukciv")
+
+[node name="BuidlingHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/BuildingPanel"]
+layout_mode = 2
+
+[node name="BuildingTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/BuildingPanel/BuidlingHBox"]
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("14_8dttq")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="BuildingValLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/BuildingPanel/BuidlingHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "1"
 vertical_alignment = 1
 
-[node name="ReligionCitizenLabel" type="Label" parent="CityInfoVBox/DetailHBox/LeftVBox"]
+[node name="BuildingKeyLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/BuildingPanel/BuidlingHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "0 宗教公民"
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+text = "建筑  "
+horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="HabitalityLabel" type="Label" parent="CityInfoVBox/DetailHBox/LeftVBox"]
+[node name="ReligionCitizenPanel" type="PanelContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "+1 宜居度"
-horizontal_alignment = 1
+theme_override_styles/panel = ExtResource("13_ukciv")
+
+[node name="ReligionCitizenHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/ReligionCitizenPanel"]
+layout_mode = 2
+
+[node name="ReligionCitizenTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/ReligionCitizenPanel/ReligionCitizenHBox"]
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("15_jyqoq")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="ReligionCitizenValLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/ReligionCitizenPanel/ReligionCitizenHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "0"
 vertical_alignment = 1
 
-[node name="HousingLabel" type="Label" parent="CityInfoVBox/DetailHBox/LeftVBox"]
+[node name="ReligionCitizenKeyLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/ReligionCitizenPanel/ReligionCitizenHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "1/6 住房"
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+text = "宗教公民  "
+horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="VSeparator" type="VSeparator" parent="CityInfoVBox/DetailHBox"]
+[node name="AmenityPanel" type="PanelContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("13_ukciv")
+
+[node name="AmenityHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/AmenityPanel"]
 layout_mode = 2
 
-[node name="RightVBox" type="VBoxContainer" parent="CityInfoVBox/DetailHBox"]
+[node name="AmenityTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/AmenityPanel/AmenityHBox"]
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("16_6t6dy")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="AmenityValLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/AmenityPanel/AmenityHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "+1"
+vertical_alignment = 1
+
+[node name="AmenityKeyLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/AmenityPanel/AmenityHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "宜居度  "
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="HousingPanel" type="PanelContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("13_ukciv")
+
+[node name="HousingHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/HousingPanel"]
+layout_mode = 2
+
+[node name="HousingTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/HousingPanel/HousingHBox"]
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("17_5jmgs")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="HousingValLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/HousingPanel/HousingHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "1/6"
+vertical_alignment = 1
+
+[node name="HousingKeyLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/LeftVBox/HousingPanel/HousingHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "住房  "
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="VSeparator" type="VSeparator" parent="MainPanel/CityInfoVBox/DetailHBox"]
+layout_mode = 2
+
+[node name="RightVBox" type="VBoxContainer" parent="MainPanel/CityInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="ProducingLabel" type="Label" parent="CityInfoVBox/DetailHBox/RightVBox"]
+[node name="ProducingLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/RightVBox"]
 layout_mode = 2
 text = "没有生产任何东西"
 
-[node name="DataLabel" type="Label" parent="CityInfoVBox/DetailHBox/RightVBox"]
+[node name="DataLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/RightVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 
-[node name="IntroLabel" type="Label" parent="CityInfoVBox/DetailHBox/RightVBox"]
+[node name="IntroLabel" type="Label" parent="MainPanel/CityInfoVBox/DetailHBox/RightVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 
-[node name="VSeparator2" type="VSeparator" parent="CityInfoVBox/DetailHBox"]
+[node name="VSeparator2" type="VSeparator" parent="MainPanel/CityInfoVBox/DetailHBox"]
 layout_mode = 2
 
-[node name="ProductTextureRect" type="TextureRect" parent="CityInfoVBox/DetailHBox"]
+[node name="ProductTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 expand_mode = 1
 
-[node name="ProgressHBox" type="HBoxContainer" parent="CityInfoVBox"]
+[node name="ProgressHBox" type="HBoxContainer" parent="MainPanel/CityInfoVBox"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_vertical = 8
+alignment = 1
 
-[node name="GrowthBar" type="ProgressBar" parent="CityInfoVBox/ProgressHBox"]
-custom_minimum_size = Vector2(0, 20)
+[node name="CitizenTextureRect" type="TextureRect" parent="MainPanel/CityInfoVBox/ProgressHBox"]
+self_modulate = Color(0.301961, 0.301961, 0.301961, 1)
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("18_qbtrd")
+stretch_mode = 5
+
+[node name="CitizenLabel" type="Label" parent="MainPanel/CityInfoVBox/ProgressHBox/CitizenTextureRect"]
+layout_mode = 0
+offset_top = 3.0
+offset_right = 32.0
+offset_bottom = 32.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GrowthBar" type="ProgressBar" parent="MainPanel/CityInfoVBox/ProgressHBox"]
+custom_minimum_size = Vector2(150, 20)
+layout_mode = 2
+size_flags_horizontal = 4
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("StyleBoxFlat_6p4mt")
 value = 50.0
 show_percentage = false
 
-[node name="GrowthTurnLabel" type="Label" parent="CityInfoVBox/ProgressHBox/GrowthBar"]
+[node name="GrowthTurnLabel" type="Label" parent="MainPanel/CityInfoVBox/ProgressHBox/GrowthBar"]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxEmpty_q1h03")
 text = "6 回合后增长"
 vertical_alignment = 1
 
-[node name="ProductBar" type="ProgressBar" parent="CityInfoVBox/ProgressHBox"]
-custom_minimum_size = Vector2(0, 20)
+[node name="ProductBar" type="ProgressBar" parent="MainPanel/CityInfoVBox/ProgressHBox"]
+custom_minimum_size = Vector2(150, 20)
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 4
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("StyleBoxFlat_aq6hc")
 value = 50.0
 show_percentage = false
 
-[node name="ProductTurnLabel" type="Label" parent="CityInfoVBox/ProgressHBox/ProductBar"]
+[node name="ProductTurnLabel" type="Label" parent="MainPanel/CityInfoVBox/ProgressHBox/ProductBar"]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxEmpty_v11nb")
 text = "0 回合后完成"
 vertical_alignment = 1
 
-[connection signal="toggled" from="CityInfoVBox/ButtonHBox/ProductButton" to="." method="_on_product_button_toggled"]
+[connection signal="toggled" from="ButtonPanel/ButtonHBox/ProductButton" to="." method="_on_product_button_toggled"]

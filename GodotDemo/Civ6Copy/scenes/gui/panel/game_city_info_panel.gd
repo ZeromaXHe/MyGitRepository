@@ -1,5 +1,5 @@
 class_name GameCityInfoPanel
-extends PanelContainer
+extends VBoxContainer
 
 
 signal production_button_toggled(button_pressed: bool)
@@ -13,27 +13,27 @@ var showing_city: City = null:
 			show_info()
 
 # 产出选择按钮
-@onready var culture_check_box: CheckBox = $CityInfoVBox/YieldHBox/CultureCheckBox
-@onready var food_check_box: CheckBox = $CityInfoVBox/YieldHBox/FoodCheckBox
-@onready var product_check_box: CheckBox = $CityInfoVBox/YieldHBox/ProductCheckBox
-@onready var science_check_box: CheckBox = $CityInfoVBox/YieldHBox/ScienceCheckBox
-@onready var religion_check_box: CheckBox = $CityInfoVBox/YieldHBox/ReligionCheckBox
-@onready var gold_check_box: CheckBox = $CityInfoVBox/YieldHBox/GoldCheckBox
+@onready var culture_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/CultureCheckBox
+@onready var food_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/FoodCheckBox
+@onready var product_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/ProductCheckBox
+@onready var science_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/ScienceCheckBox
+@onready var religion_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/ReligionCheckBox
+@onready var gold_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/GoldCheckBox
 # 城市名字相关
-@onready var city_name_panel: PanelContainer = $CityInfoVBox/NamePanel
-@onready var capital_texture_rect: TextureRect = $CityInfoVBox/NamePanel/NameHBox/CapitalTextureRect
-@onready var city_name_label: Label = $CityInfoVBox/NamePanel/NameHBox/NameLabel
+@onready var city_name_panel: PanelContainer = $MainPanel/CityInfoVBox/NamePanel
+@onready var capital_texture_rect: TextureRect = $MainPanel/CityInfoVBox/NamePanel/NameHBox/CapitalTextureRect
+@onready var city_name_label: Label = $MainPanel/CityInfoVBox/NamePanel/NameHBox/NameLabel
 # 城市所属文明图片
-@onready var city_pic_panel: PanelContainer = $CityInfoVBox/DetailHBox/CityPicPanel
-@onready var city_texture_rect: TextureRect = $CityInfoVBox/DetailHBox/CityPicPanel/CityTextureRect
+@onready var city_pic_panel: PanelContainer = $MainPanel/CityInfoVBox/DetailHBox/CityPicPanel
+@onready var city_texture_rect: TextureRect = $MainPanel/CityInfoVBox/DetailHBox/CityPicPanel/CityTextureRect
 # 城市生产相关
-@onready var city_production_button: Button = $CityInfoVBox/ButtonHBox/ProductButton
-@onready var city_product_texture_rect: TextureRect = $CityInfoVBox/DetailHBox/ProductTextureRect
-@onready var city_producing_label: Label = $CityInfoVBox/DetailHBox/RightVBox/ProducingLabel
-@onready var city_data_label: Label = $CityInfoVBox/DetailHBox/RightVBox/DataLabel
-@onready var city_intro_label: Label = $CityInfoVBox/DetailHBox/RightVBox/IntroLabel
-@onready var city_product_progress: ProgressBar = $CityInfoVBox/ProgressHBox/ProductBar
-@onready var city_product_turn_label: Label = $CityInfoVBox/ProgressHBox/ProductBar/ProductTurnLabel
+@onready var city_production_button: Button = $ButtonPanel/ButtonHBox/ProductButton
+@onready var city_product_texture_rect: TextureRect = $MainPanel/CityInfoVBox/DetailHBox/ProductTextureRect
+@onready var city_producing_label: Label = $MainPanel/CityInfoVBox/DetailHBox/RightVBox/ProducingLabel
+@onready var city_data_label: Label = $MainPanel/CityInfoVBox/DetailHBox/RightVBox/DataLabel
+@onready var city_intro_label: Label = $MainPanel/CityInfoVBox/DetailHBox/RightVBox/IntroLabel
+@onready var city_product_progress: ProgressBar = $MainPanel/CityInfoVBox/ProgressHBox/ProductBar
+@onready var city_product_turn_label: Label = $MainPanel/CityInfoVBox/ProgressHBox/ProductBar/ProductTurnLabel
 
 
 func _ready() -> void:

@@ -1,0 +1,458 @@
+[gd_scene load_steps=36 format=3 uid="uid://cmal7eblkh33l"]
+
+[ext_resource type="Texture2D" uid="uid://61demjx51mfs" path="res://assets/icon_park/圆形连接_six-circular-connection.svg" id="1_ss8pf"]
+[ext_resource type="Texture2D" uid="uid://cykmcdd2dscm5" path="res://assets/made_in_godot/empty_tech_texture.tres" id="2_q4vfe"]
+[ext_resource type="Texture2D" uid="uid://qxie35ufu8e5" path="res://assets/civ6_origin/tech/webp_64x64/icon_tech_mining.webp" id="3_rhste"]
+[ext_resource type="Texture2D" uid="uid://0m7bwjefi2yj" path="res://assets/icon_park/书籍-打开_book-open.svg" id="4_ouqwe"]
+[ext_resource type="Texture2D" uid="uid://bdbgu3setop1r" path="res://assets/made_in_godot/empty_culture_texture.tres" id="5_hepun"]
+[ext_resource type="Texture2D" uid="uid://bympbh3m6sfb5" path="res://assets/civ6_origin/civic/webp_64x64/icon_civic_code_of_laws.webp" id="6_c4dof"]
+[ext_resource type="Texture2D" uid="uid://dg0xrcmgglcw8" path="res://assets/icon_park/整形科_plastic-surgery.svg" id="7_w6vgw"]
+[ext_resource type="Texture2D" uid="uid://bg06k4k4ewyru" path="res://assets/icon_park/大风_heavy-wind.svg" id="8_5nc6h"]
+[ext_resource type="Texture2D" uid="uid://d13bfbh0jdh58" path="res://assets/icon_park/编辑撰写_writing-fluently.svg" id="9_abpyj"]
+[ext_resource type="Texture2D" uid="uid://ctt7s3eprkwmc" path="res://assets/icon_park/历史记录_history.svg" id="10_vo2uq"]
+[ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="11_15bk5"]
+[ext_resource type="Texture2D" uid="uid://cuegcjht205ut" path="res://assets/civ6_origin/improvement/webp_64x64/icon_improvement_mine.webp" id="12_pjc8u"]
+[ext_resource type="Texture2D" uid="uid://dk0w15vgb5tpm" path="res://assets/civ6_origin/improvement/webp_64x64/icon_improvement_quarry.webp" id="13_mowsq"]
+[ext_resource type="Texture2D" uid="uid://c7etc8q8fka23" path="res://assets/civ6_origin/resource/resources_copper.png" id="14_nfqbt"]
+[ext_resource type="Texture2D" uid="uid://b8k3hklo0yfj" path="res://assets/icon_park/上一步_back(blue).svg" id="15_iu6sw"]
+[ext_resource type="Texture2D" uid="uid://ctanhlm72csdu" path="res://assets/civ6_origin/policy/webp_64x64/icon_policy_card_red.webp" id="15_pvaxi"]
+[ext_resource type="Texture2D" uid="uid://br7x3f56uwjct" path="res://assets/civ6_origin/policy/webp_64x64/icon_policy_card_yellow.webp" id="16_dgsok"]
+[ext_resource type="Texture2D" uid="uid://i32td8k8350b" path="res://assets/civ6_origin/unit/webp_64x64/icon_unit_scout.webp" id="17_x3vbe"]
+[ext_resource type="Texture2D" uid="uid://61tqu8ntxtx2" path="res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp" id="18_6pupn"]
+[ext_resource type="Texture2D" uid="uid://bfqduln8babkl" path="res://assets/icon_park/上一步_back(pink).svg" id="18_qipa3"]
+
+[sub_resource type="Gradient" id="Gradient_bw1fp"]
+offsets = PackedFloat32Array(0, 0.490756, 0.532773, 0.998319)
+colors = PackedColorArray(0.482353, 0.392157, 0.25098, 1, 0.494118, 0.4, 0.254902, 1, 0.27451, 0.164706, 0.117647, 1, 0.254902, 0.152941, 0.105882, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_b2scp"]
+gradient = SubResource("Gradient_bw1fp")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_uan0a"]
+texture = SubResource("GradientTexture2D_b2scp")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vwgcg"]
+bg_color = Color(0.215686, 0.188235, 0.133333, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7qjqu"]
+bg_color = Color(0.180392, 0.745098, 0.92549, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_b8d4q"]
+texture = ExtResource("2_q4vfe")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rrtt1"]
+bg_color = Color(0.215686, 0.188235, 0.133333, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rbrtn"]
+bg_color = Color(0.729412, 0.54902, 0.94902, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hxnmb"]
+texture = ExtResource("5_hepun")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jwvnj"]
+bg_color = Color(0.196078, 0.168627, 0.113725, 1)
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0.482353, 0.415686, 0.27451, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dqnmp"]
+bg_color = Color(0.121569, 0.192157, 0.258824, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.482353, 0.415686, 0.27451, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_26ipj"]
+bg_color = Color(0.101961, 0.156863, 0.211765, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d7xj8"]
+bg_color = Color(0.176471, 0.168627, 0.258824, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.482353, 0.415686, 0.27451, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f44fu"]
+bg_color = Color(0.121569, 0.121569, 0.184314, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j5k7h"]
+bg_color = Color(0.0509804, 0.133333, 0.231373, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.482353, 0.415686, 0.27451, 1)
+
+[node name="MidTopLeftVBox" type="VBoxContainer"]
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="MidTopLeftButtonPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_uan0a")
+
+[node name="ButtonHBox" type="HBoxContainer" parent="MidTopLeftButtonPanel"]
+layout_mode = 2
+
+[node name="SciTreeButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox"]
+layout_mode = 2
+tooltip_text = "科技树
+
+查看或管理您的研究。"
+icon = ExtResource("1_ss8pf")
+
+[node name="SciTreeSmallHBox" type="HBoxContainer" parent="MidTopLeftButtonPanel/ButtonHBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="TechProgressBar" type="ProgressBar" parent="MidTopLeftButtonPanel/ButtonHBox/SciTreeSmallHBox"]
+custom_minimum_size = Vector2(3, 32)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_vwgcg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_7qjqu")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="TechImgPanel" type="PanelContainer" parent="MidTopLeftButtonPanel/ButtonHBox/SciTreeSmallHBox"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_b8d4q")
+
+[node name="TechTreeButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox/SciTreeSmallHBox/TechImgPanel"]
+layout_mode = 2
+flat = true
+
+[node name="TechImg" type="TextureRect" parent="MidTopLeftButtonPanel/ButtonHBox/SciTreeSmallHBox/TechImgPanel"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("3_rhste")
+expand_mode = 2
+
+[node name="CulTreeButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox"]
+layout_mode = 2
+tooltip_text = "市政树
+
+查看或管理您的市政焦点。"
+icon = ExtResource("4_ouqwe")
+
+[node name="CulTreeHBox" type="HBoxContainer" parent="MidTopLeftButtonPanel/ButtonHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="CivicProgressBar" type="ProgressBar" parent="MidTopLeftButtonPanel/ButtonHBox/CulTreeHBox"]
+custom_minimum_size = Vector2(3, 32)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_rrtt1")
+theme_override_styles/fill = SubResource("StyleBoxFlat_rbrtn")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="CivicImgPanel" type="PanelContainer" parent="MidTopLeftButtonPanel/ButtonHBox/CulTreeHBox"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxTexture_hxnmb")
+
+[node name="CivicTreeButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox/CulTreeHBox/CivicImgPanel"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+flat = true
+
+[node name="CivicImg" type="TextureRect" parent="MidTopLeftButtonPanel/ButtonHBox/CulTreeHBox/CivicImgPanel"]
+layout_mode = 2
+texture = ExtResource("6_c4dof")
+expand_mode = 2
+
+[node name="GreatPersonButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox"]
+layout_mode = 2
+tooltip_text = "伟人
+
+查看可用的伟人，并查看获得一位伟人的进度条。"
+icon = ExtResource("7_w6vgw")
+
+[node name="WeatherButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox"]
+visible = false
+layout_mode = 2
+icon = ExtResource("8_5nc6h")
+
+[node name="GovernerButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox"]
+visible = false
+layout_mode = 2
+icon = ExtResource("9_abpyj")
+
+[node name="HistoryButton" type="Button" parent="MidTopLeftButtonPanel/ButtonHBox"]
+visible = false
+layout_mode = 2
+icon = ExtResource("10_vo2uq")
+
+[node name="WorldTrackShowButton" type="CheckBox" parent="MidTopLeftButtonPanel/ButtonHBox"]
+layout_mode = 2
+tooltip_text = "显示/隐藏世界追踪"
+button_pressed = true
+
+[node name="WorldTrackerTitlePanel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_jwvnj")
+
+[node name="TrackTitleLabel" type="Label" parent="WorldTrackerTitlePanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.486275, 0.419608, 0.290196, 1)
+theme_override_font_sizes/font_size = 12
+text = "世界追踪"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TrackPanelShowMenuBtn" type="MenuButton" parent="WorldTrackerTitlePanel"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+icon = ExtResource("11_15bk5")
+expand_icon = true
+item_count = 3
+popup/item_0/text = "研究面板"
+popup/item_0/checkable = 1
+popup/item_0/checked = true
+popup/item_0/id = 0
+popup/item_1/text = "市政面板"
+popup/item_1/checkable = 1
+popup/item_1/checked = true
+popup/item_1/id = 1
+popup/item_2/text = "单位列表"
+popup/item_2/checkable = 1
+popup/item_2/checked = true
+popup/item_2/id = 2
+
+[node name="SciTreePanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dqnmp")
+
+[node name="SciTreeHBox" type="HBoxContainer" parent="SciTreePanel"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="TechProgressBar" type="ProgressBar" parent="SciTreePanel/SciTreeHBox"]
+custom_minimum_size = Vector2(5, 64)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_vwgcg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_7qjqu")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="TechImgPanel" type="PanelContainer" parent="SciTreePanel/SciTreeHBox"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_b8d4q")
+
+[node name="TechImg" type="TextureRect" parent="SciTreePanel/SciTreeHBox/TechImgPanel"]
+layout_mode = 2
+texture = ExtResource("3_rhste")
+
+[node name="TechTurnLabel" type="Label" parent="SciTreePanel/SciTreeHBox/TechImgPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "回合: 2"
+
+[node name="SciTreeVBox" type="VBoxContainer" parent="SciTreePanel/SciTreeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TechNameLabel" type="Label" parent="SciTreePanel/SciTreeHBox/SciTreeVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "采矿业"
+
+[node name="TechUnlockPanel" type="PanelContainer" parent="SciTreePanel/SciTreeHBox/SciTreeVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_26ipj")
+
+[node name="TechUnlockHBox" type="HBoxContainer" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel"]
+layout_mode = 2
+
+[node name="UnlockTextureRect" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("12_pjc8u")
+expand_mode = 2
+
+[node name="UnlockTextureRect2" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("13_mowsq")
+expand_mode = 2
+
+[node name="UnlockTextureRect3" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("14_nfqbt")
+expand_mode = 2
+
+[node name="EurekaHBox" type="HBoxContainer" parent="SciTreePanel/SciTreeHBox/SciTreeVBox"]
+layout_mode = 2
+
+[node name="EurekaTextureRect" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/EurekaHBox"]
+layout_mode = 2
+texture = ExtResource("15_iu6sw")
+expand_mode = 2
+
+[node name="TechEurekaLabel" type="Label" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/EurekaHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "尤里卡"
+clip_text = true
+
+[node name="CulTreePanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d7xj8")
+
+[node name="CulTreeHBox" type="HBoxContainer" parent="CulTreePanel"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="CivicProgressBar" type="ProgressBar" parent="CulTreePanel/CulTreeHBox"]
+custom_minimum_size = Vector2(5, 64)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_rrtt1")
+theme_override_styles/fill = SubResource("StyleBoxFlat_rbrtn")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="CivicImgPanel" type="PanelContainer" parent="CulTreePanel/CulTreeHBox"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_hxnmb")
+
+[node name="CivicImg" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CivicImgPanel"]
+layout_mode = 2
+texture = ExtResource("6_c4dof")
+
+[node name="CivicTurnLabel" type="Label" parent="CulTreePanel/CulTreeHBox/CivicImgPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "回合: 5"
+
+[node name="CulTreeVBox" type="VBoxContainer" parent="CulTreePanel/CulTreeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CivicNameLabel" type="Label" parent="CulTreePanel/CulTreeHBox/CulTreeVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "法典"
+
+[node name="CivicUnlockPanel" type="PanelContainer" parent="CulTreePanel/CulTreeHBox/CulTreeVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_f44fu")
+
+[node name="CivicUnlockHBox" type="HBoxContainer" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel"]
+layout_mode = 2
+
+[node name="UnlockTextureRect" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("15_pvaxi")
+expand_mode = 2
+
+[node name="UnlockTextureRect2" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("15_pvaxi")
+expand_mode = 2
+
+[node name="UnlockTextureRect3" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("16_dgsok")
+expand_mode = 2
+
+[node name="UnlockTextureRect4" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("16_dgsok")
+expand_mode = 2
+
+[node name="InspireHBox" type="HBoxContainer" parent="CulTreePanel/CulTreeHBox/CulTreeVBox"]
+layout_mode = 2
+
+[node name="InspireTextureRect" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/InspireHBox"]
+layout_mode = 2
+texture = ExtResource("18_qipa3")
+expand_mode = 2
+
+[node name="CivicInspireLabel" type="Label" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/InspireHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "鼓舞时刻"
+
+[node name="UnitListPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_j5k7h")
+
+[node name="UnitListVBox" type="VBoxContainer" parent="UnitListPanel"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="UnitListPanel/UnitListVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "单位列表"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UnitsScrollContainer" type="ScrollContainer" parent="UnitListPanel/UnitListVBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+
+[node name="UnitsVBox" type="VBoxContainer" parent="UnitListPanel/UnitListVBox/UnitsScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="ScoutButton" type="Button" parent="UnitListPanel/UnitListVBox/UnitsScrollContainer/UnitsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "侦察兵"
+icon = ExtResource("17_x3vbe")
+expand_icon = true
+
+[node name="WarriorButton" type="Button" parent="UnitListPanel/UnitListVBox/UnitsScrollContainer/UnitsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "勇士"
+icon = ExtResource("18_6pupn")
+expand_icon = true
+
+[node name="HSeparator" type="HSeparator" parent="UnitListPanel/UnitListVBox"]
+layout_mode = 2
+
+[node name="SearchLineEdit" type="LineEdit" parent="UnitListPanel/UnitListVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+caret_blink = true
+caret_blink_interval = 0.5

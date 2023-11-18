@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bmbo3lvy76glo"]
+[gd_scene load_steps=11 format=3 uid="uid://bmbo3lvy76glo"]
 
 [ext_resource type="Script" path="res://scenes/gui/panel/game_city_product_panel.gd" id="1_fpwec"]
 [ext_resource type="StyleBox" uid="uid://cucjkim8l0fiq" path="res://styles/lime_green_title_style.tres" id="1_l3xht"]
@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://b2f3rlpq16aea" path="res://assets/civ6_origin/core/webp_32x32/core_production.webp" id="4_kxaxx"]
 [ext_resource type="Texture2D" uid="uid://onqbvvq12y21" path="res://assets/civ6_origin/core/webp_32x32/core_gold.webp" id="5_nnnlu"]
 [ext_resource type="Texture2D" uid="uid://mro7bq6p1jub" path="res://assets/civ6_origin/core/webp_32x32/core_faith.webp" id="6_sxljj"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vrppu"]
+bg_color = Color(0.054902, 0.145098, 0.227451, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_81wxm"]
 bg_color = Color(0.666667, 0.815686, 0.937255, 1)
@@ -26,6 +29,7 @@ anchor_bottom = 1.0
 offset_right = 167.0
 grow_vertical = 2
 size_flags_horizontal = 8
+theme_override_styles/panel = SubResource("StyleBoxFlat_vrppu")
 script = ExtResource("1_fpwec")
 
 [node name="CityProductVBox" type="VBoxContainer" parent="."]

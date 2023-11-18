@@ -347,6 +347,7 @@ alignment = 2
 
 [node name="TurnAndYearLabel" type="Label" parent="TopRightHBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "回合 1/500
 公元前4000年"
 

@@ -1,49 +1,93 @@
-[gd_scene load_steps=8 format=3 uid="uid://dsrkjn1ew77q0"]
+[gd_scene load_steps=18 format=3 uid="uid://dsrkjn1ew77q0"]
 
 [ext_resource type="Script" path="res://scenes/gui/panel/game_unit_info_panel.gd" id="1_0vypd"]
 [ext_resource type="Texture2D" uid="uid://81jchr7jfvj2" path="res://assets/icon_park/城市_city.svg" id="1_di22r"]
+[ext_resource type="StyleBox" uid="uid://cjmu7ccclm7ga" path="res://styles/button_blue_panel_background.tres" id="2_vpemu"]
 [ext_resource type="Texture2D" uid="uid://bv4018bitw6lp" path="res://assets/icon_park/移动_move-one.svg" id="2_x73bs"]
 [ext_resource type="Texture2D" uid="uid://6xgc8c08sapv" path="res://assets/icon_park/下一步_next.svg" id="3_f8lx0"]
+[ext_resource type="Texture2D" uid="uid://i8mrdakall0l" path="res://assets/icon_park/安全_shield.svg" id="4_gq1ky"]
 [ext_resource type="Texture2D" uid="uid://bp2ij7l5jjug7" path="res://assets/icon_park/睡眠_sleep.svg" id="4_ocul7"]
 [ext_resource type="Texture2D" uid="uid://d4eirmtmehyf2" path="res://assets/civ6_origin/unit/png_200/unit_settler.png" id="5_taqnt"]
+[ext_resource type="Texture2D" uid="uid://c1bb5gdtkqpri" path="res://assets/icon_park/危害_harm.svg" id="7_jk74y"]
+[ext_resource type="Texture2D" uid="uid://c0cy4sa464yl3" path="res://assets/civ6_origin/core/webp_32x32/core_strength.webp" id="7_ytf7o"]
+[ext_resource type="Texture2D" uid="uid://s0hg5173p1br" path="res://assets/civ6_origin/core/webp_32x32/core_movement.webp" id="8_giyld"]
+[ext_resource type="StyleBox" uid="uid://cr1odivmeytvb" path="res://styles/info_blue_panel_background.tres" id="9_5uk4m"]
+[ext_resource type="StyleBox" uid="uid://o3mc7dw3jat8" path="res://styles/info_detail_deep_blue_panel_background.tres" id="11_g24hb"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tk5f3"]
 bg_color = Color(0.0627451, 0.909804, 0.294118, 1)
 
-[node name="UnitInfoPanel" type="PanelContainer"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6prms"]
+bg_color = Color(0.498039, 0.4, 0.254902, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ymwi4"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p1jnd"]
+bg_color = Color(0.756863, 0.756863, 0.756863, 1)
+
+[node name="UnitInfoPanel" type="VBoxContainer"]
 size_flags_horizontal = 8
 size_flags_vertical = 8
+theme_override_constants/separation = 0
 script = ExtResource("1_0vypd")
 
-[node name="UnitInfoVBox" type="VBoxContainer" parent="."]
+[node name="ButtonPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = ExtResource("2_vpemu")
+
+[node name="ButtonHBox" type="HBoxContainer" parent="ButtonPanel"]
 layout_mode = 2
 alignment = 2
 
-[node name="ButtonHBox" type="HBoxContainer" parent="UnitInfoVBox"]
-layout_mode = 2
-alignment = 2
-
-[node name="CityButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+[node name="CityButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 icon = ExtResource("1_di22r")
 
-[node name="MoveButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+[node name="MoveButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "移至"
 icon = ExtResource("2_x73bs")
 
-[node name="SkipButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+[node name="DefendButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "驻扎"
+icon = ExtResource("4_gq1ky")
+
+[node name="SkipButton" type="Button" parent="ButtonPanel/ButtonHBox"]
+layout_mode = 2
+tooltip_text = "跳过回合"
 icon = ExtResource("3_f8lx0")
 
-[node name="SleepButton" type="Button" parent="UnitInfoVBox/ButtonHBox"]
+[node name="SleepButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 icon = ExtResource("4_ocul7")
 
-[node name="DetailHBox" type="HBoxContainer" parent="UnitInfoVBox"]
+[node name="AlertButton" type="Button" parent="ButtonPanel/ButtonHBox"]
+layout_mode = 2
+tooltip_text = "警戒"
+icon = ExtResource("7_jk74y")
+
+[node name="MainPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("9_5uk4m")
+
+[node name="UnitInfoVBox" type="VBoxContainer" parent="MainPanel"]
 layout_mode = 2
 alignment = 2
 
-[node name="HpBar" type="ProgressBar" parent="UnitInfoVBox/DetailHBox"]
+[node name="NameButton" type="Button" parent="MainPanel/UnitInfoVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "开拓者"
+
+[node name="DetailHBox" type="HBoxContainer" parent="MainPanel/UnitInfoVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 2
+
+[node name="HpBar" type="ProgressBar" parent="MainPanel/UnitInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(10, 100)
 layout_mode = 2
 size_flags_vertical = 1
@@ -51,7 +95,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_tk5f3")
 value = 80.0
 fill_mode = 3
 
-[node name="UnitTextureRect" type="TextureRect" parent="UnitInfoVBox/DetailHBox"]
+[node name="UnitTextureRect" type="TextureRect" parent="MainPanel/UnitInfoVBox/DetailHBox"]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -59,22 +103,91 @@ size_flags_vertical = 4
 texture = ExtResource("5_taqnt")
 expand_mode = 1
 
-[node name="DetailVBox" type="VBoxContainer" parent="UnitInfoVBox/DetailHBox"]
-custom_minimum_size = Vector2(100, 0)
+[node name="DetailVBox" type="VBoxContainer" parent="MainPanel/UnitInfoVBox/DetailHBox"]
+custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 
-[node name="NameLabel" type="Label" parent="UnitInfoVBox/DetailHBox/DetailVBox"]
+[node name="MeleeAtkPanel" type="PanelContainer" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox"]
 layout_mode = 2
-text = "开拓者"
+theme_override_styles/panel = ExtResource("11_g24hb")
+
+[node name="MeleeAtkHBox" type="HBoxContainer" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MeleeAtkPanel"]
+layout_mode = 2
+
+[node name="MeleeAtkTextureRect" type="TextureRect" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MeleeAtkPanel/MeleeAtkHBox"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+texture = ExtResource("7_ytf7o")
+expand_mode = 2
+
+[node name="MeleeAtkValLabel" type="Label" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MeleeAtkPanel/MeleeAtkHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "20"
+vertical_alignment = 1
+
+[node name="MeleeAtkKeyLabel" type="Label" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MeleeAtkPanel/MeleeAtkHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "近战攻击力  "
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MovePanel" type="PanelContainer" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("11_g24hb")
+
+[node name="MoveHBox" type="HBoxContainer" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MovePanel"]
+layout_mode = 2
+
+[node name="MoveTextureRect" type="TextureRect" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MovePanel/MoveHBox"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+texture = ExtResource("8_giyld")
+expand_mode = 2
+
+[node name="MoveValLabel" type="Label" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MovePanel/MoveHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "2/2"
+vertical_alignment = 1
+
+[node name="MoveKeyLabel" type="Label" parent="MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MovePanel/MoveHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "移动  "
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ExpPanel" type="PanelContainer" parent="MainPanel/UnitInfoVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_6prms")
+
+[node name="ExpHBox" type="HBoxContainer" parent="MainPanel/UnitInfoVBox/ExpPanel"]
+layout_mode = 2
+
+[node name="ExpLabel" type="Label" parent="MainPanel/UnitInfoVBox/ExpPanel/ExpHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.196078, 0.152941, 0.0941176, 1)
+theme_override_font_sizes/font_size = 8
+text = "    经验值    "
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="MoveLabel" type="Label" parent="UnitInfoVBox/DetailHBox/DetailVBox"]
+[node name="ExpProgressBar" type="ProgressBar" parent="MainPanel/UnitInfoVBox/ExpPanel/ExpHBox"]
+custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
-text = "2/2 移动"
-horizontal_alignment = 1
-vertical_alignment = 1
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_ymwi4")
+theme_override_styles/fill = SubResource("StyleBoxFlat_p1jnd")
+value = 50.0
+show_percentage = false
 
-[connection signal="pressed" from="UnitInfoVBox/ButtonHBox/CityButton" to="." method="_on_city_button_pressed"]
-[connection signal="pressed" from="UnitInfoVBox/ButtonHBox/SkipButton" to="." method="_on_skip_button_pressed"]
-[connection signal="pressed" from="UnitInfoVBox/ButtonHBox/SleepButton" to="." method="_on_sleep_button_pressed"]
+[connection signal="pressed" from="ButtonPanel/ButtonHBox/CityButton" to="." method="_on_city_button_pressed"]
+[connection signal="pressed" from="ButtonPanel/ButtonHBox/DefendButton" to="." method="_on_defend_button_pressed"]
+[connection signal="pressed" from="ButtonPanel/ButtonHBox/SkipButton" to="." method="_on_skip_button_pressed"]
+[connection signal="pressed" from="ButtonPanel/ButtonHBox/SleepButton" to="." method="_on_sleep_button_pressed"]
+[connection signal="pressed" from="ButtonPanel/ButtonHBox/AlertButton" to="." method="_on_alert_button_pressed"]
