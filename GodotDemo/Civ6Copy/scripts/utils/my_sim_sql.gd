@@ -76,7 +76,13 @@ class Table:
 	
 	func update_field_by_id(id: int, field: String, val: Variant) -> void:
 		var do: DataObj = query_by_id(id)
+		if indexes.has(field):
+			var index: Index = indexes[field]
+			index.remove(do)
 		do.set(field, val)
+		if indexes.has(field):
+			var index: Index = indexes[field]
+			index.add(do)
 	
 	
 	func query_by_id(id: int) -> DataObj:

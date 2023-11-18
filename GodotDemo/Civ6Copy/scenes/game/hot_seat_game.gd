@@ -219,8 +219,8 @@ func handle_city_product_settler_button_pressed() -> void:
 	if chosen_city == null:
 		printerr("handle_city_product_settler_button_pressed | weird, no chosen city")
 		return
-	chosen_city.producing_unit_type = UnitTypeTable.Type.SETTLER
 	CityController.choose_producing_unit(chosen_city.id, UnitTypeTable.Type.SETTLER)
+	chosen_city.producing_unit_type = UnitTypeTable.Type.SETTLER
 
 
 func handle_turn_button_clicked() -> void:

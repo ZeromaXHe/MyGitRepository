@@ -12,16 +12,14 @@ var player_id: int
 var capital: bool
 # 总住房数量
 var housing: int
-# 已用住房数量
-var housing_used: int
 # 宜居度
 var amenity: int
 # 防御值
 var defense: int
 # 人口
-var pop: int
+var pop: int = 1
 # 粮食累计值
-var food_sum: float
+var food_sum: float = 0
 # 生产单位类型
 var producing_type: UnitTypeTable.Type = -1
 # 生产力累计值

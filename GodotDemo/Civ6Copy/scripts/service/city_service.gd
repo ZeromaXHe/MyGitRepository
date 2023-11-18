@@ -64,19 +64,19 @@ static func get_city_yield(city_id: int) -> YieldDTO:
 		var yield_dto: YieldDTO = MapController.get_tile_yield(tile_do.coord)
 		city_yield.culture += yield_dto.culture
 		city_yield.food += yield_dto.food
-		city_yield.product += yield_dto.production
+		city_yield.production += yield_dto.production
 		city_yield.science += yield_dto.science
 		city_yield.religion += yield_dto.religion
 		city_yield.gold += yield_dto.gold
 	# 建筑产出
-	var buildings: Array = CityBuildingService.get_buildings(city_id)
-	for building in buildings:
-		print("get_city_yield | calcing building yield coord: ", building)
-		match building:
+	var city_buildings: Array = CityBuildingService.get_buildings(city_id)
+	for city_building in city_buildings:
+		print("get_city_yield | calcing building yield coord: ", city_building.building)
+		match city_building.building:
 			CityBuildingTable.Building.PALACE:
 				city_yield.culture += 1
 				city_yield.gold += 5
-				city_yield.product += 2
+				city_yield.production += 2
 				city_yield.science += 2
 	# 公民产出
 	city_yield.science += 0.5 * city_do.pop
