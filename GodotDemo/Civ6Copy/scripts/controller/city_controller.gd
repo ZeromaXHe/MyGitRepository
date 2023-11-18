@@ -16,6 +16,7 @@ static func create_city(coord: Vector2i) -> City:
 
 static func choose_producing_unit(id: int, unit_type: UnitTypeTable.Type) -> void:
 	CityService.choose_producing_unit(id, unit_type)
+	city_view_dict[id].update_production_ui()
 
 
 static func get_city_do(id: int) -> CityDO:

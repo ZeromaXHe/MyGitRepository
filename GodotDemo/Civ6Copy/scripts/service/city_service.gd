@@ -19,7 +19,7 @@ static func create_city(coord: Vector2i) -> CityDO:
 			.get_surrounding_cells(city_do.coord, 1, true) \
 			.filter(MapController.is_in_map_tile)
 	for cell in territory_cells:
-		print("create_city | city: ", city_do.id, " claiming territory: ", cell)
+#		print("create_city | city: ", city_do.id, " claiming territory: ", cell)
 		MapTileService.city_claim_territory(city_do.id, cell)
 	PlayerController.player_view_dict[PlayerService.get_current_player_id()].territory_border.paint_dash_border(territory_cells)
 	
@@ -54,13 +54,13 @@ static func get_city_yield(city_id: int) -> YieldDTO:
 	var city_do: CityDO = CityService.get_city_do(city_id)
 	var city_yield := YieldDTO.new()
 	# 地块产出
-	print("get_city_yield | start")
+#	print("get_city_yield | start")
 	var territories: Array = MapTileService.get_map_tile_dos_by_city(city_id)
-	print("get_city_yield | territories: ", territories)
+#	print("get_city_yield | territories: ", territories)
 	for territory in territories:
 		# TODO: 需要根据公民分配的位置来判断是否加
 		var tile_do := territory as MapTileDO 
-		print("get_city_yield | calcing tile yield coord: ", tile_do.coord)
+#		print("get_city_yield | calcing tile yield coord: ", tile_do.coord)
 		var yield_dto: YieldDTO = MapController.get_tile_yield(tile_do.coord)
 		city_yield.culture += yield_dto.culture
 		city_yield.food += yield_dto.food
@@ -71,7 +71,7 @@ static func get_city_yield(city_id: int) -> YieldDTO:
 	# 建筑产出
 	var city_buildings: Array = CityBuildingService.get_buildings(city_id)
 	for city_building in city_buildings:
-		print("get_city_yield | calcing building yield coord: ", city_building.building)
+#		print("get_city_yield | calcing building yield coord: ", city_building.building)
 		match city_building.building:
 			CityBuildingTable.Building.PALACE:
 				city_yield.culture += 1
@@ -93,12 +93,9 @@ static func update_product_val(id: int) -> void:
 	# TODO: 暂时妥协的逻辑
 	var city: City = CityController.city_view_dict[id]
 	if city_do.production_sum + city_yield.production > 80.0:
-		city.product_completed.emit(city_do.producing_type, city)
-		city.producing_unit_type = -1
-		city.production_val = city_do.production_sum + city_yield.production - 80.0
+		city.product_completed.emit(city_do.producing_type, city_do.coord)
 		DatabaseUtils.city_tbl.update_field_by_id(id, "producing_type", -1)
-		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city.production_val)
+		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city_do.production_sum + city_yield.production - 80.0)
 	else:
-		city.production_val = city_do.production_sum + city_yield.production
-		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city.production_val)
+		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city_do.production_sum + city_yield.production)
 

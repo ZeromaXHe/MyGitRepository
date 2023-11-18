@@ -91,3 +91,4 @@ static func update_citys_product_val() -> void:
 	var cities: Array = CityService.get_city_dos_of_player(player_id)
 	for city in cities:
 		CityService.update_product_val(city.id)
+		CityController.city_view_dict[city.id].update_production_ui()

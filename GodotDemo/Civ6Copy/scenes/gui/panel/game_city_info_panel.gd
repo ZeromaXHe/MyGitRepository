@@ -59,21 +59,15 @@ func show_info() -> void:
 	city_pic_panel.get("theme_override_styles/panel").set("bg_color", player_do.main_color)
 	# 产量显示
 	var yield_dto: YieldDTO = CityController.get_city_yield(showing_city.id)
-	showing_city.yield_culture = yield_dto.culture
-	showing_city.yield_food = yield_dto.food
-	showing_city.yield_product = yield_dto.production
-	showing_city.yield_science = yield_dto.science
-	showing_city.yield_religion = yield_dto.religion
-	showing_city.yield_gold = yield_dto.gold
-	handle_city_yield_culture_changed(yield_dto.culture)
-	handle_city_yield_food_changed(yield_dto.food)
-	handle_city_yield_product_changed(yield_dto.production)
-	handle_city_yield_science_changed(yield_dto.science)
-	handle_city_yield_religion_changed(yield_dto.religion)
-	handle_city_yield_gold_changed(yield_dto.gold)
+	update_city_yield_culture(yield_dto.culture)
+	update_city_yield_food(yield_dto.food)
+	update_city_yield_product(yield_dto.production)
+	update_city_yield_science(yield_dto.science)
+	update_city_yield_religion(yield_dto.religion)
+	update_city_yield_gold(yield_dto.gold)
 	# 生产单位显示
-	handle_city_producing_unit_type_changed(showing_city.producing_unit_type)
-	# 绑定信号，方便后续更新信息(TODO: 目前已经全部失效了)
+	handle_city_production_changed(showing_city.id)
+	# 绑定信号，方便后续更新信息
 	connect_showing_city_signals()
 	# 展示出来
 	show()
@@ -89,41 +83,13 @@ func yield_text(val: float) -> String:
 
 
 func disconnect_showing_city_signals() -> void:
-	if showing_city.producing_unit_type_changed.is_connected(handle_city_producing_unit_type_changed):
-		showing_city.producing_unit_type_changed.disconnect(handle_city_producing_unit_type_changed)
-	if showing_city.production_val_changed.is_connected(handle_city_production_val_changed):
-		showing_city.production_val_changed.disconnect(handle_city_production_val_changed)
-	if showing_city.yield_culture_changed.is_connected(handle_city_yield_culture_changed):
-		showing_city.yield_culture_changed.disconnect(handle_city_yield_culture_changed)
-	if showing_city.yield_food_changed.is_connected(handle_city_yield_food_changed):
-		showing_city.yield_food_changed.disconnect(handle_city_yield_food_changed)
-	if showing_city.yield_product_changed.is_connected(handle_city_yield_product_changed):
-		showing_city.yield_product_changed.disconnect(handle_city_yield_product_changed)
-	if showing_city.yield_science_changed.is_connected(handle_city_yield_science_changed):
-		showing_city.yield_science_changed.disconnect(handle_city_yield_science_changed)
-	if showing_city.yield_religion_changed.is_connected(handle_city_yield_religion_changed):
-		showing_city.yield_religion_changed.disconnect(handle_city_yield_religion_changed)
-	if showing_city.yield_gold_changed.is_connected(handle_city_yield_gold_changed):
-		showing_city.yield_gold_changed.disconnect(handle_city_yield_gold_changed)
+	if showing_city.city_production_changed.is_connected(handle_city_production_changed):
+		showing_city.city_production_changed.disconnect(handle_city_production_changed)
 
 
 func connect_showing_city_signals() -> void:
-	if not showing_city.producing_unit_type_changed.is_connected(handle_city_producing_unit_type_changed):
-		showing_city.producing_unit_type_changed.connect(handle_city_producing_unit_type_changed)
-	if not showing_city.production_val_changed.is_connected(handle_city_production_val_changed):
-		showing_city.production_val_changed.connect(handle_city_production_val_changed)
-	if not showing_city.yield_culture_changed.is_connected(handle_city_yield_culture_changed):
-		showing_city.yield_culture_changed.connect(handle_city_yield_culture_changed)
-	if not showing_city.yield_food_changed.is_connected(handle_city_yield_food_changed):
-		showing_city.yield_food_changed.connect(handle_city_yield_food_changed)
-	if not showing_city.yield_product_changed.is_connected(handle_city_yield_product_changed):
-		showing_city.yield_product_changed.connect(handle_city_yield_product_changed)
-	if not showing_city.yield_science_changed.is_connected(handle_city_yield_science_changed):
-		showing_city.yield_science_changed.connect(handle_city_yield_science_changed)
-	if not showing_city.yield_religion_changed.is_connected(handle_city_yield_religion_changed):
-		showing_city.yield_religion_changed.connect(handle_city_yield_religion_changed)
-	if not showing_city.yield_gold_changed.is_connected(handle_city_yield_gold_changed):
-		showing_city.yield_gold_changed.connect(handle_city_yield_gold_changed)
+	if not showing_city.city_production_changed.is_connected(handle_city_production_changed):
+		showing_city.city_production_changed.connect(handle_city_production_changed)
 
 
 func set_product_button_pressed(button_pressed: bool) -> void:
@@ -134,53 +100,48 @@ func handle_chosen_city_changed(city: City) -> void:
 	showing_city = city
 
 
-func handle_city_producing_unit_type_changed(type: UnitTypeTable.Type) -> void:
-	if type == -1:
+func handle_city_production_changed(id: int) -> void:
+	var city_do: CityDO = CityController.get_city_do(id)
+	if city_do.producing_type == -1:
 		city_product_texture_rect.texture = null
 		city_producing_label.text = "没有生产任何东西"
 		city_data_label.text = ""
 		city_intro_label.text = ""
 		city_product_turn_label.text = "0 回合后完成"
 	else:
-		city_product_texture_rect.texture = Unit.get_unit_pic_webp_256x256(type)
-		city_producing_label.text = Unit.get_unit_name(type)
+		city_product_texture_rect.texture = UnitController.get_unit_pic_webp_256x256(city_do.producing_type)
+		city_producing_label.text = UnitController.get_unit_name(city_do.producing_type)
 		# TODO: 单位数据和简介
 		city_data_label.text = "移动力：2"
 		city_intro_label.text = "这是正在制造一个" + city_producing_label.text + "的简介"
+		var yield_product = CityController.get_city_yield(id).production
+		city_product_turn_label.text = str(ceili((80.0 - city_do.production_sum) / yield_product)) + " 回合后完成"
 	# 选择新生产单位时强制刷新进度条
-	handle_city_production_val_changed(showing_city.production_val)
-
-
-func handle_city_production_val_changed(val: float) -> void:
 	# TODO: 先全部按开拓者的生产计算
-	city_product_progress.value = val * 100.0 / 80.0
-	if showing_city.producing_unit_type == -1:
-		city_product_turn_label.text = "0 回合后完成"
-	else:
-		city_product_turn_label.text = str(ceili((80.0 - val) / showing_city.yield_product)) + " 回合后完成"
+	city_product_progress.value = city_do.production_sum * 100.0 / 80.0
 
 
-func handle_city_yield_culture_changed(val: float) -> void:
+func update_city_yield_culture(val: float) -> void:
 	culture_check_box.text = yield_text(val)
 
 
-func handle_city_yield_food_changed(val: float) -> void:
+func update_city_yield_food(val: float) -> void:
 	food_check_box.text = yield_text(val)
 
 
-func handle_city_yield_product_changed(val: float) -> void:
+func update_city_yield_product(val: float) -> void:
 	product_check_box.text = yield_text(val)
 
 
-func handle_city_yield_science_changed(val: float) -> void:
+func update_city_yield_science(val: float) -> void:
 	science_check_box.text = yield_text(val)
 
 
-func handle_city_yield_religion_changed(val: float) -> void:
+func update_city_yield_religion(val: float) -> void:
 	religion_check_box.text = yield_text(val)
 
 
-func handle_city_yield_gold_changed(val: float) -> void:
+func update_city_yield_gold(val: float) -> void:
 	gold_check_box.text = yield_text(val)
 
 

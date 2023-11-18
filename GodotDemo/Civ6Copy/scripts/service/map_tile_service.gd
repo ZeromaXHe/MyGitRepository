@@ -8,11 +8,11 @@ static func clear_map_tiles() -> void:
 static func city_claim_territory(city_id: int, coord: Vector2i) -> void:
 	var tile_do: MapTileDO = get_map_tile_do_by_coord(coord)
 	DatabaseUtils.map_tile_tbl.update_field_by_id(tile_do.id, "city_id", city_id)
-	print("city_claim_territory | after city_id: ", tile_do.city_id, " input:", city_id)
+#	print("city_claim_territory | after city_id: ", tile_do.city_id, " input:", city_id)
 
 
 static func get_map_tile_dos_by_city(city_id: int) -> Array:
-	print("get_map_tile_dos_by_city | input:", city_id)
+#	print("get_map_tile_dos_by_city | input:", city_id)
 	return DatabaseUtils.map_tile_tbl.query_by_city_id(city_id)
 
 

@@ -157,13 +157,13 @@ func chose_city_and_camera_focus(city: CityDO):
 
 func set_chosen_city(city: City) -> void:
 	if chosen_city != null:
-		if chosen_city.producing_unit_type_changed.is_connected(handle_chosen_city_producing_unit_type_changed):
-			chosen_city.producing_unit_type_changed.disconnect(handle_chosen_city_producing_unit_type_changed)
+		if chosen_city.city_production_changed.is_connected(handle_chosen_city_production_changed):
+			chosen_city.city_production_changed.disconnect(handle_chosen_city_production_changed)
 	chosen_city = city
 	chosen_city_changed.emit(city)
 	if city != null:
-		if not city.producing_unit_type_changed.is_connected(handle_chosen_city_producing_unit_type_changed):
-			city.producing_unit_type_changed.connect(handle_chosen_city_producing_unit_type_changed)
+		if not city.city_production_changed.is_connected(handle_chosen_city_production_changed):
+			city.city_production_changed.connect(handle_chosen_city_production_changed)
 
 
 func set_chosen_unit(unit: Unit) -> void:
@@ -188,8 +188,8 @@ func handle_unit_clicked(unit: Unit) -> void:
 	chosen_unit = unit
 
 
-func handle_city_product_completed(unit_type: UnitTypeTable.Type, city: City) -> void:
-	add_unit(unit_type, city.coord)
+func handle_city_product_completed(unit_type: UnitTypeTable.Type, city_coord: Vector2i) -> void:
+	add_unit(unit_type, city_coord)
 
 
 func handle_unit_city_button_pressed() -> void:
@@ -219,8 +219,8 @@ func handle_city_product_settler_button_pressed() -> void:
 	if chosen_city == null:
 		printerr("handle_city_product_settler_button_pressed | weird, no chosen city")
 		return
+	game_gui.hide_city_product_panel()
 	CityController.choose_producing_unit(chosen_city.id, UnitTypeTable.Type.SETTLER)
-	chosen_city.producing_unit_type = UnitTypeTable.Type.SETTLER
 
 
 func handle_turn_button_clicked() -> void:
@@ -246,14 +246,15 @@ func handle_turn_button_clicked() -> void:
 				printerr("handle_turn_button_clicked | CITY_NEED_PRODUCT | no productable city found")
 			else:
 				chose_city_and_camera_focus(productable_city)
+				game_gui.show_city_product_panel()
 
 
-func handle_unit_move_capability_depleted(unit: Unit) -> void:
+func handle_unit_move_capability_depleted(_unit: Unit) -> void:
 	# 单位的移动力耗尽时，更新回合状态
 	refresh_turn_status()
 
 
-func handle_chosen_city_producing_unit_type_changed(type: UnitTypeTable.Type) -> void:
+func handle_chosen_city_production_changed(_id: int) -> void:
 	# 城市选择了新的生产项目，需要刷新一下回合状态
 	refresh_turn_status()
 

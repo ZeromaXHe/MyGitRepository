@@ -30,13 +30,13 @@ func show_info() -> void:
 		return
 	# 刷新内容
 	var unit_do: UnitDO = UnitController.get_unit_do(showing_unit.id)
-	unit_name_label.text = Unit.get_unit_name(unit_do.type)
+	unit_name_label.text = UnitController.get_unit_name(unit_do.type)
 	if unit_do.type == UnitTypeTable.Type.SETTLER:
 		unit_city_button.show()
 	else:
 		unit_city_button.hide()
 	
-	unit_texture_rect.texture = load(Unit.get_unit_pic_200(unit_do.type))
+	unit_texture_rect.texture = load(UnitController.get_unit_pic_200(unit_do.type))
 	
 	handle_unit_move_capability_changed(unit_do.move)
 	# 绑定信号，方便后续更新信息

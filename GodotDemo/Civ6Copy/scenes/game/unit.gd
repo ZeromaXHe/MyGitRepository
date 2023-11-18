@@ -23,55 +23,20 @@ func initiate() -> void:
 
 
 func initiate_icon(unit_do: UnitDO) -> void:
-	icon.texture = get_unit_pic_webp_64x64(unit_do.type)
+	icon.texture = UnitController.get_unit_pic_webp_64x64(unit_do.type)
 	match unit_do.type:
 		UnitTypeTable.Type.SETTLER:
 			icon.scale = Vector2(0.2, 0.2)
 		_:
 			icon.scale = Vector2(0.8, 0.8)
-	
+	# 绘制单位种类背景图标
 	var unit_type_do: UnitTypeDO = UnitTypeController.get_unit_type_do_by_enum(unit_do.type)
 	var icon_path: String = UnitCategoryController.get_unit_category_do_by_enum(unit_type_do.category).icon
 	background.texture = load(icon_path)
-	
+	# 给单位绘制所属玩家颜色
 	var player_do: PlayerDO = PlayerController.get_player_do(unit_do.player_id)
 	background.modulate = player_do.main_color
 	icon.modulate = player_do.second_color
-
-
-static func get_unit_pic_webp_256x256(type: UnitTypeTable.Type) -> Texture2D:
-	var unit_type_do: UnitTypeDO = UnitTypeController.get_unit_type_do_by_enum(type)
-	if unit_type_do == null:
-		printerr("get_unit_pic_webp_256x256 | no pic for type: ", type)
-		return null
-	return load(unit_type_do.icon_256)
-
-
-static func get_unit_pic_webp_64x64(type: UnitTypeTable.Type) -> Texture2D:
-	var unit_type_do: UnitTypeDO = UnitTypeController.get_unit_type_do_by_enum(type)
-	if unit_type_do == null:
-		printerr("get_unit_pic_webp_64x64 | no pic for type: ", type)
-		return null
-	if type == UnitTypeTable.Type.SETTLER:
-		# 开拓者目前没有 64x64 的图
-		return load(unit_type_do.icon_256)
-	return load(unit_type_do.icon_64)
-
-
-static func get_unit_name(type: UnitTypeTable.Type) -> String:
-	var unit_type_do: UnitTypeDO = UnitTypeController.get_unit_type_do_by_enum(type)
-	if unit_type_do == null:
-		printerr("get_unit_name | no name for type: ", type)
-		return ""
-	return unit_type_do.view_name
-
-
-static func get_unit_pic_200(type: UnitTypeTable.Type) -> String:
-	var unit_type_do: UnitTypeDO = UnitTypeController.get_unit_type_do_by_enum(type)
-	if unit_type_do == null:
-		printerr("get_unit_pic_200 | no pic_200 for type: ", type)
-		return ""
-	return unit_type_do.pic_200
 
 
 func delete() -> void:
