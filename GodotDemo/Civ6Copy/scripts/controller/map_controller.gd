@@ -1,13 +1,6 @@
 class_name MapController
 
 
-static var map_shower: MapShower
-
-
-static func register_map_shower(map_shower: MapShower) -> void:
-	MapController.map_shower = map_shower
-
-
 static func init_map() -> void:
 	MapService.init_map_tile_table()
 	MapService.init_map_border_table()

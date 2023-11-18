@@ -3,8 +3,6 @@ extends Node2D
 
 
 signal unit_clicked(unit: Unit)
-signal unit_move_capability_depleted(unit: Unit)
-signal move_capability_changed(move_capability: int)
 
 
 var id: int
@@ -15,7 +13,7 @@ var id: int
 
 func initiate() -> void:
 	var unit_do: UnitDO = UnitController.get_unit_do(id)
-	global_position = MapController.map_shower.map_coord_to_global_position(unit_do.coord)
+	global_position = ViewHolder.get_map_shower().map_coord_to_global_position(unit_do.coord)
 	# 绘制图标图像
 	initiate_icon(unit_do)
 	# 更新玩家视野
@@ -54,7 +52,7 @@ func update_sight() -> void:
 		PlayerSightController.in_sight(in_sight_coord)
 	var cells: Array[Vector2i] = []
 	cells.append_array(dict.keys())
-	MapController.map_shower.paint_in_sight_tile_areas(cells)
+	ViewHolder.get_map_shower().paint_in_sight_tile_areas(cells)
 
 
 func update_out_sight() -> void:
@@ -66,7 +64,7 @@ func update_out_sight() -> void:
 		PlayerSightController.out_sight(out_sight_coord)
 		var seens: Array = PlayerSightController.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
 		if seens.any(func(s): s.coord == out_sight_coord):
-			MapController.map_shower.paint_out_sight_tile_areas(out_sight_coord, PlayerSightTable.Sight.SEEN)
+			ViewHolder.get_map_shower().paint_out_sight_tile_areas(out_sight_coord, PlayerSightTable.Sight.SEEN)
 
 
 func show_move_range() -> void:
@@ -78,7 +76,7 @@ func show_move_range() -> void:
 	var cells: Array[Vector2i] = []
 	# FIXME: 暂时让所有单位都在地块上互斥
 	cells.append_array(dict.keys().filter(func(coord): return is_no_unit_on_tile(coord)))
-	MapController.map_shower.paint_move_tile_areas(cells)
+	ViewHolder.get_map_shower().paint_move_tile_areas(cells)
 
 
 func is_no_unit_on_tile(coord: Vector2i) -> bool:
@@ -90,7 +88,7 @@ func move_to(coord: Vector2i) -> void:
 	UnitController.cost_unit_move(unit_do.id, MapController.get_move_cost_sum(unit_do.coord, coord))
 	update_out_sight()
 	UnitController.move_unit(id, coord)
-	self.global_position = MapController.map_shower.map_coord_to_global_position(coord)
+	self.global_position = ViewHolder.get_map_shower().map_coord_to_global_position(coord)
 	update_sight()
 
 

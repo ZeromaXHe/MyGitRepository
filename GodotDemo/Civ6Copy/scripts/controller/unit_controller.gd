@@ -3,14 +3,12 @@ class_name UnitController
 
 const UNIT_SCENE: PackedScene = preload("res://scenes/game/unit.tscn")
 
-static var unit_view_dict: Dictionary = {}
-
 
 static func create_unit(req_dto: CreateUnitReqDTO) -> Unit:
 	var unit_do: UnitDO = UnitService.create_unit(req_dto)
 	var unit: Unit = UNIT_SCENE.instantiate()
 	unit.id = unit_do.id
-	unit_view_dict[unit_do.id] = unit
+	ViewHolder.register_unit(unit)
 	return unit
 
 
@@ -36,10 +34,10 @@ static func sleep_unit(id: int) -> void:
 
 static func cost_unit_move(id: int, cost: int) -> void:
 	var new_move: int = UnitService.cost_unit_move(id, cost)
-	var unit: Unit = unit_view_dict[id]
-	unit.move_capability_changed.emit(new_move)
+	var unit: Unit = ViewHolder.get_unit(id)
+	ViewSignalsEmitter.get_instance().unit_move_changed.emit(id, new_move)
 	if new_move == 0:
-		unit.unit_move_capability_depleted.emit(unit)
+		ViewSignalsEmitter.get_instance().unit_move_depleted.emit(id)
 
 
 static func move_unit(id: int, coord: Vector2i) -> void:

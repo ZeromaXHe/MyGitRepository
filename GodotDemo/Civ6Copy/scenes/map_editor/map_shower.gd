@@ -98,7 +98,7 @@ var _coord_to_resource_icon_dict: Dictionary = {}
 
 func _ready() -> void:
 	hide_continent_layer()
-	MapController.register_map_shower(self)
+	ViewHolder.register_map_shower(self)
 
 
 func initialize() -> void:

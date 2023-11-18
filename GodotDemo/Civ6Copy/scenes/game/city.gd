@@ -3,9 +3,6 @@ extends Node2D
 
 
 signal city_clicked(city: City)
-signal city_production_changed(city_id: int)
-# 新单位建成
-signal product_completed(unit_type: UnitTypeTable.Type, city_coord: Vector2i)
 
 
 var id: int
@@ -28,14 +25,14 @@ func _ready() -> void:
 func initiate() -> void:
 	var city_do: CityDO = CityController.get_city_do(id)
 	name_label.text = city_do.name
-	global_position = MapController.map_shower.map_coord_to_global_position(city_do.coord)
+	global_position = ViewHolder.get_map_shower().map_coord_to_global_position(city_do.coord)
 	# 配置颜色
 	set_main_color(PlayerController.get_current_player().main_color)
 	set_second_color(PlayerController.get_current_player().second_color)
 	# 是否首都
 	capital_texture_rect.visible = city_do.capital
 	# 绘制城市
-	MapController.map_shower.paint_city(city_do.coord, 1)
+	ViewHolder.get_map_shower().paint_city(city_do.coord, 1)
 
 
 func set_main_color(main_color: Color) -> void:
@@ -49,7 +46,6 @@ func set_second_color(second_color: Color) -> void:
 
 func update_production_ui() -> void:
 	var city_do: CityDO = CityController.get_city_do(id)
-	city_production_changed.emit(id)
 	# TODO: 暂时只用开拓者成本的计算
 	product_progress_bar.value = city_do.production_sum * 100.0 / 80.0
 	if city_do.producing_type == -1:

@@ -15,21 +15,21 @@ static func create_city(coord: Vector2i) -> CityDO:
 	DatabaseUtils.city_tbl.insert(city_do)
 	
 	# 初始化城市领土（周围一圈）
-	var territory_cells: Array[Vector2i] = MapController.map_shower \
+	var territory_cells: Array[Vector2i] = ViewHolder.get_map_shower() \
 			.get_surrounding_cells(city_do.coord, 1, true) \
 			.filter(MapController.is_in_map_tile)
 	for cell in territory_cells:
 #		print("create_city | city: ", city_do.id, " claiming territory: ", cell)
 		MapTileService.city_claim_territory(city_do.id, cell)
-	PlayerController.player_view_dict[PlayerService.get_current_player_id()].territory_border.paint_dash_border(territory_cells)
+	ViewHolder.get_player(PlayerService.get_current_player_id()).territory_border.paint_dash_border(territory_cells)
 	
 	# 城市视野（周围两格）
-	var sight_cells: Array[Vector2i] = MapController.map_shower \
+	var sight_cells: Array[Vector2i] = ViewHolder.get_map_shower() \
 			.get_surrounding_cells(city_do.coord, 2, true) \
 			.filter(MapController.is_in_map_tile)
 	for in_sight_coord in sight_cells:
 		PlayerSightService.in_sight(in_sight_coord)
-	MapController.map_shower.paint_in_sight_tile_areas(sight_cells)
+	ViewHolder.get_map_shower().paint_in_sight_tile_areas(sight_cells)
 	
 	# 首都宫殿建筑
 	if city_do.capital:
@@ -40,6 +40,8 @@ static func create_city(coord: Vector2i) -> CityDO:
 
 static func choose_producing_unit(id: int, unit_type: UnitTypeTable.Type) -> void:
 	DatabaseUtils.city_tbl.update_field_by_id(id, "producing_type", unit_type)
+	# 发送信号
+	ViewSignalsEmitter.get_instance().city_production_changed.emit(id)
 
 
 static func get_city_do(id: int) -> CityDO:
@@ -91,11 +93,13 @@ static func update_product_val(id: int) -> void:
 	var city_do: CityDO = get_city_do(id)
 	var city_yield: YieldDTO = get_city_yield(id)
 	# TODO: 暂时妥协的逻辑
-	var city: City = CityController.city_view_dict[id]
+	var city: City = ViewHolder.get_city(id)
 	if city_do.production_sum + city_yield.production > 80.0:
-		city.product_completed.emit(city_do.producing_type, city_do.coord)
+		ViewSignalsEmitter.get_instance().city_production_completed.emit(city_do.producing_type, city_do.coord)
 		DatabaseUtils.city_tbl.update_field_by_id(id, "producing_type", -1)
 		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city_do.production_sum + city_yield.production - 80.0)
 	else:
 		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city_do.production_sum + city_yield.production)
+	# 发送信号
+	ViewSignalsEmitter.get_instance().city_production_changed.emit(id)
 

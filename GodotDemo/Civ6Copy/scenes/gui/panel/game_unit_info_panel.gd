@@ -9,8 +9,6 @@ signal sleep_button_pressed
 
 var showing_unit: Unit = null:
 	set(unit):
-		if showing_unit != null:
-			disconnect_showing_unit_signals()
 		showing_unit = unit
 		if unit == null:
 			hide()
@@ -38,25 +36,21 @@ func show_info() -> void:
 	
 	unit_texture_rect.texture = load(UnitController.get_unit_pic_200(unit_do.type))
 	
-	handle_unit_move_capability_changed(unit_do.move)
+	handle_unit_move_changed(unit_do.id, unit_do.move)
 	# 绑定信号，方便后续更新信息
 	connect_showing_unit_signals()
 	# 显示出来
 	show()
 
 
-func disconnect_showing_unit_signals() -> void:
-	if showing_unit.move_capability_changed.is_connected(handle_unit_move_capability_changed):
-		showing_unit.move_capability_changed.disconnect(handle_unit_move_capability_changed)
-
-
 func connect_showing_unit_signals() -> void:
-	if not showing_unit.move_capability_changed.is_connected(handle_unit_move_capability_changed):
-		showing_unit.move_capability_changed.connect(handle_unit_move_capability_changed)
+	ViewSignalsEmitter.get_instance().unit_move_changed.connect(handle_unit_move_changed)
 
 
-func handle_unit_move_capability_changed(move_capability: int) -> void:
-	unit_move_label.text = "%d/%d 移动" % [move_capability, UnitController.get_move_range(showing_unit.id)]
+func handle_unit_move_changed(unit_id: int, move: int) -> void:
+	if showing_unit == null or unit_id != showing_unit.id:
+		return
+	unit_move_label.text = "%d/%d 移动" % [move, UnitController.get_move_range(showing_unit.id)]
 
 
 func handle_chosen_unit_changed(unit: Unit) -> void:

@@ -50,9 +50,11 @@ func _ready() -> void:
 	camera.initialize(MapController.get_map_tile_size_vec(), map_shower.get_map_tile_xy())
 	# 绑定 game_gui 和游戏之间的所有信号（双向）
 	game_gui.signal_binding_with_game(self)
+	ViewSignalsEmitter.get_instance().city_production_changed.connect(handle_city_production_changed)
+	ViewSignalsEmitter.get_instance().city_production_completed.connect(handle_city_production_completed)
 	# 将所有玩家的领土 TileMap 放到场景中
 	for player in PlayerController.get_all_player_dos():
-		territory_borders.add_child(PlayerController.player_view_dict[player.id].territory_border)
+		territory_borders.add_child(ViewHolder.get_player(player.id).territory_border)
 	paint_player_sight()
 	# 增加测试单位
 	test_add_unit()
@@ -129,7 +131,7 @@ func add_unit(type: UnitTypeTable.Type, coord: Vector2i) -> Unit:
 	unit.initiate()
 	# 处理单位信号
 	unit.unit_clicked.connect(handle_unit_clicked)
-	unit.unit_move_capability_depleted.connect(handle_unit_move_capability_depleted)
+	ViewSignalsEmitter.get_instance().unit_move_depleted.connect(handle_unit_move_depleted)
 	# 新的单位需要移动，更新一下回合状态
 	refresh_turn_status()
 	return unit
@@ -140,30 +142,23 @@ func build_city(coord: Vector2i) -> void:
 	cities.add_child(city)
 	city.initiate()
 	city.city_clicked.connect(handle_city_clicked)
-	city.product_completed.connect(handle_city_product_completed)
 	# 新的城市需要选择建造项目，更新一下回合状态
 	refresh_turn_status()
 
 
 func chose_unit_and_camera_focus(unit: UnitDO):
-	handle_unit_clicked(UnitController.unit_view_dict[unit.id])
+	handle_unit_clicked(ViewHolder.get_unit(unit.id))
 	camera.global_position = map_shower.map_coord_to_global_position(unit.coord)
 
 
 func chose_city_and_camera_focus(city: CityDO):
-	handle_city_clicked(CityController.city_view_dict[city.id])
+	handle_city_clicked(ViewHolder.get_city(city.id))
 	camera.global_position = map_shower.map_coord_to_global_position(city.coord)
 
 
 func set_chosen_city(city: City) -> void:
-	if chosen_city != null:
-		if chosen_city.city_production_changed.is_connected(handle_chosen_city_production_changed):
-			chosen_city.city_production_changed.disconnect(handle_chosen_city_production_changed)
 	chosen_city = city
 	chosen_city_changed.emit(city)
-	if city != null:
-		if not city.city_production_changed.is_connected(handle_chosen_city_production_changed):
-			city.city_production_changed.connect(handle_chosen_city_production_changed)
 
 
 func set_chosen_unit(unit: Unit) -> void:
@@ -188,7 +183,7 @@ func handle_unit_clicked(unit: Unit) -> void:
 	chosen_unit = unit
 
 
-func handle_city_product_completed(unit_type: UnitTypeTable.Type, city_coord: Vector2i) -> void:
+func handle_city_production_completed(unit_type: UnitTypeTable.Type, city_coord: Vector2i) -> void:
 	add_unit(unit_type, city_coord)
 
 
@@ -249,12 +244,13 @@ func handle_turn_button_clicked() -> void:
 				game_gui.show_city_product_panel()
 
 
-func handle_unit_move_capability_depleted(_unit: Unit) -> void:
+func handle_unit_move_depleted(_unit_id: int) -> void:
 	# 单位的移动力耗尽时，更新回合状态
 	refresh_turn_status()
 
 
-func handle_chosen_city_production_changed(_id: int) -> void:
+func handle_city_production_changed(id: int) -> void:
+	ViewHolder.get_city(id).update_production_ui()
 	# 城市选择了新的生产项目，需要刷新一下回合状态
 	refresh_turn_status()
 

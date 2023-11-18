@@ -70,7 +70,7 @@ static func is_oasis_placeable_terrain(terrain_type: TerrainTable.Terrain) -> bo
 
 
 static func is_oasis_placeable_surroundings(tile_coord: Vector2i) -> bool:
-	var surroundings: Array[Vector2i] = MapController.map_shower.get_surrounding_cells(tile_coord, 1, false)
+	var surroundings: Array[Vector2i] = ViewHolder.get_map_shower().get_surrounding_cells(tile_coord, 1, false)
 	for surrounding in surroundings:
 		var tile_do: MapTileDO = MapController.get_map_tile_do_by_coord(surrounding)
 		var terrain: TerrainTable.Terrain = tile_do.terrain

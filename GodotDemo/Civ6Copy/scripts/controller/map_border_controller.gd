@@ -2,7 +2,7 @@ class_name MapBorderController
 
 
 static func is_river_placeable(border_coord: Vector2i) -> bool:
-	if MapController.map_shower.is_in_map_border(border_coord) <= 0 or MapBorderUtils.get_border_type(border_coord) == MapBorderTable.Type.CENTER:
+	if ViewHolder.get_map_shower().is_in_map_border(border_coord) <= 0 or MapBorderUtils.get_border_type(border_coord) == MapBorderTable.Type.CENTER:
 		return false
 	var neighbor_tile_coords: Array[Vector2i] = MapBorderUtils.get_neighbor_tile_of_border(border_coord)
 	for coord in neighbor_tile_coords:
@@ -30,7 +30,7 @@ static func is_river_placeable(border_coord: Vector2i) -> bool:
 
 
 static func is_cliff_placeable(border_coord: Vector2i) -> bool:
-	if MapController.map_shower.is_in_map_border(border_coord) <= 0 or MapBorderUtils.get_border_type(border_coord) == MapBorderTable.Type.CENTER:
+	if ViewHolder.get_map_shower().is_in_map_border(border_coord) <= 0 or MapBorderUtils.get_border_type(border_coord) == MapBorderTable.Type.CENTER:
 		return false
 	var neighbor_tile_coords: Array[Vector2i] = MapBorderUtils.get_neighbor_tile_of_border(border_coord)
 	var neighbor_sea: bool = false

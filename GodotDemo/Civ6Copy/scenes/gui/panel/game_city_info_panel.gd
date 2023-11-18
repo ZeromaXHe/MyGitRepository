@@ -6,8 +6,6 @@ signal production_button_toggled(button_pressed: bool)
 
 var showing_city: City = null:
 	set(city):
-		if showing_city != null:
-			disconnect_showing_city_signals()
 		showing_city = city
 		if city == null:
 			hide()
@@ -82,14 +80,8 @@ func yield_text(val: float) -> String:
 		return "+%.1f" % val
 
 
-func disconnect_showing_city_signals() -> void:
-	if showing_city.city_production_changed.is_connected(handle_city_production_changed):
-		showing_city.city_production_changed.disconnect(handle_city_production_changed)
-
-
 func connect_showing_city_signals() -> void:
-	if not showing_city.city_production_changed.is_connected(handle_city_production_changed):
-		showing_city.city_production_changed.connect(handle_city_production_changed)
+	ViewSignalsEmitter.get_instance().city_production_changed.connect(handle_city_production_changed)
 
 
 func set_product_button_pressed(button_pressed: bool) -> void:
@@ -101,6 +93,8 @@ func handle_chosen_city_changed(city: City) -> void:
 
 
 func handle_city_production_changed(id: int) -> void:
+	if showing_city == null or id != showing_city.id:
+		return
 	var city_do: CityDO = CityController.get_city_do(id)
 	if city_do.producing_type == -1:
 		city_product_texture_rect.texture = null

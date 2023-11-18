@@ -1,9 +1,6 @@
 class_name PlayerController
 
 
-static var player_view_dict: Dictionary = {}
-
-
 static func clear_players() -> void:
 	PlayerService.clear_players()
 
@@ -11,9 +8,9 @@ static func clear_players() -> void:
 static func add_player(player: PlayerDO) -> Player:
 	PlayerService.add_player(player)
 	var p := Player.new()
-	p.initiate(player.main_color, player.second_color)
+	p.initiate(player)
 	# 存储用于反查显示层对象
-	player_view_dict[player.id] = p
+	ViewHolder.register_player(p)
 	return p
 
 
@@ -91,4 +88,3 @@ static func update_citys_product_val() -> void:
 	var cities: Array = CityService.get_city_dos_of_player(player_id)
 	for city in cities:
 		CityService.update_product_val(city.id)
-		CityController.city_view_dict[city.id].update_production_ui()
