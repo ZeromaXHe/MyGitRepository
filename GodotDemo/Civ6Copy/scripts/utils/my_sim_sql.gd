@@ -1,7 +1,7 @@
 class_name MySimSQL
 
 
-class IdGenerator:
+class IdGenerator extends RefCounted:
 	var id: int = 0
 	
 	
@@ -14,7 +14,7 @@ class IdGenerator:
 		id = 0
 
 
-class DataObj:
+class DataObj extends RefCounted:
 	var id: int
 
 
@@ -27,7 +27,7 @@ class EnumDO extends DataObj:
 	var view_name: String
 
 
-class Table:
+class Table extends RefCounted:
 	var id_gen := IdGenerator.new()
 	var id_index : Dictionary = {}
 	var indexes: Dictionary = {}
@@ -174,7 +174,7 @@ class EnumTable extends Table:
 		return enum_val_index.get_do(enum_val)[0] as EnumDO
 
 
-class Index:
+class Index extends RefCounted:
 	enum Type {
 		UNIQUE, # 唯一
 		NORMAL, # 普通
@@ -228,7 +228,7 @@ class Index:
 			return [dict.get(col)]
 
 
-class QueryWrapper:
+class QueryWrapper extends RefCounted:
 	var where_arr: Array[Where] = []
 	var order_arr: Array[Order] = []
 	
@@ -248,7 +248,7 @@ class QueryWrapper:
 		return self
 
 
-class Where:
+class Where extends RefCounted:
 	# 字段名
 	var field: String
 	# 操作符
@@ -263,7 +263,7 @@ class Where:
 		self.val = val
 
 
-class Order:
+class Order extends RefCounted:
 	# 字段名
 	var field: String
 	# 是否降序

@@ -33,7 +33,7 @@ static func pointy_hex_corner(center: Vector2, size: float, i: int) -> Vector2:
 ## =======================================================
 #						偏移坐标系
 ## =======================================================
-class OffsetCoord:
+class OffsetCoord extends RefCounted:
 	enum Type {
 		ALL,
 		ODD_R, # TileMap 的 Stacked 其实就是对应这种 odd-r
@@ -227,7 +227,7 @@ class OffsetCoord:
 ## =======================================================
 #						轴坐标系
 ## =======================================================
-class Hex:
+class Hex extends RefCounted:
 	static var axial_direction_vectors: Array[Hex] = [
 		Hex.new(1, 0), Hex.new(1, -1), Hex.new(0, -1), # 右，右上，左上
 		Hex.new(-1, 0), Hex.new(-1, 1), Hex.new(0, 1), # 左，左下，右下
@@ -404,7 +404,7 @@ class Hex:
 ## =======================================================
 #						立方体坐标系
 ## =======================================================
-class Cube:
+class Cube extends RefCounted:
 	# 因为有 new，貌似就没办法写成 const
 	static var cube_direction_vectors: Array[Cube] = [
 		Cube.new(1, 0, -1), Cube.new(1, -1, 0), Cube.new(0, -1, 1), # 右，右上，左上
@@ -588,7 +588,7 @@ class Cube:
 ## =======================================================
 #						双倍坐标系
 ## =======================================================
-class DoubledCoord:
+class DoubledCoord extends RefCounted:
 	enum Type {
 		ALL,
 		HEIGHT,

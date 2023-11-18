@@ -6,3 +6,10 @@ extends MySimSQL.DataObj
 var coord: Vector2i
 # 地块类型
 var tile_type := MapBorderTable.TileType.EMPTY
+
+
+func clone() -> MapBorderDO:
+	var result := MapBorderDO.new()
+	result.coord = self.coord
+	result.tile_type = self.tile_type
+	return result

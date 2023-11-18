@@ -16,3 +16,15 @@ var village: bool = false
 var resource := ResourceTable.ResourceType.EMPTY # 空
 # 大洲 id
 var continent := ContinentTable.Continent.EMPTY # 空
+
+
+func clone() -> MapTileDO:
+	var result := MapTileDO.new()
+	result.coord = self.coord
+	result.city_id = self.city_id
+	result.terrain = self.terrain
+	result.landscape = self.landscape
+	result.village = self.village
+	result.resource = self.resource
+	result.continent = self.continent
+	return result
