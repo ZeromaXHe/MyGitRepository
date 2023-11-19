@@ -76,3 +76,17 @@ static func test_map_controller_get_tile_coord_directed_border() -> void:
 
 func _on_button_pressed() -> void:
 	print("why can't press button under canvas layer?")
+
+
+func _on_control_mouse_entered() -> void:
+	# Mouse-Filter 是 Pass 的话会打印，但是后面的 button 就点不了了……
+	# Ignore 的话，直接就没有鼠标信号了
+	print("_on_control_mouse_entered")
+
+
+func _on_parent_control_mouse_entered() -> void:
+	print("_on_parent_control_mouse_entered")
+
+
+func _on_parent_control_mouse_exited() -> void:
+	print("_on_parent_control_mouse_exited")

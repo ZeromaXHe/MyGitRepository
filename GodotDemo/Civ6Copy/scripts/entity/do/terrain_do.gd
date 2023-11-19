@@ -10,7 +10,9 @@ var food: int = 0
 var production: int = 0
 # 金币产量
 var gold: int = 0
-# 防御力加成
+# 移动力消耗
+var move_cost: int = 0
+# 防御值变更
 var defence_bonus: int = 0
 # 对周围地块魅力值的影响
 var charm_influence: int = 0

@@ -45,7 +45,7 @@ func show_info() -> void:
 	else:
 		city_button.hide()
 		defend_button.show()
-		skip_button.hide()
+		skip_button.show()
 		sleep_button.hide()
 		alert_button.show()
 		melee_atk_panel.show()

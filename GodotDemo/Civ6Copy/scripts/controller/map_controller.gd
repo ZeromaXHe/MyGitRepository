@@ -61,3 +61,22 @@ static func load_from_save() -> bool:
 
 static func get_tile_yield(coord: Vector2i) -> YieldDTO:
 	return MapTileService.get_tile_yield(coord)
+
+
+static func get_tile_info(coord: Vector2i) -> TileInfoDTO:
+	return MapTileService.get_tile_info(coord)
+
+
+static func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool) -> Array[Vector2i]:
+	# Godot 这个假范型，真垃圾…… 还得这样脱裤子放屁拐一下，不然后面 .map() 返回的是 Array
+	var result: Array[Vector2i] = []
+	if dist < 0:
+		return result
+	var oddr: HexagonUtils.OffsetCoord = HexagonUtils.OffsetCoord.odd_r(map_coord.x, map_coord.y)
+	if include_inside:
+		result.append_array(oddr.to_axial().spiral(dist) \
+				.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))
+	else:
+		result.append_array(oddr.to_axial().ring(dist) \
+				.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))
+	return result

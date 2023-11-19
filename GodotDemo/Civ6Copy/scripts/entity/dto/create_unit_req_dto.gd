@@ -1,4 +1,5 @@
 class_name CreateUnitReqDTO
+extends RefCounted
 
 
 # 坐标

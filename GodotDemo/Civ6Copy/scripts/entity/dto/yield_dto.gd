@@ -1,4 +1,5 @@
 class_name YieldDTO
+extends RefCounted
 
 
 # 文化产出
@@ -10,6 +11,6 @@ var production: int = 0
 # 科技产出
 var science: int = 0
 # 信仰产出
-var religion: int = 0
+var faith: int = 0
 # 金币产出
 var gold: int = 0

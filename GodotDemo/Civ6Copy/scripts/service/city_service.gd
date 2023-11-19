@@ -15,8 +15,7 @@ static func create_city(coord: Vector2i) -> CityDO:
 	DatabaseUtils.city_tbl.insert(city_do)
 	
 	# 初始化城市领土（周围一圈）
-	var territory_cells: Array[Vector2i] = ViewHolder.get_map_shower() \
-			.get_surrounding_cells(city_do.coord, 1, true) \
+	var territory_cells: Array[Vector2i] = MapController.get_surrounding_cells(city_do.coord, 1, true)\
 			.filter(MapController.is_in_map_tile)
 	for cell in territory_cells:
 #		print("create_city | city: ", city_do.id, " claiming territory: ", cell)
@@ -24,8 +23,7 @@ static func create_city(coord: Vector2i) -> CityDO:
 	ViewHolder.get_player(PlayerService.get_current_player_id()).territory_border.paint_dash_border(territory_cells)
 	
 	# 城市视野（周围两格）
-	var sight_cells: Array[Vector2i] = ViewHolder.get_map_shower() \
-			.get_surrounding_cells(city_do.coord, 2, true) \
+	var sight_cells: Array[Vector2i] = MapController.get_surrounding_cells(city_do.coord, 2, true) \
 			.filter(MapController.is_in_map_tile)
 	for in_sight_coord in sight_cells:
 		PlayerSightService.in_sight(in_sight_coord)
@@ -68,7 +66,7 @@ static func get_city_yield(city_id: int) -> YieldDTO:
 		city_yield.food += yield_dto.food
 		city_yield.production += yield_dto.production
 		city_yield.science += yield_dto.science
-		city_yield.religion += yield_dto.religion
+		city_yield.faith += yield_dto.faith
 		city_yield.gold += yield_dto.gold
 	# 建筑产出
 	var city_buildings: Array = CityBuildingService.get_buildings(city_id)

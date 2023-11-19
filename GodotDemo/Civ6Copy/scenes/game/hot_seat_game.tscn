@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/game/hot_seat_game.gd" id="1_7qv8v"]
 [ext_resource type="PackedScene" uid="uid://3ptyvtoemex4" path="res://scenes/map_editor/map_shower.tscn" id="1_e6n88"]
-[ext_resource type="Script" path="res://scripts/camera_manager.gd" id="2_rysfb"]
+[ext_resource type="PackedScene" uid="uid://clao08y8vgl00" path="res://scenes/camera/camera_manager.tscn" id="3_7c6xb"]
 [ext_resource type="PackedScene" uid="uid://dfpeq8ikcp1wc" path="res://scenes/gui/game_gui.tscn" id="5_2h3hc"]
 
 [node name="HotSeatGame" type="Node2D"]
@@ -18,9 +18,6 @@ z_index = 5
 [node name="Units" type="Node2D" parent="."]
 z_index = 5
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position_smoothing_enabled = true
-rotation_smoothing_enabled = true
-script = ExtResource("2_rysfb")
+[node name="Camera2D" parent="." instance=ExtResource("3_7c6xb")]
 
 [node name="GameGUI" parent="." instance=ExtResource("5_2h3hc")]

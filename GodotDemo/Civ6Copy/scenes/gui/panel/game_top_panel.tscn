@@ -178,13 +178,13 @@ layout_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RegionOutline" type="PanelContainer" parent="TopLeftHBox"]
+[node name="FaithOutline" type="PanelContainer" parent="TopLeftHBox"]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_ftkgq")
 
-[node name="ReligionMarginCntnr" type="MarginContainer" parent="TopLeftHBox/RegionOutline"]
+[node name="FaithMarginCntnr" type="MarginContainer" parent="TopLeftHBox/FaithOutline"]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
@@ -193,28 +193,28 @@ theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="RegionPanel" type="PanelContainer" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr"]
+[node name="FaithPanel" type="PanelContainer" parent="TopLeftHBox/FaithOutline/FaithMarginCntnr"]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxTexture_5hv8u")
 
-[node name="RegionHBox" type="HBoxContainer" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel"]
+[node name="FaithHBox" type="HBoxContainer" parent="TopLeftHBox/FaithOutline/FaithMarginCntnr/FaithPanel"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+[node name="TextureRect" type="TextureRect" parent="TopLeftHBox/FaithOutline/FaithMarginCntnr/FaithPanel/FaithHBox"]
 layout_mode = 2
 texture = ExtResource("4_b2dnh")
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+[node name="Label" type="Label" parent="TopLeftHBox/FaithOutline/FaithMarginCntnr/FaithPanel/FaithHBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.631373, 0.698039, 0.768627, 1)
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label2" type="Label" parent="TopLeftHBox/RegionOutline/ReligionMarginCntnr/RegionPanel/RegionHBox"]
+[node name="Label2" type="Label" parent="TopLeftHBox/FaithOutline/FaithMarginCntnr/FaithPanel/FaithHBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.529412, 0.588235, 0.627451, 1)
 theme_override_font_sizes/font_size = 10

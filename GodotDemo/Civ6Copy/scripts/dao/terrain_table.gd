@@ -43,6 +43,7 @@ func _init() -> void:
 				do.short_name = "草丘"
 				do.food = 2
 				do.production = 1
+				do.move_cost = 1
 				do.defence_bonus = 3
 			Terrain.GRASS_MOUNTAIN:
 				do.view_name = "草原（山脉）"
@@ -59,6 +60,7 @@ func _init() -> void:
 				do.short_name = "平丘"
 				do.food = 1
 				do.production = 2
+				do.move_cost = 1
 				do.defence_bonus = 3
 			Terrain.PLAIN_MOUNTAIN:
 				do.view_name = "平原（山脉）"
@@ -72,6 +74,7 @@ func _init() -> void:
 				do.view_name = "沙漠（丘陵）"
 				do.short_name = "沙丘"
 				do.production = 1
+				do.move_cost = 1
 				do.defence_bonus = 3
 			Terrain.DESERT_MOUNTAIN:
 				do.view_name = "沙漠（山脉）"
@@ -87,6 +90,7 @@ func _init() -> void:
 				do.short_name = "冻丘"
 				do.food = 1
 				do.production = 1
+				do.move_cost = 1
 				do.defence_bonus = 3
 			Terrain.TUNDRA_MOUNTAIN:
 				do.view_name = "冻土（山脉）"
@@ -100,6 +104,7 @@ func _init() -> void:
 				do.view_name = "雪地（丘陵）"
 				do.short_name = "雪丘"
 				do.production = 1
+				do.move_cost = 1
 				do.defence_bonus = 3
 			Terrain.SNOW_MOUNTAIN:
 				do.view_name = "雪地（山脉）"

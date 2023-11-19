@@ -16,15 +16,23 @@ theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="Label" type="Label" parent="MarginContainer"]
+[node name="Label" type="RichTextLabel" parent="MarginContainer"]
+custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.14902, 0.14902, 0.14902, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/default_color = Color(0.121569, 0.121569, 0.121569, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
 text = "沙漠（丘陵）
+森林
+马[color=red]（需求 畜牧业）[/color]
+河流
 移动力消耗：2
 防御值变更：3
 魅力：迷人的（2）
 大陆：非洲
 ---------------
-1 生产力
+1 [img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img]生产力
 Hex (45, 25)"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0

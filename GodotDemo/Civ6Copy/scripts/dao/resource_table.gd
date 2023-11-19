@@ -126,7 +126,7 @@ func _init() -> void:
 				do.view_name = "染料"
 				do.short_name = "染料"
 				do.category = Category.LUXURY
-				do.religion = 1
+				do.faith = 1
 			ResourceType.COTTON:
 				do.view_name = "棉花"
 				do.short_name = "棉花"
@@ -145,7 +145,7 @@ func _init() -> void:
 				do.view_name = "烟草"
 				do.short_name = "烟草"
 				do.category = Category.LUXURY
-				do.religion = 1
+				do.faith = 1
 			ResourceType.COAL:
 				do.view_name = "煤"
 				do.short_name = "煤"
@@ -155,7 +155,7 @@ func _init() -> void:
 				do.view_name = "熏香"
 				do.short_name = "熏香"
 				do.category = Category.LUXURY
-				do.religion = 1
+				do.faith = 1
 			ResourceType.COW:
 				do.view_name = "牛"
 				do.short_name = "牛"
@@ -175,7 +175,7 @@ func _init() -> void:
 				do.view_name = "珍珠"
 				do.short_name = "珍珠"
 				do.category = Category.LUXURY
-				do.religion = 1
+				do.faith = 1
 			ResourceType.FUR:
 				do.view_name = "皮草"
 				do.short_name = "皮草"

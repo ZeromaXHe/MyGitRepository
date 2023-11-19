@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/map_editor/map_editor.gd" id="1_brqnu"]
 [ext_resource type="PackedScene" uid="uid://3ptyvtoemex4" path="res://scenes/map_editor/map_shower.tscn" id="2_v0hw3"]
-[ext_resource type="Script" path="res://scripts/camera_manager.gd" id="3_0wudy"]
+[ext_resource type="PackedScene" uid="uid://clao08y8vgl00" path="res://scenes/camera/camera_manager.tscn" id="3_uuuc4"]
 [ext_resource type="PackedScene" uid="uid://cw4d6w6b4mr0o" path="res://scenes/gui/map_editor_gui.tscn" id="4_1r2w3"]
 
 [node name="MapEditor" type="Node2D"]
@@ -10,7 +10,6 @@ script = ExtResource("1_brqnu")
 
 [node name="MapShower" parent="." instance=ExtResource("2_v0hw3")]
 
-[node name="Camera2D" type="Camera2D" parent="."]
-script = ExtResource("3_0wudy")
+[node name="Camera2D" parent="." instance=ExtResource("3_uuuc4")]
 
 [node name="MapEditorGUI" parent="." instance=ExtResource("4_1r2w3")]

@@ -17,7 +17,7 @@ var showing_city: City = null:
 @onready var food_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/FoodCheckBox
 @onready var product_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/ProductCheckBox
 @onready var science_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/ScienceCheckBox
-@onready var religion_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/ReligionCheckBox
+@onready var faith_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/FaithCheckBox
 @onready var gold_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/GoldCheckBox
 # 城市名字相关
 @onready var city_name_panel: PanelContainer = $MainPanel/CityInfoVBox/NamePanel
@@ -61,7 +61,7 @@ func show_info() -> void:
 	update_city_yield_food(yield_dto.food)
 	update_city_yield_product(yield_dto.production)
 	update_city_yield_science(yield_dto.science)
-	update_city_yield_religion(yield_dto.religion)
+	update_city_yield_faith(yield_dto.faith)
 	update_city_yield_gold(yield_dto.gold)
 	# 生产单位显示
 	handle_city_production_changed(showing_city.id)
@@ -131,8 +131,8 @@ func update_city_yield_science(val: float) -> void:
 	science_check_box.text = yield_text(val)
 
 
-func update_city_yield_religion(val: float) -> void:
-	religion_check_box.text = yield_text(val)
+func update_city_yield_faith(val: float) -> void:
+	faith_check_box.text = yield_text(val)
 
 
 func update_city_yield_gold(val: float) -> void:

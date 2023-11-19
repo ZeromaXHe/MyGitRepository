@@ -15,6 +15,6 @@ var production: int = 0
 # 科技产量
 var science: int = 0
 # 宗教产量
-var religion: int = 0
+var faith: int = 0
 # 金币产量
 var gold: int = 0

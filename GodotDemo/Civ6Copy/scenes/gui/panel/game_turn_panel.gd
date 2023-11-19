@@ -16,21 +16,25 @@ func _ready() -> void:
 func show_end_turn() -> void:
 	turn_text_button.text = "下一回合"
 	turn_button.icon = load("res://assets/icon_park/下一步_next.svg")
+	turn_button.tooltip_text = "结束回合。"
 
 
 func show_unit_need_move() -> void:
 	turn_text_button.text = "单位需要命令"
 	turn_button.icon = load("res://assets/icon_park/注意_attention.svg")
+	turn_button.tooltip_text = "一个单位需要命令。"
 
 
 func show_city_need_product() -> void:
 	turn_text_button.text = "选择生产项目"
 	turn_button.icon = load("res://assets/civ6_origin/core/webp_32x32/core_production.webp")
+	turn_button.tooltip_text = "您需要在此城市选择生产一个单位或建筑。"
 
 
 func show_tech_need_choose() -> void:
 	turn_text_button.text = "选择科技"
 	turn_button.icon = load("res://assets/civ6_origin/core/webp_32x32/core_science.webp")
+	turn_button.tooltip_text = "您需要选择一项科技进行研究。"
 
 
 func handle_turn_status_changed(status: HotSeatGame.TurnStatus) -> void:

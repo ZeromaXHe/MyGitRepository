@@ -58,6 +58,7 @@ show_percentage = false
 [node name="TurnButton" type="Button" parent="MainPanel/HBoxContainer"]
 custom_minimum_size = Vector2(130, 150)
 layout_mode = 2
+tooltip_text = "一个单位需要命令。"
 icon = ExtResource("1_8cqeb")
 flat = true
 icon_alignment = 1
@@ -67,6 +68,7 @@ expand_icon = true
 custom_minimum_size = Vector2(10, 100)
 layout_mode = 2
 size_flags_vertical = 1
+tooltip_text = "远古时代"
 theme_override_styles/fill = SubResource("StyleBoxFlat_fh4h4")
 max_value = 8.0
 step = 1.0

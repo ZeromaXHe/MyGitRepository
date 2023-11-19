@@ -77,7 +77,7 @@ theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "买人"
 
-[node name="ReligionUnitButton" type="Button" parent="ButtonPanel/ButtonHBox"]
+[node name="FaithUnitButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
@@ -134,7 +134,7 @@ theme_override_font_sizes/font_size = 12
 text = "+3.0"
 icon = ExtResource("5_spm84")
 
-[node name="ReligionCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
+[node name="FaithCheckBox" type="CheckBox" parent="MainPanel/CityInfoVBox/YieldHBox"]
 layout_mode = 2
 theme = ExtResource("1_aany7")
 theme_override_colors/font_color = Color(0.87451, 0.964706, 1, 1)

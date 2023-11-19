@@ -44,6 +44,8 @@ var turn_year: int = -4000
 
 
 func _ready() -> void:
+	GameController.set_mode(GameController.Mode.HOT_SEAT_GAME)
+	
 	map_shower.initialize()
 	MapController.init_astar()
 	camera.initialize(MapController.get_map_tile_size_vec(), map_shower.get_map_tile_xy())
@@ -249,15 +251,15 @@ func handle_city_production_changed(id: int) -> void:
 	refresh_turn_status()
 
 
-func handle_mouse_hover_tile(delta: float) -> bool:
+func handle_mouse_hover_tile(delta: float) -> void:
 	var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and MapController.is_in_map_tile(map_coord):
-			game_gui.show_mouse_hover_tile_info(map_coord, MapController.get_map_tile_do_by_coord(map_coord))
-		return false
+		if camera.is_mouse_hover_in_camera() and map_shower.is_in_sight_tile_area(map_coord) \
+				and not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 \
+				and MapController.is_in_map_tile(map_coord):
+			game_gui.show_mouse_hover_tile_info(map_coord)
+		return
 	_mouse_hover_tile_coord = map_coord
 	_mouse_hover_tile_time = 0
 	game_gui.hide_mouse_hover_tile_info()
-	return true
-

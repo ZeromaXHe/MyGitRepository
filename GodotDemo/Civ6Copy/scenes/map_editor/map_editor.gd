@@ -31,6 +31,8 @@ var _after_step_stack: Array[PaintStep] = []
 
 
 func _ready() -> void:
+	GameController.set_mode(GameController.Mode.MAP_EDITOR)
+	
 	map_shower.initialize()
 	camera.initialize(MapController.get_map_tile_size_vec(), map_shower.get_map_tile_xy())
 	
@@ -148,8 +150,9 @@ func handle_mouse_hover_tile(delta: float) -> bool:
 	var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if not gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 and MapController.is_in_map_tile(map_coord):
-			gui.show_mouse_hover_tile_info(map_coord, MapController.get_map_tile_do_by_coord(map_coord))
+		if camera.is_mouse_hover_in_camera() and not gui.is_mouse_hover_info_shown() \
+				and _mouse_hover_tile_time > 2 and MapController.is_in_map_tile(map_coord):
+			gui.show_mouse_hover_tile_info(map_coord)
 		return false
 	clear_pre_mouse_hover_tile_chosen()
 	_mouse_hover_tile_coord = map_coord
@@ -194,7 +197,7 @@ func paint_new_chosen_area(renew: bool = false) -> void:
 			map_shower.paint_chosen_border_area(border_coord, MapBorderController.is_cliff_placeable)
 		MapEditorGUI.PlaceMode.TERRAIN:
 			var dist: int = gui.get_painter_size_dist()
-			var new_inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
+			var new_inside: Array[Vector2i] = MapController.get_surrounding_cells(map_coord, dist, true)
 			for coord in new_inside:
 				# 新增新图块
 				map_shower.paint_tile_chosen_placeable(coord)
@@ -208,7 +211,7 @@ func paint_new_chosen_area(renew: bool = false) -> void:
 			map_shower.paint_chosen_tile_area(map_coord, placeable)
 		MapEditorGUI.PlaceMode.CONTINENT:
 			var dist: int = gui.get_painter_size_dist()
-			var new_inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
+			var new_inside: Array[Vector2i] = MapController.get_surrounding_cells(map_coord, dist, true)
 			for coord in new_inside:
 				map_shower.paint_chosen_tile_area(coord, ContinentController.is_continent_placeable)
 
@@ -270,7 +273,7 @@ func paint_map() -> void:
 		MapEditorGUI.PlaceMode.TERRAIN:
 			var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 			var dist: int = gui.get_painter_size_dist()
-			var inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
+			var inside: Array[Vector2i] = MapController.get_surrounding_cells(map_coord, dist, true)
 			for coord in inside:
 				# 超出地图范围的不处理
 				if not MapController.is_in_map_tile(coord):
@@ -280,7 +283,7 @@ func paint_map() -> void:
 				paint_terrain(coord, step, gui.terrain_type)
 			# 围绕陆地地块绘制浅海
 			if gui.terrain_type != TerrainTable.Terrain.SHORE and gui.terrain_type != TerrainTable.Terrain.OCEAN:
-				var out_ring: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist + 1, false)
+				var out_ring: Array[Vector2i] = MapController.get_surrounding_cells(map_coord, dist + 1, false)
 				for coord in out_ring:
 					# 超出地图范围的不处理
 					if not MapController.is_in_map_tile(coord):
@@ -291,7 +294,7 @@ func paint_map() -> void:
 					paint_terrain(coord, step, TerrainTable.Terrain.SHORE)
 			# 如果地块是丘陵，需要在周围沿海边界放置悬崖
 			if TerrainController.is_hill_land_terrain(gui.terrain_type):
-				var borders: Array[Vector2i] = map_shower.get_surrounding_borders(map_coord, dist)
+				var borders: Array[Vector2i] = MapBorderController.get_surrounding_borders(map_coord, dist)
 				for border in borders:
 					if MapBorderController.is_cliff_placeable(border):
 						paint_border(border, step, MapBorderTable.TileType.CLIFF)
@@ -327,7 +330,7 @@ func paint_map() -> void:
 		MapEditorGUI.PlaceMode.CONTINENT:
 			var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 			var dist: int = gui.get_painter_size_dist()
-			var inside: Array[Vector2i] = map_shower.get_surrounding_cells(map_coord, dist, true)
+			var inside: Array[Vector2i] = MapController.get_surrounding_cells(map_coord, dist, true)
 			for coord in inside:
 				if not ContinentController.is_continent_placeable(coord):
 					continue
