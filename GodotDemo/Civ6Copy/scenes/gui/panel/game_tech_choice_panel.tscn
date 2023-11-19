@@ -1,0 +1,266 @@
+[gd_scene load_steps=18 format=3 uid="uid://d4mfe7rarl2nf"]
+
+[ext_resource type="StyleBox" uid="uid://cucjkim8l0fiq" path="res://styles/lime_green_title_style.tres" id="1_wx1y0"]
+[ext_resource type="Script" path="res://scenes/gui/panel/game_tech_choice_panel.gd" id="1_xqji6"]
+[ext_resource type="Texture2D" uid="uid://cykmcdd2dscm5" path="res://assets/made_in_godot/empty_tech_texture.tres" id="2_a4ali"]
+[ext_resource type="Texture2D" uid="uid://qxie35ufu8e5" path="res://assets/civ6_origin/tech/webp_64x64/icon_tech_mining.webp" id="3_b1wkq"]
+[ext_resource type="Texture2D" uid="uid://cuegcjht205ut" path="res://assets/civ6_origin/improvement/webp_64x64/icon_improvement_mine.webp" id="4_bc51k"]
+[ext_resource type="Texture2D" uid="uid://dk0w15vgb5tpm" path="res://assets/civ6_origin/improvement/webp_64x64/icon_improvement_quarry.webp" id="5_8ko6q"]
+[ext_resource type="Texture2D" uid="uid://c7etc8q8fka23" path="res://assets/civ6_origin/resource/resources_copper.png" id="6_5ku5h"]
+[ext_resource type="Texture2D" uid="uid://b8k3hklo0yfj" path="res://assets/icon_park/上一步_back(blue).svg" id="7_5ggha"]
+[ext_resource type="StyleBox" uid="uid://bj7xx7wnoe7vd" path="res://styles/menu_blue_button_normal.tres" id="8_a4x1x"]
+[ext_resource type="StyleBox" uid="uid://b4xkboxi50vdl" path="res://styles/menu_blue_button_hover.tres" id="9_ihhnl"]
+[ext_resource type="StyleBox" uid="uid://c6jfyt57bjnn0" path="res://styles/menu_blue_button_press.tres" id="10_sdfrd"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2iohm"]
+bg_color = Color(0.054902, 0.145098, 0.227451, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e0s1n"]
+bg_color = Color(0.121569, 0.192157, 0.258824, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.482353, 0.415686, 0.27451, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d3hms"]
+bg_color = Color(0.215686, 0.188235, 0.133333, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d3j6j"]
+bg_color = Color(0.180392, 0.745098, 0.92549, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_baf1p"]
+texture = ExtResource("2_a4ali")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mg3bs"]
+bg_color = Color(0.101961, 0.156863, 0.211765, 1)
+
+[node name="TechChoicePanel" type="PanelContainer"]
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 300.0
+grow_vertical = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_2iohm")
+script = ExtResource("1_xqji6")
+
+[node name="TechChoiceVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TitlePanel" type="PanelContainer" parent="TechChoiceVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("1_wx1y0")
+
+[node name="TitleLabel" type="Label" parent="TechChoiceVBox/TitlePanel"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.0588235, 0.0588235, 0.0588235, 1)
+text = "选择研究"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="TechChoiceVBox/TitlePanel"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "X"
+
+[node name="ResearchingPanel" type="PanelContainer" parent="TechChoiceVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_e0s1n")
+
+[node name="HBox" type="HBoxContainer" parent="TechChoiceVBox/ResearchingPanel"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="TechProgressBar" type="ProgressBar" parent="TechChoiceVBox/ResearchingPanel/HBox"]
+custom_minimum_size = Vector2(5, 64)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_d3hms")
+theme_override_styles/fill = SubResource("StyleBoxFlat_d3j6j")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="TechImgPanel" type="PanelContainer" parent="TechChoiceVBox/ResearchingPanel/HBox"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_baf1p")
+
+[node name="TechImg" type="TextureRect" parent="TechChoiceVBox/ResearchingPanel/HBox/TechImgPanel"]
+layout_mode = 2
+texture = ExtResource("3_b1wkq")
+
+[node name="TechTurnLabel" type="Label" parent="TechChoiceVBox/ResearchingPanel/HBox/TechImgPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "回合: 2"
+
+[node name="VBox" type="VBoxContainer" parent="TechChoiceVBox/ResearchingPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TechNameLabel" type="Label" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "采矿业"
+
+[node name="TechUnlockPanel" type="PanelContainer" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mg3bs")
+
+[node name="TechUnlockHBox" type="HBoxContainer" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel"]
+layout_mode = 2
+
+[node name="UnlockTextureRect" type="TextureRect" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("4_bc51k")
+expand_mode = 2
+
+[node name="UnlockTextureRect2" type="TextureRect" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("5_8ko6q")
+expand_mode = 2
+
+[node name="UnlockTextureRect3" type="TextureRect" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("6_5ku5h")
+expand_mode = 2
+
+[node name="EurekaHBox" type="HBoxContainer" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox"]
+layout_mode = 2
+
+[node name="EurekaTextureRect" type="TextureRect" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox/EurekaHBox"]
+layout_mode = 2
+texture = ExtResource("7_5ggha")
+expand_mode = 2
+
+[node name="TechEurekaLabel" type="Label" parent="TechChoiceVBox/ResearchingPanel/HBox/VBox/EurekaHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "尤里卡"
+clip_text = true
+
+[node name="OpenTechTreeButton" type="Button" parent="TechChoiceVBox"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("8_a4x1x")
+theme_override_styles/hover = ExtResource("9_ihhnl")
+theme_override_styles/pressed = ExtResource("10_sdfrd")
+text = "打开科技树"
+
+[node name="ContentScrollContainer" type="ScrollContainer" parent="TechChoiceVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="TechChoiceVBox/ContentScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="TechButtonVBox" type="VBoxContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ResearchingPanel" type="PanelContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_e0s1n")
+
+[node name="Button" type="Button" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel"]
+layout_mode = 2
+flat = true
+
+[node name="HBox" type="HBoxContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="TechProgressBar" type="ProgressBar" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox"]
+custom_minimum_size = Vector2(5, 64)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_d3hms")
+theme_override_styles/fill = SubResource("StyleBoxFlat_d3j6j")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="TechImgPanel" type="PanelContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_baf1p")
+
+[node name="TechImg" type="TextureRect" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/TechImgPanel"]
+layout_mode = 2
+texture = ExtResource("3_b1wkq")
+
+[node name="TechTurnLabel" type="Label" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/TechImgPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "回合: 2"
+
+[node name="VBox" type="VBoxContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TechNameLabel" type="Label" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "采矿业"
+
+[node name="TechUnlockPanel" type="PanelContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mg3bs")
+
+[node name="TechUnlockHBox" type="HBoxContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel"]
+layout_mode = 2
+
+[node name="UnlockTextureRect" type="TextureRect" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("4_bc51k")
+expand_mode = 2
+
+[node name="UnlockTextureRect2" type="TextureRect" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("5_8ko6q")
+expand_mode = 2
+
+[node name="UnlockTextureRect3" type="TextureRect" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox/TechUnlockPanel/TechUnlockHBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("6_5ku5h")
+expand_mode = 2
+
+[node name="EurekaHBox" type="HBoxContainer" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox"]
+layout_mode = 2
+
+[node name="EurekaTextureRect" type="TextureRect" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox/EurekaHBox"]
+layout_mode = 2
+texture = ExtResource("7_5ggha")
+expand_mode = 2
+
+[node name="TechEurekaLabel" type="Label" parent="TechChoiceVBox/ContentScrollContainer/MarginContainer/TechButtonVBox/ResearchingPanel/HBox/VBox/EurekaHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "尤里卡"
+clip_text = true
+
+[connection signal="pressed" from="TechChoiceVBox/TitlePanel/CloseButton" to="." method="_on_close_button_pressed" flags=18]

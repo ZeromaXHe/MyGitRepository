@@ -1,0 +1,1352 @@
+[gd_scene load_steps=19 format=3 uid="uid://cqxbwhbliy2gk"]
+
+[ext_resource type="StyleBox" uid="uid://cucjkim8l0fiq" path="res://styles/lime_green_title_style.tres" id="1_8hc0u"]
+[ext_resource type="Script" path="res://scenes/gui/panel/game_city_detail_panel.gd" id="1_mm65t"]
+[ext_resource type="Texture2D" uid="uid://c2m56hyvkjiqt" path="res://assets/icon_park/铅笔_pencil.svg" id="2_4mykl"]
+[ext_resource type="Texture2D" uid="uid://cvumun1p0gxj5" path="res://assets/civ6_origin/core/webp_32x32/core_citizen.webp" id="3_iu63y"]
+[ext_resource type="Texture2D" uid="uid://ddx325q2pjqwy" path="res://assets/civ6_origin/core/webp_32x32/core_housing.webp" id="4_1jit8"]
+[ext_resource type="Texture2D" uid="uid://bcfky6df866vk" path="res://assets/civ6_origin/core/webp_32x32/core_religion.webp" id="5_p5phu"]
+[ext_resource type="StyleBox" uid="uid://o3mc7dw3jat8" path="res://styles/info_detail_deep_blue_panel_background.tres" id="6_68873"]
+[ext_resource type="Texture2D" uid="uid://na1cqxfdkg2m" path="res://assets/civ6_origin/core/webp_32x32/core_food.webp" id="7_7pvdc"]
+[ext_resource type="Texture2D" uid="uid://bohinfcvltqr1" path="res://assets/icon_park/右1_right-two.svg" id="8_jp0ty"]
+[ext_resource type="Texture2D" uid="uid://cwo30yw02i07n" path="res://assets/civ6_origin/district/webp_256x256/icon_district_city_center.webp" id="9_4bn60"]
+[ext_resource type="Texture2D" uid="uid://d1hkenwnxs471" path="res://assets/civ6_origin/building/webp_64x64/icon_building_palace.webp" id="10_sgsg5"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2iohm"]
+bg_color = Color(0.054902, 0.145098, 0.227451, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bnwnc"]
+bg_color = Color(0.341176, 0.164706, 0.0745098, 1)
+border_width_top = 2
+border_color = Color(0.713726, 0.592157, 0.396078, 1)
+
+[sub_resource type="Gradient" id="Gradient_40fmc"]
+offsets = PackedFloat32Array(0, 0.329004, 0.670996, 0.995671)
+colors = PackedColorArray(0.054902, 0.145098, 0.227451, 0, 0.133333, 0.215686, 0.337255, 1, 0.133333, 0.215686, 0.337255, 1, 0.054902, 0.145098, 0.227451, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_nxvjx"]
+gradient = SubResource("Gradient_40fmc")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_swg5v"]
+texture = SubResource("GradientTexture2D_nxvjx")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qwe2m"]
+bg_color = Color(0.156863, 0.301961, 0.419608, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.239216, 0.368627, 0.478431, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4gtso"]
+bg_color = Color(0.105882, 0.203922, 0.313726, 1)
+
+[node name="CityDetailPanel" type="PanelContainer"]
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 300.0
+grow_vertical = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_2iohm")
+script = ExtResource("1_mm65t")
+
+[node name="CityDetailVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TitlePanel" type="PanelContainer" parent="CityDetailVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("1_8hc0u")
+
+[node name="TitleLabel" type="Label" parent="CityDetailVBox/TitlePanel"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.0588235, 0.0588235, 0.0588235, 1)
+text = "城市详情"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="CityDetailVBox/TitlePanel"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "X"
+
+[node name="NameChangeButton" type="Button" parent="CityDetailVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "罗马"
+icon = ExtResource("2_4mykl")
+expand_icon = true
+
+[node name="NameChangeLineEdit" type="LineEdit" parent="CityDetailVBox"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "罗马"
+
+[node name="PagePanel" type="PanelContainer" parent="CityDetailVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bnwnc")
+
+[node name="PageButtonHBox" type="HBoxContainer" parent="CityDetailVBox/PagePanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="CitizenPageButton" type="Button" parent="CityDetailVBox/PagePanel/PageButtonHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "公民、宜居度和住房。"
+toggle_mode = true
+button_pressed = true
+icon = ExtResource("3_iu63y")
+icon_alignment = 1
+
+[node name="BuildingPageButton" type="Button" parent="CityDetailVBox/PagePanel/PageButtonHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "区域、建筑、奇观和贸易站。"
+toggle_mode = true
+icon = ExtResource("4_1jit8")
+icon_alignment = 1
+
+[node name="ReligionPageButton" type="Button" parent="CityDetailVBox/PagePanel/PageButtonHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "公民、宜居度和住房。"
+toggle_mode = true
+icon = ExtResource("5_p5phu")
+icon_alignment = 1
+
+[node name="ContentScrollContainer" type="ScrollContainer" parent="CityDetailVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="CitizenPageVBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HSeparator" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+
+[node name="PopTitleLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "人口增长"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+
+[node name="PopMarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="PopVBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer"]
+layout_mode = 2
+
+[node name="PopPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="PopHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/PopPanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="PopTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/PopPanel/PopHBox"]
+modulate = Color(0, 1, 0, 1)
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("3_iu63y")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="PopLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/PopPanel/PopHBox"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "人口
+4 回合后将诞生一位新公民"
+
+[node name="TurnFoodPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="TurnFoodHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnFoodPanel"]
+layout_mode = 2
+
+[node name="TurnFoodKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnFoodPanel/TurnFoodHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "每回合食物"
+vertical_alignment = 1
+
+[node name="TurnFoodValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnFoodPanel/TurnFoodHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "+4"
+vertical_alignment = 1
+
+[node name="FoodConsumedPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="FoodConsumedHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/FoodConsumedPanel"]
+layout_mode = 2
+
+[node name="FoodConsumedKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/FoodConsumedPanel/FoodConsumedHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "食物消耗"
+vertical_alignment = 1
+
+[node name="FoodConsumedValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/FoodConsumedPanel/FoodConsumedHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "-2"
+vertical_alignment = 1
+
+[node name="FoodNeededForGrowthPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="FoodNeededForGrowthHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/FoodNeededForGrowthPanel"]
+layout_mode = 2
+
+[node name="FoodNeededForGrowthKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/FoodNeededForGrowthPanel/FoodNeededForGrowthHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "需要食物来扩大人口"
+vertical_alignment = 1
+
+[node name="FoodNeededForGrowthValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/FoodNeededForGrowthPanel/FoodNeededForGrowthHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "7"
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+
+[node name="TurnFoodIncrPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="TurnFoodIncrHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnFoodIncrPanel"]
+layout_mode = 2
+
+[node name="TurnFoodIncrKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnFoodIncrPanel/TurnFoodIncrHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "每回合食物增长"
+vertical_alignment = 1
+
+[node name="TurnFoodIncrValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnFoodIncrPanel/TurnFoodIncrHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "+2"
+vertical_alignment = 1
+
+[node name="AmenityBonusPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="AmenityBonusHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/AmenityBonusPanel"]
+layout_mode = 2
+
+[node name="AmenityBonusKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/AmenityBonusPanel/AmenityBonusHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "宜居度加成"
+vertical_alignment = 1
+
+[node name="AmenityBonusValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/AmenityBonusPanel/AmenityBonusHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "+10%"
+vertical_alignment = 1
+
+[node name="OtherBonusPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="OtherBonusHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/OtherBonusPanel"]
+layout_mode = 2
+
+[node name="OtherBonusKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/OtherBonusPanel/OtherBonusHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "其他加成"
+vertical_alignment = 1
+
+[node name="OtherBonusValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/OtherBonusPanel/OtherBonusHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "0%"
+vertical_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+
+[node name="TurnImprovedFoodPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="TurnImprovedFoodHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnImprovedFoodPanel"]
+layout_mode = 2
+
+[node name="TurnImprovedFoodKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnImprovedFoodPanel/TurnImprovedFoodHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "每回合改良的食物"
+vertical_alignment = 1
+
+[node name="TurnImprovedFoodValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/TurnImprovedFoodPanel/TurnImprovedFoodHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "+2.2"
+vertical_alignment = 1
+
+[node name="HousingMultiplierPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HousingMultiplierHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/HousingMultiplierPanel"]
+layout_mode = 2
+
+[node name="HousingMultiplierKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/HousingMultiplierPanel/HousingMultiplierHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "住房倍增"
+vertical_alignment = 1
+
+[node name="HousingMultiplierValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/HousingMultiplierPanel/HousingMultiplierHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "1"
+vertical_alignment = 1
+
+[node name="OccupationMultiplierPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="OccupationMultiplierHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/OccupationMultiplierPanel"]
+layout_mode = 2
+
+[node name="OccupationMultiplierKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/OccupationMultiplierPanel/OccupationMultiplierHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "占领城市倍增"
+vertical_alignment = 1
+
+[node name="OccupationMultiplierValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/OccupationMultiplierPanel/OccupationMultiplierHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "无"
+vertical_alignment = 1
+
+[node name="HSeparator3" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+
+[node name="RemainingFoodPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="RemainingFoodHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/RemainingFoodPanel"]
+layout_mode = 2
+
+[node name="RemainingFoodKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/RemainingFoodPanel/RemainingFoodHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "剩余食物总数"
+vertical_alignment = 1
+
+[node name="RemainingFoodValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/RemainingFoodPanel/RemainingFoodHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "+2.2"
+vertical_alignment = 1
+
+[node name="RemainingFoodTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/RemainingFoodPanel/RemainingFoodHBox"]
+layout_mode = 2
+texture = ExtResource("7_7pvdc")
+expand_mode = 2
+
+[node name="HSeparator4" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+
+[node name="GrowthHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="GrowthLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/GrowthHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+text = "增长"
+vertical_alignment = 1
+
+[node name="GrowthProgressBar" type="ProgressBar" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/GrowthHBox"]
+custom_minimum_size = Vector2(170, 10)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="GrowthTurnLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/PopMarginContainer/PopVBox/GrowthHBox/GrowthProgressBar"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = -9.0
+offset_right = 42.0
+offset_bottom = 17.0
+text = "4"
+vertical_alignment = 1
+
+[node name="HSeparator3" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+
+[node name="AmenityTitleLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "宜居度"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator4" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+
+[node name="AmenityMarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="AmenityVBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer"]
+layout_mode = 2
+
+[node name="SumHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+
+[node name="SumPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/SumPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="VBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/SumPanel/HBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="AmenityValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/SumPanel/HBox/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+text = "1"
+
+[node name="NeededValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/SumPanel/HBox/VBox"]
+layout_mode = 2
+text = "0"
+
+[node name="PopLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/SumPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "宜居度
+/
+所需"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ArrowTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("8_jp0ty")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="StatusPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="VBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/StatusPanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="StatusKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/StatusPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "状态："
+vertical_alignment = 2
+
+[node name="StatusValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/SumHBox/StatusPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+text = "高兴"
+
+[node name="BonusPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/BonusPanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="BonusTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/BonusPanel/HBox"]
+modulate = Color(0, 1, 0, 1)
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("3_iu63y")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="BonusRichTextLabel" type="RichTextLabel" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/BonusPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "[color=green]+10%[/color] 人口增长
+[color=green]+5%[/color] 非食物产量"
+fit_content = true
+autowrap_mode = 0
+
+[node name="FromLuxuryPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromLuxuryPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromLuxuryPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自奢侈品资源的宜居度："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromLuxuryPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="FromMunicipalPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromMunicipalPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromMunicipalPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自市政的宜居度："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromMunicipalPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="FromAmusementPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromAmusementPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromAmusementPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自娱乐设施的宜居度："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromAmusementPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "1"
+vertical_alignment = 1
+
+[node name="FromGreatPersonPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromGreatPersonPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromGreatPersonPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自伟人的宜居度："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromGreatPersonPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="FromCityStatePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromCityStatePanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromCityStatePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自城邦的宜居度："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromCityStatePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="FromReligionPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromReligionPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromReligionPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自宗教的宜居度："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromReligionPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="FromNationalParkPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromNationalParkPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromNationalParkPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自国家公园的宜居度："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromNationalParkPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="FromWarWearyPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromWarWearyPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromWarWearyPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自厌战的影响："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromWarWearyPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="FromBankruptPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromBankruptPanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromBankruptPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "来自破产的影响："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/FromBankruptPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="TotalAmenityHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/TotalAmenityHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "总宜居度"
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/TotalAmenityHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "1"
+vertical_alignment = 1
+
+[node name="AdvicePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_qwe2m")
+
+[node name="AdviceLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/AmenityMarginContainer/AmenityVBox/AdvicePanel"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "获得宜居度：
+开发奢侈品资源"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator5" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+
+[node name="HousingTitleLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "住房"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator6" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+
+[node name="HousingMarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="HousingVBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer"]
+layout_mode = 2
+
+[node name="SumHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+
+[node name="SumPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/SumPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="VBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/SumPanel/HBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="HousingValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/SumPanel/HBox/VBox"]
+layout_mode = 2
+text = "4"
+
+[node name="CitizenValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/SumPanel/HBox/VBox"]
+layout_mode = 2
+text = "1"
+
+[node name="PopLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/SumPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "住房
+/
+公民"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ArrowTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("8_jp0ty")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="StatusPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/StatusPanel"]
+layout_mode = 2
+
+[node name="HousingTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/StatusPanel/HBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("4_1jit8")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="StatusKeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/SumHBox/StatusPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "人口增长率正常。"
+vertical_alignment = 2
+
+[node name="BuildingProvidePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/BuildingProvidePanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/BuildingProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "建筑提供的住房："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/BuildingProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "1"
+vertical_alignment = 1
+
+[node name="MunicipalProvidePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/MunicipalProvidePanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/MunicipalProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "市政提供的住房："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/MunicipalProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="DistrictProvidePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/DistrictProvidePanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/DistrictProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "区域提供的住房："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/DistrictProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0
+"
+vertical_alignment = 1
+
+[node name="ImprovementProvidePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/ImprovementProvidePanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/ImprovementProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "改良设施提供的住房："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/ImprovementProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="WaterProvidePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/WaterProvidePanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/WaterProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "水源提供的住房："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/WaterProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "3"
+vertical_alignment = 1
+
+[node name="GreatPersonProvidePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/GreatPersonProvidePanel"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/GreatPersonProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "伟人提供的住房："
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/GreatPersonProvidePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "0"
+vertical_alignment = 1
+
+[node name="TotalHousingHBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+
+[node name="KeyLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/TotalHousingHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "住房总数"
+vertical_alignment = 1
+
+[node name="ValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/TotalHousingHBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "4"
+vertical_alignment = 1
+
+[node name="AdvicePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_qwe2m")
+
+[node name="AdviceLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/CitizenPageVBox/HousingMarginContainer/HousingVBox/AdvicePanel"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "获得住房：
+放置改良设施：农场，渔船，牧场，种植园，营地，大庄园"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuildingPageVBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer"]
+visible = false
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="CitySummaryTitleLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "城市概况"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="SummaryMarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+
+[node name="SummaryPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/SummaryMarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/SummaryMarginContainer/SummaryPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="VBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/SummaryMarginContainer/SummaryPanel/HBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="BuiltDistrictValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/SummaryMarginContainer/SummaryPanel/HBox/VBox"]
+layout_mode = 2
+text = "0"
+
+[node name="CanBuildValLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/SummaryMarginContainer/SummaryPanel/HBox/VBox"]
+layout_mode = 2
+text = "1"
+
+[node name="SummaryLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/SummaryMarginContainer/SummaryPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "区域已建造
+/
+可建造"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator3" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="BuildingAndDistrictLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "建筑和区域"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator4" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="BuildingDistrictMarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="CenterPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_4gtso")
+
+[node name="CenterVBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox"]
+layout_mode = 2
+
+[node name="CenterTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/HBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("9_4bn60")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="CenterLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "市中心"
+vertical_alignment = 1
+
+[node name="CenterBuildingMargin" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/CenterBuildingMargin"]
+layout_mode = 2
+
+[node name="PalacePanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/CenterBuildingMargin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("6_68873")
+
+[node name="HBox" type="HBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/CenterBuildingMargin/VBox/PalacePanel"]
+layout_mode = 2
+
+[node name="PalaceTextureRect" type="TextureRect" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/CenterBuildingMargin/VBox/PalacePanel/HBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+texture = ExtResource("10_sgsg5")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="PalaceLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/CenterBuildingMargin/VBox/PalacePanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "宫殿"
+vertical_alignment = 1
+
+[node name="PalaceRichTextLabel" type="RichTextLabel" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/BuildingDistrictMarginContainer/CenterPanel/CenterVBox/CenterBuildingMargin/VBox/PalacePanel/HBox"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "[img=20]res://assets/civ6_origin/core/webp_32x32/core_production.webp[/img][color=orange]+2[/color][img=20]res://assets/civ6_origin/core/webp_32x32/core_gold.webp[/img][color=yellow]+5[/color][img=20]res://assets/civ6_origin/core/webp_32x32/core_science.webp[/img][color=lightblue]+2[/color][img=20]res://assets/civ6_origin/core/webp_32x32/core_culture.webp[/img][color=pink]+2[/color]"
+fit_content = true
+autowrap_mode = 0
+
+[node name="HSeparator5" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="WonderTitleLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "奇观"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator6" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="WonderMarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="NoWonderPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/WonderMarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_4gtso")
+
+[node name="NoWonderLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/WonderMarginContainer/NoWonderPanel"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "尚未建造奇观。"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator7" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="CitySummaryTitleLabel3" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "奇观"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator8" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="TradePointMarginContainer" type="MarginContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox"]
+layout_mode = 2
+
+[node name="NoTradePointPanel" type="PanelContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/TradePointMarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_4gtso")
+
+[node name="NoTradePointLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/BuildingPageVBox/TradePointMarginContainer/NoTradePointPanel"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "没有贸易站。"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReligionPageVBox" type="VBoxContainer" parent="CityDetailVBox/ContentScrollContainer/MarginContainer"]
+visible = false
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/ReligionPageVBox"]
+layout_mode = 2
+
+[node name="ReligionTitleLabel" type="Label" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/ReligionPageVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.839216, 0.843137, 0.854902, 1)
+theme_override_colors/font_outline_color = Color(0.211765, 0.419608, 0.564706, 1)
+theme_override_constants/outline_size = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_swg5v")
+text = "宗教"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="CityDetailVBox/ContentScrollContainer/MarginContainer/ReligionPageVBox"]
+layout_mode = 2
+
+[connection signal="pressed" from="CityDetailVBox/TitlePanel/CloseButton" to="." method="_on_close_button_pressed"]

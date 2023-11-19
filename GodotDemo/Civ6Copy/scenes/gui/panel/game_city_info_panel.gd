@@ -3,6 +3,7 @@ extends VBoxContainer
 
 
 signal production_button_toggled(button_pressed: bool)
+signal info_button_toggled(button_pressed: bool)
 
 var showing_city: City = null:
 	set(city):
@@ -26,8 +27,10 @@ var showing_city: City = null:
 # 城市所属文明图片
 @onready var city_pic_panel: PanelContainer = $MainPanel/CityInfoVBox/DetailHBox/CityPicPanel
 @onready var city_texture_rect: TextureRect = $MainPanel/CityInfoVBox/DetailHBox/CityPicPanel/CityTextureRect
-# 城市生产相关
+# 上方按钮组
+@onready var city_info_button: Button = $ButtonPanel/ButtonHBox/InfoButton
 @onready var city_production_button: Button = $ButtonPanel/ButtonHBox/ProductButton
+# 城市生产相关
 @onready var city_product_texture_rect: TextureRect = $MainPanel/CityInfoVBox/DetailHBox/ProductTextureRect
 @onready var city_producing_label: Label = $MainPanel/CityInfoVBox/DetailHBox/RightVBox/ProducingLabel
 @onready var city_data_label: Label = $MainPanel/CityInfoVBox/DetailHBox/RightVBox/DataLabel
@@ -88,6 +91,10 @@ func set_product_button_pressed(button_pressed: bool) -> void:
 	city_production_button.button_pressed = button_pressed
 
 
+func set_info_button_pressed(button_pressed: bool) -> void:
+	city_info_button.button_pressed = button_pressed
+
+
 func handle_chosen_city_changed(city: City) -> void:
 	showing_city = city
 
@@ -142,3 +149,8 @@ func update_city_yield_gold(val: float) -> void:
 ## 生产单位的按钮的状态发生改变
 func _on_product_button_toggled(button_pressed: bool) -> void:
 	production_button_toggled.emit(button_pressed)
+
+
+## 城市详情按钮的状态发生改变
+func _on_info_button_toggled(button_pressed: bool) -> void:
+	info_button_toggled.emit(button_pressed)

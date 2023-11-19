@@ -11,6 +11,14 @@ signal city_product_settler_button_pressed
 @onready var wiki_panel: WikiPanel = $WikiPanelContainer
 # 鼠标悬停在地块上时显示的面板
 @onready var mouse_hover_tile_panel: MouseHoverTilePanel = $MouseHoverTilePanel
+# 左上角世界追踪面板
+@onready var world_track_panel: GameWorldTrackPanel = $MainVBox/MainContainer/WorldTrackPanel
+# 左边的城市详情面板
+@onready var city_detail_panel: CityDetailPanel = $MainVBox/MainContainer/CityDetailPanel
+# 左边的选择研究面板
+@onready var tech_choice_panel: TechChoicePanel = $MainVBox/MainContainer/TechChoicePanel
+# 左下角的小地图
+@onready var mini_map_panel: GameMiniMapPanel = $MainVBox/MainContainer/MiniMapPanel
 # 右下角单位信息栏
 @onready var unit_info_panel: GameUnitInfoPanel = $MainVBox/MainContainer/RightDownHBox/UnitInfoPanel
 # 右下角城市信息栏
@@ -31,6 +39,7 @@ func _ready() -> void:
 	# 右下角面板初始化
 	unit_info_panel.hide()
 	city_info_panel.hide()
+	city_detail_panel.hide()
 	hide_city_product_panel()
 	# 鼠标悬停面板初始不显示
 	hide_mouse_hover_tile_info()
@@ -54,9 +63,14 @@ func signal_binding_with_game(game: HotSeatGame) -> void:
 	unit_info_panel.sleep_button_pressed.connect(game.handle_unit_sleep_button_pressed)
 	# 处理城市信息界面生产按钮的按下状态修改的信号
 	city_info_panel.production_button_toggled.connect(handle_city_info_production_button_toggled)
+	city_info_panel.info_button_toggled.connect(handle_city_info_button_toggled)
 	# 处理城市生产界面的信号
 	city_product_panel.settler_button_pressed.connect(game.handle_city_product_settler_button_pressed)
 	city_product_panel.close_button_pressed.connect(handle_city_product_panel_close_button_pressed)
+	# 处理城市详情界面的信号
+	city_detail_panel.close_button_pressed.connect(handle_city_detail_panel_close_button_pressed)
+	# 处理世界追踪界面的信号
+	world_track_panel.tech_button_pressed.connect(handle_world_track_panel_tech_button_pressed)
 
 
 func show_city_product_panel() -> void:
@@ -121,10 +135,28 @@ func handle_city_info_production_button_toggled(button_pressed: bool) -> void:
 		hide_city_product_panel()
 
 
+func handle_city_info_button_toggled(button_pressed: bool) -> void:
+	if button_pressed:
+		city_detail_panel.show()
+	else:
+		city_detail_panel.hide()
+
+
 ## 点击城市生产面板的关闭按钮
 func handle_city_product_panel_close_button_pressed() -> void:
 	hide_city_product_panel()
 	city_info_panel.set_product_button_pressed(false)
+
+
+## 点击城市详情面板的关闭按钮
+func handle_city_detail_panel_close_button_pressed() -> void:
+	city_detail_panel.hide()
+	city_info_panel.set_info_button_pressed(false)
+
+
+## 点击世界追踪面板的科技按钮
+func handle_world_track_panel_tech_button_pressed() -> void:
+	tech_choice_panel.show()
 
 
 ## 点击菜单中的“返回游戏”

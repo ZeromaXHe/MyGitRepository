@@ -1,5 +1,6 @@
-[gd_scene load_steps=36 format=3 uid="uid://cmal7eblkh33l"]
+[gd_scene load_steps=37 format=3 uid="uid://cmal7eblkh33l"]
 
+[ext_resource type="Script" path="res://scenes/gui/panel/game_world_track_panel.gd" id="1_50tr4"]
 [ext_resource type="Texture2D" uid="uid://61demjx51mfs" path="res://assets/icon_park/圆形连接_six-circular-connection.svg" id="1_ss8pf"]
 [ext_resource type="Texture2D" uid="uid://cykmcdd2dscm5" path="res://assets/made_in_godot/empty_tech_texture.tres" id="2_q4vfe"]
 [ext_resource type="Texture2D" uid="uid://qxie35ufu8e5" path="res://assets/civ6_origin/tech/webp_64x64/icon_tech_mining.webp" id="3_rhste"]
@@ -80,10 +81,11 @@ border_width_top = 1
 border_width_bottom = 1
 border_color = Color(0.482353, 0.415686, 0.27451, 1)
 
-[node name="MidTopLeftVBox" type="VBoxContainer"]
+[node name="WorldTrackPanel" type="VBoxContainer"]
 size_flags_horizontal = 0
 size_flags_vertical = 0
 theme_override_constants/separation = 0
+script = ExtResource("1_50tr4")
 
 [node name="MidTopLeftButtonPanel" type="PanelContainer" parent="."]
 layout_mode = 2
@@ -144,6 +146,7 @@ tooltip_text = "市政树
 icon = ExtResource("4_ouqwe")
 
 [node name="CulTreeHBox" type="HBoxContainer" parent="MidTopLeftButtonPanel/ButtonHBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
@@ -202,12 +205,16 @@ layout_mode = 2
 tooltip_text = "显示/隐藏世界追踪"
 button_pressed = true
 
-[node name="WorldTrackerTitlePanel" type="PanelContainer" parent="."]
+[node name="MainVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="WorldTrackerTitlePanel" type="PanelContainer" parent="MainVBox"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_jwvnj")
 
-[node name="TrackTitleLabel" type="Label" parent="WorldTrackerTitlePanel"]
+[node name="TrackTitleLabel" type="Label" parent="MainVBox/WorldTrackerTitlePanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.486275, 0.419608, 0.290196, 1)
 theme_override_font_sizes/font_size = 12
@@ -215,7 +222,7 @@ text = "世界追踪"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="TrackPanelShowMenuBtn" type="MenuButton" parent="WorldTrackerTitlePanel"]
+[node name="TrackPanelShowMenuBtn" type="MenuButton" parent="MainVBox/WorldTrackerTitlePanel"]
 custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 icon = ExtResource("11_15bk5")
@@ -234,17 +241,17 @@ popup/item_2/checkable = 1
 popup/item_2/checked = true
 popup/item_2/id = 2
 
-[node name="SciTreePanel" type="PanelContainer" parent="."]
+[node name="SciTreePanel" type="PanelContainer" parent="MainVBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dqnmp")
 
-[node name="SciTreeHBox" type="HBoxContainer" parent="SciTreePanel"]
+[node name="SciTreeHBox" type="HBoxContainer" parent="MainVBox/SciTreePanel"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 0
 
-[node name="TechProgressBar" type="ProgressBar" parent="SciTreePanel/SciTreeHBox"]
+[node name="TechProgressBar" type="ProgressBar" parent="MainVBox/SciTreePanel/SciTreeHBox"]
 custom_minimum_size = Vector2(5, 64)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_vwgcg")
@@ -253,16 +260,16 @@ value = 50.0
 fill_mode = 3
 show_percentage = false
 
-[node name="TechImgPanel" type="PanelContainer" parent="SciTreePanel/SciTreeHBox"]
+[node name="TechImgPanel" type="PanelContainer" parent="MainVBox/SciTreePanel/SciTreeHBox"]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_b8d4q")
 
-[node name="TechImg" type="TextureRect" parent="SciTreePanel/SciTreeHBox/TechImgPanel"]
+[node name="TechImg" type="TextureRect" parent="MainVBox/SciTreePanel/SciTreeHBox/TechImgPanel"]
 layout_mode = 2
 texture = ExtResource("3_rhste")
 
-[node name="TechTurnLabel" type="Label" parent="SciTreePanel/SciTreeHBox/TechImgPanel"]
+[node name="TechTurnLabel" type="Label" parent="MainVBox/SciTreePanel/SciTreeHBox/TechImgPanel"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 8
@@ -271,66 +278,70 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 text = "回合: 2"
 
-[node name="SciTreeVBox" type="VBoxContainer" parent="SciTreePanel/SciTreeHBox"]
+[node name="TechButton" type="Button" parent="MainVBox/SciTreePanel/SciTreeHBox/TechImgPanel"]
+layout_mode = 2
+flat = true
+
+[node name="SciTreeVBox" type="VBoxContainer" parent="MainVBox/SciTreePanel/SciTreeHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TechNameLabel" type="Label" parent="SciTreePanel/SciTreeHBox/SciTreeVBox"]
+[node name="TechNameLabel" type="Label" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "采矿业"
 
-[node name="TechUnlockPanel" type="PanelContainer" parent="SciTreePanel/SciTreeHBox/SciTreeVBox"]
+[node name="TechUnlockPanel" type="PanelContainer" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_26ipj")
 
-[node name="TechUnlockHBox" type="HBoxContainer" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel"]
+[node name="TechUnlockHBox" type="HBoxContainer" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel"]
 layout_mode = 2
 
-[node name="UnlockTextureRect" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
+[node name="UnlockTextureRect" type="TextureRect" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 texture = ExtResource("12_pjc8u")
 expand_mode = 2
 
-[node name="UnlockTextureRect2" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
+[node name="UnlockTextureRect2" type="TextureRect" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 texture = ExtResource("13_mowsq")
 expand_mode = 2
 
-[node name="UnlockTextureRect3" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
+[node name="UnlockTextureRect3" type="TextureRect" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox/TechUnlockPanel/TechUnlockHBox"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 texture = ExtResource("14_nfqbt")
 expand_mode = 2
 
-[node name="EurekaHBox" type="HBoxContainer" parent="SciTreePanel/SciTreeHBox/SciTreeVBox"]
+[node name="EurekaHBox" type="HBoxContainer" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox"]
 layout_mode = 2
 
-[node name="EurekaTextureRect" type="TextureRect" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/EurekaHBox"]
+[node name="EurekaTextureRect" type="TextureRect" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox/EurekaHBox"]
 layout_mode = 2
 texture = ExtResource("15_iu6sw")
 expand_mode = 2
 
-[node name="TechEurekaLabel" type="Label" parent="SciTreePanel/SciTreeHBox/SciTreeVBox/EurekaHBox"]
+[node name="TechEurekaLabel" type="Label" parent="MainVBox/SciTreePanel/SciTreeHBox/SciTreeVBox/EurekaHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 10
 text = "尤里卡"
 clip_text = true
 
-[node name="CulTreePanel" type="PanelContainer" parent="."]
+[node name="CulTreePanel" type="PanelContainer" parent="MainVBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_d7xj8")
 
-[node name="CulTreeHBox" type="HBoxContainer" parent="CulTreePanel"]
+[node name="CulTreeHBox" type="HBoxContainer" parent="MainVBox/CulTreePanel"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 0
 
-[node name="CivicProgressBar" type="ProgressBar" parent="CulTreePanel/CulTreeHBox"]
+[node name="CivicProgressBar" type="ProgressBar" parent="MainVBox/CulTreePanel/CulTreeHBox"]
 custom_minimum_size = Vector2(5, 64)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_rrtt1")
@@ -339,16 +350,16 @@ value = 50.0
 fill_mode = 3
 show_percentage = false
 
-[node name="CivicImgPanel" type="PanelContainer" parent="CulTreePanel/CulTreeHBox"]
+[node name="CivicImgPanel" type="PanelContainer" parent="MainVBox/CulTreePanel/CulTreeHBox"]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_hxnmb")
 
-[node name="CivicImg" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CivicImgPanel"]
+[node name="CivicImg" type="TextureRect" parent="MainVBox/CulTreePanel/CulTreeHBox/CivicImgPanel"]
 layout_mode = 2
 texture = ExtResource("6_c4dof")
 
-[node name="CivicTurnLabel" type="Label" parent="CulTreePanel/CulTreeHBox/CivicImgPanel"]
+[node name="CivicTurnLabel" type="Label" parent="MainVBox/CulTreePanel/CulTreeHBox/CivicImgPanel"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 8
@@ -357,102 +368,105 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 text = "回合: 5"
 
-[node name="CulTreeVBox" type="VBoxContainer" parent="CulTreePanel/CulTreeHBox"]
+[node name="CulTreeVBox" type="VBoxContainer" parent="MainVBox/CulTreePanel/CulTreeHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CivicNameLabel" type="Label" parent="CulTreePanel/CulTreeHBox/CulTreeVBox"]
+[node name="CivicNameLabel" type="Label" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "法典"
 
-[node name="CivicUnlockPanel" type="PanelContainer" parent="CulTreePanel/CulTreeHBox/CulTreeVBox"]
+[node name="CivicUnlockPanel" type="PanelContainer" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_f44fu")
 
-[node name="CivicUnlockHBox" type="HBoxContainer" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel"]
+[node name="CivicUnlockHBox" type="HBoxContainer" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel"]
 layout_mode = 2
 
-[node name="UnlockTextureRect" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+[node name="UnlockTextureRect" type="TextureRect" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 texture = ExtResource("15_pvaxi")
 expand_mode = 2
 
-[node name="UnlockTextureRect2" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+[node name="UnlockTextureRect2" type="TextureRect" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 texture = ExtResource("15_pvaxi")
 expand_mode = 2
 
-[node name="UnlockTextureRect3" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+[node name="UnlockTextureRect3" type="TextureRect" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 texture = ExtResource("16_dgsok")
 expand_mode = 2
 
-[node name="UnlockTextureRect4" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
+[node name="UnlockTextureRect4" type="TextureRect" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox/CivicUnlockPanel/CivicUnlockHBox"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 texture = ExtResource("16_dgsok")
 expand_mode = 2
 
-[node name="InspireHBox" type="HBoxContainer" parent="CulTreePanel/CulTreeHBox/CulTreeVBox"]
+[node name="InspireHBox" type="HBoxContainer" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox"]
 layout_mode = 2
 
-[node name="InspireTextureRect" type="TextureRect" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/InspireHBox"]
+[node name="InspireTextureRect" type="TextureRect" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox/InspireHBox"]
 layout_mode = 2
 texture = ExtResource("18_qipa3")
 expand_mode = 2
 
-[node name="CivicInspireLabel" type="Label" parent="CulTreePanel/CulTreeHBox/CulTreeVBox/InspireHBox"]
+[node name="CivicInspireLabel" type="Label" parent="MainVBox/CulTreePanel/CulTreeHBox/CulTreeVBox/InspireHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 10
 text = "鼓舞时刻"
 
-[node name="UnitListPanel" type="PanelContainer" parent="."]
+[node name="UnitListPanel" type="PanelContainer" parent="MainVBox"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_j5k7h")
 
-[node name="UnitListVBox" type="VBoxContainer" parent="UnitListPanel"]
+[node name="UnitListVBox" type="VBoxContainer" parent="MainVBox/UnitListPanel"]
 layout_mode = 2
 
-[node name="TitleLabel" type="Label" parent="UnitListPanel/UnitListVBox"]
+[node name="TitleLabel" type="Label" parent="MainVBox/UnitListPanel/UnitListVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "单位列表"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="UnitsScrollContainer" type="ScrollContainer" parent="UnitListPanel/UnitListVBox"]
+[node name="UnitsScrollContainer" type="ScrollContainer" parent="MainVBox/UnitListPanel/UnitListVBox"]
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 
-[node name="UnitsVBox" type="VBoxContainer" parent="UnitListPanel/UnitListVBox/UnitsScrollContainer"]
+[node name="UnitsVBox" type="VBoxContainer" parent="MainVBox/UnitListPanel/UnitListVBox/UnitsScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
 
-[node name="ScoutButton" type="Button" parent="UnitListPanel/UnitListVBox/UnitsScrollContainer/UnitsVBox"]
+[node name="ScoutButton" type="Button" parent="MainVBox/UnitListPanel/UnitListVBox/UnitsScrollContainer/UnitsVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "侦察兵"
 icon = ExtResource("17_x3vbe")
 expand_icon = true
 
-[node name="WarriorButton" type="Button" parent="UnitListPanel/UnitListVBox/UnitsScrollContainer/UnitsVBox"]
+[node name="WarriorButton" type="Button" parent="MainVBox/UnitListPanel/UnitListVBox/UnitsScrollContainer/UnitsVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "勇士"
 icon = ExtResource("18_6pupn")
 expand_icon = true
 
-[node name="HSeparator" type="HSeparator" parent="UnitListPanel/UnitListVBox"]
+[node name="HSeparator" type="HSeparator" parent="MainVBox/UnitListPanel/UnitListVBox"]
 layout_mode = 2
 
-[node name="SearchLineEdit" type="LineEdit" parent="UnitListPanel/UnitListVBox"]
+[node name="SearchLineEdit" type="LineEdit" parent="MainVBox/UnitListPanel/UnitListVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 caret_blink = true
 caret_blink_interval = 0.5
+
+[connection signal="toggled" from="MidTopLeftButtonPanel/ButtonHBox/WorldTrackShowButton" to="." method="_on_world_track_show_button_toggled"]
+[connection signal="pressed" from="MainVBox/SciTreePanel/SciTreeHBox/TechImgPanel/TechButton" to="." method="_on_tech_button_pressed"]

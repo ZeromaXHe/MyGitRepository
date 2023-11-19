@@ -55,36 +55,45 @@ alignment = 2
 
 [node name="InfoButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "开启/关闭城市详情"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "详情"
 
+[node name="VSeparator" type="VSeparator" parent="ButtonPanel/ButtonHBox"]
+layout_mode = 2
+
 [node name="BuyCellButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "购买单元格"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "买地"
 
 [node name="CitizenButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "市民管理"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "市民"
 
 [node name="BuyUnitButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "使用金币购买物品"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "买人"
 
 [node name="FaithUnitButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "使用信仰值购买物品"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "信人"
 
 [node name="ProductButton" type="Button" parent="ButtonPanel/ButtonHBox"]
 layout_mode = 2
+tooltip_text = "改变城市生产项目"
 theme_override_font_sizes/font_size = 12
 toggle_mode = true
 text = "生产"
@@ -424,4 +433,5 @@ theme_override_styles/normal = SubResource("StyleBoxEmpty_v11nb")
 text = "0 回合后完成"
 vertical_alignment = 1
 
+[connection signal="toggled" from="ButtonPanel/ButtonHBox/InfoButton" to="." method="_on_info_button_toggled"]
 [connection signal="toggled" from="ButtonPanel/ButtonHBox/ProductButton" to="." method="_on_product_button_toggled"]

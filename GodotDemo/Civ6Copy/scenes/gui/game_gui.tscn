@@ -1,17 +1,15 @@
-[gd_scene load_steps=25 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=26 format=3 uid="uid://dfpeq8ikcp1wc"]
 
 [ext_resource type="Script" path="res://scenes/gui/game_gui.gd" id="1_heuwt"]
 [ext_resource type="PackedScene" uid="uid://cuqtin2smf42h" path="res://scenes/gui/panel/game_top_panel.tscn" id="2_4ekn0"]
 [ext_resource type="PackedScene" uid="uid://cmal7eblkh33l" path="res://scenes/gui/panel/game_world_track_panel.tscn" id="3_wjgdj"]
-[ext_resource type="Texture2D" uid="uid://duwxecohirtpr" path="res://assets/icon_park/镜子2_mirror-two.svg" id="9_11lm6"]
-[ext_resource type="Texture2D" uid="uid://x3lg83lirlhc" path="res://assets/icon_park/地图_map-draw.svg" id="10_bdjt4"]
-[ext_resource type="Texture2D" uid="uid://cnld60u7rpxkv" path="res://assets/icon_park/本地_local-two.svg" id="11_chx2f"]
-[ext_resource type="Texture2D" uid="uid://bwrtwad4y7ct1" path="res://assets/icon_park/搜索_search.svg" id="12_efpiw"]
-[ext_resource type="Texture2D" uid="uid://cwdk6g3kghm5v" path="res://assets/icon_park/世界_world.svg" id="13_23sag"]
-[ext_resource type="Texture2D" uid="uid://b1di533muewx2" path="res://assets/icon_park/全屏播放_full-screen-play.svg" id="14_iwx8h"]
+[ext_resource type="Texture2D" uid="uid://o66w84gg4lhx" path="res://assets/civ6_origin/leader/webp_64x64/icon_leader_trajan.webp" id="4_86vqc"]
+[ext_resource type="PackedScene" uid="uid://bfavrm7majmo" path="res://scenes/gui/panel/game_mini_map_panel.tscn" id="7_c8n5a"]
 [ext_resource type="Texture2D" uid="uid://dwjtbkeorddo6" path="res://assets/icon_park/排行榜_ranking.svg" id="15_1mjtj"]
 [ext_resource type="Texture2D" uid="uid://bo3js64jh1014" path="res://assets/icon_park/夜晚模式_dark-mode.svg" id="16_y7cb5"]
+[ext_resource type="PackedScene" uid="uid://cqxbwhbliy2gk" path="res://scenes/gui/panel/game_city_detail_panel.tscn" id="17_0tkqm"]
 [ext_resource type="Texture2D" uid="uid://d2em5ph4336s3" path="res://assets/icon_park/分析_analysis.svg" id="17_gl51h"]
+[ext_resource type="PackedScene" uid="uid://d4mfe7rarl2nf" path="res://scenes/gui/panel/game_tech_choice_panel.tscn" id="18_jl3to"]
 [ext_resource type="PackedScene" uid="uid://dsrkjn1ew77q0" path="res://scenes/gui/panel/game_unit_info_panel.tscn" id="18_r0akp"]
 [ext_resource type="PackedScene" uid="uid://dsvabdnd8uany" path="res://scenes/gui/panel/game_city_info_panel.tscn" id="19_karjy"]
 [ext_resource type="PackedScene" uid="uid://bfwi0qylm5dh6" path="res://scenes/gui/panel/game_turn_panel.tscn" id="20_7b5h4"]
@@ -22,6 +20,17 @@
 [ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://styles/menu_deep_blue_button_normal.tres" id="33_4g664"]
 [ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://styles/menu_deep_blue_button_hover.tres" id="34_aeh5d"]
 [ext_resource type="StyleBox" uid="uid://dqr84amdys5ut" path="res://styles/menu_deep_blue_button_press.tres" id="35_ltdyn"]
+
+[sub_resource type="Gradient" id="Gradient_bw1fp"]
+offsets = PackedFloat32Array(0, 0.490756, 0.532773, 0.998319)
+colors = PackedColorArray(0.482353, 0.392157, 0.25098, 1, 0.494118, 0.4, 0.254902, 1, 0.27451, 0.164706, 0.117647, 1, 0.254902, 0.152941, 0.105882, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_b2scp"]
+gradient = SubResource("Gradient_bw1fp")
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_j87jg"]
+texture = SubResource("GradientTexture2D_b2scp")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iwk70"]
 bg_color = Color(0.133333, 0.133333, 0.133333, 0.901961)
@@ -44,6 +53,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_override_constants/separation = 0
 
 [node name="TopPanel" parent="MainVBox" instance=ExtResource("2_4ekn0")]
 layout_mode = 2
@@ -53,86 +63,53 @@ layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="MidTopLeftVBox" parent="MainVBox/MainContainer" instance=ExtResource("3_wjgdj")]
+[node name="WorldTrackPanel" parent="MainVBox/MainContainer" instance=ExtResource("3_wjgdj")]
 layout_mode = 2
 
-[node name="MidTopRightPanel" type="PanelContainer" parent="MainVBox/MainContainer"]
+[node name="HBox" type="HBoxContainer" parent="MainVBox/MainContainer"]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
+alignment = 2
 
-[node name="ButtonHBox" type="HBoxContainer" parent="MainVBox/MainContainer/MidTopRightPanel"]
+[node name="PlayerHBox" type="HBoxContainer" parent="MainVBox/MainContainer/HBox"]
 layout_mode = 2
 
-[node name="RankButton" type="Button" parent="MainVBox/MainContainer/MidTopRightPanel/ButtonHBox"]
+[node name="Player1TextureRect" type="TextureRect" parent="MainVBox/MainContainer/HBox/PlayerHBox"]
 layout_mode = 2
-tooltip_text = "世界排名"
+tooltip_text = "图拉真
+罗马（玩家1）"
+texture = ExtResource("4_86vqc")
+
+[node name="MidTopRightPanel" type="PanelContainer" parent="MainVBox/MainContainer/HBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_j87jg")
+
+[node name="ButtonHBox" type="HBoxContainer" parent="MainVBox/MainContainer/HBox/MidTopRightPanel"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="RankButton" type="Button" parent="MainVBox/MainContainer/HBox/MidTopRightPanel/ButtonHBox"]
+layout_mode = 2
+tooltip_text = "世界排名
+
+查看世界排名看看自己表现如何，并看看您需要做什么来取得胜利。"
 icon = ExtResource("15_1mjtj")
 
-[node name="EraButton" type="Button" parent="MainVBox/MainContainer/MidTopRightPanel/ButtonHBox"]
+[node name="EraButton" type="Button" parent="MainVBox/MainContainer/HBox/MidTopRightPanel/ButtonHBox"]
 visible = false
 layout_mode = 2
 icon = ExtResource("16_y7cb5")
 
-[node name="ReportButton" type="Button" parent="MainVBox/MainContainer/MidTopRightPanel/ButtonHBox"]
+[node name="ReportButton" type="Button" parent="MainVBox/MainContainer/HBox/MidTopRightPanel/ButtonHBox"]
 layout_mode = 2
 tooltip_text = "报告列表"
 icon = ExtResource("17_gl51h")
 
-[node name="MiniMapPanel" type="PanelContainer" parent="MainVBox/MainContainer"]
+[node name="MiniMapPanel" parent="MainVBox/MainContainer" instance=ExtResource("7_c8n5a")]
 layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 8
-
-[node name="MiniMapVBox" type="VBoxContainer" parent="MainVBox/MainContainer/MiniMapPanel"]
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 8
-alignment = 2
-
-[node name="MiniMapBtnHBox" type="HBoxContainer" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox"]
-layout_mode = 2
-
-[node name="FilterButton" type="Button" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
-layout_mode = 2
-icon = ExtResource("9_11lm6")
-
-[node name="OptionButton" type="Button" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
-layout_mode = 2
-icon = ExtResource("10_bdjt4")
-
-[node name="PinButton" type="Button" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
-layout_mode = 2
-icon = ExtResource("11_chx2f")
-
-[node name="SearchButton" type="Button" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
-layout_mode = 2
-icon = ExtResource("12_efpiw")
-
-[node name="StrategyViewButton" type="Button" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
-layout_mode = 2
-icon = ExtResource("13_23sag")
-
-[node name="FullScreenButton" type="Button" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MiniMapBtnHBox"]
-layout_mode = 2
-icon = ExtResource("14_iwx8h")
-
-[node name="MarginContainer" type="MarginContainer" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox"]
-layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
-
-[node name="SubViewportContainer" type="SubViewportContainer" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MarginContainer"]
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 8
-
-[node name="SubViewport" type="SubViewport" parent="MainVBox/MainContainer/MiniMapPanel/MiniMapVBox/MarginContainer/SubViewportContainer"]
-handle_input_locally = false
-size = Vector2i(288, 162)
-render_target_update_mode = 4
 
 [node name="RightDownHBox" type="HBoxContainer" parent="MainVBox/MainContainer"]
 layout_mode = 2
@@ -153,6 +130,14 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="CityProductPanel" parent="MainVBox/MainContainer/RightDownHBox" instance=ExtResource("21_pw5r8")]
+visible = false
+layout_mode = 2
+
+[node name="CityDetailPanel" parent="MainVBox/MainContainer" instance=ExtResource("17_0tkqm")]
+visible = false
+layout_mode = 2
+
+[node name="TechChoicePanel" parent="MainVBox/MainContainer" instance=ExtResource("18_jl3to")]
 visible = false
 layout_mode = 2
 
