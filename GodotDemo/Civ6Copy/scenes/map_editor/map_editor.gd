@@ -386,10 +386,10 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: TerrainTable.
 	if change.before.village and not VillageController.is_village_placeable_terrain(terrain_type):
 		change.after.village = false
 	
-	if change.before.continent != ContinentTable.Continent.EMPTY \
+	if change.before.continent != ContinentTable.Enum.EMPTY \
 			and not ContinentController.is_continent_placeable_terrain(terrain_type):
-		change.after.continent = ContinentTable.Continent.EMPTY
-	elif ContinentController.is_continent_placeable_terrain(terrain_type) and change.before.continent == ContinentTable.Continent.EMPTY:
+		change.after.continent = ContinentTable.Enum.EMPTY
+	elif ContinentController.is_continent_placeable_terrain(terrain_type) and change.before.continent == ContinentTable.Enum.EMPTY:
 		# 从海变陆时需要给个默认的大洲
 		change.after.continent = gui.continent_type
 	
@@ -455,7 +455,7 @@ func paint_resource(tile_coord: Vector2i, step: PaintStep, type: ResourceTable.E
 	map_shower.paint_resource(tile_coord, type)
 
 
-func paint_continent(tile_coord: Vector2i, step: PaintStep, type: ContinentTable.Continent) -> void:
+func paint_continent(tile_coord: Vector2i, step: PaintStep, type: ContinentTable.Enum) -> void:
 	# 记录操作
 	var change: PaintChange = build_change_of_tile(tile_coord, TileChangeType.CONTINENT)
 	change.after.continent = type

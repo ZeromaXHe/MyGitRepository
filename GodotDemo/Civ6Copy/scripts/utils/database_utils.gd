@@ -1,6 +1,10 @@
 class_name DatabaseUtils
 
 
+# 文明表
+static var civ_tbl := CivTable.new()
+# 领袖表
+static var leader_tbl := LeaderTable.new()
 # 地图尺寸表
 static var map_size_tbl := MapSizeTable.new()
 # 地图类型表
