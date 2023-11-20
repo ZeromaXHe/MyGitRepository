@@ -3,7 +3,7 @@ extends MySimSQL.EnumTable
 
 
 # 地图类型
-enum Type {
+enum Enum {
 	BLANK, # 空白地图
 }
 
@@ -12,12 +12,12 @@ func _init() -> void:
 	super._init()
 	elem_type = MapTypeDO
 	
-	for k in Type.keys():
+	for k in Enum.keys():
 		var do = MapTypeDO.new()
 		do.enum_name = k
-		do.enum_val = Type[k]
+		do.enum_val = Enum[k]
 		match do.enum_val:
-			Type.BLANK:
+			Enum.BLANK:
 				do.view_name = "空白地图"
 		super.init_insert(do)
 

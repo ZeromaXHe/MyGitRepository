@@ -2,7 +2,7 @@ class_name UnitCategoryTable
 extends MySimSQL.EnumTable
 
 
-enum Category {
+enum Enum {
 	GROUND_FORCE, # 地面部队
 	SEA_FORCE, # 海上部队
 	AIR_FORCE, # 空中部队
@@ -17,30 +17,30 @@ func _init() -> void:
 	super._init()
 	elem_type = UnitCategoryDO
 	
-	for k in Category.keys():
+	for k in Enum.keys():
 		var do := UnitCategoryDO.new()
 		do.enum_name = k
-		do.enum_val = Category[k]
+		do.enum_val = Enum[k]
 		match do.enum_val:
-			Category.GROUND_FORCE:
+			Enum.GROUND_FORCE:
 				do.view_name = "地面部队"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_ground_military_background.svg"
-			Category.SEA_FORCE:
+			Enum.SEA_FORCE:
 				do.view_name = "海上部队"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_sea_military_background.svg"
-			Category.AIR_FORCE:
+			Enum.AIR_FORCE:
 				do.view_name = "空中部队"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_ground_military_background.svg"
-			Category.ASSISTANT_FORCE:
+			Enum.ASSISTANT_FORCE:
 				do.view_name = "支援部队"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_assistant_background.svg"
-			Category.CITIZEN:
+			Enum.CITIZEN:
 				do.view_name = "平民"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_citizen_background.svg"
-			Category.TRADER:
+			Enum.TRADER:
 				do.view_name = "商人"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_trader_background.svg"
-			Category.RELIGIOUS:
+			Enum.RELIGIOUS:
 				do.view_name = "宗教单位"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_religious_background.svg"
 		super.init_insert(do)

@@ -38,7 +38,7 @@ func test_hexagon_utils_cube_ring() -> void:
 
 
 func test_map_service_get_in_map_surrounding_coords() -> void:
-	print(MapService.get_in_map_surrounding_coords(Vector2i(22, 14), DatabaseUtils.map_size_tbl.query_by_enum_val(MapSizeTable.Size.DUAL).size_vec))
+	print(MapService.get_in_map_surrounding_coords(Vector2i(22, 14), DatabaseUtils.map_size_tbl.query_by_enum_val(MapSizeTable.Enum.DUAL).size_vec))
 	print(HexagonUtils.OffsetCoord.odd_r(22, 14).neighbor(HexagonUtils.Direction.RIGHT_DOWN).to_vec2i())
 	print(HexagonUtils.OffsetCoord.odd_r(22, 14).neighbor(HexagonUtils.Direction.LEFT_DOWN).to_vec2i())
 

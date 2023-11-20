@@ -35,7 +35,7 @@ func show_info() -> void:
 	# 刷新内容
 	var unit_do: UnitDO = UnitController.get_unit_do(showing_unit.id)
 	name_button.text = UnitController.get_unit_name(unit_do.type)
-	if unit_do.type == UnitTypeTable.Type.SETTLER:
+	if unit_do.type == UnitTypeTable.Enum.SETTLER:
 		city_button.show()
 		defend_button.hide()
 		skip_button.show()

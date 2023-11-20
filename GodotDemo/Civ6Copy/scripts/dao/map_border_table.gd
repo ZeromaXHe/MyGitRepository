@@ -19,7 +19,7 @@ enum Type {
 	VERTICAL, # | 垂直线
 }
 
-enum TileType {
+enum Enum {
 	EMPTY, # 空
 	RIVER, # 河流
 	CLIFF, # 悬崖

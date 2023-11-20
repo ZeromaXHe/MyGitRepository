@@ -5,7 +5,7 @@ extends MySimSQL.DataObj
 # 坐标
 var coord: Vector2i
 # 地块类型
-var tile_type := MapBorderTable.TileType.EMPTY
+var tile_type := MapBorderTable.Enum.EMPTY
 
 
 func clone() -> MapBorderDO:

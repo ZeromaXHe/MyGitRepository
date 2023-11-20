@@ -1,8 +1,8 @@
 class_name MapService
 
 
-static var size := MapSizeTable.Size.DUAL
-static var type := MapTypeTable.Type.BLANK
+static var size := MapSizeTable.Enum.DUAL
+static var type := MapTypeTable.Enum.BLANK
 # A* 算法
 static var move_astar: MapMoveAStar2D
 static var sight_astar: MapSightAStar2D
@@ -107,13 +107,13 @@ static func serialize_map_tile_info() -> String:
 			row = tile_do.coord.x
 		else:
 			res += ","
-		if tile_do.continent != ContinentTable.Continent.EMPTY:
+		if tile_do.continent != ContinentTable.Enum.EMPTY:
 			res += str(tile_do.terrain) + "|" \
 					+ str(tile_do.landscape) + "|" \
 					+ ("1" if tile_do.village else "0") + "|" \
 					+ str(tile_do.resource) + "|" \
 					+ str(tile_do.continent)
-		elif tile_do.resource != ResourceTable.ResourceType.EMPTY:
+		elif tile_do.resource != ResourceTable.Enum.EMPTY:
 			res += str(tile_do.terrain) + "|" \
 					+ str(tile_do.landscape) + "|" \
 					+ ("1" if tile_do.village else "0") + "|" \
@@ -122,7 +122,7 @@ static func serialize_map_tile_info() -> String:
 			res += str(tile_do.terrain) + "|" \
 					+ str(tile_do.landscape) + "|" \
 					+ ("1" if tile_do.village else "0")
-		elif tile_do.landscape != LandscapeTable.Landscape.EMPTY:
+		elif tile_do.landscape != LandscapeTable.Enum.EMPTY:
 			res += str(tile_do.terrain) + "|" \
 					+ str(tile_do.landscape)
 		else:
@@ -324,7 +324,7 @@ class MapMoveAStar2D extends MapAStar2D:
 		var to_tile: MapTileDO = MapTileService.get_map_tile_do_by_coord(to_coord)
 		# 无法前往山脉和冰
 		if TerrainService.is_mountain_land_terrain(to_tile.terrain) \
-				or to_tile.landscape == LandscapeTable.Landscape.ICE:
+				or to_tile.landscape == LandscapeTable.Enum.ICE:
 			return UNREACHABLE_COST
 		# FIXME: 暂时先让跨越陆海分隔的路线成本为无法到达
 		if TerrainService.is_land_terrain(from_tile.terrain) \

@@ -5,7 +5,7 @@ extends MySimSQL.DataObj
 # 所在地块坐标
 var coord: Vector2i
 # 单位类型
-var type: UnitTypeTable.Type
+var type: UnitTypeTable.Enum
 # 所属玩家 id
 var player_id: int
 # 剩余移动力

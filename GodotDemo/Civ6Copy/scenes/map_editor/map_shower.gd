@@ -21,72 +21,72 @@ const BORDER_TILE_LAYER_IDX: int = 0
 const BORDER_CHOSEN_LAYER_IDX: int = 1
 # 资源类型和对应资源图标场景的映射字典
 const RESOURCE_TYPE_TO_ICON_SCENE_DICT: Dictionary = {
-	ResourceTable.ResourceType.SILK: preload("res://scenes/map_editor/resource_tiles/resource_sprite.tscn"),
-	ResourceTable.ResourceType.RELIC: preload("res://scenes/map_editor/resource_tiles/sprite_relic.tscn"),
-	ResourceTable.ResourceType.COCOA_BEAN: preload("res://scenes/map_editor/resource_tiles/sprite_cocoa_bean.tscn"),
-	ResourceTable.ResourceType.COFFEE: preload("res://scenes/map_editor/resource_tiles/sprite_coffee.tscn"),
-	ResourceTable.ResourceType.MARBLE: preload("res://scenes/map_editor/resource_tiles/sprite_marble.tscn"),
-	ResourceTable.ResourceType.RICE: preload("res://scenes/map_editor/resource_tiles/sprite_rice.tscn"),
-	ResourceTable.ResourceType.WHEAT: preload("res://scenes/map_editor/resource_tiles/sprite_wheat.tscn"),
-	ResourceTable.ResourceType.TRUFFLE: preload("res://scenes/map_editor/resource_tiles/sprite_truffle.tscn"),
-	ResourceTable.ResourceType.ORANGE: preload("res://scenes/map_editor/resource_tiles/sprite_orange.tscn"),
-	ResourceTable.ResourceType.DYE: preload("res://scenes/map_editor/resource_tiles/sprite_dye.tscn"),
-	ResourceTable.ResourceType.COTTON: preload("res://scenes/map_editor/resource_tiles/sprite_cotton.tscn"),
-	ResourceTable.ResourceType.MERCURY: preload("res://scenes/map_editor/resource_tiles/sprite_mercury.tscn"),
-	ResourceTable.ResourceType.WRECKAGE: preload("res://scenes/map_editor/resource_tiles/sprite_wreckage.tscn"),
-	ResourceTable.ResourceType.TOBACCO: preload("res://scenes/map_editor/resource_tiles/sprite_tobacco.tscn"),
-	ResourceTable.ResourceType.COAL: preload("res://scenes/map_editor/resource_tiles/sprite_coal.tscn"),
-	ResourceTable.ResourceType.INCENSE: preload("res://scenes/map_editor/resource_tiles/sprite_incense.tscn"),
-	ResourceTable.ResourceType.COW: preload("res://scenes/map_editor/resource_tiles/sprite_cow.tscn"),
-	ResourceTable.ResourceType.JADE: preload("res://scenes/map_editor/resource_tiles/sprite_jade.tscn"),
-	ResourceTable.ResourceType.CORN: preload("res://scenes/map_editor/resource_tiles/sprite_corn.tscn"),
-	ResourceTable.ResourceType.PEARL: preload("res://scenes/map_editor/resource_tiles/sprite_pearl.tscn"),
-	ResourceTable.ResourceType.FUR: preload("res://scenes/map_editor/resource_tiles/sprite_fur.tscn"),
-	ResourceTable.ResourceType.SALT: preload("res://scenes/map_editor/resource_tiles/sprite_salt.tscn"),
-	ResourceTable.ResourceType.STONE: preload("res://scenes/map_editor/resource_tiles/sprite_stone.tscn"),
-	ResourceTable.ResourceType.OIL: preload("res://scenes/map_editor/resource_tiles/sprite_oil.tscn"),
-	ResourceTable.ResourceType.GYPSUM: preload("res://scenes/map_editor/resource_tiles/sprite_gypsum.tscn"),
-	ResourceTable.ResourceType.SALTPETER: preload("res://scenes/map_editor/resource_tiles/sprite_saltpeter.tscn"),
-	ResourceTable.ResourceType.SUGAR: preload("res://scenes/map_editor/resource_tiles/sprite_sugar.tscn"),
-	ResourceTable.ResourceType.SHEEP: preload("res://scenes/map_editor/resource_tiles/sprite_sheep.tscn"),
-	ResourceTable.ResourceType.TEA: preload("res://scenes/map_editor/resource_tiles/sprite_tea.tscn"),
-	ResourceTable.ResourceType.WINE: preload("res://scenes/map_editor/resource_tiles/sprite_wine.tscn"),
-	ResourceTable.ResourceType.HONEY: preload("res://scenes/map_editor/resource_tiles/sprite_honey.tscn"),
-	ResourceTable.ResourceType.CRAB: preload("res://scenes/map_editor/resource_tiles/sprite_crab.tscn"),
-	ResourceTable.ResourceType.IVORY: preload("res://scenes/map_editor/resource_tiles/sprite_ivory.tscn"),
-	ResourceTable.ResourceType.DIAMOND: preload("res://scenes/map_editor/resource_tiles/sprite_diamond.tscn"),
-	ResourceTable.ResourceType.URANIUM: preload("res://scenes/map_editor/resource_tiles/sprite_uranium.tscn"),
-	ResourceTable.ResourceType.IRON: preload("res://scenes/map_editor/resource_tiles/sprite_iron.tscn"),
-	ResourceTable.ResourceType.COPPER: preload("res://scenes/map_editor/resource_tiles/sprite_copper.tscn"),
-	ResourceTable.ResourceType.ALUMINIUM: preload("res://scenes/map_editor/resource_tiles/sprite_aluminium.tscn"),
-	ResourceTable.ResourceType.SILVER: preload("res://scenes/map_editor/resource_tiles/sprite_silver.tscn"),
-	ResourceTable.ResourceType.SPICE: preload("res://scenes/map_editor/resource_tiles/sprite_spice.tscn"),
-	ResourceTable.ResourceType.BANANA: preload("res://scenes/map_editor/resource_tiles/sprite_banana.tscn"),
-	ResourceTable.ResourceType.HORSE: preload("res://scenes/map_editor/resource_tiles/sprite_horse.tscn"),
-	ResourceTable.ResourceType.FISH: preload("res://scenes/map_editor/resource_tiles/sprite_fish.tscn"),
-	ResourceTable.ResourceType.WHALE: preload("res://scenes/map_editor/resource_tiles/sprite_whale.tscn"),
-	ResourceTable.ResourceType.DEER: preload("res://scenes/map_editor/resource_tiles/sprite_deer.tscn"),
+	ResourceTable.Enum.SILK: preload("res://scenes/map_editor/resource_tiles/resource_sprite.tscn"),
+	ResourceTable.Enum.RELIC: preload("res://scenes/map_editor/resource_tiles/sprite_relic.tscn"),
+	ResourceTable.Enum.COCOA_BEAN: preload("res://scenes/map_editor/resource_tiles/sprite_cocoa_bean.tscn"),
+	ResourceTable.Enum.COFFEE: preload("res://scenes/map_editor/resource_tiles/sprite_coffee.tscn"),
+	ResourceTable.Enum.MARBLE: preload("res://scenes/map_editor/resource_tiles/sprite_marble.tscn"),
+	ResourceTable.Enum.RICE: preload("res://scenes/map_editor/resource_tiles/sprite_rice.tscn"),
+	ResourceTable.Enum.WHEAT: preload("res://scenes/map_editor/resource_tiles/sprite_wheat.tscn"),
+	ResourceTable.Enum.TRUFFLE: preload("res://scenes/map_editor/resource_tiles/sprite_truffle.tscn"),
+	ResourceTable.Enum.ORANGE: preload("res://scenes/map_editor/resource_tiles/sprite_orange.tscn"),
+	ResourceTable.Enum.DYE: preload("res://scenes/map_editor/resource_tiles/sprite_dye.tscn"),
+	ResourceTable.Enum.COTTON: preload("res://scenes/map_editor/resource_tiles/sprite_cotton.tscn"),
+	ResourceTable.Enum.MERCURY: preload("res://scenes/map_editor/resource_tiles/sprite_mercury.tscn"),
+	ResourceTable.Enum.WRECKAGE: preload("res://scenes/map_editor/resource_tiles/sprite_wreckage.tscn"),
+	ResourceTable.Enum.TOBACCO: preload("res://scenes/map_editor/resource_tiles/sprite_tobacco.tscn"),
+	ResourceTable.Enum.COAL: preload("res://scenes/map_editor/resource_tiles/sprite_coal.tscn"),
+	ResourceTable.Enum.INCENSE: preload("res://scenes/map_editor/resource_tiles/sprite_incense.tscn"),
+	ResourceTable.Enum.COW: preload("res://scenes/map_editor/resource_tiles/sprite_cow.tscn"),
+	ResourceTable.Enum.JADE: preload("res://scenes/map_editor/resource_tiles/sprite_jade.tscn"),
+	ResourceTable.Enum.CORN: preload("res://scenes/map_editor/resource_tiles/sprite_corn.tscn"),
+	ResourceTable.Enum.PEARL: preload("res://scenes/map_editor/resource_tiles/sprite_pearl.tscn"),
+	ResourceTable.Enum.FUR: preload("res://scenes/map_editor/resource_tiles/sprite_fur.tscn"),
+	ResourceTable.Enum.SALT: preload("res://scenes/map_editor/resource_tiles/sprite_salt.tscn"),
+	ResourceTable.Enum.STONE: preload("res://scenes/map_editor/resource_tiles/sprite_stone.tscn"),
+	ResourceTable.Enum.OIL: preload("res://scenes/map_editor/resource_tiles/sprite_oil.tscn"),
+	ResourceTable.Enum.GYPSUM: preload("res://scenes/map_editor/resource_tiles/sprite_gypsum.tscn"),
+	ResourceTable.Enum.SALTPETER: preload("res://scenes/map_editor/resource_tiles/sprite_saltpeter.tscn"),
+	ResourceTable.Enum.SUGAR: preload("res://scenes/map_editor/resource_tiles/sprite_sugar.tscn"),
+	ResourceTable.Enum.SHEEP: preload("res://scenes/map_editor/resource_tiles/sprite_sheep.tscn"),
+	ResourceTable.Enum.TEA: preload("res://scenes/map_editor/resource_tiles/sprite_tea.tscn"),
+	ResourceTable.Enum.WINE: preload("res://scenes/map_editor/resource_tiles/sprite_wine.tscn"),
+	ResourceTable.Enum.HONEY: preload("res://scenes/map_editor/resource_tiles/sprite_honey.tscn"),
+	ResourceTable.Enum.CRAB: preload("res://scenes/map_editor/resource_tiles/sprite_crab.tscn"),
+	ResourceTable.Enum.IVORY: preload("res://scenes/map_editor/resource_tiles/sprite_ivory.tscn"),
+	ResourceTable.Enum.DIAMOND: preload("res://scenes/map_editor/resource_tiles/sprite_diamond.tscn"),
+	ResourceTable.Enum.URANIUM: preload("res://scenes/map_editor/resource_tiles/sprite_uranium.tscn"),
+	ResourceTable.Enum.IRON: preload("res://scenes/map_editor/resource_tiles/sprite_iron.tscn"),
+	ResourceTable.Enum.COPPER: preload("res://scenes/map_editor/resource_tiles/sprite_copper.tscn"),
+	ResourceTable.Enum.ALUMINIUM: preload("res://scenes/map_editor/resource_tiles/sprite_aluminium.tscn"),
+	ResourceTable.Enum.SILVER: preload("res://scenes/map_editor/resource_tiles/sprite_silver.tscn"),
+	ResourceTable.Enum.SPICE: preload("res://scenes/map_editor/resource_tiles/sprite_spice.tscn"),
+	ResourceTable.Enum.BANANA: preload("res://scenes/map_editor/resource_tiles/sprite_banana.tscn"),
+	ResourceTable.Enum.HORSE: preload("res://scenes/map_editor/resource_tiles/sprite_horse.tscn"),
+	ResourceTable.Enum.FISH: preload("res://scenes/map_editor/resource_tiles/sprite_fish.tscn"),
+	ResourceTable.Enum.WHALE: preload("res://scenes/map_editor/resource_tiles/sprite_whale.tscn"),
+	ResourceTable.Enum.DEER: preload("res://scenes/map_editor/resource_tiles/sprite_deer.tscn"),
 }
 
 # 地块类型到 TileSet 信息映射
 var _terrain_type_to_tile_dict : Dictionary = {
-	TerrainTable.Terrain.GRASS: MapTileCell.new(0, Vector2i.ZERO),
-	TerrainTable.Terrain.GRASS_HILL: MapTileCell.new(1, Vector2i.ZERO),
-	TerrainTable.Terrain.GRASS_MOUNTAIN: MapTileCell.new(2, Vector2i.ZERO),
-	TerrainTable.Terrain.PLAIN: MapTileCell.new(3, Vector2i.ZERO),
-	TerrainTable.Terrain.PLAIN_HILL: MapTileCell.new(4, Vector2i.ZERO),
-	TerrainTable.Terrain.PLAIN_MOUNTAIN: MapTileCell.new(5, Vector2i.ZERO),
-	TerrainTable.Terrain.DESERT: MapTileCell.new(6, Vector2i.ZERO),
-	TerrainTable.Terrain.DESERT_HILL: MapTileCell.new(7, Vector2i.ZERO),
-	TerrainTable.Terrain.DESERT_MOUNTAIN: MapTileCell.new(8, Vector2i.ZERO),
-	TerrainTable.Terrain.TUNDRA: MapTileCell.new(9, Vector2i.ZERO),
-	TerrainTable.Terrain.TUNDRA_HILL: MapTileCell.new(10, Vector2i.ZERO),
-	TerrainTable.Terrain.TUNDRA_MOUNTAIN: MapTileCell.new(11, Vector2i.ZERO),
-	TerrainTable.Terrain.SNOW: MapTileCell.new(12, Vector2i.ZERO),
-	TerrainTable.Terrain.SNOW_HILL: MapTileCell.new(13, Vector2i.ZERO),
-	TerrainTable.Terrain.SNOW_MOUNTAIN: MapTileCell.new(14, Vector2i.ZERO),
-	TerrainTable.Terrain.SHORE: MapTileCell.new(15, Vector2i.ZERO),
-	TerrainTable.Terrain.OCEAN: MapTileCell.new(16, Vector2i.ZERO),
+	TerrainTable.Enum.GRASS: MapTileCell.new(0, Vector2i.ZERO),
+	TerrainTable.Enum.GRASS_HILL: MapTileCell.new(1, Vector2i.ZERO),
+	TerrainTable.Enum.GRASS_MOUNTAIN: MapTileCell.new(2, Vector2i.ZERO),
+	TerrainTable.Enum.PLAIN: MapTileCell.new(3, Vector2i.ZERO),
+	TerrainTable.Enum.PLAIN_HILL: MapTileCell.new(4, Vector2i.ZERO),
+	TerrainTable.Enum.PLAIN_MOUNTAIN: MapTileCell.new(5, Vector2i.ZERO),
+	TerrainTable.Enum.DESERT: MapTileCell.new(6, Vector2i.ZERO),
+	TerrainTable.Enum.DESERT_HILL: MapTileCell.new(7, Vector2i.ZERO),
+	TerrainTable.Enum.DESERT_MOUNTAIN: MapTileCell.new(8, Vector2i.ZERO),
+	TerrainTable.Enum.TUNDRA: MapTileCell.new(9, Vector2i.ZERO),
+	TerrainTable.Enum.TUNDRA_HILL: MapTileCell.new(10, Vector2i.ZERO),
+	TerrainTable.Enum.TUNDRA_MOUNTAIN: MapTileCell.new(11, Vector2i.ZERO),
+	TerrainTable.Enum.SNOW: MapTileCell.new(12, Vector2i.ZERO),
+	TerrainTable.Enum.SNOW_HILL: MapTileCell.new(13, Vector2i.ZERO),
+	TerrainTable.Enum.SNOW_MOUNTAIN: MapTileCell.new(14, Vector2i.ZERO),
+	TerrainTable.Enum.SHORE: MapTileCell.new(15, Vector2i.ZERO),
+	TerrainTable.Enum.OCEAN: MapTileCell.new(16, Vector2i.ZERO),
 }
 # 记录 TileMap 坐标到资源图标的映射的字典
 var _coord_to_resource_icon_dict: Dictionary = {}
@@ -286,26 +286,26 @@ func paint_tile(coord: Vector2i, tile_do: MapTileDO) -> void:
 	paint_resource(coord, tile_do.resource)
 
 
-func paint_terrain(coord: Vector2i, type: TerrainTable.Terrain) -> void:
+func paint_terrain(coord: Vector2i, type: TerrainTable.Enum) -> void:
 	var tile: MapTileCell = _terrain_type_to_tile_dict[type]
 	tile_map.set_cell(TILE_TERRAIN_LAYER_IDX, coord, tile.source_id, tile.atlas_coords)
 
 
-func paint_landscape(tile_coord: Vector2i, type: LandscapeTable.Landscape) -> void:
+func paint_landscape(tile_coord: Vector2i, type: LandscapeTable.Enum) -> void:
 	match type:
-		LandscapeTable.Landscape.ICE:
+		LandscapeTable.Enum.ICE:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 19, Vector2i.ZERO)
-		LandscapeTable.Landscape.FOREST:
+		LandscapeTable.Enum.FOREST:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 20, Vector2i.ZERO)
-		LandscapeTable.Landscape.SWAMP:
+		LandscapeTable.Enum.SWAMP:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 21, Vector2i.ZERO)
-		LandscapeTable.Landscape.FLOOD:
+		LandscapeTable.Enum.FLOOD:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 22, Vector2i.ZERO)
-		LandscapeTable.Landscape.OASIS:
+		LandscapeTable.Enum.OASIS:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 23, Vector2i.ZERO)
-		LandscapeTable.Landscape.RAINFOREST:
+		LandscapeTable.Enum.RAINFOREST:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 24, Vector2i.ZERO)
-		LandscapeTable.Landscape.EMPTY:
+		LandscapeTable.Enum.EMPTY:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, -1)
 
 
@@ -323,12 +323,12 @@ func paint_city(tile_coord: Vector2i, type: int):
 		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, 32, Vector2i.ZERO)
 
 
-func paint_resource(tile_coord: Vector2i, type: ResourceTable.ResourceType) -> void:
+func paint_resource(tile_coord: Vector2i, type: ResourceTable.Enum) -> void:
 	# 清除原来的资源图标
 	if _coord_to_resource_icon_dict.has(tile_coord):
 		_coord_to_resource_icon_dict[tile_coord].queue_free()
 		_coord_to_resource_icon_dict.erase(tile_coord)
-	if type == ResourceTable.ResourceType.EMPTY:
+	if type == ResourceTable.Enum.EMPTY:
 		# FIXME：4.1 有 bug，TileMap 没办法把实例化的场景清除。现在的场景 TileMap 简直不能用…… 太蠢了
 		# 静待 4.2 发布，看 GitHub 讨论区貌似在 4.2 得到了修复。在修复前，会有资源显示和实际数据不一致的情况
 		# 对应的讨论区：https://github.com/godotengine/godot/issues/69596
@@ -345,20 +345,20 @@ func paint_resource(tile_coord: Vector2i, type: ResourceTable.ResourceType) -> v
 		resource_icons.add_child(sprite)
 
 
-func paint_continent(tile_coord: Vector2i, type: ContinentTable.Continent) -> void:
-	if type == ContinentTable.Continent.EMPTY:
+func paint_continent(tile_coord: Vector2i, type: ContinentTable.Enum) -> void:
+	if type == ContinentTable.Enum.EMPTY:
 		tile_map.erase_cell(TILE_CONTINENT_LAYER_IDX, tile_coord)
 	else:
 		tile_map.set_cell(TILE_CONTINENT_LAYER_IDX, tile_coord, 26, Vector2i((type - 1) % 10, (type - 1) / 10))
 
 
-func paint_border(border_coord: Vector2i, type: MapBorderTable.TileType) -> void:
+func paint_border(border_coord: Vector2i, type: MapBorderTable.Enum) -> void:
 	match type:
-		MapBorderTable.TileType.RIVER:
+		MapBorderTable.Enum.RIVER:
 			paint_river(border_coord)
-		MapBorderTable.TileType.CLIFF:
+		MapBorderTable.Enum.CLIFF:
 			paint_cliff(border_coord)
-		MapBorderTable.TileType.EMPTY:
+		MapBorderTable.Enum.EMPTY:
 			# 真正绘制边界为空
 			border_tile_map.erase_cell(BORDER_TILE_LAYER_IDX, border_coord)
 

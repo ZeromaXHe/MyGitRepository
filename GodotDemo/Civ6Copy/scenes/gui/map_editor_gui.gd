@@ -39,14 +39,14 @@ const PAINTER_NAME_TO_SIZE_DICT: Dictionary = {
 
 var place_mode: PlaceMode = PlaceMode.TERRAIN
 var place_mode_group: ButtonGroup = null
-var terrain_type: TerrainTable.Terrain = TerrainTable.Terrain.GRASS
+var terrain_type: TerrainTable.Enum = TerrainTable.Enum.GRASS
 var terrain_type_group: ButtonGroup = null
 var painter_size: PainterSize = PainterSize.SMALL
 var painter_size_group: ButtonGroup = null
-var landscape_type: LandscapeTable.Landscape = LandscapeTable.Landscape.ICE
+var landscape_type: LandscapeTable.Enum = LandscapeTable.Enum.ICE
 var landscape_type_group: ButtonGroup = null
-var continent_type: ContinentTable.Continent = ContinentTable.Continent.AFRICA
-var resource_type: ResourceTable.ResourceType = ResourceTable.ResourceType.SILK
+var continent_type: ContinentTable.Enum = ContinentTable.Enum.AFRICA
+var resource_type: ResourceTable.Enum = ResourceTable.Enum.SILK
 var resource_type_group: ButtonGroup = null
 
 @onready var info_label: Label = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/InfoLabel
@@ -206,7 +206,7 @@ func handle_terrain_type_group_pressed(button: BaseButton) -> void:
 	if terrain_do == null:
 		printerr("handle_terrain_type_group_pressed | wrong button in terrain type group")
 		return
-	terrain_type = TerrainTable.Terrain[terrain_do.enum_name]
+	terrain_type = TerrainTable.Enum[terrain_do.enum_name]
 
 
 func handle_painter_size_group_pressed(button: BaseButton) -> void:
@@ -223,7 +223,7 @@ func handle_landscape_type_group_pressed(button: BaseButton) -> void:
 	if landscape_do == null:
 		printerr("handle_landscape_type_group_pressed | wrong button in landscape type group")
 		return
-	landscape_type = LandscapeTable.Landscape[landscape_do.enum_name]
+	landscape_type = LandscapeTable.Enum[landscape_do.enum_name]
 
 
 func handle_continent_item_selected(idx: int) -> void:
@@ -237,7 +237,7 @@ func handle_resource_type_group_pressed(button: BaseButton) -> void:
 	if resource_do == null:
 		printerr("handle_resource_type_group_pressed | wrong button in resource type group")
 		return
-	resource_type = ResourceTable.ResourceType[resource_do.enum_name]
+	resource_type = ResourceTable.Enum[resource_do.enum_name]
 
 
 func get_painter_size_dist() -> int:

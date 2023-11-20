@@ -12,7 +12,7 @@ static func create_city(coord: Vector2i) -> City:
 	return city
 
 
-static func choose_producing_unit(id: int, unit_type: UnitTypeTable.Type) -> void:
+static func choose_producing_unit(id: int, unit_type: UnitTypeTable.Enum) -> void:
 	CityService.choose_producing_unit(id, unit_type)
 
 

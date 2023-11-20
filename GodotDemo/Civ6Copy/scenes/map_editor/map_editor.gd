@@ -221,23 +221,23 @@ func depaint_map() -> void:
 	match gui.place_mode:
 		MapEditorGUI.PlaceMode.CLIFF:
 			var border_coord: Vector2i = map_shower.get_border_coord()
-			if MapController.get_map_border_do_by_coord(border_coord).tile_type != MapBorderTable.TileType.CLIFF:
+			if MapController.get_map_border_do_by_coord(border_coord).tile_type != MapBorderTable.Enum.CLIFF:
 				return
-			paint_border(border_coord, step, MapBorderTable.TileType.EMPTY)
+			paint_border(border_coord, step, MapBorderTable.Enum.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RIVER:
 			var border_coord: Vector2i = map_shower.get_border_coord()
-			if MapController.get_map_border_do_by_coord(border_coord).tile_type != MapBorderTable.TileType.RIVER:
+			if MapController.get_map_border_do_by_coord(border_coord).tile_type != MapBorderTable.Enum.RIVER:
 				return
-			paint_border(border_coord, step, MapBorderTable.TileType.EMPTY)
+			paint_border(border_coord, step, MapBorderTable.Enum.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
 			var tile_coord: Vector2i = map_shower.get_mouse_map_coord()
-			if MapController.get_map_tile_do_by_coord(tile_coord).landscape == LandscapeTable.Landscape.EMPTY:
+			if MapController.get_map_tile_do_by_coord(tile_coord).landscape == LandscapeTable.Enum.EMPTY:
 				return
-			paint_landscape(tile_coord, step, LandscapeTable.Landscape.EMPTY)
+			paint_landscape(tile_coord, step, LandscapeTable.Enum.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.VILLAGE:
@@ -249,11 +249,11 @@ func depaint_map() -> void:
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RESOURCE:
 			var tile_coord: Vector2i = map_shower.get_mouse_map_coord()
-			if MapController.get_map_tile_do_by_coord(tile_coord).resource == ResourceTable.ResourceType.EMPTY:
+			if MapController.get_map_tile_do_by_coord(tile_coord).resource == ResourceTable.Enum.EMPTY:
 				# FIXME: 4.1 现在的场景 TileMap bug，需要等待 4.2 发布解决。目前先打日志说明一下
 #				print("tile map ", tile_coord, " is empty. (if you see a icon, it's because 4.1's bug. Wait for 4.2 update to fix it)")
 				return
-			paint_resource(tile_coord, step, ResourceTable.ResourceType.EMPTY)
+			paint_resource(tile_coord, step, ResourceTable.Enum.EMPTY)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 	save_paint_step(step)
@@ -282,22 +282,22 @@ func paint_map() -> void:
 					continue
 				paint_terrain(coord, step, gui.terrain_type)
 			# 围绕陆地地块绘制浅海
-			if gui.terrain_type != TerrainTable.Terrain.SHORE and gui.terrain_type != TerrainTable.Terrain.OCEAN:
+			if gui.terrain_type != TerrainTable.Enum.SHORE and gui.terrain_type != TerrainTable.Enum.OCEAN:
 				var out_ring: Array[Vector2i] = MapController.get_surrounding_cells(map_coord, dist + 1, false)
 				for coord in out_ring:
 					# 超出地图范围的不处理
 					if not MapController.is_in_map_tile(coord):
 						continue
 					# 仅深海需要改为浅海
-					if MapController.get_map_tile_do_by_coord(coord).terrain != TerrainTable.Terrain.OCEAN:
+					if MapController.get_map_tile_do_by_coord(coord).terrain != TerrainTable.Enum.OCEAN:
 						continue
-					paint_terrain(coord, step, TerrainTable.Terrain.SHORE)
+					paint_terrain(coord, step, TerrainTable.Enum.SHORE)
 			# 如果地块是丘陵，需要在周围沿海边界放置悬崖
 			if TerrainController.is_hill_land_terrain(gui.terrain_type):
 				var borders: Array[Vector2i] = MapBorderController.get_surrounding_borders(map_coord, dist)
 				for border in borders:
 					if MapBorderController.is_cliff_placeable(border):
-						paint_border(border, step, MapBorderTable.TileType.CLIFF)
+						paint_border(border, step, MapBorderTable.Enum.CLIFF)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.LANDSCAPE:
@@ -343,20 +343,20 @@ func paint_map() -> void:
 			var border_coord: Vector2i = map_shower.get_border_coord()
 			if not MapBorderController.is_cliff_placeable(border_coord):
 				return
-			if MapController.get_map_border_do_by_coord(border_coord).tile_type == MapBorderTable.TileType.CLIFF:
+			if MapController.get_map_border_do_by_coord(border_coord).tile_type == MapBorderTable.Enum.CLIFF:
 				return
 			# 绘制边界悬崖
-			paint_border(border_coord, step, MapBorderTable.TileType.CLIFF)
+			paint_border(border_coord, step, MapBorderTable.Enum.CLIFF)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 		MapEditorGUI.PlaceMode.RIVER:
 			var border_coord: Vector2i = map_shower.get_border_coord()
 			if not MapBorderController.is_river_placeable(border_coord):
 				return
-			if MapController.get_map_border_do_by_coord(border_coord).tile_type == MapBorderTable.TileType.RIVER:
+			if MapController.get_map_border_do_by_coord(border_coord).tile_type == MapBorderTable.Enum.RIVER:
 				return
 			# 绘制边界河流
-			paint_border(border_coord, step, MapBorderTable.TileType.RIVER)
+			paint_border(border_coord, step, MapBorderTable.Enum.RIVER)
 			# 强制重绘选择区域
 			paint_new_chosen_area(true)
 	
@@ -375,14 +375,14 @@ func save_paint_step(step: PaintStep) -> void:
 		gui.set_restore_button_disable(true)
 
 
-func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: TerrainTable.Terrain):
+func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: TerrainTable.Enum):
 	# 记录操作
 	var change: PaintChange = build_change_of_tile(coord, TileChangeType.TERRAIN)
 	change.after.terrain = terrain_type
 	
-	if change.before.landscape != LandscapeTable.Landscape.EMPTY \
+	if change.before.landscape != LandscapeTable.Enum.EMPTY \
 			and not LandscapeController.is_landscape_placeable_terrain(change.before.landscape, terrain_type):
-		change.after.landscape = LandscapeTable.Landscape.EMPTY
+		change.after.landscape = LandscapeTable.Enum.EMPTY
 	if change.before.village and not VillageController.is_village_placeable_terrain(terrain_type):
 		change.after.village = false
 	
@@ -393,9 +393,9 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: TerrainTable.
 		# 从海变陆时需要给个默认的大洲
 		change.after.continent = gui.continent_type
 	
-	if change.before.resource != ResourceTable.ResourceType.EMPTY \
+	if change.before.resource != ResourceTable.Enum.EMPTY \
 			and not ResourceController.is_resource_placeable_terrain_and_landscape(change.before.resource, terrain_type, change.after.landscape):
-		change.after.resource = ResourceTable.ResourceType.EMPTY
+		change.after.resource = ResourceTable.Enum.EMPTY
 	
 	step.changed_arr.append(change)
 	
@@ -408,23 +408,23 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: TerrainTable.
 	var borders: Array[Vector2i] = MapBorderUtils.get_all_tile_border(coord, false)
 	for border in borders:
 		var border_do: MapBorderDO = MapController.get_map_border_do_by_coord(border)
-		if border_do.tile_type == MapBorderTable.TileType.CLIFF:
+		if border_do.tile_type == MapBorderTable.Enum.CLIFF:
 			if not MapBorderController.is_cliff_placeable(border):
-				paint_border(border, step, MapBorderTable.TileType.EMPTY)
-		elif border_do.tile_type == MapBorderTable.TileType.RIVER:
+				paint_border(border, step, MapBorderTable.Enum.EMPTY)
+		elif border_do.tile_type == MapBorderTable.Enum.RIVER:
 			if not MapBorderController.is_river_placeable(border):
-				paint_border(border, step, MapBorderTable.TileType.EMPTY)
+				paint_border(border, step, MapBorderTable.Enum.EMPTY)
 
 
-func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: LandscapeTable.Landscape) -> void:
+func paint_landscape(tile_coord: Vector2i, step: PaintStep, type: LandscapeTable.Enum) -> void:
 	# 记录操作
 	var change: PaintChange = build_change_of_tile(tile_coord, TileChangeType.LANDSCAPE)
 	change.after.landscape = type
 	
-	if change.before.resource == ResourceTable.ResourceType.EMPTY \
+	if change.before.resource == ResourceTable.Enum.EMPTY \
 			and not ResourceController.is_resource_placeable_terrain_and_landscape(change.before.resource, change.before.terrain, type):
-		change.after.resource = ResourceTable.ResourceType.EMPTY
-		map_shower.paint_resource(tile_coord, ResourceTable.ResourceType.EMPTY)
+		change.after.resource = ResourceTable.Enum.EMPTY
+		map_shower.paint_resource(tile_coord, ResourceTable.Enum.EMPTY)
 	
 	step.changed_arr.append(change)
 	# 记录地图地块信息
@@ -444,7 +444,7 @@ func paint_village(tile_coord: Vector2i, step: PaintStep, type: int) -> void:
 	map_shower.paint_village(tile_coord, type)
 
 
-func paint_resource(tile_coord: Vector2i, step: PaintStep, type: ResourceTable.ResourceType) -> void:
+func paint_resource(tile_coord: Vector2i, step: PaintStep, type: ResourceTable.Enum) -> void:
 	# 记录操作
 	var change: PaintChange = build_change_of_tile(tile_coord, TileChangeType.RESOURCE)
 	change.after.resource = type
@@ -466,7 +466,7 @@ func paint_continent(tile_coord: Vector2i, step: PaintStep, type: ContinentTable
 	map_shower.paint_continent(tile_coord, type)
 
 
-func paint_border(border_coord: Vector2i, step: PaintStep, type: MapBorderTable.TileType) -> void:
+func paint_border(border_coord: Vector2i, step: PaintStep, type: MapBorderTable.Enum) -> void:
 	# 记录操作
 	var change: PaintChange = build_change_of_border(border_coord)
 	change.after_border.tile_type = type

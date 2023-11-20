@@ -50,21 +50,21 @@ static func get_tile_info(coord: Vector2i) -> TileInfoDTO:
 	tile_info_dto.move_cost = 1 + terrain_do.move_cost
 	tile_info_dto.defence_bonus = terrain_do.defence_bonus
 	
-	if tile_do.landscape != LandscapeTable.Landscape.EMPTY:
+	if tile_do.landscape != LandscapeTable.Enum.EMPTY:
 		var landscape_do: LandscapeDO = DatabaseUtils.landscape_tbl.query_by_enum_val(tile_do.landscape)
 		tile_info_dto.landscape_name = landscape_do.view_name
 		tile_info_dto.move_cost += landscape_do.move_cost
 		tile_info_dto.defence_bonus += landscape_do.defence_bonus
 	tile_info_dto.village = tile_do.village
-	if tile_do.resource != ResourceTable.ResourceType.EMPTY:
+	if tile_do.resource != ResourceTable.Enum.EMPTY:
 		tile_info_dto.resource_name = DatabaseUtils.resource_tbl.query_by_enum_val(tile_do.resource).view_name
 	
-	tile_info_dto.river = MapBorderController.is_tile_near_border(coord, MapBorderTable.TileType.RIVER)
-	tile_info_dto.cliff = MapBorderController.is_tile_near_border(coord, MapBorderTable.TileType.CLIFF)
+	tile_info_dto.river = MapBorderController.is_tile_near_border(coord, MapBorderTable.Enum.RIVER)
+	tile_info_dto.cliff = MapBorderController.is_tile_near_border(coord, MapBorderTable.Enum.CLIFF)
 	tile_info_dto.charm = get_tile_charm(coord)
 	tile_info_dto.charm_desc = get_charm_desc(tile_info_dto.charm)
 	
-	if tile_do.continent != ContinentTable.Continent.EMPTY:
+	if tile_do.continent != ContinentTable.Enum.EMPTY:
 		tile_info_dto.continent_name = DatabaseUtils.continent_tbl.query_by_enum_val(tile_do.continent).view_name
 	tile_info_dto.tile_yield = get_tile_yield(coord)
 	tile_info_dto.coord = coord

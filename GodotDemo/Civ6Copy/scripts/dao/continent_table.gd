@@ -2,7 +2,7 @@ class_name ContinentTable
 extends MySimSQL.EnumTable
 
 
-enum Continent {
+enum Enum {
 	EMPTY, # 空
 	AFRICA, # 非洲
 	AMASIA, # 阿马西亚
@@ -54,97 +54,97 @@ func _init() -> void:
 	super._init()
 	elem_type = ContinentDO
 	
-	for k in Continent.keys():
+	for k in Enum.keys():
 		var do = ContinentDO.new()
 		do.enum_name = k
-		do.enum_val = Continent[k]
+		do.enum_val = Enum[k]
 		match do.enum_val:
-			Continent.EMPTY:
+			Enum.EMPTY:
 				do.view_name = "空"
-			Continent.AFRICA:
+			Enum.AFRICA:
 				do.view_name = "非洲"
-			Continent.AMASIA:
+			Enum.AMASIA:
 				do.view_name = "阿马西亚"
-			Continent.AMERICA:
+			Enum.AMERICA:
 				do.view_name = "美洲"
-			Continent.ANTARCTICA:
+			Enum.ANTARCTICA:
 				do.view_name = "南极洲"
-			Continent.ARCTIC:
+			Enum.ARCTIC:
 				do.view_name = "北极大陆"
-			Continent.ASIA:
+			Enum.ASIA:
 				do.view_name = "亚洲"
-			Continent.ASIAMERICA:
+			Enum.ASIAMERICA:
 				do.view_name = "亚美大陆"
-			Continent.ATLANTICA:
+			Enum.ATLANTICA:
 				do.view_name = "大西洋洲"
-			Continent.ATLANTIS:
+			Enum.ATLANTIS:
 				do.view_name = "亚特兰蒂斯"
-			Continent.AUSTRALIA:
+			Enum.AUSTRALIA:
 				do.view_name = "澳大利亚"
-			Continent.AVALONIA:
+			Enum.AVALONIA:
 				do.view_name = "阿瓦隆尼亚"
-			Continent.AZANIA:
+			Enum.AZANIA:
 				do.view_name = "阿扎尼亚"
-			Continent.BALTICA:
+			Enum.BALTICA:
 				do.view_name = "波罗大陆"
-			Continent.CIMMERIA:
+			Enum.CIMMERIA:
 				do.view_name = "辛梅利亚大陆"
-			Continent.COLUMBIA:
+			Enum.COLUMBIA:
 				do.view_name = "哥伦比亚"
-			Continent.CONGO_CRATON:
+			Enum.CONGO_CRATON:
 				do.view_name = "刚果克拉通"
-			Continent.EURAMERICA:
+			Enum.EURAMERICA:
 				do.view_name = "欧美大陆"
-			Continent.EUROPE:
+			Enum.EUROPE:
 				do.view_name = "欧洲"
-			Continent.GONDWANA:
+			Enum.GONDWANA:
 				do.view_name = "冈瓦那"
-			Continent.KALAHARI:
+			Enum.KALAHARI:
 				do.view_name = "喀拉哈里"
-			Continent.KAZAKHSTANIA:
+			Enum.KAZAKHSTANIA:
 				do.view_name = "哈萨克大陆"
-			Continent.KENORLAND:
+			Enum.KENORLAND:
 				do.view_name = "凯诺兰"
-			Continent.KUMARI_KANDAM:
+			Enum.KUMARI_KANDAM:
 				do.view_name = "古默里坎达"
-			Continent.LAURASIA:
+			Enum.LAURASIA:
 				do.view_name = "劳亚古陆"
-			Continent.LAURENTIA:
+			Enum.LAURENTIA:
 				do.view_name = "劳伦古陆"
-			Continent.LEMURIA:
+			Enum.LEMURIA:
 				do.view_name = "利莫里亚 "
-			Continent.MU:
+			Enum.MU:
 				do.view_name = "穆大陆"
-			Continent.NENA:
+			Enum.NENA:
 				do.view_name = "妮娜大陆"
-			Continent.NORTH_AMERICA:
+			Enum.NORTH_AMERICA:
 				do.view_name = "北美洲"
-			Continent.NOVOPANGAEA:
+			Enum.NOVOPANGAEA:
 				do.view_name = "新盘古大陆"
-			Continent.NUNA:
+			Enum.NUNA:
 				do.view_name = "努纳"
-			Continent.OCEANIA:
+			Enum.OCEANIA:
 				do.view_name = "大洋洲"
-			Continent.PANGAEA:
+			Enum.PANGAEA:
 				do.view_name = "盘古大陆"
-			Continent.PANGAEA_ULTIMA:
+			Enum.PANGAEA_ULTIMA:
 				do.view_name = "终极盘古大陆"
-			Continent.PANNOTIA:
+			Enum.PANNOTIA:
 				do.view_name = "潘诺西亚"
-			Continent.RODINIA:
+			Enum.RODINIA:
 				do.view_name = "罗迪尼亚"
-			Continent.SIBERIA:
+			Enum.SIBERIA:
 				do.view_name = "西伯利亚"
-			Continent.SOUTH_AMERICA:
+			Enum.SOUTH_AMERICA:
 				do.view_name = "南美洲"
-			Continent.TERRA_AUSTRALIS:
+			Enum.TERRA_AUSTRALIS:
 				do.view_name = "未知的南方大陆"
-			Continent.UR:
+			Enum.UR:
 				do.view_name = "乌尔"
-			Continent.VAALBARA:
+			Enum.VAALBARA:
 				do.view_name = "瓦巴拉"
-			Continent.VENDIAN:
+			Enum.VENDIAN:
 				do.view_name = "文德期"
-			Continent.ZEALANDIA:
+			Enum.ZEALANDIA:
 				do.view_name = "西兰蒂亚"
 		super.init_insert(do)

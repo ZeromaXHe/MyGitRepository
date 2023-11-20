@@ -2,7 +2,7 @@ class_name ResourceTable
 extends MySimSQL.EnumTable
 
 
-enum ResourceType {
+enum Enum {
 	EMPTY, # 空
 	SILK, # 丝绸
 	RELIC, # 历史遗迹
@@ -69,242 +69,242 @@ func _init() -> void:
 	create_index(short_name_index)
 	create_index(category_index)
 	
-	for k in ResourceType.keys():
+	for k in Enum.keys():
 		var do = ResourceDO.new()
 		do.enum_name = k
-		do.enum_val = ResourceType[k]
+		do.enum_val = Enum[k]
 		match do.enum_val:
-			ResourceType.EMPTY:
+			Enum.EMPTY:
 				do.view_name = "空"
 				do.short_name = "空"
 				do.category = Category.EMPTY
-			ResourceType.SILK:
+			Enum.SILK:
 				do.view_name = "丝绸"
 				do.short_name = "丝绸"
 				do.category = Category.LUXURY
 				do.culture = 1
-			ResourceType.RELIC:
+			Enum.RELIC:
 				do.view_name = "历史遗迹"
 				do.short_name = "历遗"
 				do.category = Category.RELIC
-			ResourceType.COCOA_BEAN:
+			Enum.COCOA_BEAN:
 				do.view_name = "可可豆"
 				do.short_name = "可可"
 				do.category = Category.LUXURY
 				do.gold = 3
-			ResourceType.COFFEE:
+			Enum.COFFEE:
 				do.view_name = "咖啡"
 				do.short_name = "咖啡"
 				do.category = Category.LUXURY
 				do.culture = 1
-			ResourceType.MARBLE:
+			Enum.MARBLE:
 				do.view_name = "大理石"
 				do.short_name = "大理"
 				do.category = Category.LUXURY
 				do.culture = 1
-			ResourceType.RICE:
+			Enum.RICE:
 				do.view_name = "大米"
 				do.short_name = "大米"
 				do.category = Category.BONUS
 				do.food = 1
-			ResourceType.WHEAT:
+			Enum.WHEAT:
 				do.view_name = "小麦"
 				do.short_name = "小麦"
 				do.category = Category.BONUS
 				do.food = 1
-			ResourceType.TRUFFLE:
+			Enum.TRUFFLE:
 				do.view_name = "松露"
 				do.short_name = "松露"
 				do.category = Category.LUXURY
 				do.gold = 3
-			ResourceType.ORANGE:
+			Enum.ORANGE:
 				do.view_name = "柑橘"
 				do.short_name = "柑橘"
 				do.category = Category.LUXURY
 				do.food = 2
-			ResourceType.DYE:
+			Enum.DYE:
 				do.view_name = "染料"
 				do.short_name = "染料"
 				do.category = Category.LUXURY
 				do.faith = 1
-			ResourceType.COTTON:
+			Enum.COTTON:
 				do.view_name = "棉花"
 				do.short_name = "棉花"
 				do.category = Category.LUXURY
 				do.gold = 3
-			ResourceType.MERCURY:
+			Enum.MERCURY:
 				do.view_name = "水银"
 				do.short_name = "水银"
 				do.category = Category.LUXURY
 				do.science = 1
-			ResourceType.WRECKAGE:
+			Enum.WRECKAGE:
 				do.view_name = "海难遗迹"
 				do.short_name = "海遗"
 				do.category = Category.RELIC
-			ResourceType.TOBACCO:
+			Enum.TOBACCO:
 				do.view_name = "烟草"
 				do.short_name = "烟草"
 				do.category = Category.LUXURY
 				do.faith = 1
-			ResourceType.COAL:
+			Enum.COAL:
 				do.view_name = "煤"
 				do.short_name = "煤"
 				do.category = Category.STRATEGY
 				do.production = 2
-			ResourceType.INCENSE:
+			Enum.INCENSE:
 				do.view_name = "熏香"
 				do.short_name = "熏香"
 				do.category = Category.LUXURY
 				do.faith = 1
-			ResourceType.COW:
+			Enum.COW:
 				do.view_name = "牛"
 				do.short_name = "牛"
 				do.category = Category.BONUS
 				do.food = 1
-			ResourceType.JADE:
+			Enum.JADE:
 				do.view_name = "玉"
 				do.short_name = "玉"
 				do.category = Category.LUXURY
 				do.culture = 1
-			ResourceType.CORN:
+			Enum.CORN:
 				do.view_name = "玉米"
 				do.short_name = "玉米"
 				do.category = Category.BONUS
 				do.gold = 2
-			ResourceType.PEARL:
+			Enum.PEARL:
 				do.view_name = "珍珠"
 				do.short_name = "珍珠"
 				do.category = Category.LUXURY
 				do.faith = 1
-			ResourceType.FUR:
+			Enum.FUR:
 				do.view_name = "皮草"
 				do.short_name = "皮草"
 				do.category = Category.LUXURY
 				do.food = 1
 				do.gold = 1
-			ResourceType.SALT:
+			Enum.SALT:
 				do.view_name = "盐"
 				do.short_name = "盐"
 				do.category = Category.LUXURY
 				do.food = 1
 				do.gold = 1
-			ResourceType.STONE:
+			Enum.STONE:
 				do.view_name = "石头"
 				do.short_name = "石头"
 				do.category = Category.BONUS
 				do.production = 1
-			ResourceType.OIL:
+			Enum.OIL:
 				do.view_name = "石油"
 				do.short_name = "石油"
 				do.category = Category.STRATEGY
 				do.production = 3
-			ResourceType.GYPSUM:
+			Enum.GYPSUM:
 				do.view_name = "石膏"
 				do.short_name = "石膏"
 				do.category = Category.LUXURY
 				do.production = 1
 				do.gold = 1
-			ResourceType.SALTPETER:
+			Enum.SALTPETER:
 				do.view_name = "硝石"
 				do.short_name = "硝石"
 				do.category = Category.STRATEGY
 				do.food = 1
 				do.production = 1
-			ResourceType.SUGAR:
+			Enum.SUGAR:
 				do.view_name = "糖"
 				do.short_name = "糖"
 				do.category = Category.LUXURY
 				do.food = 2
-			ResourceType.SHEEP:
+			Enum.SHEEP:
 				do.view_name = "羊"
 				do.short_name = "羊"
 				do.category = Category.BONUS
 				do.food = 1
-			ResourceType.TEA:
+			Enum.TEA:
 				do.view_name = "茶"
 				do.short_name = "茶"
 				do.category = Category.LUXURY
 				do.science = 1
-			ResourceType.WINE:
+			Enum.WINE:
 				do.view_name = "葡萄酒"
 				do.short_name = "葡萄"
 				do.category = Category.LUXURY
 				do.food = 1
 				do.gold = 1
-			ResourceType.HONEY:
+			Enum.HONEY:
 				do.view_name = "蜂蜜"
 				do.short_name = "蜂蜜"
 				do.category = Category.LUXURY
 				do.food = 2
-			ResourceType.CRAB:
+			Enum.CRAB:
 				do.view_name = "螃蟹"
 				do.short_name = "螃蟹"
 				do.category = Category.BONUS
 				do.gold = 2
-			ResourceType.IVORY:
+			Enum.IVORY:
 				do.view_name = "象牙"
 				do.short_name = "象牙"
 				do.category = Category.LUXURY
 				do.production = 1
 				do.gold = 1
-			ResourceType.DIAMOND:
+			Enum.DIAMOND:
 				do.view_name = "钻石"
 				do.short_name = "钻石"
 				do.category = Category.LUXURY
 				do.gold = 3
-			ResourceType.URANIUM:
+			Enum.URANIUM:
 				do.view_name = "铀"
 				do.short_name = "铀"
 				do.category = Category.STRATEGY
 				do.production = 2
-			ResourceType.IRON:
+			Enum.IRON:
 				do.view_name = "铁"
 				do.short_name = "铁"
 				do.category = Category.STRATEGY
 				do.science = 1
-			ResourceType.COPPER:
+			Enum.COPPER:
 				do.view_name = "铜"
 				do.short_name = "铜"
 				do.category = Category.BONUS
 				do.gold = 2
-			ResourceType.ALUMINIUM:
+			Enum.ALUMINIUM:
 				do.view_name = "铝"
 				do.short_name = "铝"
 				do.category = Category.STRATEGY
 				do.science = 1
-			ResourceType.SILVER:
+			Enum.SILVER:
 				do.view_name = "银"
 				do.short_name = "银"
 				do.category = Category.LUXURY
 				do.gold = 3
-			ResourceType.SPICE:
+			Enum.SPICE:
 				do.view_name = "香料"
 				do.short_name = "香料"
 				do.category = Category.LUXURY
 				do.food = 2
-			ResourceType.BANANA:
+			Enum.BANANA:
 				do.view_name = "香蕉"
 				do.short_name = "香蕉"
 				do.category = Category.BONUS
 				do.food = 1
-			ResourceType.HORSE:
+			Enum.HORSE:
 				do.view_name = "马"
 				do.short_name = "马"
 				do.category = Category.STRATEGY
 				do.food = 1
 				do.production = 1
-			ResourceType.FISH:
+			Enum.FISH:
 				do.view_name = "鱼"
 				do.short_name = "鱼"
 				do.category = Category.BONUS
 				do.food = 1
-			ResourceType.WHALE:
+			Enum.WHALE:
 				do.view_name = "鲸鱼"
 				do.short_name = "鲸鱼"
 				do.category = Category.LUXURY
 				do.production = 1
 				do.gold = 1
-			ResourceType.DEER:
+			Enum.DEER:
 				do.view_name = "鹿"
 				do.short_name = "鹿"
 				do.category = Category.BONUS

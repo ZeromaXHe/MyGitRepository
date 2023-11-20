@@ -23,7 +23,7 @@ func initiate() -> void:
 func initiate_icon(unit_do: UnitDO) -> void:
 	icon.texture = UnitController.get_unit_pic_webp_64x64(unit_do.type)
 	match unit_do.type:
-		UnitTypeTable.Type.SETTLER:
+		UnitTypeTable.Enum.SETTLER:
 			icon.scale = Vector2(0.2, 0.2)
 		_:
 			icon.scale = Vector2(0.8, 0.8)

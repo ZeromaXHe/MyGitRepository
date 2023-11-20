@@ -2,7 +2,7 @@ class_name TerrainTable
 extends MySimSQL.EnumTable
 
 
-enum Terrain {
+enum Enum {
 	GRASS,
 	GRASS_HILL,
 	GRASS_MOUNTAIN,
@@ -29,95 +29,95 @@ func _init() -> void:
 	super._init()
 	elem_type = TerrainDO
 	create_index(short_name_index)
-	for k in Terrain.keys():
+	for k in Enum.keys():
 		var do = TerrainDO.new()
 		do.enum_name = k
-		do.enum_val = Terrain[k]
+		do.enum_val = Enum[k]
 		match do.enum_val:
-			Terrain.GRASS:
+			Enum.GRASS:
 				do.view_name = "草原"
 				do.short_name = "草原"
 				do.food = 2
-			Terrain.GRASS_HILL:
+			Enum.GRASS_HILL:
 				do.view_name = "草原（丘陵）"
 				do.short_name = "草丘"
 				do.food = 2
 				do.production = 1
 				do.move_cost = 1
 				do.defence_bonus = 3
-			Terrain.GRASS_MOUNTAIN:
+			Enum.GRASS_MOUNTAIN:
 				do.view_name = "草原（山脉）"
 				do.short_name = "草山"
 				do.charm_influence = 1
 				do.movable = false
-			Terrain.PLAIN:
+			Enum.PLAIN:
 				do.view_name = "平原"
 				do.short_name = "平原"
 				do.food = 1
 				do.production = 1
-			Terrain.PLAIN_HILL:
+			Enum.PLAIN_HILL:
 				do.view_name = "平原（丘陵）"
 				do.short_name = "平丘"
 				do.food = 1
 				do.production = 2
 				do.move_cost = 1
 				do.defence_bonus = 3
-			Terrain.PLAIN_MOUNTAIN:
+			Enum.PLAIN_MOUNTAIN:
 				do.view_name = "平原（山脉）"
 				do.short_name = "平山"
 				do.charm_influence = 1
 				do.movable = false
-			Terrain.DESERT:
+			Enum.DESERT:
 				do.view_name = "沙漠"
 				do.short_name = "沙漠"
-			Terrain.DESERT_HILL:
+			Enum.DESERT_HILL:
 				do.view_name = "沙漠（丘陵）"
 				do.short_name = "沙丘"
 				do.production = 1
 				do.move_cost = 1
 				do.defence_bonus = 3
-			Terrain.DESERT_MOUNTAIN:
+			Enum.DESERT_MOUNTAIN:
 				do.view_name = "沙漠（山脉）"
 				do.short_name = "沙山"
 				do.charm_influence = 1
 				do.movable = false
-			Terrain.TUNDRA:
+			Enum.TUNDRA:
 				do.view_name = "冻土"
 				do.short_name = "冻土"
 				do.food = 1
-			Terrain.TUNDRA_HILL:
+			Enum.TUNDRA_HILL:
 				do.view_name = "冻土（丘陵）"
 				do.short_name = "冻丘"
 				do.food = 1
 				do.production = 1
 				do.move_cost = 1
 				do.defence_bonus = 3
-			Terrain.TUNDRA_MOUNTAIN:
+			Enum.TUNDRA_MOUNTAIN:
 				do.view_name = "冻土（山脉）"
 				do.short_name = "冻山"
 				do.charm_influence = 1
 				do.movable = false
-			Terrain.SNOW:
+			Enum.SNOW:
 				do.view_name = "雪地"
 				do.short_name = "雪地"
-			Terrain.SNOW_HILL:
+			Enum.SNOW_HILL:
 				do.view_name = "雪地（丘陵）"
 				do.short_name = "雪丘"
 				do.production = 1
 				do.move_cost = 1
 				do.defence_bonus = 3
-			Terrain.SNOW_MOUNTAIN:
+			Enum.SNOW_MOUNTAIN:
 				do.view_name = "雪地（山脉）"
 				do.short_name = "雪山"
 				do.charm_influence = 1
 				do.movable = false
-			Terrain.SHORE:
+			Enum.SHORE:
 				do.view_name = "海岸与湖泊"
 				do.short_name = "浅水"
 				do.food = 1
 				do.gold = 1
 				do.charm_influence = 1
-			Terrain.OCEAN:
+			Enum.OCEAN:
 				do.view_name = "海洋"
 				do.short_name = "海洋"
 				do.food = 1

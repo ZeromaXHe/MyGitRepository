@@ -3,7 +3,7 @@ extends MySimSQL.EnumDO
 
 
 # 种类
-var category: UnitCategoryTable.Category
+var category: UnitCategoryTable.Enum
 # 移动力
 var move: int
 # 劳动力

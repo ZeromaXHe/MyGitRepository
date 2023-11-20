@@ -21,6 +21,6 @@ var pop: int = 1
 # 粮食累计值
 var food_sum: float = 0
 # 生产单位类型
-var producing_type: UnitTypeTable.Type = -1
+var producing_type: UnitTypeTable.Enum = -1
 # 生产力累计值
 var production_sum: float

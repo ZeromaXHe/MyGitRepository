@@ -36,7 +36,7 @@ static func create_city(coord: Vector2i) -> CityDO:
 	return city_do
 
 
-static func choose_producing_unit(id: int, unit_type: UnitTypeTable.Type) -> void:
+static func choose_producing_unit(id: int, unit_type: UnitTypeTable.Enum) -> void:
 	DatabaseUtils.city_tbl.update_field_by_id(id, "producing_type", unit_type)
 	# 发送信号
 	ViewSignalsEmitter.get_instance().city_production_changed.emit(id)

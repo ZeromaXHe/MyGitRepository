@@ -8,5 +8,5 @@ static func is_village_placeable(tile_coord: Vector2i) -> bool:
 	return is_village_placeable_terrain(MapController.get_map_tile_do_by_coord(tile_coord).terrain)
 
 
-static func is_village_placeable_terrain(terrain_type: TerrainTable.Terrain) -> bool:
+static func is_village_placeable_terrain(terrain_type: TerrainTable.Enum) -> bool:
 	return TerrainController.is_no_mountain_land_terrain(terrain_type)
