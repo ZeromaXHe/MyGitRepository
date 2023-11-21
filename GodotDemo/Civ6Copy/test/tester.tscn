@@ -1,16 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://dhohba0plmg00"]
+[gd_scene load_steps=5 format=3 uid="uid://dhohba0plmg00"]
 
 [ext_resource type="Script" path="res://test/tester.gd" id="1_k2f2q"]
+[ext_resource type="Texture2D" uid="uid://ducbluwofubp2" path="res://icon.svg" id="2_vemuo"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hqivw"]
+size = Vector2(1152, 648)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_va8bd"]
+size = Vector2(1152, 648)
 
 [node name="tester" type="Node2D"]
 script = ExtResource("1_k2f2q")
-
-[node name="Button" type="Button" parent="."]
-offset_left = 80.0
-offset_top = 261.0
-offset_right = 535.0
-offset_bottom = 292.0
-text = "WHY BUTTON CAN'T BE PRESSED UNDER CANVAS LAYER ?!"
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -24,20 +24,46 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="Area2D" type="Area2D" parent="CanvasLayer/MarginContainer"]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CanvasLayer/MarginContainer/Area2D"]
+position = Vector2(576, 324)
+shape = SubResource("RectangleShape2D_hqivw")
+
 [node name="Control" type="Control" parent="CanvasLayer/MarginContainer"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer/MarginContainer"]
-custom_minimum_size = Vector2(300, 200)
+[node name="SubViewportContainer" type="SubViewportContainer" parent="CanvasLayer/MarginContainer"]
 layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
+stretch = true
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="SubViewport" type="SubViewport" parent="CanvasLayer/MarginContainer/SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
 
-[node name="ParentControl" type="Control" parent="Camera2D"]
+[node name="TextureButton" type="TextureButton" parent="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport"]
+offset_left = 372.0
+offset_top = 62.0
+offset_right = 500.0
+offset_bottom = 190.0
+texture_normal = ExtResource("2_vemuo")
+
+[node name="Button" type="Button" parent="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport"]
+offset_left = 80.0
+offset_top = 261.0
+offset_right = 535.0
+offset_bottom = 292.0
+text = "WHY BUTTON CAN'T BE PRESSED UNDER CANVAS LAYER ?!"
+
+[node name="Camera2D" type="Camera2D" parent="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport"]
+
+[node name="ParentControl" type="Control" parent="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Camera2D"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -52,7 +78,23 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 1
 
-[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
+[node name="ParentArea2D" type="Area2D" parent="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Camera2D"]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Camera2D/ParentArea2D"]
+shape = SubResource("RectangleShape2D_va8bd")
+
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer/MarginContainer"]
+custom_minimum_size = Vector2(300, 200)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[connection signal="mouse_entered" from="CanvasLayer/MarginContainer/Area2D" to="." method="_on_area_2d_mouse_entered"]
+[connection signal="mouse_exited" from="CanvasLayer/MarginContainer/Area2D" to="." method="_on_area_2d_mouse_exited"]
 [connection signal="mouse_entered" from="CanvasLayer/MarginContainer/Control" to="." method="_on_control_mouse_entered"]
-[connection signal="mouse_entered" from="Camera2D/ParentControl" to="." method="_on_parent_control_mouse_entered"]
-[connection signal="mouse_exited" from="Camera2D/ParentControl" to="." method="_on_parent_control_mouse_exited"]
+[connection signal="pressed" from="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Button" to="." method="_on_button_pressed"]
+[connection signal="mouse_entered" from="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Camera2D/ParentControl" to="." method="_on_parent_control_mouse_entered"]
+[connection signal="mouse_exited" from="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Camera2D/ParentControl" to="." method="_on_parent_control_mouse_exited"]
+[connection signal="mouse_entered" from="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Camera2D/ParentArea2D" to="." method="_on_parent_area_2d_mouse_entered"]
+[connection signal="mouse_exited" from="CanvasLayer/MarginContainer/SubViewportContainer/SubViewport/Camera2D/ParentArea2D" to="." method="_on_parent_area_2d_mouse_exited"]

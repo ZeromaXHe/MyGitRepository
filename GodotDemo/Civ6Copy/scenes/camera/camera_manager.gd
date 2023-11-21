@@ -12,11 +12,6 @@ extends Camera2D
 var _previous_position := Vector2(0, 0)
 var _move_camera: bool = false
 var _final_zoom: Vector2 = zoom
-# FIXME: 因为 MouseHoverDetector 的 Mouse - Filter 为 Pass 时会遮蔽单位和城市的按钮，所以先配成 Ignore 保证正常逻辑。
-# 但目前这样鼠标悬浮框就会在 GUI 上出现……
-var mouse_hover_in_camera: bool = true
-
-@onready var mouse_hover_detector: Control = $MouseHoverDetector
 
 
 func _ready() -> void:
@@ -101,15 +96,3 @@ func set_max_y(y: int):
 
 func set_min_y(y: int):
 	MIN_Y = y
-
-
-func is_mouse_hover_in_camera() -> bool:
-	return mouse_hover_in_camera
-
-
-func _on_mouse_hover_detector_mouse_entered() -> void:
-	mouse_hover_in_camera = true
-
-
-func _on_mouse_hover_detector_mouse_exited() -> void:
-	mouse_hover_in_camera = false

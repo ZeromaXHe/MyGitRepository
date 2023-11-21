@@ -37,6 +37,9 @@ const PAINTER_NAME_TO_SIZE_DICT: Dictionary = {
 	"大笔刷": PainterSize.BIG,
 }
 
+# 鼠标位置
+var mouse_in_map_editor: bool = false
+# GUI 界面相关
 var place_mode: PlaceMode = PlaceMode.TERRAIN
 var place_mode_group: ButtonGroup = null
 var terrain_type: TerrainTable.Enum = TerrainTable.Enum.GRASS
@@ -49,6 +52,7 @@ var continent_type: ContinentTable.Enum = ContinentTable.Enum.AFRICA
 var resource_type: ResourceTable.Enum = ResourceTable.Enum.SILK
 var resource_type_group: ButtonGroup = null
 
+@onready var map_editor: MapEditor = $MarginContainer/SubViewportContainer/SubViewport/MapEditor
 @onready var info_label: Label = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/InfoLabel
 @onready var rt_tab: TabContainer = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer
 # 右边格位面板相关
@@ -123,6 +127,15 @@ func _ready() -> void:
 	# 经常重新打开项目时，Git 提交里就显示这个值就没了，不是自定义（-1）了，就离谱
 	# 为了避免哪天不小心提交了，所以强制指定一下
 	mouse_hover_tile_panel.anchors_preset = -1
+	
+	# 初始化编辑器的信号绑定
+	map_editor.initiate(self)
+
+
+func _process(delta: float) -> void:
+	if get_rt_tab_status() == MapEditorGUI.TabStatus.GRID:
+		return
+	map_editor.paint_grid_chosen_area(delta)
 
 
 func disvisible_all_place_container() -> void:
@@ -154,7 +167,8 @@ func is_mouse_hover_info_shown() -> bool:
 
 
 func show_mouse_hover_tile_info(map_coord: Vector2i) -> void:
-	mouse_hover_tile_panel.show_info(map_coord)
+	if mouse_in_map_editor:
+		mouse_hover_tile_panel.show_info(map_coord)
 
 
 func hide_mouse_hover_tile_info() -> void:
@@ -305,3 +319,11 @@ func _on_desktop_button_pressed() -> void:
 ## 点击菜单页面“保存地图”
 func _on_save_button_pressed() -> void:
 	save_map_btn_pressed.emit()
+
+
+func _on_sub_viewport_container_mouse_entered() -> void:
+	mouse_in_map_editor = true
+
+
+func _on_sub_viewport_container_mouse_exited() -> void:
+	mouse_in_map_editor = false

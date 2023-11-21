@@ -6,6 +6,12 @@ signal turn_changed(num: int, year: int)
 signal chosen_unit_changed(unit: Unit)
 signal chosen_city_changed(city: City)
 signal turn_status_changed(stats: TurnStatus)
+# GUI 相关信号
+signal gui_reverse_city_product_panel_visible
+signal gui_hide_city_product_panel
+signal gui_show_city_product_panel
+signal gui_show_mouse_hover_tile_info(map_coord: Vector2i)
+signal gui_hide_mouse_hover_tile_info
 
 
 enum TurnStatus {
@@ -40,7 +46,6 @@ var turn_year: int = -4000
 @onready var units: Node2D = $Units
 @onready var cities: Node2D = $Cities
 @onready var camera: CameraManager = $Camera2D
-@onready var game_gui: GameGUI = $GameGUI
 
 
 func _ready() -> void:
@@ -49,8 +54,6 @@ func _ready() -> void:
 	map_shower.initialize()
 	MapController.init_astar()
 	camera.initialize(MapController.get_map_tile_size_vec(), map_shower.get_map_tile_xy())
-	# 绑定 game_gui 和游戏之间的所有信号（双向）
-	game_gui.signal_binding_with_game(self)
 	ViewSignalsEmitter.get_instance().city_production_changed.connect(handle_city_production_changed)
 	ViewSignalsEmitter.get_instance().city_production_completed.connect(handle_city_production_completed)
 	# 将所有玩家的领土 TileMap 放到场景中
@@ -139,7 +142,7 @@ func build_city(coord: Vector2i) -> void:
 
 func handle_city_product_button_pressed(city: City) -> void:
 	handle_city_clicked(city)
-	game_gui.reverse_city_product_panel_visible()
+	gui_reverse_city_product_panel_visible.emit()
 
 
 func chose_unit_and_camera_focus(unit: UnitDO) -> void:
@@ -210,7 +213,7 @@ func handle_city_product_settler_button_pressed() -> void:
 	if chosen_city == null:
 		printerr("handle_city_product_settler_button_pressed | weird, no chosen city")
 		return
-	game_gui.hide_city_product_panel()
+	gui_hide_city_product_panel.emit()
 	CityController.choose_producing_unit(chosen_city.id, UnitTypeTable.Enum.SETTLER)
 
 
@@ -237,7 +240,7 @@ func handle_turn_button_clicked() -> void:
 				printerr("handle_turn_button_clicked | CITY_NEED_PRODUCT | no productable city found")
 			else:
 				chose_city_and_camera_focus(productable_city)
-				game_gui.show_city_product_panel()
+				gui_show_city_product_panel.emit()
 
 
 func handle_unit_move_depleted(_unit_id: int) -> void:
@@ -255,11 +258,10 @@ func handle_mouse_hover_tile(delta: float) -> void:
 	var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if camera.is_mouse_hover_in_camera() and map_shower.is_in_sight_tile_area(map_coord) \
-				and not game_gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 \
+		if map_shower.is_in_sight_tile_area(map_coord) and _mouse_hover_tile_time > 2 \
 				and MapController.is_in_map_tile(map_coord):
-			game_gui.show_mouse_hover_tile_info(map_coord)
+			gui_show_mouse_hover_tile_info.emit(map_coord)
 		return
 	_mouse_hover_tile_coord = map_coord
 	_mouse_hover_tile_time = 0
-	game_gui.hide_mouse_hover_tile_info()
+	gui_hide_mouse_hover_tile_info.emit()

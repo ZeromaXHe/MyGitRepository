@@ -90,3 +90,19 @@ func _on_parent_control_mouse_entered() -> void:
 
 func _on_parent_control_mouse_exited() -> void:
 	print("_on_parent_control_mouse_exited")
+
+
+func _on_area_2d_mouse_entered() -> void:
+	print("_on_area_2d_mouse_entered")
+
+
+func _on_area_2d_mouse_exited() -> void:
+	print("_on_area_2d_mouse_exited")
+
+
+func _on_parent_area_2d_mouse_entered() -> void:
+	print("_on_parent_area_2d_mouse_entered")
+
+
+func _on_parent_area_2d_mouse_exited() -> void:
+	print("_on_parent_area_2d_mouse_exited")

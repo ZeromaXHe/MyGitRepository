@@ -6,19 +6,3 @@
 position_smoothing_enabled = true
 rotation_smoothing_enabled = true
 script = ExtResource("1_jw7ws")
-
-[node name="MouseHoverDetector" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -1920.0
-offset_top = -1080.0
-offset_right = 1920.0
-offset_bottom = 1080.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[connection signal="mouse_entered" from="MouseHoverDetector" to="." method="_on_mouse_hover_detector_mouse_entered"]
-[connection signal="mouse_exited" from="MouseHoverDetector" to="." method="_on_mouse_hover_detector_mouse_exited"]

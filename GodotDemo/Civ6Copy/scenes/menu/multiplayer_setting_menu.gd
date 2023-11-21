@@ -16,7 +16,7 @@ func _on_confirm_button_pressed() -> void:
 	player.second_color = Color("f5ce02")
 	PlayerController.add_player(player)
 	# 加载页面配置
-	GlobalScript.load_scene_path = "res://scenes/game/hot_seat_game.tscn"
+	GlobalScript.load_scene_path = "res://scenes/gui/game_gui.tscn"
 	# 先默认加载地图
 	GlobalScript.load_map = true
 	get_tree().change_scene_to_file("res://scenes/menu/loading_screen.tscn")

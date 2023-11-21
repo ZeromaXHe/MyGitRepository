@@ -23,11 +23,11 @@ var _mouse_hover_border_coord: Vector2i = GlobalScript.NULL_COORD
 # 恢复和取消，记录操作的栈
 var _before_step_stack: Array[PaintStep] = []
 var _after_step_stack: Array[PaintStep] = []
-
+# GUI 的引用
+var gui: MapEditorGUI
 
 @onready var map_shower: MapShower = $MapShower
 @onready var camera: CameraManager = $Camera2D
-@onready var gui: MapEditorGUI = $MapEditorGUI
 
 
 func _ready() -> void:
@@ -35,24 +35,6 @@ func _ready() -> void:
 	
 	map_shower.initialize()
 	camera.initialize(MapController.get_map_tile_size_vec(), map_shower.get_map_tile_xy())
-	
-	gui.restore_btn_pressed.connect(handle_restore)
-	gui.cancel_btn_pressed.connect(handle_cancel)
-	gui.save_map_btn_pressed.connect(handle_save_map)
-	# 控制大洲滤镜的显示与否
-	gui.place_other_btn_pressed.connect(map_shower.hide_continent_layer)
-	gui.place_continent_btn_pressed.connect(map_shower.show_continent_layer)
-	# 切换放置和格位
-	gui.rt_tab_changed.connect(handle_gui_rt_tab_changed)
-
-
-func _process(delta: float) -> void:
-	if gui.get_rt_tab_status() == MapEditorGUI.TabStatus.GRID:
-		return
-	var tile_moved: bool = handle_mouse_hover_tile(delta)
-	var border_moved: bool = handle_mouse_hover_border(delta)
-	if tile_moved or border_moved:
-		paint_new_chosen_area()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -69,6 +51,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			if event.is_released():
 				get_viewport().set_input_as_handled()
 				depaint_map()
+
+
+func initiate(gui: MapEditorGUI) -> void:
+	self.gui = gui
+	
+	gui.restore_btn_pressed.connect(handle_restore)
+	gui.cancel_btn_pressed.connect(handle_cancel)
+	gui.save_map_btn_pressed.connect(handle_save_map)
+	# 控制大洲滤镜的显示与否
+	gui.place_other_btn_pressed.connect(map_shower.hide_continent_layer)
+	gui.place_continent_btn_pressed.connect(map_shower.show_continent_layer)
+	# 切换放置和格位
+	gui.rt_tab_changed.connect(handle_gui_rt_tab_changed)
+
+
+func paint_grid_chosen_area(delta: float) -> void:
+	var tile_moved: bool = handle_mouse_hover_tile(delta)
+	var border_moved: bool = handle_mouse_hover_border(delta)
+	if tile_moved or border_moved:
+		paint_new_chosen_area()
 
 
 func handle_save_map() -> void:
@@ -150,8 +152,8 @@ func handle_mouse_hover_tile(delta: float) -> bool:
 	var map_coord: Vector2i = map_shower.get_mouse_map_coord()
 	if map_coord == _mouse_hover_tile_coord:
 		_mouse_hover_tile_time += delta
-		if camera.is_mouse_hover_in_camera() and not gui.is_mouse_hover_info_shown() \
-				and _mouse_hover_tile_time > 2 and MapController.is_in_map_tile(map_coord):
+		if not gui.is_mouse_hover_info_shown() and _mouse_hover_tile_time > 2 \
+				and MapController.is_in_map_tile(map_coord):
 			gui.show_mouse_hover_tile_info(map_coord)
 		return false
 	clear_pre_mouse_hover_tile_chosen()

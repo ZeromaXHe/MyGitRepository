@@ -1,7 +1,8 @@
-[gd_scene load_steps=26 format=3 uid="uid://dfpeq8ikcp1wc"]
+[gd_scene load_steps=27 format=3 uid="uid://dfpeq8ikcp1wc"]
 
 [ext_resource type="Script" path="res://scenes/gui/game_gui.gd" id="1_heuwt"]
 [ext_resource type="PackedScene" uid="uid://cuqtin2smf42h" path="res://scenes/gui/panel/game_top_panel.tscn" id="2_4ekn0"]
+[ext_resource type="PackedScene" uid="uid://du3eimf7g1116" path="res://scenes/game/hot_seat_game.tscn" id="3_nrcqy"]
 [ext_resource type="PackedScene" uid="uid://cmal7eblkh33l" path="res://scenes/gui/panel/game_world_track_panel.tscn" id="3_wjgdj"]
 [ext_resource type="Texture2D" uid="uid://o66w84gg4lhx" path="res://assets/civ6_origin/leader/webp_64x64/icon_leader_trajan.webp" id="4_86vqc"]
 [ext_resource type="PackedScene" uid="uid://bfavrm7majmo" path="res://scenes/gui/panel/game_mini_map_panel.tscn" id="7_c8n5a"]
@@ -62,6 +63,17 @@ layout_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="MainVBox/MainContainer"]
+layout_mode = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="MainVBox/MainContainer/SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(1152, 606)
+render_target_update_mode = 4
+
+[node name="HotSeatGame" parent="MainVBox/MainContainer/SubViewportContainer/SubViewport" instance=ExtResource("3_nrcqy")]
 
 [node name="WorldTrackPanel" parent="MainVBox/MainContainer" instance=ExtResource("3_wjgdj")]
 layout_mode = 2
@@ -260,6 +272,8 @@ text = "返回桌面"
 [node name="HotSeatChangingScene" parent="." instance=ExtResource("27_omnpr")]
 visible = false
 
+[connection signal="mouse_entered" from="MainVBox/MainContainer/SubViewportContainer" to="." method="_on_sub_viewport_container_mouse_entered"]
+[connection signal="mouse_exited" from="MainVBox/MainContainer/SubViewportContainer" to="." method="_on_sub_viewport_container_mouse_exited"]
 [connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/ReturnButton" to="." method="_on_return_button_pressed"]
 [connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
 [connection signal="pressed" from="MenuOverlay/MenuCenterContainer/MenuPanelContainer/MenuMarginContainer/MenuVBoxContainer/DesktopButton" to="." method="_on_desktop_button_pressed"]

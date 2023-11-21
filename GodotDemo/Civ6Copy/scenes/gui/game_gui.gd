@@ -4,7 +4,10 @@ extends CanvasLayer
 
 signal city_product_settler_button_pressed
 
+var mouse_in_game: bool = false
 
+# 游戏
+@onready var game: HotSeatGame = $MainVBox/MainContainer/SubViewportContainer/SubViewport/HotSeatGame
 # 顶部面板
 @onready var top_panel: GameTopPanel = $MainVBox/TopPanel
 # 百科面板
@@ -43,15 +46,22 @@ func _ready() -> void:
 	hide_city_product_panel()
 	# 鼠标悬停面板初始不显示
 	hide_mouse_hover_tile_info()
+	# 绑定游戏信号
+	signal_binding_with_game()
 	
 	hot_seat_changing_scene.show()
 
 
-func signal_binding_with_game(game: HotSeatGame) -> void:
+func signal_binding_with_game() -> void:
 	game.turn_changed.connect(top_panel.handle_turn_changed)
 	game.chosen_unit_changed.connect(handle_chosen_unit_changed)
 	game.chosen_city_changed.connect(handle_chosen_city_changed)
 	game.turn_status_changed.connect(turn_panel.handle_turn_status_changed)
+	game.gui_reverse_city_product_panel_visible.connect(reverse_city_product_panel_visible)
+	game.gui_hide_city_product_panel.connect(hide_city_product_panel)
+	game.gui_show_city_product_panel.connect(show_city_product_panel)
+	game.gui_show_mouse_hover_tile_info.connect(show_mouse_hover_tile_info)
+	game.gui_hide_mouse_hover_tile_info.connect(hide_mouse_hover_tile_info)
 	# 处理顶部面板信号
 	top_panel.civpedia_button_pressed.connect(handle_civpedia_button_pressed)
 	top_panel.menu_button_pressed.connect(handle_menu_button_pressed)
@@ -98,12 +108,9 @@ func hide_turn_panel() -> void:
 	turn_panel.hide()
 
 
-func is_mouse_hover_info_shown() -> bool:
-	return mouse_hover_tile_panel.visible
-
-
 func show_mouse_hover_tile_info(map_coord: Vector2i) -> void:
-	mouse_hover_tile_panel.show_info(map_coord)
+	if mouse_in_game and not mouse_hover_tile_panel.visible:
+		mouse_hover_tile_panel.show_info(map_coord)
 
 
 func hide_mouse_hover_tile_info() -> void:
@@ -172,3 +179,11 @@ func _on_main_menu_button_pressed() -> void:
 ## 点击菜单中的“返回桌面”
 func _on_desktop_button_pressed() -> void:
 	get_tree().quit()
+
+
+func _on_sub_viewport_container_mouse_entered() -> void:
+	mouse_in_game = true
+
+
+func _on_sub_viewport_container_mouse_exited() -> void:
+	mouse_in_game = false
