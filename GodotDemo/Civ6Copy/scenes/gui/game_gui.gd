@@ -62,6 +62,8 @@ func signal_binding_with_game() -> void:
 	game.gui_show_city_product_panel.connect(show_city_product_panel)
 	game.gui_show_mouse_hover_tile_info.connect(show_mouse_hover_tile_info)
 	game.gui_hide_mouse_hover_tile_info.connect(hide_mouse_hover_tile_info)
+	# 初始化回合状态
+	game.refresh_turn_status()
 	# 处理顶部面板信号
 	top_panel.civpedia_button_pressed.connect(handle_civpedia_button_pressed)
 	top_panel.menu_button_pressed.connect(handle_menu_button_pressed)

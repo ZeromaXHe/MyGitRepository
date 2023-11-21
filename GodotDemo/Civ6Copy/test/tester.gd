@@ -84,6 +84,10 @@ func _on_control_mouse_entered() -> void:
 	print("_on_control_mouse_entered")
 
 
+func _on_control_mouse_exited() -> void:
+	print("_on_control_mouse_exited")
+
+
 func _on_parent_control_mouse_entered() -> void:
 	print("_on_parent_control_mouse_entered")
 
@@ -106,3 +110,11 @@ func _on_parent_area_2d_mouse_entered() -> void:
 
 func _on_parent_area_2d_mouse_exited() -> void:
 	print("_on_parent_area_2d_mouse_exited")
+
+
+func _on_sub_viewport_container_mouse_entered() -> void:
+	print("in_game")
+
+
+func _on_sub_viewport_container_mouse_exited() -> void:
+	print("out_of_game")

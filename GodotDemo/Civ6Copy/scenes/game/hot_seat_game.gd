@@ -62,8 +62,6 @@ func _ready() -> void:
 	paint_player_sight()
 	# 增加测试单位
 	test_add_unit()
-	# 初始化回合状态
-	refresh_turn_status()
 
 
 func _unhandled_input(event: InputEvent) -> void:
