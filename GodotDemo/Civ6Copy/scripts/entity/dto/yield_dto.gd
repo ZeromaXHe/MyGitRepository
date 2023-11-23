@@ -2,6 +2,16 @@ class_name YieldDTO
 extends RefCounted
 
 
+enum Enum {
+	CULTURE, # 文化
+	FOOD, # 粮食
+	PRODUCTION, # 生产力
+	SCIENCE, # 科学
+	FAITH, # 信仰
+	GOLD, # 金币
+}
+
+
 # 文化产出
 var culture: int = 0
 # 粮食产出

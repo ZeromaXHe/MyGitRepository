@@ -52,11 +52,11 @@ enum Enum {
 }
 
 enum Category {
-	EMPTY,
-	BONUS,
-	LUXURY,
-	STRATEGY,
-	RELIC,
+	EMPTY, # 空
+	BONUS, # 加成
+	LUXURY, # 奢侈品
+	STRATEGY, # 战略
+	RELIC, # 文物
 }
 
 var short_name_index := MySimSQL.Index.new("short_name", MySimSQL.Index.Type.UNIQUE)
