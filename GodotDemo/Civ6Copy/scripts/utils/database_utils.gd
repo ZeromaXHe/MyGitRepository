@@ -11,6 +11,12 @@ static var tech_tbl := TechTable.new()
 static var civic_tbl := CivicTable.new()
 # 区域表
 static var district_tbl := DistrictTable.new()
+# 建筑表
+static var building_tbl := BuildingTable.new()
+# 奇观表
+static var wonder_tbl := WonderTable.new()
+# 项目表
+static var project_tbl := ProjectTable.new()
 # 地图尺寸表
 static var map_size_tbl := MapSizeTable.new()
 # 地图类型表

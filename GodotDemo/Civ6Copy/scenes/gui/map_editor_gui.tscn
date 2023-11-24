@@ -127,7 +127,7 @@ stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="MarginContainer/SubViewportContainer"]
 handle_input_locally = false
-size = Vector2i(1152, 648)
+size = Vector2i(2, 2)
 render_target_update_mode = 4
 
 [node name="MapEditor" parent="MarginContainer/SubViewportContainer/SubViewport" instance=ExtResource("2_tk2gg")]
