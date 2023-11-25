@@ -70,7 +70,7 @@ stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="MainVBox/MainContainer/SubViewportContainer"]
 handle_input_locally = false
-size = Vector2i(2, 2)
+size = Vector2i(1152, 606)
 render_target_update_mode = 4
 
 [node name="HotSeatGame" parent="MainVBox/MainContainer/SubViewportContainer/SubViewport" instance=ExtResource("3_nrcqy")]

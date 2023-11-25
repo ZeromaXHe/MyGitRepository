@@ -53,6 +53,7 @@ enum Enum {
 #	SWEDEN, # 瑞典
 	VIETNAM, # 越南
 #	ZULU, # 祖鲁
+	BARBARIAN, # 野蛮人
 }
 
 
@@ -165,4 +166,6 @@ func _init() -> void:
 				do.view_name = "越南"
 #			Enum.ZULU:
 #				do.view_name = "祖鲁"
+			Enum.BARBARIAN:
+				do.view_name = "野蛮人"
 		super.init_insert(do)
