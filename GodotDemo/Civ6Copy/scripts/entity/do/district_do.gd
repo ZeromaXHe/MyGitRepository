@@ -26,7 +26,7 @@ var required_civic: CivicTable.Enum = -1 # 需要的市政
 var adjoin_center: int = 0 # 邻接市中心的要求（0: 无要求，1：必须邻接，-1：必须不邻接）
 var on_close_shore: bool = false # 是否放置在临近陆地的海岸上
 var adjoin_freshwater: bool = false # 是否必须邻接淡水（河流、湖泊、绿洲、山脉）
-var placable_terrains: Array[TerrainTable.Enum] # 可放置地形要求（空对应无要求）
-var placable_landscapes: Array[LandscapeTable.Enum] # 可放置地貌要求（空对应无要求）
+var placeable_terrains: Array[TerrainTable.Enum] # 可放置地形要求（空对应无要求）
+var placeable_landscapes: Array[LandscapeTable.Enum] # 可放置地貌要求（空对应无要求）
 var production_cost: int # 生产力消耗
 var maintenance_fee: int # 维护费用

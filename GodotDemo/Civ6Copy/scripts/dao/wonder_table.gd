@@ -62,7 +62,7 @@ func _init() -> void:
 				
 				do.required_tech = TechTable.Enum.CASTLES
 				do.adjoining_district = DistrictTable.Enum.ENCAMPMENT
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS_HILL,
 					TerrainTable.Enum.PLAIN_HILL,
 					TerrainTable.Enum.DESERT_HILL,
@@ -86,7 +86,7 @@ func _init() -> void:
 				
 				do.required_tech = TechTable.Enum.STEEL
 				do.adjoining_district = DistrictTable.Enum.CITY_CENTER
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -101,7 +101,7 @@ func _init() -> void:
 				do.science = 2
 				
 				do.required_tech = TechTable.Enum.WRITING
-				do.placable_landscapes = [
+				do.placeable_landscapes = [
 					LandscapeTable.Enum.FLOOD,
 					LandscapeTable.Enum.SWAMP,
 				]
@@ -126,7 +126,7 @@ func _init() -> void:
 				
 				do.required_civic = CivicTable.Enum.MASS_MEDIA
 				do.adjoining_district = DistrictTable.Enum.THEATER
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -143,7 +143,7 @@ func _init() -> void:
 				
 				do.required_civic = CivicTable.Enum.MERCANTILISM
 				do.adjoining_district = DistrictTable.Enum.HARBOR
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.SHORE,
 				] as Array[TerrainTable.Enum]
 				do.on_lake = false
@@ -158,7 +158,7 @@ func _init() -> void:
 				do.required_building = BuildingTable.Enum.BARRACKS
 				do.required_building_incompatible = true
 				do.adjoining_district = DistrictTable.Enum.ENCAMPMENT
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 				] as Array[TerrainTable.Enum]
@@ -170,7 +170,7 @@ func _init() -> void:
 				do.faith = 4
 				
 				do.required_tech = TechTable.Enum.IRON_WORKING
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.DESERT_HILL,
 				] as Array[TerrainTable.Enum]
 				do.production_cost = 400
@@ -182,7 +182,7 @@ func _init() -> void:
 				do.faith = 3
 				
 				do.required_tech = TechTable.Enum.ASTRONOMY
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS_HILL,
 					TerrainTable.Enum.PLAIN_HILL,
 					TerrainTable.Enum.DESERT_HILL,
@@ -212,7 +212,7 @@ func _init() -> void:
 				do.required_tech = TechTable.Enum.CELESTIAL_NAVIGATION
 				do.required_building = BuildingTable.Enum.LIGHTHOUSE
 				do.adjoining_district = DistrictTable.Enum.HARBOR
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.SHORE,
 				] as Array[TerrainTable.Enum]
 				do.on_lake = false
@@ -240,7 +240,7 @@ func _init() -> void:
 				do.required_civic = CivicTable.Enum.RECORDED_HISTORY
 				do.required_building = BuildingTable.Enum.LIBRARY
 				do.adjoining_district = DistrictTable.Enum.CAMPUS
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -255,10 +255,10 @@ func _init() -> void:
 				do.culture = 2
 				
 				do.required_tech = TechTable.Enum.MASONRY
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.DESERT,
 				] as Array[TerrainTable.Enum]
-				do.placable_landscapes = [
+				do.placeable_landscapes = [
 					LandscapeTable.Enum.EMPTY,
 					LandscapeTable.Enum.FLOOD,
 				] as Array[LandscapeTable.Enum]
@@ -270,7 +270,7 @@ func _init() -> void:
 				do.culture = 4
 				
 				do.required_civic = CivicTable.Enum.MASS_MEDIA
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS_HILL,
 					TerrainTable.Enum.PLAIN_HILL,
 					TerrainTable.Enum.DESERT_HILL,
@@ -286,7 +286,7 @@ func _init() -> void:
 				
 				do.required_tech = TechTable.Enum.ASTROLOGY
 				do.adjoining_resource = ResourceTable.Enum.STONE
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -303,7 +303,7 @@ func _init() -> void:
 				
 				do.required_tech = TechTable.Enum.SHIPBUILDING
 				do.adjoining_district = DistrictTable.Enum.HARBOR
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.SHORE,
 				] as Array[TerrainTable.Enum]
 				do.on_lake = false
@@ -335,7 +335,7 @@ func _init() -> void:
 				
 				do.required_civic = CivicTable.Enum.GAMES_RECREATION
 				do.adjoining_district = DistrictTable.Enum.ENTERTAINMENT_COMPLEX
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -352,7 +352,7 @@ func _init() -> void:
 				do.required_civic = CivicTable.Enum.PROFESSIONAL_SPORTS
 				do.required_building = BuildingTable.Enum.STADIUM
 				do.adjoining_district = DistrictTable.Enum.ENTERTAINMENT_COMPLEX
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -378,7 +378,7 @@ func _init() -> void:
 				do.required_building = BuildingTable.Enum.TEMPLE
 				do.create_religion_needed = true
 				do.adjoining_district = DistrictTable.Enum.HOLY_SITE
-				do.placable_landscapes = [
+				do.placeable_landscapes = [
 					LandscapeTable.Enum.FOREST,
 				] as Array[LandscapeTable.Enum]
 				do.production_cost = 400
@@ -393,7 +393,7 @@ func _init() -> void:
 				
 				do.required_civic = CivicTable.Enum.OPERA_BALLET
 				do.adjoining_district = DistrictTable.Enum.THEATER
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -411,7 +411,7 @@ func _init() -> void:
 				do.required_tech = TechTable.Enum.SCIENTIFIC_THEORY
 				do.required_building = BuildingTable.Enum.UNIVERSITY
 				do.adjoining_district = DistrictTable.Enum.CAMPUS
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 				] as Array[TerrainTable.Enum]
@@ -422,10 +422,10 @@ func _init() -> void:
 				do.remove_era = EraTable.Enum.RENAISSANCE
 				
 				do.required_tech = TechTable.Enum.MATHEMATICS
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.DESERT,
 				] as Array[TerrainTable.Enum]
-				do.placable_landscapes = [
+				do.placeable_landscapes = [
 					LandscapeTable.Enum.EMPTY,
 					LandscapeTable.Enum.FLOOD,
 				] as Array[LandscapeTable.Enum]
@@ -436,7 +436,7 @@ func _init() -> void:
 				do.remove_era = EraTable.Enum.INDUSTRIAL
 				
 				do.required_civic = CivicTable.Enum.GUILDS
-				do.placable_landscapes = [
+				do.placeable_landscapes = [
 					LandscapeTable.Enum.RAINFOREST,
 				] as Array[LandscapeTable.Enum]
 				do.production_cost = 710
@@ -448,7 +448,7 @@ func _init() -> void:
 				do.faith = 1
 				
 				do.required_civic = CivicTable.Enum.MYSTICISM
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS_HILL,
 					TerrainTable.Enum.PLAIN_HILL,
 					TerrainTable.Enum.DESERT_HILL,
@@ -473,7 +473,7 @@ func _init() -> void:
 				do.relic_slot = 2
 				
 				do.required_civic = CivicTable.Enum.DIVINE_RIGHT
-				do.placable_landscapes = [
+				do.placeable_landscapes = [
 					LandscapeTable.Enum.FLOOD,
 					LandscapeTable.Enum.SWAMP,
 				] as Array[LandscapeTable.Enum]
@@ -487,7 +487,7 @@ func _init() -> void:
 				do.required_tech = TechTable.Enum.EDUCATION
 				do.create_religion_needed = true
 				do.adjoining_district = DistrictTable.Enum.HOLY_SITE
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -503,7 +503,7 @@ func _init() -> void:
 				
 				do.required_tech = TechTable.Enum.MASS_PRODUCTION
 				do.adjoining_district = DistrictTable.Enum.INDUSTRIAL_ZONE
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.SHORE,
 				] as Array[TerrainTable.Enum]
 				do.on_lake = false
@@ -526,7 +526,7 @@ func _init() -> void:
 				
 				do.required_civic = CivicTable.Enum.CULTURAL_HERITAGE
 				do.adjoining_district = DistrictTable.Enum.HARBOR
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.SHORE,
 				] as Array[TerrainTable.Enum]
 				do.on_lake = false
@@ -537,7 +537,7 @@ func _init() -> void:
 				do.remove_era = EraTable.Enum.INDUSTRIAL
 				
 				do.required_tech = TechTable.Enum.MILITARY_TACTICS
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.SHORE,
 				] as Array[TerrainTable.Enum]
 				do.on_lake = true
@@ -552,7 +552,7 @@ func _init() -> void:
 				do.required_building = BuildingTable.Enum.BARRACKS
 				do.required_building_incompatible = false
 				do.adjoining_district = DistrictTable.Enum.ENCAMPMENT
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -568,7 +568,7 @@ func _init() -> void:
 				
 				do.required_tech = TechTable.Enum.PRINTING
 				do.adjoining_district = DistrictTable.Enum.CITY_CENTER
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,

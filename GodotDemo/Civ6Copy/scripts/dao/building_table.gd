@@ -387,7 +387,7 @@ func _init() -> void:
 				do.gold_cost = 1560
 			Enum.DAR_E_MEHR: 
 				do.view_name = "拜火神庙"
-				# 特属于“拜火神庙”信条
+				do.spec_belief = BeliefTable.Enum.DAR_E_MEHR
 				do.faith = 3
 				do.citizen_slot = 1
 				
@@ -397,7 +397,7 @@ func _init() -> void:
 				do.faith_cost = 380
 			Enum.PAGODA:
 				do.view_name = "宝塔"
-				# 特属于“宝塔”信条
+				do.spec_belief = BeliefTable.Enum.PAGODA
 				do.faith = 3
 				do.housing = 1
 				do.citizen_slot = 1
@@ -408,7 +408,7 @@ func _init() -> void:
 				do.faith_cost = 380
 			Enum.CATHEDRAL:
 				do.view_name = "大教堂"
-				# 特属于“大教堂”信条
+				do.spec_belief = BeliefTable.Enum.CATHEDRAL
 				do.faith = 3
 				do.citizen_slot = 1
 				do.religious_slot = 1
@@ -419,7 +419,7 @@ func _init() -> void:
 				do.faith_cost = 380
 			Enum.WAT:
 				do.view_name = "佛寺"
-				# 特属于“佛寺”信条
+				do.spec_belief = BeliefTable.Enum.WAT
 				do.faith = 3
 				do.science = 2
 				do.citizen_slot = 1
@@ -445,7 +445,7 @@ func _init() -> void:
 				do.maintenance_fee = 2
 			Enum.MEETING_HOUSE:
 				do.view_name = "礼拜堂"
-				# 特属于“礼拜堂”信条
+				do.spec_belief = BeliefTable.Enum.MEETING_HOUSE
 				do.faith = 3
 				do.production = 2
 				do.citizen_slot = 1
@@ -471,7 +471,7 @@ func _init() -> void:
 				do.maintenance_fee = 2
 			Enum.MOSQUE:
 				do.view_name = "清真寺"
-				# 特属于“清真寺”信条
+				do.spec_belief = BeliefTable.Enum.MOSQUE
 				do.faith = 3
 				do.citizen_slot = 1
 				
@@ -505,7 +505,7 @@ func _init() -> void:
 				do.maintenance_fee = 2
 			Enum.SYNAGOGUE:
 				do.view_name = "犹太教堂"
-				# 特属于“犹太教堂”信条
+				do.spec_belief = BeliefTable.Enum.SYNAGOGUE
 				do.faith = 5
 				do.citizen_slot = 1
 				
@@ -515,7 +515,7 @@ func _init() -> void:
 				do.faith_cost = 380
 			Enum.GURDWARA:
 				do.view_name = "谒师所"
-				# 特属于“谒师所”信条
+				do.spec_belief = BeliefTable.Enum.GURDWARA
 				do.faith = 3
 				do.food = 2
 				do.citizen_slot = 1
@@ -526,7 +526,7 @@ func _init() -> void:
 				do.faith_cost = 380
 			Enum.STUPA:
 				do.view_name = "窣堵波"
-				# 特属于“窣堵波”信条
+				do.spec_belief = BeliefTable.Enum.STUPA
 				do.faith = 3
 				do.amuse_amenity = 1
 				do.citizen_slot = 1

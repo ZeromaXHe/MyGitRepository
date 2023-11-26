@@ -6,6 +6,7 @@ var category: UnitCategoryTable.Enum # 种类
 var spec_civ: CivTable.Enum = -1 # 特属于文明
 var spec_leader: LeaderTable.Enum = -1 # 特属于领袖
 var spec_city_state: CityStateTable.Enum = -1 # 特属于城邦
+var spec_belief: BeliefTable.Enum = -1 # 特属于信条
 var replace_unit_type: UnitTypeTable.Enum = -1 # 替代的单位类型
 var upgrade_unit_type: UnitTypeTable.Enum = -1 # 升级到单位类型
 var move: int # 移动力

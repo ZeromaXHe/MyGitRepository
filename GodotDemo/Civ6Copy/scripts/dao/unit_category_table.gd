@@ -11,6 +11,8 @@ enum Enum {
 	HEAVY_CAVALRY, # 重骑兵
 	ANTI_CAVALRY, # 抗骑兵
 	SIEGE, # 攻城
+	LAHORE_NIHANG, # 尼杭战士
+	WARRIOR_MONK, # 武僧
 	# 海上部队
 	NAVY_MELEE, # 海军近战
 	NAVY_RANGE, # 海军远程攻击
@@ -59,6 +61,12 @@ func _init() -> void:
 				do.icon = "res://assets/self_made_svg/unit_background/unit_ground_military_background.svg"
 			Enum.SIEGE:
 				do.view_name = "攻城"
+				do.icon = "res://assets/self_made_svg/unit_background/unit_ground_military_background.svg"
+			Enum.LAHORE_NIHANG:
+				do.view_name = "尼杭战士"
+				do.icon = "res://assets/self_made_svg/unit_background/unit_ground_military_background.svg"
+			Enum.WARRIOR_MONK:
+				do.view_name = "武僧"
 				do.icon = "res://assets/self_made_svg/unit_background/unit_ground_military_background.svg"
 			Enum.NAVY_MELEE:
 				do.view_name = "海军近战"

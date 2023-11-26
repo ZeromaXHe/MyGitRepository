@@ -154,7 +154,7 @@ func _init() -> void:
 				do.plane_capacity = 4
 				do.charm_influence = -1
 				do.required_tech = TechTable.Enum.FLIGHT
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,
@@ -285,7 +285,7 @@ func _init() -> void:
 				do.housing = 5
 				
 				do.required_civic = CivicTable.Enum.GUILDS
-				do.placable_landscapes = [
+				do.placeable_landscapes = [
 					LandscapeTable.Enum.FOREST,
 					LandscapeTable.Enum.RAINFOREST,
 				] as Array[LandscapeTable.Enum]
@@ -469,7 +469,7 @@ func _init() -> void:
 				do.international_trade_yield.culture = 1
 				
 				do.required_civic = CivicTable.Enum.DRAMA_POETRY
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS_HILL,
 					TerrainTable.Enum.PLAIN_HILL,
 					TerrainTable.Enum.DESERT_HILL,
@@ -526,7 +526,7 @@ func _init() -> void:
 				do.charm_influence = -1
 				
 				do.required_tech = TechTable.Enum.ROCKETRY
-				do.placable_terrains = [
+				do.placeable_terrains = [
 					TerrainTable.Enum.GRASS,
 					TerrainTable.Enum.PLAIN,
 					TerrainTable.Enum.DESERT,

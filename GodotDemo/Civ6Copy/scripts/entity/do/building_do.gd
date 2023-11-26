@@ -3,6 +3,7 @@ extends MySimSQL.EnumDO
 
 
 var spec_civ: CivTable.Enum = -1 # 所属文明
+var spec_belief: BeliefTable.Enum = -1 # 特属于信条
 var replace_building: BuildingTable.Enum = -1 # 取代建筑
 var culture: int # 文化产量
 var food: int # 食物产量

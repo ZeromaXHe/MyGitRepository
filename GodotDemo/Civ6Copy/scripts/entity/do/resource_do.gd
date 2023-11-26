@@ -18,3 +18,11 @@ var science: int = 0
 var faith: int = 0
 # 金币产量
 var gold: int = 0
+
+var placeable_terrains: Array[TerrainTable.Enum] # 可放置地形
+var placeable_landscapes: Array[LandscapeTable.Enum] # 可放置地貌
+var improvement: Array[ImprovementTable.Enum] # 改良设施
+var harvest_type: YieldDTO.Enum = -1 # 收获类型
+var harvest_val: int # 收获量
+var required_tech: TechTable.Enum = -1 # 需要的科技
+var required_civic: CivicTable.Enum = -1 # 需要的市政

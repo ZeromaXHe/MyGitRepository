@@ -13,6 +13,8 @@ var river_tile_bonus: int # 河流地块加成
 var two_forest_bonus: int # 每2个森林加成
 var two_rainforest_bonus: int # 每2个雨林加成
 var two_farm_bonus: int # 每2个农场加成
+var two_plantation_bonus: int # 每2个种植园加成
+var two_hacienda_bonus: int # 每2个大庄园加成
 var improvement_dict: Dictionary # 改良设施加成字典
 var district_dict: Dictionary # 区域加成字典
 var resource_category_dict: Dictionary # 资源种类加成字典

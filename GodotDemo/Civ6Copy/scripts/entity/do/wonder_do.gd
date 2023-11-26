@@ -39,7 +39,7 @@ var adjoining_resource: ResourceTable.Enum = -1 # 邻接的资源
 var adjoin_river: bool = false # 是否必须邻接河流
 var adjoin_capital: bool = false # 是否必须邻接首都
 var on_lake: bool = false # 是否必须建在湖泊上（否对应不可以）
-var placable_terrains: Array[TerrainTable.Enum] # 可放置地形要求（空对应无要求）
-var placable_landscapes: Array[LandscapeTable.Enum] # 可放置地貌要求（空对应无要求）
+var placeable_terrains: Array[TerrainTable.Enum] # 可放置地形要求（空对应无要求）
+var placeable_landscapes: Array[LandscapeTable.Enum] # 可放置地貌要求（空对应无要求）
 var production_cost: int # 生产力消耗
 

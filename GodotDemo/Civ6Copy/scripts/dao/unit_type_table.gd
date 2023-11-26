@@ -824,7 +824,7 @@ func _init() -> void:
 			Enum.LAHORE_NIHANG:
 				do.view_name = "尼杭战士"
 				do.spec_city_state = CityStateTable.Enum.LAHORE
-				do.category = UnitCategoryTable.Enum.MELEE # 百科里尼杭战士是单独的
+				do.category = UnitCategoryTable.Enum.LAHORE_NIHANG
 				do.move = 2
 				do.melee_atk = 25
 				
@@ -1031,8 +1031,8 @@ func _init() -> void:
 				do.maintenance_fee = 3
 			Enum.WARRIOR_MONK:
 				do.view_name = "武僧"
-				# 特属于“武僧”信条
-				do.category = UnitCategoryTable.Enum.MELEE # 百科上武僧是单独的
+				do.spec_belief = BeliefTable.Enum.WARRIOR_MONKS
+				do.category = UnitCategoryTable.Enum.WARRIOR_MONK
 				do.move = 3
 				do.melee_atk = 40
 				
