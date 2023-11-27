@@ -20,25 +20,27 @@ const SIGHT_TERRAIN_IDX: int = 1
 const BORDER_TILE_LAYER_IDX: int = 0
 const BORDER_CHOSEN_LAYER_IDX: int = 1
 
+@export var minimap: bool = false
+
 # 地块类型到 TileSet source id 信息映射
 var _terrain_type_to_src_id_dict : Dictionary = {
-	TerrainTable.Enum.GRASS: 0,
-	TerrainTable.Enum.GRASS_HILL: 1,
-	TerrainTable.Enum.GRASS_MOUNTAIN: 2,
-	TerrainTable.Enum.PLAIN: 3,
-	TerrainTable.Enum.PLAIN_HILL: 4,
-	TerrainTable.Enum.PLAIN_MOUNTAIN: 5,
-	TerrainTable.Enum.DESERT: 6,
-	TerrainTable.Enum.DESERT_HILL: 7,
-	TerrainTable.Enum.DESERT_MOUNTAIN: 8,
-	TerrainTable.Enum.TUNDRA: 9,
-	TerrainTable.Enum.TUNDRA_HILL: 10,
-	TerrainTable.Enum.TUNDRA_MOUNTAIN: 11,
-	TerrainTable.Enum.SNOW: 12,
-	TerrainTable.Enum.SNOW_HILL: 13,
-	TerrainTable.Enum.SNOW_MOUNTAIN: 14,
-	TerrainTable.Enum.SHORE: 15,
-	TerrainTable.Enum.OCEAN: 16,
+	TerrainTable.Enum.GRASS: [0, 0],
+	TerrainTable.Enum.GRASS_HILL: [1, 0],
+	TerrainTable.Enum.GRASS_MOUNTAIN: [2, 2],
+	TerrainTable.Enum.PLAIN: [3, 3],
+	TerrainTable.Enum.PLAIN_HILL: [4, 3],
+	TerrainTable.Enum.PLAIN_MOUNTAIN: [5, 5],
+	TerrainTable.Enum.DESERT: [6, 6],
+	TerrainTable.Enum.DESERT_HILL: [7, 6],
+	TerrainTable.Enum.DESERT_MOUNTAIN: [8, 8],
+	TerrainTable.Enum.TUNDRA: [9, 9],
+	TerrainTable.Enum.TUNDRA_HILL: [10, 9],
+	TerrainTable.Enum.TUNDRA_MOUNTAIN: [11, 11],
+	TerrainTable.Enum.SNOW: [12, 12],
+	TerrainTable.Enum.SNOW_HILL: [13, 12],
+	TerrainTable.Enum.SNOW_MOUNTAIN: [14, 14],
+	TerrainTable.Enum.SHORE: [15, 15],
+	TerrainTable.Enum.OCEAN: [16, 16],
 }
 # 记录 TileMap 坐标到资源图标的映射的字典
 var _coord_to_resource_icon_dict: Dictionary = {}
@@ -50,7 +52,8 @@ var _coord_to_resource_icon_dict: Dictionary = {}
 
 func _ready() -> void:
 	hide_continent_layer()
-	ViewHolder.register_map_shower(self)
+	print("minimap: ", minimap)
+	ViewHolder.register_map_shower(self, minimap)
 	
 	if GlobalScript.load_map:
 		load_map()
@@ -237,11 +240,13 @@ func paint_tile(coord: Vector2i, tile_do: MapTileDO) -> void:
 
 
 func paint_terrain(coord: Vector2i, type: TerrainTable.Enum) -> void:
-	var src_id: int = _terrain_type_to_src_id_dict[type]
-	tile_map.set_cell(TILE_TERRAIN_LAYER_IDX, coord, src_id, Vector2i.ZERO)
+	var src_ids: Array = _terrain_type_to_src_id_dict[type]
+	tile_map.set_cell(TILE_TERRAIN_LAYER_IDX, coord, src_ids[1 if minimap else 0], Vector2i.ZERO)
 
 
 func paint_landscape(tile_coord: Vector2i, type: LandscapeTable.Enum) -> void:
+	if minimap:
+		return
 	match type:
 		LandscapeTable.Enum.ICE:
 			tile_map.set_cell(TILE_LANDSCAPE_LAYER_IDX, tile_coord, 19, Vector2i.ZERO)
@@ -260,6 +265,8 @@ func paint_landscape(tile_coord: Vector2i, type: LandscapeTable.Enum) -> void:
 
 
 func paint_village(tile_coord: Vector2i, village: bool):
+	if minimap:
+		return
 	if village:
 		tile_map.set_cell(TILE_VILLAGE_LAYER_IDX, tile_coord, 25, Vector2i.ZERO)
 	else:
@@ -274,6 +281,8 @@ func paint_city(tile_coord: Vector2i, type: int):
 
 
 func paint_resource(tile_coord: Vector2i, type: ResourceTable.Enum) -> void:
+	if minimap:
+		return
 	# 清除原来的资源图标
 	if _coord_to_resource_icon_dict.has(tile_coord):
 		_coord_to_resource_icon_dict[tile_coord].queue_free()
@@ -297,6 +306,8 @@ func paint_resource(tile_coord: Vector2i, type: ResourceTable.Enum) -> void:
 
 
 func paint_continent(tile_coord: Vector2i, type: ContinentTable.Enum) -> void:
+	if minimap:
+		return
 	if type == ContinentTable.Enum.EMPTY:
 		tile_map.erase_cell(TILE_CONTINENT_LAYER_IDX, tile_coord)
 	else:

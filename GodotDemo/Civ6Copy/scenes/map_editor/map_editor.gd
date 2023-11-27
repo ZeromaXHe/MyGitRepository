@@ -61,6 +61,9 @@ func initiate(gui: MapEditorGUI) -> void:
 	gui.place_continent_btn_pressed.connect(map_shower.show_continent_layer)
 	# 切换放置和格位
 	gui.rt_tab_changed.connect(handle_gui_rt_tab_changed)
+	# 小地图相关
+	gui.mini_map.click_on_tile.connect(handle_mini_map_clicked_on_tile)
+	camera.set_minimap_transform_path(gui.mini_map.get_view_line().get_path())
 
 
 func paint_grid_chosen_area(delta: float) -> void:
@@ -68,6 +71,10 @@ func paint_grid_chosen_area(delta: float) -> void:
 	var border_moved: bool = handle_mouse_hover_border(delta)
 	if tile_moved or border_moved:
 		paint_new_chosen_area()
+
+
+func handle_mini_map_clicked_on_tile(coord: Vector2i) -> void:
+	camera.global_position = map_shower.map_coord_to_global_position(coord)
 
 
 func handle_save_map() -> void:
@@ -93,6 +100,7 @@ func handle_restore() -> void:
 			match change.tile_change_type:
 				TileChangeType.TERRAIN:
 					map_shower.paint_tile(change.coord, change.after)
+					ViewHolder.get_minimap_shower().paint_tile(change.coord, change.after)
 				TileChangeType.LANDSCAPE:
 					map_shower.paint_tile(change.coord, change.after)
 				TileChangeType.VILLAGE:
@@ -106,6 +114,7 @@ func handle_restore() -> void:
 		else:
 			# 恢复 BorderTileMap 到操作后的状态
 			map_shower.paint_border(change.coord, change.after_border.tile_type)
+			ViewHolder.get_minimap_shower().paint_border(change.coord, change.after_border.tile_type)
 			# 恢复地图地块信息
 			MapController.change_border_tile_info(change.coord, change.after_border)
 	# 把操作存到之前的取消栈中
@@ -125,6 +134,7 @@ func handle_cancel() -> void:
 			match change.tile_change_type:
 				TileChangeType.TERRAIN:
 					map_shower.paint_tile(change.coord, change.before)
+					ViewHolder.get_minimap_shower().paint_tile(change.coord, change.before)
 				TileChangeType.LANDSCAPE:
 					map_shower.paint_tile(change.coord, change.before)
 				TileChangeType.VILLAGE:
@@ -138,6 +148,7 @@ func handle_cancel() -> void:
 		else:
 			# 恢复 BorderTileMap 到操作前的状态
 			map_shower.paint_border(change.coord, change.before_border.tile_type)
+			ViewHolder.get_minimap_shower().paint_border(change.coord, change.before_border.tile_type)
 			# 恢复地图地块信息
 			MapController.change_border_tile_info(change.coord, change.before_border)
 	# 把操作存到之后的恢复栈中
@@ -402,6 +413,7 @@ func paint_terrain(coord: Vector2i, step: PaintStep, terrain_type: TerrainTable.
 	MapController.change_map_tile_info(coord, change.after)
 	# 重新绘制整个 TileMap 地块
 	map_shower.paint_tile(coord, change.after)
+	ViewHolder.get_minimap_shower().paint_tile(coord, change.after)
 	
 	# 对周围一圈边界进行校验，不符合的边界需要重置为空
 	var borders: Array[Vector2i] = MapBorderUtils.get_all_tile_border(coord, false)
@@ -474,6 +486,7 @@ func paint_border(border_coord: Vector2i, step: PaintStep, type: MapBorderTable.
 	MapController.change_border_tile_info(border_coord, change.after_border)
 	# 真正绘制边界
 	map_shower.paint_border(border_coord, type)
+	ViewHolder.get_minimap_shower().paint_border(border_coord, type)
 
 
 func build_change_of_tile(tile_coord: Vector2i, type: TileChangeType) -> PaintChange:

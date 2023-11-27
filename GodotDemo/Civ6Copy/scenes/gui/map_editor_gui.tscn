@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://cw4d6w6b4mr0o"]
+[gd_scene load_steps=40 format=3 uid="uid://cw4d6w6b4mr0o"]
 
 [ext_resource type="Texture2D" uid="uid://bsp5g2cvvrsaa" path="res://assets/icon_park/汉堡图标_hamburger-button.svg" id="1_gwgln"]
 [ext_resource type="Script" path="res://scenes/gui/map_editor_gui.gd" id="1_lwefg"]
@@ -13,6 +13,7 @@
 [ext_resource type="ButtonGroup" uid="uid://chjyaxgfkotgt" path="res://scenes/gui/landscape_mode_place_btn_group.tres" id="6_u002j"]
 [ext_resource type="ButtonGroup" uid="uid://byp27x6033aly" path="res://scenes/gui/resource_mode_place_btn_group.tres" id="7_bf14j"]
 [ext_resource type="StyleBox" uid="uid://cysjabncooi5o" path="res://styles/menu_deep_blue_button_normal.tres" id="12_8yj3s"]
+[ext_resource type="PackedScene" uid="uid://q01p2vr13jfj" path="res://scenes/game/mini_map.tscn" id="13_r0ies"]
 [ext_resource type="StyleBox" uid="uid://myu1cithxhwy" path="res://styles/menu_deep_blue_button_hover.tres" id="13_rpcex"]
 [ext_resource type="StyleBox" uid="uid://dqr84amdys5ut" path="res://styles/menu_deep_blue_button_press.tres" id="14_bhfgr"]
 [ext_resource type="PackedScene" uid="uid://babhwv4eoh1kt" path="res://scenes/gui/mouse_hover_tile_panel.tscn" id="15_jf40g"]
@@ -127,7 +128,7 @@ stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="MarginContainer/SubViewportContainer"]
 handle_input_locally = false
-size = Vector2i(2, 2)
+size = Vector2i(1152, 648)
 render_target_update_mode = 4
 
 [node name="MapEditor" parent="MarginContainer/SubViewportContainer/SubViewport" instance=ExtResource("2_tk2gg")]
@@ -1133,6 +1134,8 @@ layout_mode = 2
 handle_input_locally = false
 size = Vector2i(288, 162)
 render_target_update_mode = 4
+
+[node name="MiniMap" parent="MarginContainer/LeftDownPanelContainer/VBoxContainer/MarginContainer/SubViewportContainer/SubViewport" instance=ExtResource("13_r0ies")]
 
 [node name="MenuOverlay" type="PanelContainer" parent="."]
 visible = false

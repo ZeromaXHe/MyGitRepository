@@ -53,6 +53,7 @@ func update_sight() -> void:
 	var cells: Array[Vector2i] = []
 	cells.append_array(dict.keys())
 	ViewHolder.get_map_shower().paint_in_sight_tile_areas(cells)
+	ViewHolder.get_minimap_shower().paint_in_sight_tile_areas(cells)
 
 
 func update_out_sight() -> void:
@@ -65,6 +66,7 @@ func update_out_sight() -> void:
 		var seens: Array = PlayerSightController.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
 		if seens.any(func(s): s.coord == out_sight_coord):
 			ViewHolder.get_map_shower().paint_out_sight_tile_areas(out_sight_coord, PlayerSightTable.Sight.SEEN)
+			ViewHolder.get_minimap_shower().paint_out_sight_tile_areas(out_sight_coord, PlayerSightTable.Sight.SEEN)
 
 
 func show_move_range() -> void:

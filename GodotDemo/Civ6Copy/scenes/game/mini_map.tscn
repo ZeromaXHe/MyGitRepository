@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://q01p2vr13jfj"]
+
+[ext_resource type="PackedScene" uid="uid://3ptyvtoemex4" path="res://scenes/map_editor/map_shower.tscn" id="1_5cw60"]
+[ext_resource type="Script" path="res://scenes/game/mini_map.gd" id="1_tgxbi"]
+
+[node name="MiniMap" type="Node2D"]
+script = ExtResource("1_tgxbi")
+
+[node name="MapShower" parent="." instance=ExtResource("1_5cw60")]
+minimap = true
+
+[node name="ViewLine2D" type="Line2D" parent="."]
+z_index = 10
+points = PackedVector2Array(576, 324, 576, -324, -576, -324, -576, 324, 576, 324)
+width = 30.0
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.04, 0.04)

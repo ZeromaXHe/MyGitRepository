@@ -55,6 +55,8 @@ var resource_type_group: ButtonGroup = null
 @onready var map_editor: MapEditor = $MarginContainer/SubViewportContainer/SubViewport/MapEditor
 @onready var info_label: Label = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TitleVBoxContainer/InfoLabel
 @onready var rt_tab: TabContainer = $MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer
+# 小地图
+@onready var mini_map: MiniMap = $MarginContainer/LeftDownPanelContainer/VBoxContainer/MarginContainer/SubViewportContainer/SubViewport/MiniMap
 # 右边格位面板相关
 @onready var grid_coord_label: Label = $"MarginContainer/RightTopPanelContainer/RtVBoxContainer/TabContainer/格位/GridContainer/CoordLabel"
 # 左上角的选择放置模式的按钮

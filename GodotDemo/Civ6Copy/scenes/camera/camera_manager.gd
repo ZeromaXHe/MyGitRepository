@@ -13,9 +13,12 @@ var _previous_position := Vector2(0, 0)
 var _move_camera: bool = false
 var _final_zoom: Vector2 = zoom
 
+@onready var minimap_transform: RemoteTransform2D = $MinimapTransform2D
+
 
 func _ready() -> void:
 	zoom = Vector2(0.8, 0.8)
+	scale = Vector2.ONE / zoom
 	
 	initialize(MapController.get_map_tile_size_vec(), ViewHolder.get_map_shower().get_map_tile_xy())
 
@@ -34,12 +37,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			_final_zoom = clamp(_final_zoom + Vector2(0.05, 0.05), MIN_ZOOM, MAX_ZOOM)
 			var tween = get_tree().create_tween()
 			tween.tween_property(self, "zoom", _final_zoom, 0.1)
+			tween.tween_property(self, "scale", Vector2.ONE / _final_zoom, 0.1)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			# 镜头缩小
 			get_viewport().set_input_as_handled()
 			_final_zoom = clamp(_final_zoom - Vector2(0.05, 0.05), MIN_ZOOM, MAX_ZOOM)
 			var tween = get_tree().create_tween()
 			tween.tween_property(self, "zoom", _final_zoom, 0.1)
+			tween.tween_property(self, "scale", Vector2.ONE / _final_zoom, 0.1)
 	elif event is InputEventMouseMotion:
 		# 拖拽镜头过程中
 #		get_viewport().set_input_as_handled()
@@ -60,6 +65,10 @@ func initialize(map_size: Vector2i, tile_xy: Vector2i) -> void:
 	global_position = Vector2(max_x / 2, max_y / 2)
 
 
+func set_minimap_transform_path(node_path: NodePath) -> void:
+	minimap_transform.remote_path = node_path
+
+
 func start_drag(start_position: Vector2):
 	_previous_position = start_position
 	_move_camera = true
@@ -73,14 +82,14 @@ func end_drag():
 func drag(to_position: Vector2):
 	if not _move_camera:
 		return
-	position += (_previous_position - to_position) / zoom.x
+	global_position += (_previous_position - to_position) / zoom.x
 	# 限制镜头移动范围
 	var diff_x = get_viewport().size.x / zoom.x / 2
 	var diff_y = get_viewport().size.y / zoom.y / 2
 	# 直接对 Vector2 而不分别对 x、y 进行 clamp() 的话，貌似会 bug。
 	# 因为 Vector2 的大小判断逻辑是 x 处于范围内的话，就不会处理 y 了。
-	position.x = clamp(position.x, MIN_X + diff_x, MAX_X - diff_x)
-	position.y = clamp(position.y, MIN_Y + diff_y, MAX_Y - diff_y)
+	global_position.x = clamp(global_position.x, MIN_X + diff_x, MAX_X - diff_x)
+	global_position.y = clamp(global_position.y, MIN_Y + diff_y, MAX_Y - diff_y)
 	_previous_position = to_position
 
 

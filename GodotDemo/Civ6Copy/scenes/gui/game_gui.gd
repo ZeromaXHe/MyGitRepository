@@ -62,8 +62,13 @@ func signal_binding_with_game() -> void:
 	game.gui_show_city_product_panel.connect(show_city_product_panel)
 	game.gui_show_mouse_hover_tile_info.connect(show_mouse_hover_tile_info)
 	game.gui_hide_mouse_hover_tile_info.connect(hide_mouse_hover_tile_info)
+	# 增加测试单位
+	game.test_add_unit()
 	# 初始化回合状态
 	game.refresh_turn_status()
+	# 设置小地图镜头范围线的远程引用
+	var camera_manager: CameraManager = game.get_minimap_camera()
+	camera_manager.set_minimap_transform_path(mini_map_panel.get_mini_map().get_view_line().get_path())
 	# 处理顶部面板信号
 	top_panel.civpedia_button_pressed.connect(handle_civpedia_button_pressed)
 	top_panel.menu_button_pressed.connect(handle_menu_button_pressed)
@@ -83,6 +88,8 @@ func signal_binding_with_game() -> void:
 	city_detail_panel.close_button_pressed.connect(handle_city_detail_panel_close_button_pressed)
 	# 处理世界追踪界面的信号
 	world_track_panel.tech_button_pressed.connect(handle_world_track_panel_tech_button_pressed)
+	# 处理小地图点击信号
+	mini_map_panel.clicked_on_minimap_tile.connect(game.handle_clicked_on_minimap_tile)
 
 
 func show_city_product_panel() -> void:

@@ -2,17 +2,25 @@ class_name ViewHolder
 
 
 static var map_shower: MapShower
+static var minimap_shower: MapShower
 static var player_view_dict: Dictionary = {}
 static var unit_view_dict: Dictionary = {}
 static var city_view_dict: Dictionary = {}
 
 
-static func register_map_shower(ms: MapShower) -> void:
-	map_shower = ms
+static func register_map_shower(ms: MapShower, minimap: bool) -> void:
+	if minimap:
+		minimap_shower = ms
+	else:
+		map_shower = ms
 
 
 static func get_map_shower() -> MapShower:
 	return map_shower
+
+
+static func get_minimap_shower() -> MapShower:
+	return minimap_shower
 
 
 static func register_player(player: Player) -> void:
@@ -24,7 +32,7 @@ static func get_player(id: int) -> Player:
 
 
 static func get_all_players() -> Array:
-	return player_view_dict.values
+	return player_view_dict.values()
 
 
 static func register_unit(unit: Unit) -> void:

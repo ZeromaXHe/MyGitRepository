@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://bfavrm7majmo"]
+[gd_scene load_steps=12 format=3 uid="uid://bfavrm7majmo"]
 
 [ext_resource type="Texture2D" uid="uid://duwxecohirtpr" path="res://assets/icon_park/镜子2_mirror-two.svg" id="1_4r22l"]
 [ext_resource type="Script" path="res://scenes/gui/panel/game_mini_map_panel.gd" id="1_uthie"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://cwdk6g3kghm5v" path="res://assets/icon_park/世界_world.svg" id="5_p8u35"]
 [ext_resource type="Texture2D" uid="uid://b1di533muewx2" path="res://assets/icon_park/全屏播放_full-screen-play.svg" id="6_i43q6"]
 [ext_resource type="Texture2D" uid="uid://kwys0nn7e7gm" path="res://assets/icon_park/向下收起_expand-down-one.svg" id="8_m6ykp"]
+[ext_resource type="PackedScene" uid="uid://q01p2vr13jfj" path="res://scenes/game/mini_map.tscn" id="9_8d8j2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wf8dr"]
 bg_color = Color(0.835294, 0.737255, 0.509804, 1)
@@ -93,3 +94,7 @@ size_flags_vertical = 8
 handle_input_locally = false
 size = Vector2i(288, 162)
 render_target_update_mode = 4
+
+[node name="MiniMap" parent="MiniMapPanel/MarginContainer/SubViewportContainer/SubViewport" instance=ExtResource("9_8d8j2")]
+
+[connection signal="click_on_tile" from="MiniMapPanel/MarginContainer/SubViewportContainer/SubViewport/MiniMap" to="." method="_on_mini_map_click_on_tile"]

@@ -6,3 +6,5 @@
 position_smoothing_enabled = true
 rotation_smoothing_enabled = true
 script = ExtResource("1_jw7ws")
+
+[node name="MinimapTransform2D" type="RemoteTransform2D" parent="."]

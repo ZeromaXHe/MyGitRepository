@@ -58,8 +58,6 @@ func _ready() -> void:
 	for player in ViewHolder.get_all_players():
 		territory_borders.add_child((player as Player).territory_border)
 	paint_player_sight()
-	# 增加测试单位
-	test_add_unit()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -77,6 +75,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	handle_mouse_hover_tile(delta)
+
+
+func get_minimap_camera() -> CameraManager:
+	return camera
 
 
 func refresh_turn_status() -> void:
@@ -248,6 +250,10 @@ func handle_city_production_changed(id: int) -> void:
 	ViewHolder.get_city(id).update_production_ui()
 	# 城市选择了新的生产项目，需要刷新一下回合状态
 	refresh_turn_status()
+
+
+func handle_clicked_on_minimap_tile(coord: Vector2i) -> void:
+	camera.global_position = map_shower.map_coord_to_global_position(coord)
 
 
 func handle_mouse_hover_tile(delta: float) -> void:
