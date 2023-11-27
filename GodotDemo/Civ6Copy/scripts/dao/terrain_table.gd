@@ -43,11 +43,13 @@ func _init() -> void:
 				do.short_name = "草丘"
 				do.food = 2
 				do.production = 1
+				do.hill = true
 				do.move_cost = 1
 				do.defence_bonus = 3
 			Enum.GRASS_MOUNTAIN:
 				do.view_name = "草原（山脉）"
 				do.short_name = "草山"
+				do.mountain = true
 				do.charm_influence = 1
 				do.movable = false
 			Enum.PLAIN:
@@ -60,11 +62,13 @@ func _init() -> void:
 				do.short_name = "平丘"
 				do.food = 1
 				do.production = 2
+				do.hill = true
 				do.move_cost = 1
 				do.defence_bonus = 3
 			Enum.PLAIN_MOUNTAIN:
 				do.view_name = "平原（山脉）"
 				do.short_name = "平山"
+				do.mountain = true
 				do.charm_influence = 1
 				do.movable = false
 			Enum.DESERT:
@@ -74,11 +78,13 @@ func _init() -> void:
 				do.view_name = "沙漠（丘陵）"
 				do.short_name = "沙丘"
 				do.production = 1
+				do.hill = true
 				do.move_cost = 1
 				do.defence_bonus = 3
 			Enum.DESERT_MOUNTAIN:
 				do.view_name = "沙漠（山脉）"
 				do.short_name = "沙山"
+				do.mountain = true
 				do.charm_influence = 1
 				do.movable = false
 			Enum.TUNDRA:
@@ -90,11 +96,13 @@ func _init() -> void:
 				do.short_name = "冻丘"
 				do.food = 1
 				do.production = 1
+				do.hill = true
 				do.move_cost = 1
 				do.defence_bonus = 3
 			Enum.TUNDRA_MOUNTAIN:
 				do.view_name = "冻土（山脉）"
 				do.short_name = "冻山"
+				do.mountain = true
 				do.charm_influence = 1
 				do.movable = false
 			Enum.SNOW:
@@ -103,12 +111,14 @@ func _init() -> void:
 			Enum.SNOW_HILL:
 				do.view_name = "雪地（丘陵）"
 				do.short_name = "雪丘"
+				do.hill = true
 				do.production = 1
 				do.move_cost = 1
 				do.defence_bonus = 3
 			Enum.SNOW_MOUNTAIN:
 				do.view_name = "雪地（山脉）"
 				do.short_name = "雪山"
+				do.mountain = true
 				do.charm_influence = 1
 				do.movable = false
 			Enum.SHORE:
@@ -116,11 +126,13 @@ func _init() -> void:
 				do.short_name = "浅水"
 				do.food = 1
 				do.gold = 1
+				do.water = true
 				do.charm_influence = 1
 			Enum.OCEAN:
 				do.view_name = "海洋"
 				do.short_name = "海洋"
 				do.food = 1
+				do.water = true
 		super.init_insert(do)
 
 

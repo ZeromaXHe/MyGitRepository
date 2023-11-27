@@ -1,37 +1,35 @@
 class_name TerrainService
 
 
+static func get_terrain_do_by_enum_val(enum_val: TerrainTable.Enum) -> TerrainDO:
+	return DatabaseUtils.terrain_tbl.query_by_enum_val(enum_val)
+
+
 static func is_land_terrain(type: TerrainTable.Enum) -> bool:
-	return type != TerrainTable.Enum.SHORE and type != TerrainTable.Enum.OCEAN
+	return not get_terrain_do_by_enum_val(type).water
 
 
 static func is_flat_land_terrain(type: TerrainTable.Enum) -> bool:
-	return type == TerrainTable.Enum.GRASS or type == TerrainTable.Enum.PLAIN \
-			or type == TerrainTable.Enum.DESERT or type == TerrainTable.Enum.TUNDRA \
-			or type == TerrainTable.Enum.SNOW
+	var do: TerrainDO = get_terrain_do_by_enum_val(type)
+	return not do.water and not do.hill and not do.mountain
 
 
 static func is_hill_land_terrain(type: TerrainTable.Enum) -> bool:
-	return type == TerrainTable.Enum.GRASS_HILL or type == TerrainTable.Enum.PLAIN_HILL \
-			or type == TerrainTable.Enum.DESERT_HILL or type == TerrainTable.Enum.TUNDRA_HILL \
-			or type == TerrainTable.Enum.SNOW_HILL
+	var do: TerrainDO = get_terrain_do_by_enum_val(type)
+	return not do.water and do.hill
 
 
 static func is_mountain_land_terrain(type: TerrainTable.Enum) -> bool:
-	return type == TerrainTable.Enum.GRASS_MOUNTAIN or type == TerrainTable.Enum.PLAIN_MOUNTAIN \
-			or type == TerrainTable.Enum.DESERT_MOUNTAIN or type == TerrainTable.Enum.TUNDRA_MOUNTAIN \
-			or type == TerrainTable.Enum.SNOW_MOUNTAIN
+	var do: TerrainDO = get_terrain_do_by_enum_val(type)
+	return not do.water and do.mountain
 
 
 static func is_no_mountain_land_terrain(type: TerrainTable.Enum) -> bool:
-	return type == TerrainTable.Enum.GRASS or type == TerrainTable.Enum.GRASS_HILL \
-			or type == TerrainTable.Enum.PLAIN or type == TerrainTable.Enum.PLAIN_HILL \
-			or type == TerrainTable.Enum.DESERT or type == TerrainTable.Enum.DESERT_HILL \
-			or type == TerrainTable.Enum.TUNDRA or type == TerrainTable.Enum.TUNDRA_HILL \
-			or type == TerrainTable.Enum.SNOW or type == TerrainTable.Enum.SNOW_HILL
+	var do: TerrainDO = get_terrain_do_by_enum_val(type)
+	return not do.water and not do.mountain
 
 
 static func is_sea_terrain(type: TerrainTable.Enum) -> bool:
-	return type == TerrainTable.Enum.SHORE or type == TerrainTable.Enum.OCEAN
+	return get_terrain_do_by_enum_val(type).water
 
 

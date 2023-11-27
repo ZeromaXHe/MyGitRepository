@@ -10,6 +10,12 @@ var food: int = 0
 var production: int = 0
 # 金币产量
 var gold: int = 0
+# 水域
+var water: bool = false
+# 丘陵
+var hill: bool = false
+# 山脉
+var mountain: bool = false
 # 移动力消耗
 var move_cost: int = 0
 # 防御值变更

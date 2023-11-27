@@ -26,3 +26,5 @@ var harvest_type: YieldDTO.Enum = -1 # 收获类型
 var harvest_val: int # 收获量
 var required_tech: TechTable.Enum = -1 # 需要的科技
 var required_civic: CivicTable.Enum = -1 # 需要的市政
+
+var icon_scene: String # 图标场景路径

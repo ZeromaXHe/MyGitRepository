@@ -114,4 +114,4 @@ func _on_new_button_pressed() -> void:
 ## 点击地图编辑器的“加载地图”按钮
 func _on_load_button_pressed() -> void:
 	GlobalScript.load_map = true
-	get_tree().change_scene_to_file("res://scenes/map_editor/map_editor.tscn")
+	get_tree().change_scene_to_file("res://scenes/gui/map_editor_gui.tscn")
