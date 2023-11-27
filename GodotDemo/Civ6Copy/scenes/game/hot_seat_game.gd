@@ -50,15 +50,13 @@ var turn_year: int = -4000
 
 func _ready() -> void:
 	GameController.set_mode(GameController.Mode.HOT_SEAT_GAME)
-	
-	map_shower.initialize()
+	# 初始化 A*
 	MapController.init_astar()
-	camera.initialize(MapController.get_map_tile_size_vec(), map_shower.get_map_tile_xy())
-	ViewSignalsEmitter.get_instance().city_production_changed.connect(handle_city_production_changed)
-	ViewSignalsEmitter.get_instance().city_production_completed.connect(handle_city_production_completed)
+	# 连接信号
+	ViewSignalsEmitter.connect_game_signals(self)
 	# 将所有玩家的领土 TileMap 放到场景中
-	for player in PlayerController.get_all_player_dos():
-		territory_borders.add_child(ViewHolder.get_player(player.id).territory_border)
+	for player in ViewHolder.get_all_players():
+		territory_borders.add_child((player as Player).territory_border)
 	paint_player_sight()
 	# 增加测试单位
 	test_add_unit()

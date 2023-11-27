@@ -23,6 +23,10 @@ static func get_player(id: int) -> Player:
 	return player_view_dict[id]
 
 
+static func get_all_players() -> Array:
+	return player_view_dict.values
+
+
 static func register_unit(unit: Unit) -> void:
 	unit_view_dict[unit.id] = unit
 

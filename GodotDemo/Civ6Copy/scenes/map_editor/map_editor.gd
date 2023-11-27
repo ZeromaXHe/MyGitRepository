@@ -32,9 +32,6 @@ var gui: MapEditorGUI
 
 func _ready() -> void:
 	GameController.set_mode(GameController.Mode.MAP_EDITOR)
-	
-	map_shower.initialize()
-	camera.initialize(MapController.get_map_tile_size_vec(), map_shower.get_map_tile_xy())
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -16,6 +16,8 @@ var _final_zoom: Vector2 = zoom
 
 func _ready() -> void:
 	zoom = Vector2(0.8, 0.8)
+	
+	initialize(MapController.get_map_tile_size_vec(), ViewHolder.get_map_shower().get_map_tile_xy())
 
 
 func _unhandled_input(event: InputEvent) -> void:

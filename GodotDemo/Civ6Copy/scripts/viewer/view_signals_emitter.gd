@@ -12,3 +12,9 @@ static var singleton := ViewSignalsEmitter.new()
 
 static func get_instance() -> ViewSignalsEmitter:
 	return singleton
+
+
+static func connect_game_signals(game: HotSeatGame) -> void:
+	singleton.city_production_changed.connect(game.handle_city_production_changed)
+	singleton.city_production_completed.connect(game.handle_city_production_completed)
+
