@@ -22,6 +22,10 @@ enum TurnStatus {
 }
 
 
+const BUY_CELL_NODE_2D_SCENE: PackedScene = preload("res://scenes/game/buy_cell_node_2d.tscn")
+const CITIZEN_NODE_2D_SCENE: PackedScene = preload("res://scenes/game/citizen_node_2d.tscn")
+
+
 var chosen_unit: Unit = null:
 	set = set_chosen_unit
 var chosen_city: City = null:
@@ -45,6 +49,8 @@ var turn_year: int = -4000
 @onready var territory_borders: Node2D = $TerritoryBorders
 @onready var units: Node2D = $Units
 @onready var cities: Node2D = $Cities
+@onready var buy_cell_nodes: Node2D = $BuyCellNodes
+@onready var citizen_nodes: Node2D = $CitizenNodes
 @onready var camera: CameraManager = $Camera2D
 
 
@@ -156,6 +162,9 @@ func chose_city_and_camera_focus(city: CityDO) -> void:
 func set_chosen_city(city: City) -> void:
 	chosen_city = city
 	chosen_city_changed.emit(city)
+	if city == null:
+		clear_buy_cell_nodes()
+		clear_citizen_nodes()
 
 
 func set_chosen_unit(unit: Unit) -> void:
@@ -213,6 +222,64 @@ func handle_city_product_settler_button_pressed() -> void:
 		return
 	gui_hide_city_product_panel.emit()
 	CityController.choose_producing_unit(chosen_city.id, UnitTypeTable.Enum.SETTLER)
+
+
+func handle_buy_cell_button_toggled(button_pressed: bool) -> void:
+	if button_pressed:
+		initiate_buy_cell_nodes()
+	else:
+		clear_buy_cell_nodes()
+
+
+func handle_buy_cell_node_pressed() -> void:
+	clear_buy_cell_nodes()
+	initiate_buy_cell_nodes()
+	# 如果正在显示市民管理按钮，需要刷新一下
+	if citizen_nodes.get_child_count() > 0:
+		clear_citizen_nodes()
+		initiate_citizen_nodes()
+
+
+func initiate_buy_cell_nodes() -> void:
+	var rims: Array[Vector2i] = CityController.get_city_rims(chosen_city.id)
+	var city_coord: Vector2i = CityController.get_city_do(chosen_city.id).coord
+	for rim in rims:
+		if HexagonUtils.OffsetCoord.odd_r(rim.x, rim.y).distance_to(HexagonUtils.OffsetCoord.odd_r(city_coord.x, city_coord.y)) > 3 \
+				or MapController.get_map_tile_do_by_coord(rim).city_id > 0:
+			continue
+		var buy_cell_node_2d: BuyCellNode2D = BUY_CELL_NODE_2D_SCENE.instantiate()
+		buy_cell_node_2d.global_position = map_shower.map_coord_to_global_position(rim)
+		buy_cell_node_2d.city_id = chosen_city.id
+		buy_cell_node_2d.coord = rim
+		buy_cell_node_2d.node_pressed.connect(handle_buy_cell_node_pressed)
+		buy_cell_nodes.add_child(buy_cell_node_2d)
+
+
+func clear_buy_cell_nodes() -> void:
+	for node in buy_cell_nodes.get_children():
+		node.queue_free()
+
+
+func handle_citizen_button_toggled(button_pressed: bool) -> void:
+	if button_pressed:
+		initiate_citizen_nodes()
+	else:
+		clear_citizen_nodes()
+
+
+func initiate_citizen_nodes() -> void:
+	var territories: Array[Vector2i] = CityController.get_city_territories(chosen_city.id)
+	for territory in territories:
+		var citizen_node_2d: CitizenNode2D = CITIZEN_NODE_2D_SCENE.instantiate()
+		citizen_node_2d.global_position = map_shower.map_coord_to_global_position(territory)
+		citizen_node_2d.city_id = chosen_city.id
+		citizen_node_2d.coord = territory
+		citizen_nodes.add_child(citizen_node_2d)
+
+
+func clear_citizen_nodes() -> void:
+	for node in citizen_nodes.get_children():
+		node.queue_free()
 
 
 func handle_turn_button_clicked() -> void:

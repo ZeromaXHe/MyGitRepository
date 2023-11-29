@@ -23,3 +23,11 @@ static func get_city_do(id: int) -> CityDO:
 static func get_city_yield(city_id: int) -> YieldDTO:
 	return CityService.get_city_yield(city_id)
 
+
+static func get_city_territories(id: int) -> Array[Vector2i]:
+	return CityService.get_city_territories(id)
+
+
+static func get_city_rims(id: int) -> Array[Vector2i]:
+	return CityService.get_city_rims(id)
+

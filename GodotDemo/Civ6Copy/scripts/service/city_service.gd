@@ -101,3 +101,27 @@ static func update_product_val(id: int) -> void:
 	# 发送信号
 	ViewSignalsEmitter.get_instance().city_production_changed.emit(id)
 
+
+static func get_city_territories(id: int) -> Array[Vector2i]:
+	var tile_arr: Array = DatabaseUtils.map_tile_tbl.query_by_city_id(id)
+	var result: Array[Vector2i] = []
+	for tile in tile_arr:
+		result.append((tile as MapTileDO).coord)
+	return result
+
+
+static func get_city_rims(id: int) -> Array[Vector2i]:
+	var tile_arr: Array = DatabaseUtils.map_tile_tbl.query_by_city_id(id)
+	var dict: Dictionary = {}
+	for tile in tile_arr:
+		dict[(tile as MapTileDO).coord] = true
+	var result: Array[Vector2i] = []
+	for tile in tile_arr:
+		var coords: Array[Vector2i] = MapController.get_surrounding_cells(tile.coord, 1, false)
+		# TODO: 现在获取周围的算法有点重复，后续优化
+		for coord in coords:
+			if dict.has(coord) or not MapController.is_in_map_tile(coord):
+				continue
+			result.append(coord)
+			dict[coord] = false
+	return result

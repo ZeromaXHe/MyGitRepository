@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://bb7ih4jqauy10"]
+
+[ext_resource type="Script" path="res://scenes/game/citizen_node_2d.gd" id="1_1gs7y"]
+[ext_resource type="Texture2D" uid="uid://cvumun1p0gxj5" path="res://assets/civ6_origin/core/webp_32x32/core_citizen.webp" id="1_ocaop"]
+
+[node name="CitizenNode2D" type="Node2D"]
+script = ExtResource("1_1gs7y")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+
+[node name="TextureRect" type="TextureRect" parent="PanelContainer"]
+layout_mode = 2
+texture = ExtResource("1_ocaop")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Button" type="Button" parent="PanelContainer"]
+layout_mode = 2
+flat = true
+
+[connection signal="pressed" from="PanelContainer/Button" to="." method="_on_button_pressed"]

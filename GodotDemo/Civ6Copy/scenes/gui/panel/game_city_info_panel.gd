@@ -4,10 +4,15 @@ extends VBoxContainer
 
 signal production_button_toggled(button_pressed: bool)
 signal info_button_toggled(button_pressed: bool)
+signal buy_cell_button_toggled(button_pressed: bool)
+signal citizen_button_toggled(button_pressed: bool)
+
 
 var showing_city: City = null:
 	set(city):
 		showing_city = city
+		buy_cell_button.button_pressed = false
+		citizen_button.button_pressed = false
 		if city == null:
 			hide()
 		else:
@@ -29,6 +34,8 @@ var showing_city: City = null:
 @onready var city_texture_rect: TextureRect = $MainPanel/CityInfoVBox/DetailHBox/CityPicPanel/CityTextureRect
 # 上方按钮组
 @onready var city_info_button: Button = $ButtonPanel/ButtonHBox/InfoButton
+@onready var buy_cell_button: Button = $ButtonPanel/ButtonHBox/BuyCellButton
+@onready var citizen_button: Button = $ButtonPanel/ButtonHBox/CitizenButton
 @onready var city_production_button: Button = $ButtonPanel/ButtonHBox/ProductButton
 # 城市生产相关
 @onready var city_product_texture_rect: TextureRect = $MainPanel/CityInfoVBox/DetailHBox/ProductTextureRect
@@ -154,3 +161,12 @@ func _on_product_button_toggled(button_pressed: bool) -> void:
 ## 城市详情按钮的状态发生改变
 func _on_info_button_toggled(button_pressed: bool) -> void:
 	info_button_toggled.emit(button_pressed)
+
+
+## 城市购买单元格按钮的状态发生改变
+func _on_buy_cell_button_toggled(button_pressed: bool) -> void:
+	buy_cell_button_toggled.emit(button_pressed)
+
+
+func _on_citizen_button_toggled(button_pressed: bool) -> void:
+	citizen_button_toggled.emit(button_pressed)

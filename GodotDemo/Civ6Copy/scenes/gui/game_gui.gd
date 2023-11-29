@@ -81,6 +81,8 @@ func signal_binding_with_game() -> void:
 	# 处理城市信息界面生产按钮的按下状态修改的信号
 	city_info_panel.production_button_toggled.connect(handle_city_info_production_button_toggled)
 	city_info_panel.info_button_toggled.connect(handle_city_info_button_toggled)
+	city_info_panel.buy_cell_button_toggled.connect(game.handle_buy_cell_button_toggled)
+	city_info_panel.citizen_button_toggled.connect(game.handle_citizen_button_toggled)
 	# 处理城市生产界面的信号
 	city_product_panel.settler_button_pressed.connect(game.handle_city_product_settler_button_pressed)
 	city_product_panel.close_button_pressed.connect(handle_city_product_panel_close_button_pressed)

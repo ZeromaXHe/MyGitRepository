@@ -17,4 +17,10 @@ z_index = 5
 [node name="Units" type="Node2D" parent="."]
 z_index = 5
 
+[node name="BuyCellNodes" type="Node2D" parent="."]
+z_index = 10
+
+[node name="CitizenNodes" type="Node2D" parent="."]
+z_index = 10
+
 [node name="Camera2D" parent="." instance=ExtResource("3_7c6xb")]

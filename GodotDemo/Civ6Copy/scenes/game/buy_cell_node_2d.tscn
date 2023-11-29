@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3 uid="uid://bjdbupuv3mmga"]
+
+[ext_resource type="Script" path="res://scenes/game/buy_cell_node_2d.gd" id="1_a0e4b"]
+[ext_resource type="Texture2D" uid="uid://onqbvvq12y21" path="res://assets/civ6_origin/core/webp_32x32/core_gold.webp" id="1_q63k3"]
+
+[node name="BuyCellNode2D" type="Node2D"]
+script = ExtResource("1_a0e4b")
+
+[node name="BuyCellControl" type="PanelContainer" parent="."]
+offset_left = -24.5
+offset_top = -13.0
+offset_right = 24.5
+offset_bottom = 13.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="BuyCellControl"]
+layout_mode = 2
+
+[node name="GoldTextureRect" type="TextureRect" parent="BuyCellControl/HBoxContainer"]
+layout_mode = 2
+texture = ExtResource("1_q63k3")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="BuyCellControl/HBoxContainer"]
+layout_mode = 2
+text = "25"
+
+[node name="Button" type="Button" parent="BuyCellControl"]
+layout_mode = 2
+flat = true
+
+[connection signal="pressed" from="BuyCellControl/Button" to="." method="_on_button_pressed"]

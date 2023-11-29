@@ -434,4 +434,6 @@ text = "0 回合后完成"
 vertical_alignment = 1
 
 [connection signal="toggled" from="ButtonPanel/ButtonHBox/InfoButton" to="." method="_on_info_button_toggled"]
+[connection signal="toggled" from="ButtonPanel/ButtonHBox/BuyCellButton" to="." method="_on_buy_cell_button_toggled"]
+[connection signal="toggled" from="ButtonPanel/ButtonHBox/CitizenButton" to="." method="_on_citizen_button_toggled"]
 [connection signal="toggled" from="ButtonPanel/ButtonHBox/ProductButton" to="." method="_on_product_button_toggled"]

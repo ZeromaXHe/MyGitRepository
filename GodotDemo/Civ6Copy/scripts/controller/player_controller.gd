@@ -26,6 +26,10 @@ static func get_current_player() -> PlayerDO:
 	return PlayerService.get_current_player()
 
 
+static func get_current_player_id() -> int:
+	return PlayerService.get_current_player_id()
+
+
 static func get_next_need_move_unit(unit_id: int = -1, return_input: bool = true) -> UnitDO:
 	var player_id: int = PlayerService.get_current_player_id()
 	var units: Array = UnitService.get_unit_dos_of_player(player_id)
