@@ -20,6 +20,9 @@ const SIGHT_TERRAIN_IDX: int = 1
 const BORDER_TILE_LAYER_IDX: int = 0
 const BORDER_CHOSEN_LAYER_IDX: int = 1
 
+static var singleton: MapShower
+static var singleton_minimap: MapShower
+
 @export var minimap: bool = false
 
 # 地块类型到 TileSet source id 信息映射
@@ -49,37 +52,40 @@ var _terrain_type_to_src_id_dict : Dictionary = {
 
 func _ready() -> void:
 	hide_continent_layer()
-	print("minimap: ", minimap)
-	ViewHolder.register_map_shower(self, minimap)
+	if minimap:
+		singleton_minimap = self
+	else:
+		singleton = self
 	
 	if GlobalScript.load_map:
 		load_map()
 	else:
 		GlobalScript.record_time()
-		MapController.init_map()
+		MapService.init_map_tile_table()
+		MapService.init_map_border_table()
 	
 	# 读取地块
 	GlobalScript.load_info = "填涂地图地块..."
-	var size_vec: Vector2i = MapController.get_map_tile_size_vec()
+	var size_vec: Vector2i = MapService.get_map_tile_size_vec()
 	for i in range(size_vec.x):
 		for j in range(size_vec.y):
 			var coord := Vector2i(i, j)
-			var tile_do: MapTileDO = MapController.get_map_tile_do_by_coord(coord)
+			var tile_do: MapTileDO = MapTileService.get_map_tile_do_by_coord(coord)
 			paint_tile(coord, tile_do)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting map tiles")
 	
 	# 读取边界
 	GlobalScript.load_info = "填涂地图边界块..."
-	var border_size_vec: Vector2i = MapController.get_border_tile_size_vec()
+	var border_size_vec: Vector2i = MapService.get_border_tile_size_vec()
 	for i in range(border_size_vec.x):
 		for j in range(border_size_vec.y):
 			var coord := Vector2i(i, j)
-			paint_border(coord, MapController.get_map_border_do_by_coord(coord).tile_type)
+			paint_border(coord, MapService.get_map_border_do_by_coord(coord).tile_type)
 	GlobalScript.log_used_time_from_last_record("MapShower.initialize", "painting border tiles")
 
 
 func load_map() -> void:
-	if not MapController.load_from_save():
+	if not MapService.load_from_save():
 		printerr("you have no map save")
 
 

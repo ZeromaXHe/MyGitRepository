@@ -1,11 +1,11 @@
-class_name LandscapeController
+class_name LandscapeService
 
 
 static func is_landscape_placeable(tile_coord: Vector2i, landscape: LandscapeTable.Enum) -> bool:
 	# 超出地图范围的不处理
-	if not MapController.is_in_map_tile(tile_coord):
+	if not MapService.is_in_map_tile(tile_coord):
 		return false
-	if not is_landscape_placeable_terrain(landscape, MapController.get_map_tile_do_by_coord(tile_coord).terrain):
+	if not is_landscape_placeable_terrain(landscape, MapTileService.get_map_tile_do_by_coord(tile_coord).terrain):
 		return false
 	match landscape:
 		LandscapeTable.Enum.FLOOD:
@@ -40,7 +40,7 @@ static func is_landscape_placeable_terrain(landscape: LandscapeTable.Enum, terra
 
 
 static func is_ice_placeable_terrain(terrain_type: TerrainTable.Enum) -> bool:
-	return TerrainController.is_sea_terrain(terrain_type)
+	return TerrainService.is_sea_terrain(terrain_type)
 
 
 static func is_forest_placeable_terrain(terrain_type: TerrainTable.Enum) -> bool:
@@ -58,7 +58,7 @@ static func is_flood_placeable_terrain(terrain_type: TerrainTable.Enum) -> bool:
 
 
 static func is_flood_placeable_borders(tile_coord: Vector2i) -> bool:
-	return MapBorderController.is_tile_near_border(tile_coord, MapBorderTable.Enum.RIVER)
+	return MapBorderService.is_tile_near_border(tile_coord, MapBorderTable.Enum.RIVER)
 
 
 static func is_oasis_placeable_terrain(terrain_type: TerrainTable.Enum) -> bool:
@@ -66,9 +66,9 @@ static func is_oasis_placeable_terrain(terrain_type: TerrainTable.Enum) -> bool:
 
 
 static func is_oasis_placeable_surroundings(tile_coord: Vector2i) -> bool:
-	var surroundings: Array[Vector2i] = MapController.get_surrounding_cells(tile_coord, 1, false)
+	var surroundings: Array[Vector2i] = MapService.get_surrounding_cells(tile_coord, 1, false)
 	for surrounding in surroundings:
-		var tile_do: MapTileDO = MapController.get_map_tile_do_by_coord(surrounding)
+		var tile_do: MapTileDO = MapTileService.get_map_tile_do_by_coord(surrounding)
 		var terrain: TerrainTable.Enum = tile_do.terrain
 		if terrain != TerrainTable.Enum.DESERT \
 				and terrain != TerrainTable.Enum.DESERT_HILL \

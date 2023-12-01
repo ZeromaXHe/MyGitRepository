@@ -10,6 +10,8 @@ signal citizen_button_toggled(button_pressed: bool)
 
 var showing_city: City = null:
 	set(city):
+		if showing_city != null:
+			showing_city.city_production_changed.disconnect(handle_city_production_changed)
 		showing_city = city
 		buy_cell_button.button_pressed = false
 		citizen_button.button_pressed = false
@@ -17,6 +19,7 @@ var showing_city: City = null:
 			hide()
 		else:
 			show_info()
+			showing_city.city_production_changed.connect(handle_city_production_changed)
 
 # 产出选择按钮
 @onready var culture_check_box: CheckBox = $MainPanel/CityInfoVBox/YieldHBox/CultureCheckBox
@@ -56,17 +59,17 @@ func show_info() -> void:
 		return
 	
 	# 刷新内容
-	var city_do: CityDO = CityController.get_city_do(showing_city.id)
+	var city_do: CityDO = CityService.get_city_do(showing_city.id)
 	city_name_label.text = city_do.name
 	capital_texture_rect.visible = city_do.capital
 	# 城市所属玩家颜色
-	var player_do: PlayerDO = PlayerController.get_player_do(city_do.player_id)
+	var player_do: PlayerDO = PlayerService.get_player_do(city_do.player_id)
 	city_texture_rect.modulate = player_do.second_color
 	city_name_label.add_theme_color_override("font_color", player_do.second_color)
 	city_name_panel.get("theme_override_styles/panel").set("bg_color", player_do.main_color)
 	city_pic_panel.get("theme_override_styles/panel").set("bg_color", player_do.main_color)
 	# 产量显示
-	var yield_dto: YieldDTO = CityController.get_city_yield(showing_city.id)
+	var yield_dto: YieldDTO = CityService.get_city_yield(showing_city.id)
 	update_city_yield_culture(yield_dto.culture)
 	update_city_yield_food(yield_dto.food)
 	update_city_yield_product(yield_dto.production)
@@ -75,8 +78,6 @@ func show_info() -> void:
 	update_city_yield_gold(yield_dto.gold)
 	# 生产单位显示
 	handle_city_production_changed(showing_city.id)
-	# 绑定信号，方便后续更新信息
-	connect_showing_city_signals()
 	# 展示出来
 	show()
 
@@ -88,10 +89,6 @@ func yield_text(val: float) -> String:
 		return "0"
 	else:
 		return "+%.1f" % val
-
-
-func connect_showing_city_signals() -> void:
-	ViewSignalsEmitter.get_instance().city_production_changed.connect(handle_city_production_changed)
 
 
 func set_product_button_pressed(button_pressed: bool) -> void:
@@ -109,7 +106,7 @@ func handle_chosen_city_changed(city: City) -> void:
 func handle_city_production_changed(id: int) -> void:
 	if showing_city == null or id != showing_city.id:
 		return
-	var city_do: CityDO = CityController.get_city_do(id)
+	var city_do: CityDO = CityService.get_city_do(id)
 	if city_do.producing_type == -1:
 		city_product_texture_rect.texture = null
 		city_producing_label.text = "没有生产任何东西"
@@ -117,12 +114,12 @@ func handle_city_production_changed(id: int) -> void:
 		city_intro_label.text = ""
 		city_product_turn_label.text = "0 回合后完成"
 	else:
-		city_product_texture_rect.texture = UnitController.get_unit_pic_webp_256x256(city_do.producing_type)
-		city_producing_label.text = UnitController.get_unit_name(city_do.producing_type)
+		city_product_texture_rect.texture = UnitService.get_unit_pic_webp_256x256(city_do.producing_type)
+		city_producing_label.text = UnitService.get_unit_name(city_do.producing_type)
 		# TODO: 单位数据和简介
 		city_data_label.text = "移动力：2"
 		city_intro_label.text = "这是正在制造一个" + city_producing_label.text + "的简介"
-		var yield_product = CityController.get_city_yield(id).production
+		var yield_product = CityService.get_city_yield(id).production
 		city_product_turn_label.text = str(ceili((80.0 - city_do.production_sum) / yield_product)) + " 回合后完成"
 	# 选择新生产单位时强制刷新进度条
 	# TODO: 先全部按开拓者的生产计算

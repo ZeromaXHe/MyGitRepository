@@ -62,6 +62,46 @@ static func delete_unit(id: int) -> void:
 	DatabaseUtils.unit_tbl.delete_by_id(id)
 
 
+static func get_sight_range() -> int:
+	# TODO: 先通通返回 2 格视野
+	return 2
+
+
 static func get_move_range(unit_id: int) -> int:
 	var unit_do: UnitDO = get_unit_do(unit_id)
 	return DatabaseUtils.unit_type_tbl.query_by_enum_val(unit_do.type).move
+
+
+static func get_unit_pic_webp_256x256(type: UnitTypeTable.Enum) -> Texture2D:
+	var unit_type_do: UnitTypeDO = UnitTypeService.get_unit_type_do_by_enum(type)
+	if unit_type_do == null:
+		printerr("get_unit_pic_webp_256x256 | no pic for type: ", type)
+		return null
+	return load(unit_type_do.icon_256)
+
+
+static func get_unit_pic_webp_64x64(type: UnitTypeTable.Enum) -> Texture2D:
+	var unit_type_do: UnitTypeDO = UnitTypeService.get_unit_type_do_by_enum(type)
+	if unit_type_do == null:
+		printerr("get_unit_pic_webp_64x64 | no pic for type: ", type)
+		return null
+	if type == UnitTypeTable.Enum.SETTLER:
+		# 开拓者目前没有 64x64 的图
+		return load(unit_type_do.icon_256)
+	return load(unit_type_do.icon_64)
+
+
+static func get_unit_name(type: UnitTypeTable.Enum) -> String:
+	var unit_type_do: UnitTypeDO = UnitTypeService.get_unit_type_do_by_enum(type)
+	if unit_type_do == null:
+		printerr("get_unit_name | no name for type: ", type)
+		return ""
+	return unit_type_do.view_name
+
+
+static func get_unit_pic_200(type: UnitTypeTable.Enum) -> String:
+	var unit_type_do: UnitTypeDO = UnitTypeService.get_unit_type_do_by_enum(type)
+	if unit_type_do == null:
+		printerr("get_unit_pic_200 | no pic_200 for type: ", type)
+		return ""
+	return unit_type_do.pic_200

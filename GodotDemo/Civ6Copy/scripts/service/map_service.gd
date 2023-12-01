@@ -256,6 +256,22 @@ static func get_in_map_surrounding_coords(coord: Vector2i, map_size: Vector2i) -
 	return result
 
 
+## 没有根据地图过滤无效坐标
+static func get_surrounding_cells(map_coord: Vector2i, dist: int, include_inside: bool) -> Array[Vector2i]:
+	# Godot 这个假范型，真垃圾…… 还得这样脱裤子放屁拐一下，不然后面 .map() 返回的是 Array
+	var result: Array[Vector2i] = []
+	if dist < 0:
+		return result
+	var oddr: HexagonUtils.OffsetCoord = HexagonUtils.OffsetCoord.odd_r(map_coord.x, map_coord.y)
+	if include_inside:
+		result.append_array(oddr.to_axial().spiral(dist) \
+				.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))
+	else:
+		result.append_array(oddr.to_axial().ring(dist) \
+				.map(func(hex: HexagonUtils.Hex): return hex.to_oddr().to_vec2i()))
+	return result
+
+
 class MapAStar2D extends AStar2D:
 	const UNREACHABLE_COST: float = 1e100
 	

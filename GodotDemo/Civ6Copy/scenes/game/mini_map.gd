@@ -5,13 +5,16 @@ extends Node2D
 signal click_on_tile(coord: Vector2i)
 
 
+static var singleton: MiniMap
+
 @onready var map_shower: MapShower = $MapShower
 @onready var camera: Camera2D = $Camera2D
 @onready var view_line: Line2D = $ViewLine2D
 
 
 func _ready() -> void:
-	initialize(MapController.get_map_tile_size_vec(), ViewHolder.get_map_shower().get_map_tile_xy())
+	singleton = self
+	initialize(MapService.get_map_tile_size_vec(), MapShower.singleton.get_map_tile_xy())
 	paint_player_sight()
 
 
@@ -38,14 +41,14 @@ func get_view_line() -> Line2D:
 
 
 func paint_player_sight() -> void:
-	var player: PlayerDO = PlayerController.get_current_player()
-	var unseens: Array = PlayerSightController.get_player_sight_dos_by_sight(PlayerSightTable.Sight.UNSEEN)
+	var player: PlayerDO = PlayerService.get_current_player()
+	var unseens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.UNSEEN)
 	for unseen in unseens:
 		map_shower.paint_out_sight_tile_areas(unseen.coord, PlayerSightTable.Sight.UNSEEN)
-	var seens: Array = PlayerSightController.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
+	var seens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
 	for seen in seens:
 		map_shower.paint_out_sight_tile_areas(seen.coord, PlayerSightTable.Sight.SEEN)
-	var in_sights: Array = PlayerSightController.get_player_sight_dos_by_sight(PlayerSightTable.Sight.IN_SIGHT)
+	var in_sights: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.IN_SIGHT)
 	var in_sight_coords: Array[Vector2i] = []
 	for in_sight in in_sights:
 		in_sight_coords.append(in_sight.coord)

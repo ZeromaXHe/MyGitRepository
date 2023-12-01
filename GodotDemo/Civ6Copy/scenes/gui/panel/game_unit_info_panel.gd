@@ -9,11 +9,14 @@ signal sleep_button_pressed
 
 var showing_unit: Unit = null:
 	set(unit):
+		if showing_unit != null:
+			showing_unit.unit_move_changed.disconnect(handle_unit_move_changed)
 		showing_unit = unit
 		if unit == null:
 			hide()
 		else:
 			show_info()
+			showing_unit.unit_move_changed.connect(handle_unit_move_changed)
 
 
 @onready var unit_texture_rect: TextureRect = $MainPanel/UnitInfoVBox/DetailHBox/UnitTextureRect
@@ -33,8 +36,8 @@ func show_info() -> void:
 		printerr("GameUnitInfoPanel | show_info | weird, no showing unit, but show")
 		return
 	# 刷新内容
-	var unit_do: UnitDO = UnitController.get_unit_do(showing_unit.id)
-	name_button.text = UnitController.get_unit_name(unit_do.type)
+	var unit_do: UnitDO = UnitService.get_unit_do(showing_unit.id)
+	name_button.text = UnitService.get_unit_name(unit_do.type)
 	if unit_do.type == UnitTypeTable.Enum.SETTLER:
 		city_button.show()
 		defend_button.hide()
@@ -50,23 +53,17 @@ func show_info() -> void:
 		alert_button.show()
 		melee_atk_panel.show()
 	
-	unit_texture_rect.texture = load(UnitController.get_unit_pic_200(unit_do.type))
+	unit_texture_rect.texture = load(UnitService.get_unit_pic_200(unit_do.type))
 	
 	handle_unit_move_changed(unit_do.id, unit_do.move)
-	# 绑定信号，方便后续更新信息
-	connect_showing_unit_signals()
 	# 显示出来
 	show()
-
-
-func connect_showing_unit_signals() -> void:
-	ViewSignalsEmitter.get_instance().unit_move_changed.connect(handle_unit_move_changed)
 
 
 func handle_unit_move_changed(unit_id: int, move: int) -> void:
 	if showing_unit == null or unit_id != showing_unit.id:
 		return
-	move_val_label.text = "%d/%d" % [move, UnitController.get_move_range(showing_unit.id)]
+	move_val_label.text = "%d/%d" % [move, UnitService.get_move_range(showing_unit.id)]
 
 
 func handle_chosen_unit_changed(unit: Unit) -> void:

@@ -2,12 +2,15 @@ class_name CameraManager
 extends Camera2D
 
 
+# 限制
 @export var MIN_ZOOM := Vector2(0.3, 0.3)
 @export var MAX_ZOOM := Vector2(1.5, 1.5)
 @export var MAX_X: int = 1500
 @export var MIN_X: int = -1500
 @export var MAX_Y: int = 500
 @export var MIN_Y: int = -500
+
+static var singleton: CameraManager
 
 var _previous_position := Vector2(0, 0)
 var _move_camera: bool = false
@@ -17,10 +20,12 @@ var _final_zoom: Vector2 = zoom
 
 
 func _ready() -> void:
+	singleton = self
+	
 	zoom = Vector2(0.8, 0.8)
 	scale = Vector2.ONE / zoom
 	
-	initialize(MapController.get_map_tile_size_vec(), ViewHolder.get_map_shower().get_map_tile_xy())
+	initialize(MapService.get_map_tile_size_vec(), MapShower.singleton.get_map_tile_xy())
 
 
 func _unhandled_input(event: InputEvent) -> void:

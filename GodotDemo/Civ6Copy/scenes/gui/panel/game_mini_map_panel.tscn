@@ -96,5 +96,3 @@ size = Vector2i(288, 162)
 render_target_update_mode = 4
 
 [node name="MiniMap" parent="MiniMapPanel/MarginContainer/SubViewportContainer/SubViewport" instance=ExtResource("9_8d8j2")]
-
-[connection signal="click_on_tile" from="MiniMapPanel/MarginContainer/SubViewportContainer/SubViewport/MiniMap" to="." method="_on_mini_map_click_on_tile"]

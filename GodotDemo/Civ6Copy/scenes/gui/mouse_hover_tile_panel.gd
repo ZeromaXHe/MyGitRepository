@@ -15,7 +15,7 @@ func _process(delta: float) -> void:
 
 
 func show_info(map_coord: Vector2i) -> void:
-	var tile_info: TileInfoDTO = MapController.get_tile_info(map_coord)
+	var tile_info: TileInfoDTO = MapTileService.get_tile_info(map_coord)
 	label.text = tile_info.terrain_name
 	if tile_info.landscape_name != "":
 		label.text += "\n" + tile_info.landscape_name
@@ -36,7 +36,7 @@ func show_info(map_coord: Vector2i) -> void:
 		if tile_info.continent_name != null:
 			label.text += "\n大陆：" + tile_info.continent_name
 	label.text += "\n---------------"
-	var yield_dto: YieldDTO = MapController.get_tile_yield(map_coord)
+	var yield_dto: YieldDTO = MapTileService.get_tile_yield(map_coord)
 	if yield_dto.culture > 0:
 		label.text += "\n" + str(yield_dto.culture) + " [img=20]res://assets/civ6_origin/core/webp_32x32/core_culture.webp[/img]文化"
 	if yield_dto.food > 0:

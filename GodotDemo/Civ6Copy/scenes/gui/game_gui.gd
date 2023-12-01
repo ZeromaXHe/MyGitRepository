@@ -4,6 +4,9 @@ extends CanvasLayer
 
 signal city_product_settler_button_pressed
 
+
+static var singleton: GameGUI
+
 var mouse_in_game: bool = false
 
 # 游戏
@@ -37,6 +40,8 @@ var mouse_in_game: bool = false
 
 
 func _ready() -> void:
+	singleton = self
+	
 	wiki_panel.hide()
 	menu_overlay.hide()
 	# 右下角面板初始化
@@ -47,12 +52,16 @@ func _ready() -> void:
 	# 鼠标悬停面板初始不显示
 	hide_mouse_hover_tile_info()
 	# 绑定游戏信号
-	signal_binding_with_game()
+	connect_signals()
+	# 增加测试单位
+	game.test_add_unit()
+	# 初始化回合状态
+	game.refresh_turn_status()
 	
 	hot_seat_changing_scene.show()
 
 
-func signal_binding_with_game() -> void:
+func connect_signals() -> void:
 	game.turn_changed.connect(top_panel.handle_turn_changed)
 	game.chosen_unit_changed.connect(handle_chosen_unit_changed)
 	game.chosen_city_changed.connect(handle_chosen_city_changed)
@@ -62,13 +71,8 @@ func signal_binding_with_game() -> void:
 	game.gui_show_city_product_panel.connect(show_city_product_panel)
 	game.gui_show_mouse_hover_tile_info.connect(show_mouse_hover_tile_info)
 	game.gui_hide_mouse_hover_tile_info.connect(hide_mouse_hover_tile_info)
-	# 增加测试单位
-	game.test_add_unit()
-	# 初始化回合状态
-	game.refresh_turn_status()
 	# 设置小地图镜头范围线的远程引用
-	var camera_manager: CameraManager = game.get_minimap_camera()
-	camera_manager.set_minimap_transform_path(mini_map_panel.get_mini_map().get_view_line().get_path())
+	CameraManager.singleton.set_minimap_transform_path(MiniMap.singleton.get_view_line().get_path())
 	# 处理顶部面板信号
 	top_panel.civpedia_button_pressed.connect(handle_civpedia_button_pressed)
 	top_panel.menu_button_pressed.connect(handle_menu_button_pressed)
@@ -91,7 +95,7 @@ func signal_binding_with_game() -> void:
 	# 处理世界追踪界面的信号
 	world_track_panel.tech_button_pressed.connect(handle_world_track_panel_tech_button_pressed)
 	# 处理小地图点击信号
-	mini_map_panel.clicked_on_minimap_tile.connect(game.handle_clicked_on_minimap_tile)
+	MiniMap.singleton.click_on_tile.connect(game.handle_clicked_on_minimap_tile)
 
 
 func show_city_product_panel() -> void:

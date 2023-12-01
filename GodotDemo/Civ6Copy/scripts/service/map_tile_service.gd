@@ -46,7 +46,7 @@ static func get_tile_info(coord: Vector2i) -> TileInfoDTO:
 	var tile_do: MapTileDO = DatabaseUtils.map_tile_tbl.query_by_coord(coord)
 	var terrain_do: TerrainDO = DatabaseUtils.terrain_tbl.query_by_enum_val(tile_do.terrain)
 	tile_info_dto.terrain_name = terrain_do.view_name
-	tile_info_dto.land = TerrainController.is_land_terrain(tile_do.terrain)
+	tile_info_dto.land = TerrainService.is_land_terrain(tile_do.terrain)
 	tile_info_dto.move_cost = 1 + terrain_do.move_cost
 	tile_info_dto.defence_bonus = terrain_do.defence_bonus
 	
@@ -59,8 +59,8 @@ static func get_tile_info(coord: Vector2i) -> TileInfoDTO:
 	if tile_do.resource != ResourceTable.Enum.EMPTY:
 		tile_info_dto.resource_name = DatabaseUtils.resource_tbl.query_by_enum_val(tile_do.resource).view_name
 	
-	tile_info_dto.river = MapBorderController.is_tile_near_border(coord, MapBorderTable.Enum.RIVER)
-	tile_info_dto.cliff = MapBorderController.is_tile_near_border(coord, MapBorderTable.Enum.CLIFF)
+	tile_info_dto.river = MapBorderService.is_tile_near_border(coord, MapBorderTable.Enum.RIVER)
+	tile_info_dto.cliff = MapBorderService.is_tile_near_border(coord, MapBorderTable.Enum.CLIFF)
 	tile_info_dto.charm = get_tile_charm(coord)
 	tile_info_dto.charm_desc = get_charm_desc(tile_info_dto.charm)
 	
@@ -73,9 +73,9 @@ static func get_tile_info(coord: Vector2i) -> TileInfoDTO:
 
 static func get_tile_charm(coord: Vector2i) -> int:
 	var charm: int = 0
-	var surroundings: Array[Vector2i] = MapController.get_surrounding_cells(coord, 1, false)
+	var surroundings: Array[Vector2i] = MapService.get_surrounding_cells(coord, 1, false)
 	for surrounding in surroundings:
-		var tile_do: MapTileDO = MapController.get_map_tile_do_by_coord(surrounding)
+		var tile_do: MapTileDO = MapTileService.get_map_tile_do_by_coord(surrounding)
 		if tile_do == null:
 			continue
 		var terrain_do: TerrainDO = DatabaseUtils.terrain_tbl.query_by_enum_val(tile_do.terrain)

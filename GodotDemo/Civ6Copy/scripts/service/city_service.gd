@@ -15,19 +15,19 @@ static func create_city(coord: Vector2i) -> CityDO:
 	DatabaseUtils.city_tbl.insert(city_do)
 	
 	# 初始化城市领土（周围一圈）
-	var territory_cells: Array[Vector2i] = MapController.get_surrounding_cells(city_do.coord, 1, true)\
-			.filter(MapController.is_in_map_tile)
+	var territory_cells: Array[Vector2i] = MapService.get_surrounding_cells(city_do.coord, 1, true)\
+			.filter(MapService.is_in_map_tile)
 	for cell in territory_cells:
 #		print("create_city | city: ", city_do.id, " claiming territory: ", cell)
 		MapTileService.city_claim_territory(city_do.id, cell)
-	ViewHolder.get_player(PlayerService.get_current_player_id()).territory_border.paint_dash_border(territory_cells)
+	Player.id_dict[PlayerService.get_current_player_id()].territory_border.paint_dash_border(territory_cells)
 	
 	# 城市视野（周围两格）
-	var sight_cells: Array[Vector2i] = MapController.get_surrounding_cells(city_do.coord, 2, true) \
-			.filter(MapController.is_in_map_tile)
+	var sight_cells: Array[Vector2i] = MapService.get_surrounding_cells(city_do.coord, 2, true) \
+			.filter(MapService.is_in_map_tile)
 	for in_sight_coord in sight_cells:
 		PlayerSightService.in_sight(in_sight_coord)
-	ViewHolder.get_map_shower().paint_in_sight_tile_areas(sight_cells)
+	MapShower.singleton.paint_in_sight_tile_areas(sight_cells)
 	
 	# 首都宫殿建筑
 	if city_do.capital:
@@ -39,7 +39,7 @@ static func create_city(coord: Vector2i) -> CityDO:
 static func choose_producing_unit(id: int, unit_type: UnitTypeTable.Enum) -> void:
 	DatabaseUtils.city_tbl.update_field_by_id(id, "producing_type", unit_type)
 	# 发送信号
-	ViewSignalsEmitter.get_instance().city_production_changed.emit(id)
+	City.id_dict[id].city_production_changed.emit(id)
 
 
 static func get_city_do(id: int) -> CityDO:
@@ -61,7 +61,7 @@ static func get_city_yield(city_id: int) -> YieldDTO:
 		# TODO: 需要根据公民分配的位置来判断是否加
 		var tile_do := territory as MapTileDO 
 #		print("get_city_yield | calcing tile yield coord: ", tile_do.coord)
-		var yield_dto: YieldDTO = MapController.get_tile_yield(tile_do.coord)
+		var yield_dto: YieldDTO = MapTileService.get_tile_yield(tile_do.coord)
 		city_yield.culture += yield_dto.culture
 		city_yield.food += yield_dto.food
 		city_yield.production += yield_dto.production
@@ -91,15 +91,15 @@ static func update_product_val(id: int) -> void:
 	var city_do: CityDO = get_city_do(id)
 	var city_yield: YieldDTO = get_city_yield(id)
 	# TODO: 暂时妥协的逻辑
-	var city: City = ViewHolder.get_city(id)
+	var city: City = City.id_dict[id]
 	if city_do.production_sum + city_yield.production > 80.0:
-		ViewSignalsEmitter.get_instance().city_production_completed.emit(city_do.producing_type, city_do.coord)
+		city.city_production_completed.emit(city_do.producing_type, city_do.coord)
 		DatabaseUtils.city_tbl.update_field_by_id(id, "producing_type", -1)
 		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city_do.production_sum + city_yield.production - 80.0)
 	else:
 		DatabaseUtils.city_tbl.update_field_by_id(id, "production_sum", city_do.production_sum + city_yield.production)
 	# 发送信号
-	ViewSignalsEmitter.get_instance().city_production_changed.emit(id)
+	city.city_production_changed.emit(id)
 
 
 static func get_city_territories(id: int) -> Array[Vector2i]:
@@ -117,10 +117,10 @@ static func get_city_rims(id: int) -> Array[Vector2i]:
 		dict[(tile as MapTileDO).coord] = true
 	var result: Array[Vector2i] = []
 	for tile in tile_arr:
-		var coords: Array[Vector2i] = MapController.get_surrounding_cells(tile.coord, 1, false)
+		var coords: Array[Vector2i] = MapService.get_surrounding_cells(tile.coord, 1, false)
 		# TODO: 现在获取周围的算法有点重复，后续优化
 		for coord in coords:
-			if dict.has(coord) or not MapController.is_in_map_tile(coord):
+			if dict.has(coord) or not MapService.is_in_map_tile(coord):
 				continue
 			result.append(coord)
 			dict[coord] = false
