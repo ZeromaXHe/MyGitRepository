@@ -42,12 +42,9 @@ var _terrain_type_to_src_id_dict : Dictionary = {
 	TerrainTable.Enum.SHORE: [15, 15],
 	TerrainTable.Enum.OCEAN: [16, 16],
 }
-# 记录 TileMap 坐标到资源图标的映射的字典
-var _coord_to_resource_icon_dict: Dictionary = {}
 
 @onready var border_tile_map: TileMap = $BorderTileMap
 @onready var tile_map: TileMap = $TileMap
-@onready var resource_icons: Node2D = $ResourceIcons
 
 
 func _ready() -> void:
@@ -283,26 +280,12 @@ func paint_city(tile_coord: Vector2i, type: int):
 func paint_resource(tile_coord: Vector2i, type: ResourceTable.Enum) -> void:
 	if minimap:
 		return
-	# 清除原来的资源图标
-	if _coord_to_resource_icon_dict.has(tile_coord):
-		_coord_to_resource_icon_dict[tile_coord].queue_free()
-		_coord_to_resource_icon_dict.erase(tile_coord)
 	if type == ResourceTable.Enum.EMPTY:
-		# FIXME：4.1 有 bug，TileMap 没办法把实例化的场景清除。现在的场景 TileMap 简直不能用…… 太蠢了
-		# 静待 4.2 发布，看 GitHub 讨论区貌似在 4.2 得到了修复。在修复前，会有资源显示和实际数据不一致的情况
-		# 对应的讨论区：https://github.com/godotengine/godot/issues/69596
-#			print("do_paint_resource empty: ", tile_coord, " (tile map won't update until 4.2 is relased)")
-#			tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, -1, Vector2i(-1, -1), -1)
+		tile_map.erase_cell(TILE_RESOURCE_LAYER_IDX, tile_coord)
 		pass
 	else:
 		# 保证资源图标场景的排序和 ResourseType 中一致
-#		tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
-		var resource_do: ResourceDO = ResourceController.get_resource_do_by_enum_val(type)
-		var scene: PackedScene = load(resource_do.icon_scene)
-		var sprite := scene.instantiate() as Sprite2D
-		sprite.global_position = map_coord_to_global_position(tile_coord) + Vector2(0, 60)
-		_coord_to_resource_icon_dict[tile_coord] = sprite
-		resource_icons.add_child(sprite)
+		tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
 
 
 func paint_continent(tile_coord: Vector2i, type: ContinentTable.Enum) -> void:
