@@ -16,17 +16,17 @@ static func create_city(coord: Vector2i) -> CityDO:
 	
 	# 初始化城市领土（周围一圈）
 	var territory_cells: Array[Vector2i] = MapService.get_surrounding_cells(city_do.coord, 1, true)\
-			.filter(MapService.is_in_map_tile)
+			.filter(func(cell): return MapService.is_in_map_tile(cell) and MapTileService.get_map_tile_do_by_coord(cell).city_id == 0)
 	for cell in territory_cells:
 #		print("create_city | city: ", city_do.id, " claiming territory: ", cell)
 		MapTileService.city_claim_territory(city_do.id, cell)
 	Player.id_dict[PlayerService.get_current_player_id()].territory_border.paint_dash_border(territory_cells)
 	
 	# 城市视野（周围两格）
-	var sight_cells: Array[Vector2i] = MapService.get_surrounding_cells(city_do.coord, 2, true) \
-			.filter(MapService.is_in_map_tile)
+	var sight_cells: Array[Vector2i] = CityService.get_city_rims(city_do.id)
+	sight_cells.append_array(territory_cells)
 	for in_sight_coord in sight_cells:
-		PlayerSightService.in_sight(in_sight_coord)
+		CitySightService.in_sight(city_do.id, in_sight_coord)
 	MapShower.singleton.paint_in_sight_tile_areas(sight_cells)
 	
 	# 首都宫殿建筑

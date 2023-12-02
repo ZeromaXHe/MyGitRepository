@@ -65,8 +65,12 @@ static var player_tbl := PlayerTable.new()
 static var player_sight_tbl := PlayerSightTable.new()
 # 城市表
 static var city_tbl := CityTable.new()
+# 城市视野表
+static var city_sight_tbl := CitySightTable.new()
 # 城市建筑表
 static var city_building_tbl := CityBuildingTable.new()
 # 单位表
 static var unit_tbl := UnitTable.new()
+# 单位视野表
+static var unit_sight_tbl := UnitSightTable.new()
 

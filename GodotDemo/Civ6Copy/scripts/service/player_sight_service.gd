@@ -14,28 +14,27 @@ static func initialize_player_sight(player_id: int) -> void:
 
 static func get_player_sight_do(player_id: int, coord: Vector2i) -> PlayerSightDO:
 	var qw := MySimSQL.QueryWrapper.new().eq("coord", coord).eq("player_id", player_id)
-	return DatabaseUtils.player_sight_tbl.select_arr(qw)[0]
+	var arr: Array = DatabaseUtils.player_sight_tbl.select_arr(qw)
+	if arr.is_empty():
+		return null
+	return arr[0]
 
 
 static func get_player_sight_dos_by_sight(sight: PlayerSightTable.Sight) -> Array:
 	return DatabaseUtils.player_sight_tbl.query_by_sight(sight)
 
 
-static func in_sight(coord: Vector2i) -> void:
-	var do: PlayerSightDO = get_player_sight_do(PlayerService.get_current_player_id(), coord)
+static func in_sight(player_id: int, coord: Vector2i) -> void:
+	var do: PlayerSightDO = get_player_sight_do(player_id, coord)
 	if do.sight == PlayerSightTable.Sight.IN_SIGHT:
-		DatabaseUtils.player_sight_tbl.update_field_by_id(do.id, "count", do.count + 1)
 		return
 	DatabaseUtils.player_sight_tbl.update_field_by_id(do.id, "sight", PlayerSightTable.Sight.IN_SIGHT)
-	DatabaseUtils.player_sight_tbl.update_field_by_id(do.id, "count", 1)
 
 
-static func out_sight(coord: Vector2i) -> void:
-	var do: PlayerSightDO = get_player_sight_do(PlayerService.get_current_player_id(), coord)
+static func out_sight(player_id: int, coord: Vector2i) -> void:
+	var do: PlayerSightDO = get_player_sight_do(player_id, coord)
 	if do.sight != PlayerSightTable.Sight.IN_SIGHT:
 		return
-	if do.count > 1:
-		DatabaseUtils.player_sight_tbl.update_field_by_id(do.id, "count", do.count - 1)
-		return
-	DatabaseUtils.player_sight_tbl.update_field_by_id(do.id, "sight", PlayerSightTable.Sight.SEEN)
-	DatabaseUtils.player_sight_tbl.update_field_by_id(do.id, "count", 0)
+	var count = UnitSightService.get_player_unit_sight_count(player_id, coord) + CitySightService.get_player_city_sight_count(player_id, coord)
+	if count == 1:
+		DatabaseUtils.player_sight_tbl.update_field_by_id(do.id, "sight", PlayerSightTable.Sight.SEEN)

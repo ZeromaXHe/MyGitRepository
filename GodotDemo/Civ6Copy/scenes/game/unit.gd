@@ -68,7 +68,7 @@ func update_sight() -> void:
 	var player_do: PlayerDO = PlayerService.get_player_do(unit_do.player_id)
 	var dict: Dictionary = MapService.sight_astar.get_in_range_coords_to_cost_dict(unit_do.coord, UnitService.get_sight_range())
 	for in_sight_coord in dict.keys():
-		PlayerSightService.in_sight(in_sight_coord)
+		UnitSightService.in_sight(id, in_sight_coord)
 	var cells: Array[Vector2i] = []
 	cells.append_array(dict.keys())
 	MapShower.singleton.paint_in_sight_tile_areas(cells)
@@ -81,7 +81,7 @@ func update_out_sight() -> void:
 	var dict: Dictionary = MapService.move_astar.get_in_range_coords_to_cost_dict(unit_do.coord, UnitService.get_sight_range())
 	var cells: Array[Vector2i] = []
 	for out_sight_coord in dict.keys():
-		PlayerSightService.out_sight(out_sight_coord)
+		UnitSightService.out_sight(id, out_sight_coord)
 		var seens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
 		if seens.any(func(s): s.coord == out_sight_coord):
 			MapShower.singleton.paint_out_sight_tile_areas(out_sight_coord, PlayerSightTable.Sight.SEEN)

@@ -291,6 +291,7 @@ func paint_resource(tile_coord: Vector2i, type: ResourceTable.Enum) -> void:
 		pass
 	else:
 		# 保证资源图标场景的排序和 ResourseType 中一致
+		# FIXME: 现在 4.2 貌似有 bug，场景 TileMap 的 Z Index 不会跟随 Layer 而是按照自己的 Z Index. 未来如果改了的话，要记得场景 Z Index 改回来
 		tile_map.set_cell(TILE_RESOURCE_LAYER_IDX, tile_coord, 27, Vector2i.ZERO, type)
 
 

@@ -8,5 +8,3 @@ var player_id: int
 var coord: Vector2i
 # 视野类型
 var sight := PlayerSightTable.Sight.UNSEEN
-# 被看见的对象数量
-var count: int = 0

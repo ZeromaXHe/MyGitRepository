@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://c6lbmdmed2pxa" path="res://assets/civ6_origin/resource/resources_silk.png" id="1_q0nhe"]
 
 [node name="ResourceSprite" type="Sprite2D"]
+z_index = 5
 position = Vector2(0, 40)
 scale = Vector2(0.215, 0.2)
 texture = ExtResource("1_q0nhe")
