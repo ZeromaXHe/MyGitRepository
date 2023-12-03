@@ -7,8 +7,10 @@ signal unit_move_depleted(unit_id: int)
 signal unit_move_changed(unit_id: int, move: int)
 
 
-const UNIT_SCENE: PackedScene = preload("res://scenes/game/unit.tscn")
-
+# 按注释这样莫名其妙编辑器就会报 unit.tscn 已损坏，看 GitHub 好像是因为 preload 循环引用，但是 city.tscn 就是正常的……
+# FIXME: 参考 https://github.com/godotengine/godot/issues/77007
+#const UNIT_SCENE: PackedScene = preload("res://scenes/game/unit.tscn")
+static var UNIT_SCENE: PackedScene = load("res://scenes/game/unit.tscn")
 static var id_dict: Dictionary = {}
 
 var id: int:

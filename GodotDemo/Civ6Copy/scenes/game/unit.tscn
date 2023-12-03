@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/game/unit.gd" id="1_k4u4h"]
 [ext_resource type="Texture2D" uid="uid://3jlynv3h1q73" path="res://assets/self_made_svg/unit_background/unit_citizen_background.svg" id="1_la2jy"]
-[ext_resource type="Texture2D" uid="uid://61tqu8ntxtx2" path="res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp" id="3_js0qj"]
+[ext_resource type="Texture2D" uid="uid://dq2btwwdfnreu" path="res://assets/civ6_origin/unit/webp_64x64/icon_unit_warrior.webp" id="3_js0qj"]
 
 [node name="Unit" type="Node2D"]
 script = ExtResource("1_k4u4h")
