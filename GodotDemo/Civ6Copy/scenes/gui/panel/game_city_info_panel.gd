@@ -36,6 +36,7 @@ var showing_city: City = null:
 @onready var city_pic_panel: PanelContainer = $MainPanel/CityInfoVBox/DetailHBox/CityPicPanel
 @onready var city_texture_rect: TextureRect = $MainPanel/CityInfoVBox/DetailHBox/CityPicPanel/CityTextureRect
 # 上方按钮组
+@onready var button_h_box: HBoxContainer = $ButtonPanel/ButtonHBox
 @onready var city_info_button: Button = $ButtonPanel/ButtonHBox/InfoButton
 @onready var buy_cell_button: Button = $ButtonPanel/ButtonHBox/BuyCellButton
 @onready var citizen_button: Button = $ButtonPanel/ButtonHBox/CitizenButton
@@ -64,6 +65,7 @@ func show_info() -> void:
 	capital_texture_rect.visible = city_do.capital
 	# 城市所属玩家颜色
 	var player_do: PlayerDO = PlayerService.get_player_do(city_do.player_id)
+	button_h_box.visible = player_do.id == PlayerService.get_current_player_id() # 非玩家城市不可按按钮
 	city_texture_rect.modulate = player_do.second_color
 	city_name_label.add_theme_color_override("font_color", player_do.second_color)
 	city_name_panel.get("theme_override_styles/panel").set("bg_color", player_do.main_color)

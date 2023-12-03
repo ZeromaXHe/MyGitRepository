@@ -24,6 +24,8 @@ static func add_player(player: PlayerDO) -> Player:
 
 func initiate(player_do: PlayerDO) -> void:
 	id = player_do.id
+	# 必须复制一份，不然颜色的修改会应用到所有 territory_border_scene 副本
+	territory_border.material = territory_border.material.duplicate()
 	(territory_border.material as ShaderMaterial).set_shader_parameter("to1", player_do.main_color)
 	(territory_border.material as ShaderMaterial).set_shader_parameter("to2", player_do.second_color)
 

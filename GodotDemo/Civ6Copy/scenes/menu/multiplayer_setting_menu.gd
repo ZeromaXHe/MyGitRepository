@@ -15,6 +15,11 @@ func _on_confirm_button_pressed() -> void:
 	player.main_color = Color("c71415")
 	player.second_color = Color("f5ce02")
 	Player.add_player(player)
+	var player2 := PlayerDO.new()
+	player2.name = "玩家 2"
+	player2.main_color = Color.REBECCA_PURPLE
+	player2.second_color = Color.YELLOW
+	Player.add_player(player2)
 	# 加载页面配置
 	GlobalScript.load_scene_path = "res://scenes/gui/game_gui.tscn"
 	# 先默认加载地图

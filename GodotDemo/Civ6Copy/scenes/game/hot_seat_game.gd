@@ -3,6 +3,7 @@ extends Node2D
 
 
 signal turn_changed(num: int, year: int)
+signal player_changed
 signal chosen_unit_changed(unit: Unit)
 signal chosen_city_changed(city: City)
 signal turn_status_changed(stats: TurnStatus)
@@ -88,6 +89,24 @@ func _process(delta: float) -> void:
 	handle_mouse_hover_tile(delta)
 
 
+func initiate_turn_status() -> void:
+	refresh_turn_status()
+	if turn_status == TurnStatus.CITY_NEED_PRODUCT:
+		chose_city_and_camera_focus(PlayerService.get_next_productable_city(-1 if chosen_city == null else chosen_city.id))
+	elif turn_status == TurnStatus.UNIT_NEED_MOVE:
+		chose_unit_and_camera_focus(PlayerService.get_next_need_move_unit(-1 if chosen_unit == null else chosen_unit.id))
+	else:
+		# 其他情况下，随便找个城市或者单位作为摄像机焦点
+		var player_id = PlayerService.get_current_player_id()
+		var units: Array = UnitService.get_unit_dos_of_player(player_id)
+		if not units.is_empty():
+			handle_clicked_on_minimap_tile((units[0] as UnitDO).coord)
+		else:
+			var citys: Array = CityService.get_city_dos_of_player(player_id)
+			# 城市一定有，不然文明就灭亡了……
+			handle_clicked_on_minimap_tile((citys[0] as CityDO).coord)
+
+
 func refresh_turn_status() -> void:
 	if PlayerService.get_next_productable_city(-1 if chosen_city == null else chosen_city.id) != null:
 		turn_status = TurnStatus.CITY_NEED_PRODUCT
@@ -99,13 +118,14 @@ func refresh_turn_status() -> void:
 
 func paint_player_sight() -> void:
 	var player: PlayerDO = PlayerService.get_current_player()
-	var unseens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.UNSEEN)
-	for unseen in unseens:
-		map_shower.paint_out_sight_tile_areas(unseen.coord, PlayerSightTable.Sight.UNSEEN)
-	var seens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
+	var size_vec: Vector2i = MapService.get_map_tile_size_vec()
+	for i in range(size_vec.x):
+		for j in range(size_vec.y):
+			map_shower.paint_out_sight_tile_areas(Vector2i(i, j), PlayerSightTable.Sight.UNSEEN)
+	var seens: Array = PlayerSightService.get_player_sight_dos_by_sight(player.id, PlayerSightTable.Sight.SEEN)
 	for seen in seens:
 		map_shower.paint_out_sight_tile_areas(seen.coord, PlayerSightTable.Sight.SEEN)
-	var in_sights: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.IN_SIGHT)
+	var in_sights: Array = PlayerSightService.get_player_sight_dos_by_sight(player.id, PlayerSightTable.Sight.IN_SIGHT)
 	var in_sight_coords: Array[Vector2i] = []
 	for in_sight in in_sights:
 		in_sight_coords.append(in_sight.coord)
@@ -114,14 +134,17 @@ func paint_player_sight() -> void:
 
 func test_add_unit() -> void:
 	GlobalScript.load_info = "初始化单位..."
-	var settler: Unit = add_unit(UnitTypeTable.Enum.SETTLER, Vector2i(22, 13))
-	var warrior: Unit = add_unit(UnitTypeTable.Enum.WARRIOR, Vector2i(21, 13))
+	# TODO: 现在坐标和单位玩家 id 都是写死的，后续优化
+	add_unit(1, UnitTypeTable.Enum.SETTLER, Vector2i(14, 14))
+	add_unit(1, UnitTypeTable.Enum.WARRIOR, Vector2i(14, 13))
+	add_unit(2, UnitTypeTable.Enum.SETTLER, Vector2i(18, 11))
+	add_unit(2, UnitTypeTable.Enum.WARRIOR, Vector2i(17, 11))
 
 
-func add_unit(type: UnitTypeTable.Enum, coord: Vector2i) -> Unit:
+func add_unit(player_id: int, type: UnitTypeTable.Enum, coord: Vector2i) -> Unit:
 	var req_dto := CreateUnitReqDTO.new()
 	req_dto.coord = coord
-	req_dto.player_id = PlayerService.get_current_player().id
+	req_dto.player_id = player_id
 	req_dto.type = type
 	var unit: Unit = Unit.create_unit(req_dto)
 	units.add_child(unit)
@@ -135,6 +158,9 @@ func add_unit(type: UnitTypeTable.Enum, coord: Vector2i) -> Unit:
 
 
 func build_city(coord: Vector2i) -> void:
+	if MapTileService.get_map_tile_do_by_coord(coord).city_id > 0:
+		# 已经被占领的地块不能建城
+		return
 	var city: City = City.create_city(coord)
 	cities.add_child(city)
 	city.initiate()
@@ -173,12 +199,13 @@ func set_chosen_city(city: City) -> void:
 func set_chosen_unit(unit: Unit) -> void:
 	if chosen_unit != null:
 		map_shower.clear_move_tile_areas()
-	if unit != null:
-		# 显示移动框
+	var current_player_not_null_unit: bool = unit != null and UnitService.get_unit_do(unit.id).player_id == PlayerService.get_current_player_id()
+	if current_player_not_null_unit:
+		# 点的是当前玩家的单位，才会显示移动框
 		unit.show_move_range()
 	chosen_unit = unit
 	chosen_unit_changed.emit(unit)
-	if unit != null:
+	if current_player_not_null_unit:
 		UnitService.wake_unit(unit.id)
 
 
@@ -193,7 +220,7 @@ func handle_unit_clicked(unit: Unit) -> void:
 
 
 func handle_city_production_completed(unit_type: UnitTypeTable.Enum, city_coord: Vector2i) -> void:
-	add_unit(unit_type, city_coord)
+	add_unit(PlayerService.get_current_player().id, unit_type, city_coord)
 
 
 func handle_unit_city_button_pressed() -> void:
@@ -289,13 +316,18 @@ func handle_turn_button_clicked() -> void:
 	match turn_status:
 		TurnStatus.END_TURN:
 			chosen_unit = null
-			# 增加回合数
-			turn_num += 1
+			chosen_city = null
 			# 刷新单位移动力、跳过状态等
 			PlayerService.refresh_units()
 			# 更新城市生产进度
 			PlayerService.update_citys_product_val()
-			refresh_turn_status()
+			# 切换下一个玩家
+			if PlayerService.current_player_end_turn():
+				# 如果所有玩家都已经轮替完毕，增加回合数
+				turn_num += 1
+			player_changed.emit()
+			initiate_turn_status()
+			paint_player_sight()
 		TurnStatus.UNIT_NEED_MOVE:
 			var movable_unit: UnitDO = PlayerService.get_next_need_move_unit(-1 if chosen_unit == null else chosen_unit.id)
 			if movable_unit == null:

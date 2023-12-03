@@ -12,8 +12,6 @@ static func clear_players() -> void:
 static func add_player(player: PlayerDO) -> void:
 	DatabaseUtils.player_tbl.insert(player)
 	player_id_arr.append(player.id)
-	# 初始化玩家视野
-	PlayerSightService.initialize_player_sight(player.id)
 
 
 static func get_current_player() -> PlayerDO:
@@ -25,6 +23,11 @@ static func get_current_player_id() -> int:
 		return -1
 	return player_id_arr[player_idx]
 
+
+## 当前玩家结束回合，返回是否所有玩家都已结束本回合
+static func current_player_end_turn() -> bool:
+	player_idx = (player_idx + 1) % player_id_arr.size()
+	return player_idx == 0
 
 static func get_player_do(id: int) -> PlayerDO:
 	return DatabaseUtils.player_tbl.query_by_id(id)
@@ -44,9 +47,6 @@ static func get_next_need_move_unit(unit_id: int = -1, return_input: bool = true
 		return movable[0]
 	
 	var unit: UnitDO = UnitService.get_unit_do(unit_id)
-	if return_input and UnitService.is_next_need_move(unit):
-		return unit
-	
 	var idx = units.find(unit)
 	if idx == -1:
 		printerr("get_next_need_move_unit | unit unfound in units")
@@ -56,6 +56,9 @@ static func get_next_need_move_unit(unit_id: int = -1, return_input: bool = true
 		if UnitService.is_next_need_move(units[i]):
 			return units[i]
 		i = (i + 1) % units.size()
+	# 可以返回自己的情况下，如果自己可以移动就把自己返回
+	if return_input and UnitService.is_next_need_move(unit):
+		return unit
 	return null
 
 
@@ -76,9 +79,6 @@ static func get_next_productable_city(city_id: int = -1, return_input: bool = tr
 		return productable[0]
 	
 	var city: CityDO = CityService.get_city_do(city_id)
-	if return_input and CityService.is_next_need_product(city):
-		return city
-	
 	var idx = cities.find(city)
 	if idx == -1:
 		printerr("get_next_productable_city | city unfound in cities")
@@ -88,6 +88,9 @@ static func get_next_productable_city(city_id: int = -1, return_input: bool = tr
 		if CityService.is_next_need_product(cities[i]):
 			return cities[i]
 		i = (i + 1) % cities.size()
+	# 可以返回自己的情况下，如果自己可以选择生产项目就把自己返回
+	if return_input and CityService.is_next_need_product(city):
+		return city
 	return null
 
 

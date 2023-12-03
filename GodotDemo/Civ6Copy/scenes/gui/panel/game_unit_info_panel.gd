@@ -24,6 +24,7 @@ var showing_unit: Unit = null:
 @onready var move_val_label: Label = $MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MovePanel/MoveHBox/MoveValLabel
 @onready var melee_atk_panel: PanelContainer = $MainPanel/UnitInfoVBox/DetailHBox/DetailVBox/MeleeAtkPanel
 # 上方按钮组
+@onready var button_h_box: HBoxContainer = $ButtonPanel/ButtonHBox
 @onready var city_button: Button = $ButtonPanel/ButtonHBox/CityButton
 @onready var defend_button: Button = $ButtonPanel/ButtonHBox/DefendButton
 @onready var skip_button: Button = $ButtonPanel/ButtonHBox/SkipButton
@@ -38,20 +39,22 @@ func show_info() -> void:
 	# 刷新内容
 	var unit_do: UnitDO = UnitService.get_unit_do(showing_unit.id)
 	name_button.text = UnitService.get_unit_name(unit_do.type)
-	if unit_do.type == UnitTypeTable.Enum.SETTLER:
-		city_button.show()
-		defend_button.hide()
-		skip_button.show()
-		sleep_button.show()
-		alert_button.hide()
-		melee_atk_panel.hide()
-	else:
-		city_button.hide()
-		defend_button.show()
-		skip_button.show()
-		sleep_button.hide()
-		alert_button.show()
-		melee_atk_panel.show()
+	button_h_box.visible = unit_do.player_id == PlayerService.get_current_player_id() # 非本玩家单位，无法操作
+	if button_h_box.visible:
+		if unit_do.type == UnitTypeTable.Enum.SETTLER:
+			city_button.show()
+			defend_button.hide()
+			skip_button.show()
+			sleep_button.show()
+			alert_button.hide()
+			melee_atk_panel.hide()
+		else:
+			city_button.hide()
+			defend_button.show()
+			skip_button.show()
+			sleep_button.hide()
+			alert_button.show()
+			melee_atk_panel.show()
 	
 	unit_texture_rect.texture = load(UnitService.get_unit_pic_200(unit_do.type))
 	

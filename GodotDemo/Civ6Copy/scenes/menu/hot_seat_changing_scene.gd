@@ -6,6 +6,10 @@ extends Control
 
 
 func _ready() -> void:
+	refresh_player()
+
+
+func refresh_player() -> void:
 	var player_do: PlayerDO = PlayerService.get_current_player()
 	if player_do == null:
 		player_label.text = "测试玩家"

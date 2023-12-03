@@ -56,13 +56,14 @@ func _ready() -> void:
 	# 增加测试单位
 	game.test_add_unit()
 	# 初始化回合状态
-	game.refresh_turn_status()
+	game.initiate_turn_status()
 	
 	hot_seat_changing_scene.show()
 
 
 func connect_signals() -> void:
 	game.turn_changed.connect(top_panel.handle_turn_changed)
+	game.player_changed.connect(handle_player_changed)
 	game.chosen_unit_changed.connect(handle_chosen_unit_changed)
 	game.chosen_city_changed.connect(handle_chosen_city_changed)
 	game.turn_status_changed.connect(turn_panel.handle_turn_status_changed)
@@ -138,6 +139,13 @@ func handle_civpedia_button_pressed() -> void:
 
 func handle_menu_button_pressed() -> void:
 	menu_overlay.show()
+
+
+func handle_player_changed() -> void:
+	hot_seat_changing_scene.refresh_player()
+	hot_seat_changing_scene.show()
+	# 更新小地图新玩家视野
+	MiniMap.singleton.paint_player_sight()
 
 
 func handle_chosen_unit_changed(unit: Unit) -> void:

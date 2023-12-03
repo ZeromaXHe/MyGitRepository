@@ -49,6 +49,8 @@ func initiate() -> void:
 	if not city_do.capital:
 		name_button.icon = null
 	global_position = MapShower.singleton.map_coord_to_global_position(city_do.coord)
+	# 必须复制，不然修改颜色会影响到所有城市的颜色
+	city_main_panel.set("theme_override_styles/panel", city_main_panel.get("theme_override_styles/panel").duplicate())
 	# 配置颜色
 	set_main_color(PlayerService.get_current_player().main_color)
 	set_second_color(PlayerService.get_current_player().second_color)

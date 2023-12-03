@@ -122,6 +122,10 @@ func map_coord_to_global_position(map_coord: Vector2i) -> Vector2:
 
 
 func paint_out_sight_tile_areas(coord: Vector2i, type: PlayerSightTable.Sight) -> void:
+	# 对于小地图，始终显示看过的地块，转发到视野内的处理
+	if minimap and type == PlayerSightTable.Sight.SEEN:
+		paint_in_sight_tile_areas([coord])
+		return
 	match type:
 		PlayerSightTable.Sight.UNSEEN:
 			tile_map.set_cell(TILE_OUT_SIGHT_LAYER_IDX, coord, 31, Vector2i.ZERO)

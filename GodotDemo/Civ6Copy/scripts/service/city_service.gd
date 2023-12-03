@@ -28,6 +28,7 @@ static func create_city(coord: Vector2i) -> CityDO:
 	for in_sight_coord in sight_cells:
 		CitySightService.in_sight(city_do.id, in_sight_coord)
 	MapShower.singleton.paint_in_sight_tile_areas(sight_cells)
+	MapShower.singleton_minimap.paint_in_sight_tile_areas(sight_cells)
 	
 	# 首都宫殿建筑
 	if city_do.capital:

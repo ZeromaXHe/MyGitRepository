@@ -42,14 +42,16 @@ func get_view_line() -> Line2D:
 
 func paint_player_sight() -> void:
 	var player: PlayerDO = PlayerService.get_current_player()
-	var unseens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.UNSEEN)
-	for unseen in unseens:
-		map_shower.paint_out_sight_tile_areas(unseen.coord, PlayerSightTable.Sight.UNSEEN)
-	var seens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
+	var size_vec: Vector2i = MapService.get_map_tile_size_vec()
+	for i in range(size_vec.x):
+		for j in range(size_vec.y):
+			map_shower.paint_out_sight_tile_areas(Vector2i(i, j), PlayerSightTable.Sight.UNSEEN)
+	var seens: Array = PlayerSightService.get_player_sight_dos_by_sight(player.id, PlayerSightTable.Sight.SEEN)
 	for seen in seens:
 		map_shower.paint_out_sight_tile_areas(seen.coord, PlayerSightTable.Sight.SEEN)
-	var in_sights: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.IN_SIGHT)
+	var in_sights: Array = PlayerSightService.get_player_sight_dos_by_sight(player.id, PlayerSightTable.Sight.IN_SIGHT)
 	var in_sight_coords: Array[Vector2i] = []
 	for in_sight in in_sights:
 		in_sight_coords.append(in_sight.coord)
 	map_shower.paint_in_sight_tile_areas(in_sight_coords)
+

@@ -73,19 +73,23 @@ func update_sight() -> void:
 		UnitSightService.in_sight(id, in_sight_coord)
 	var cells: Array[Vector2i] = []
 	cells.append_array(dict.keys())
-	MapShower.singleton.paint_in_sight_tile_areas(cells)
-	MapShower.singleton_minimap.paint_in_sight_tile_areas(cells)
+	if PlayerService.get_current_player_id() == player_do.id:
+		MapShower.singleton.paint_in_sight_tile_areas(cells)
+		MapShower.singleton_minimap.paint_in_sight_tile_areas(cells)
 
 
 func update_out_sight() -> void:
 	var unit_do: UnitDO = UnitService.get_unit_do(id)
 	var player_do: PlayerDO = PlayerService.get_player_do(unit_do.player_id)
-	var dict: Dictionary = MapService.move_astar.get_in_range_coords_to_cost_dict(unit_do.coord, UnitService.get_sight_range())
+	var dict: Dictionary = MapService.sight_astar.get_in_range_coords_to_cost_dict(unit_do.coord, UnitService.get_sight_range())
 	var cells: Array[Vector2i] = []
-	for out_sight_coord in dict.keys():
+	var current_player: bool = PlayerService.get_current_player_id() == player_do.id
+	for out_sight_coord: Vector2i in dict.keys():
 		UnitSightService.out_sight(id, out_sight_coord)
-		var seens: Array = PlayerSightService.get_player_sight_dos_by_sight(PlayerSightTable.Sight.SEEN)
-		if seens.any(func(s): s.coord == out_sight_coord):
+		if not current_player:
+			continue
+		# 当前玩家更新视野
+		if PlayerSightService.get_player_sight_do(unit_do.player_id, out_sight_coord).sight == PlayerSightTable.Sight.SEEN:
 			MapShower.singleton.paint_out_sight_tile_areas(out_sight_coord, PlayerSightTable.Sight.SEEN)
 			MapShower.singleton_minimap.paint_out_sight_tile_areas(out_sight_coord, PlayerSightTable.Sight.SEEN)
 
