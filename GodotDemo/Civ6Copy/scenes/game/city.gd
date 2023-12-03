@@ -9,7 +9,10 @@ signal city_name_button_pressed(city: City)
 signal city_product_button_pressed(city: City)
 
 
-const CITY_SCENE: PackedScene = preload("res://scenes/game/city.tscn")
+# 按注释这样莫名其妙编辑器就会报 city.tscn 已损坏，看 GitHub 好像是因为 preload 循环引用
+# FIXME: 参考 https://github.com/godotengine/godot/issues/77007
+#const CITY_SCENE: PackedScene = preload("res://scenes/game/city.tscn")
+static var CITY_SCENE: PackedScene = load("res://scenes/game/city.tscn")
 
 static var id_dict: Dictionary = {}
 
