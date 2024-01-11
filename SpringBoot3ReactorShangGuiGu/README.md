@@ -1,6 +1,6 @@
 # 参考教程
 
-尚硅谷SpringBoot3响应式编程教程，2024最新springboot入门到实战 
+尚硅谷SpringBoot3响应式编程教程，2024最新springboot入门到实战
 
 https://www.bilibili.com/video/BV1sC4y1K7ET
 
@@ -8,7 +8,8 @@ https://www.bilibili.com/video/BV1sC4y1K7ET
 
 ## P8 为什么有 Reactive Stream 规范
 
-Java 9 中的 Flow 类定义了响应式编程的 API。实际上就是拷贝了 Reactive Stream 的四个接口定义，然后放在 java.util.concurrent.Flow 类中。Java 9 提供了 SubmissionPublisher 和 ConsumerSubscriber 两个默认实现。
+Java 9 中的 Flow 类定义了响应式编程的 API。实际上就是拷贝了 Reactive Stream 的四个接口定义，然后放在
+java.util.concurrent.Flow 类中。Java 9 提供了 SubmissionPublisher 和 ConsumerSubscriber 两个默认实现。
 
 ### Reactive Manifesto
 
@@ -49,7 +50,8 @@ API Components:
 1. Publisher：发布者，产生数据流
 2. Subscriber：订阅者，消费数据流
 3. Subscription：订阅关系（订阅关系是发布者和订阅者之间的关键接口。订阅者通过订阅来表示对发布者产生的数据的兴趣。订阅者可以请求一定数量的元素，也可以取消订阅。）
-4. Processor：处理器（处理器是同时实现了发布者和订阅者接口的组件。它可以接收来自一个发布者的数据，进行处理，并将结果发布给下一个订阅者。处理器在 Reactor 中充当中间环节，代表一个处理阶段，允许你在数据流中进行转换、过滤和其他操作。）
+4. Processor：处理器（处理器是同时实现了发布者和订阅者接口的组件。它可以接收来自一个发布者的数据，进行处理，并将结果发布给下一个订阅者。处理器在
+   Reactor 中充当中间环节，代表一个处理阶段，允许你在数据流中进行转换、过滤和其他操作。）
 
 这种模型遵循 Reactive Streams 规范，确保了异步流的一致性和可靠性。
 
@@ -65,15 +67,11 @@ Publisher(dataBuffer) -> 多个 Processor（Subscriber -> Publisher，既是订�
 
 ## P11 Reactive-Stream 发布数据
 
-见 FlowDemo
-
 ## P12 Reactive-Stream 发布订阅写法
-
-见 FlowDemo
 
 ## P13 Reactive-Stream 四大核心组件
 
-见 FlowDemo
+P11 ~ P13 见 Chapter01Stream 的 FlowDemo
 
 响应式编程：
 
@@ -110,3 +108,60 @@ Reactor 是基于 Reactive Streams 的第四代响应式库规范，用于在 JV
 
 这就是响应式编程
 
+## P17 Mono 和 Flux 简单数据
+
+## P18 事件感知 API-doOnXxx
+
+## P19 响应式流日志
+
+## P20 核心 - subscribe()
+
+## P21 核心 - 自定义消费者
+
+## P22 核心 - 自定义消费者 - 生命周期钩子
+
+## P23 核心 - 请求重塑 - buffer
+
+## P24 核心 - 请求重塑 - limitRate
+
+## P25 核心 - 创建序列 - generate、create
+
+## P26 核心 - 自定义元素处理 - handle
+
+## P27 核心 - 自定义线程调度规则
+
+P17 ~ P27 见 Chapter02Reactor 的 FluxDemo
+
+## P28 核心 - 常见操作
+
+见 Chapter02Reactor 的 ApiTest
+
+## P29 核心 - 错误处理
+
+见 Chapter02Reactor 的 ApiTest
+
+命令式编程：常见的错误处理方式
+
+1. 捕获异常返回一个静态默认值（对应 onErrorReturn 实现上面效果，错误的时候返回一个值）
+   1. 吃掉异常，消费者无异常感知
+   2. 返回一个默认值
+   3. 流正常完成
+2. 吃掉异常，执行一个兜底方法；（对应 onErrorResume）
+   1. 吃掉异常，消费者无异常感知
+   2. 调用一个兜底方法
+   3. 流正常完成
+3. 捕获并动态计算一个返回值（对应 onErrorResume）
+4. 捕获并包装为一个业务异常，并重新抛出（对应 onErrorResume/onErrorMap）
+   1. 吃掉异常，消费者有感知
+   2. 抛新异常
+   3. 流异常完成
+5. 捕获异常，记录特殊的错误日志，重新抛出（对应 doOnError）
+   1. 异常被捕获，做自己的事情
+   2. 不影响异常继续顺着流水线传播
+   3. 不吃掉异常，只在异常发生的时候做一件事，消费者有感知
+6. finally （对应 doFinally）
+7. 忽略当前异常，仅通知记录，继续推进
+
+## P30 核心 - Sinks、重试、Context、阻塞 API
+
+见 Chapter02Reactor 的 ApiTest
