@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>哈哈</h1>
+<div id="app" style="width: 500px; height: 300px; background-color: gainsboro">
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    const http = axios.create({
+        baseURL: 'http://localhost:8080/',
+        timeout: 10000000,
+        responseType: 'stream',
+        onDownloadProgress: function (progressEvent) {
+            // 处理原生进度事件
+            // console.log("progressEvent->", progressEvent.event.currentTarget.responseText);
+            document.getElementById("app").innerText = progressEvent.event.currentTarget.responseText + "<br/>"
+        }
+    })
+    http.get('sse')
+        .then()
+</script>
+</body>
+</html>

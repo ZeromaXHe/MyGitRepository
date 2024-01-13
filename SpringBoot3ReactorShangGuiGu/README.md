@@ -165,3 +165,114 @@ P17 ~ P27 见 Chapter02Reactor 的 FluxDemo
 ## P30 核心 - Sinks、重试、Context、阻塞 API
 
 见 Chapter02Reactor 的 ApiTest
+
+## P31 WebFlux - 响应式Web与阻塞式Web组件对应关系
+
+WebFlux：底层完全基于 Netty + Reactor + SpringWeb 完成一个全异步非阻塞的 Web 响应式框架
+
+底层：异步 + 消息队列（内存） + 事件回调机制 = 整套系统
+
+优点：能使用少量资源处理大量请求
+
+组件对比
+
+| API 功能   | Servlet                        | WebFlux                  |
+|----------|--------------------------------|--------------------------|
+| 前端处理器    | DispatcherServlet              | DispatcherHandler        |
+| 处理器      | Controller                     | WebHandler/Controller    |
+| 请求、响应    | ServletRequest/ServletResponse | ServerWebExchange        |
+| 过滤器      | Filter（HttpFilter）             | WebFilter                |
+| 异常处理器    | HandlerExceptionResolver       | DispatchExceptionHandler |
+| web配置    | @EnableWebMvc                  | @EnableWebFlux           |
+| 自定义配置    | WebMvcConfigurer               | WebFluxConfigurer        |
+| 返回结果     | 任意                             | Mono/Flux/任意             |
+| 发送REST请求 | RestTemplate                   | WebClient                |
+
+## P32 WebFlux - 引入 & 介绍
+
+## P33 WebFlux - 使用 HttpHandler、HttpServer 原生 Reactor-Netty API 编写一个服务器
+
+见 Chapter03 的 FluxMainApplication
+
+## P34 WebFlux - Controller 注解 & SSE 功能
+
+见 Chapter03 的 WebFluxMainApplication\HelloController\index.html
+
+## P35 WebFlux - SSE 的完整 API
+
+见 Chapter03 的 HelloController
+
+# P36 WebFlux - DispatcherHandler 源码
+
+- HandlerMapping：请求映射处理器；保存每个请求由哪个方法进行处理
+- HandlerAdapter：处理器适配器；反射执行目标方法
+- HandlerResultHandler：处理器结果处理器
+
+SpringMVC: DispatchServlet 有一个 doDispatch() 方法，来处理所有请求；
+
+WebFlux: DispatchHandler 有一个 handle() 方法，来处理所有请求
+
+1. 请求和响应都封装在 ServerWebExchange 对象中，由 handle 方法进行处理
+2. 如果没有任何的请求映射器了；直接返回一个；创建一个未找到的错误；404；返回 Mono.error；终结流
+3. 跨域工具，是否跨域请求。跨域请求检查是否复杂跨域，需要预检请求。
+4. Flux 流式操作
+   1. 拿到所有的 handlerMappings
+   2. 找每一个 mapping 看谁能处理请求
+   3. 直接触发获取元素，拿到流的第一个元素；即找到第一个能处理这个请求的 handlerAdapter
+   4. 如果没拿到元素，则响应 404 错误
+   5. 异常处理，一旦前面发生异常，调用处理异常
+   6. 调用方法处理请求，得到响应结果
+
+源码中的核心两个：
+
+- handleRequestWith: 编写了 handlerAdapter 怎么处理请求
+- handleResult: String、User、ServerSendEvent、Mono、Flux...
+
+## P37 WebFlux - Filter 等其他 API
+
+注解开发
+
+SSE 和 WebSocket 区别：
+
+- SSE：单工；请求过去以后，等待服务端源源不断的数据
+- WebSocket：双工：连接建立以后，可以任何交互；
+
+### 目标方法传参
+
+- ServerWebExchange 封装了请求和响应对象的对象；自定义获取数据、自定义响应
+- ServerHttpRequest\ServerHttpResponse 请求、响应
+- WebSession 访问Session对象
+- org.springframework.http.HttpMethod 请求方式
+- java.util.Locale 国际化
+- java.util.TimeZone + java.time.ZoneId 时区
+- @PathVariable 路径变量
+- @MatrixVariable 矩阵变量
+- @RequestParam 请求参数
+- @RequestHeader 请求头
+- @CookieValue 获取Cookie
+- @RequestBody 获取请求体，Post、文件上传
+- HttpEntity<B> 封装后的请求对象
+- @RequestPart 获取文件上传的数据 multipart/form-data
+- java.util.Map, org.springframework.ui.Model, org.springframework.ui.ModelMap
+- Errors, BindingResult 数据校验，封装错误
+- SessionStatus + 类级别 @SessionAttributes
+- UriComponentsBuilder
+- @SessionAttributes
+- @RequestAttributes 转发请求的请求域数据
+- 所有其他对象都能作为参数：基本类型等于标注 @RequestParam, 对象类型等于标注 @ModelAttribute
+
+### 返回值的写法
+
+- @ResponseBody 把响应数据写出去，如果是对象，可以自动转为 Json
+- HttpEntity<B>, ResponseEntity<B> ResponseEntity支持快捷自定义响应内容
+- HttpHeaders 没有响应内容，只有响应头
+- ErrorResponse 快速构建错误响应
+- ProblemDetail
+- String 就是和之前的使用规则一样；forward:转发到一个地址；redirect:重定向到一个地址；配合模板引擎
+- View 直接返回视图对象
+- java.util.Map, org.springframework.ui.Model 以前一样
+- @ModelAttribute 以前一样
+- Rendering 新版的页面跳转 API；不能标注 @ResponseBody
+- void 仅代表响应完成信号
+- Flux<ServerSentEvent>, Observable<ServerSentEvent> 使用 text/event-stream 完成 SSE 效果
+- 其他返回值，都会当成给页面的数据
