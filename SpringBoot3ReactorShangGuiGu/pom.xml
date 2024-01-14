@@ -18,6 +18,7 @@
         <module>Chapter01Stream</module>
         <module>Chapter02Reactor</module>
         <module>Chapter03WebFlux</module>
+        <module>Chapter04R2DBC</module>
     </modules>
 
     <properties>

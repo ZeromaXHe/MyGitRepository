@@ -276,3 +276,17 @@ SSE 和 WebSocket 区别：
 - void 仅代表响应完成信号
 - Flux<ServerSentEvent>, Observable<ServerSentEvent> 使用 text/event-stream 完成 SSE 效果
 - 其他返回值，都会当成给页面的数据
+
+## P38 R2DBC - 课程介绍
+
+## P39 R2DBC - 体验简单查询
+
+见 Chapter04R2DBC 的 R2DBCTest
+
+## P40 Spring Data R2DBC - 整合与自动配置
+
+见 Chapter04R2DBC 的 AuthorController
+
+## P41 Spring Data R2DBC - DatabaseClient & R2dbcEntityTemplate API
+
+
