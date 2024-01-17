@@ -19,6 +19,7 @@
         <module>Chapter02Reactor</module>
         <module>Chapter03WebFlux</module>
         <module>Chapter04R2DBC</module>
+        <module>Chapter05Security</module>
     </modules>
 
     <properties>

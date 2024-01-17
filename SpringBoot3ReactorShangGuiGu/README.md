@@ -251,7 +251,7 @@ SSE 和 WebSocket 区别：
 - @RequestHeader 请求头
 - @CookieValue 获取Cookie
 - @RequestBody 获取请求体，Post、文件上传
-- HttpEntity<B> 封装后的请求对象
+- `HttpEntity<B>` 封装后的请求对象
 - @RequestPart 获取文件上传的数据 multipart/form-data
 - java.util.Map, org.springframework.ui.Model, org.springframework.ui.ModelMap
 - Errors, BindingResult 数据校验，封装错误
@@ -264,7 +264,7 @@ SSE 和 WebSocket 区别：
 ### 返回值的写法
 
 - @ResponseBody 把响应数据写出去，如果是对象，可以自动转为 Json
-- HttpEntity<B>, ResponseEntity<B> ResponseEntity支持快捷自定义响应内容
+- `HttpEntity<B>`, `ResponseEntity<B>` ResponseEntity支持快捷自定义响应内容
 - HttpHeaders 没有响应内容，只有响应头
 - ErrorResponse 快速构建错误响应
 - ProblemDetail
@@ -289,4 +289,57 @@ SSE 和 WebSocket 区别：
 
 ## P41 Spring Data R2DBC - DatabaseClient & R2dbcEntityTemplate API
 
+## P42 Spring Data R2DBC - 默认提供的 CRUD 方法、方法起名、自定义 @Query 注解
 
+## P43 Spring Data R2DBC - 1-1 数据封装 & 自定义 Converter
+
+## P44 Spring Data R2DBC - 小结
+
+## P45 Spring Data R2DBC - 1-1 关联查询
+
+## P46 Spring Data R2DBC - bufferUntilChanged 操作
+
+## P47 Spring Data R2DBC - 1 对多操作
+
+见 Chapter04R2DBC 的 R2DBCTest
+
+## P48 Spring Security - 配置认证规则
+
+### 应用安全
+
+- 防止攻击：DDos、CSRF、XSS、SQL 注入……
+- 控制权限：
+  - 登录的用户能干什么
+  - 用户登录系统以后要控制住用户的所有行为，防止越权
+- 传输加密
+  - https
+  - X509
+- 认证
+  - OAuth2.0
+  - JWT
+
+### RBAC 权限模型
+
+Role Based Access Controll: 基于角色的访问控制
+
+一个网站有很多**用户**，每个用户有很多**角色**，一个角色可以关联很多**权限**
+
+一个人到底能干什么？
+
+权限控制：
+- 找到这个人，看他有哪些角色，每个角色能拥有哪些权限。这个人就拥有一堆的角色或者权限
+- 这个人执行方法的时候，我们给方法规定好权限，由权限框架负责判断，这个人是否有指定的权限
+
+所有权限框架：
+- 让用户登录进来：认证（authenticate）：用账号密码、各种各样方式，先让用户进来
+- 查询用户拥有的所有角色和权限：授权（authorize）：每个方法执行的时候，匹配角色或者权限来判定用户是否可以执行这个方法
+
+### 认证
+
+登陆行为
+
+- 静态资源放行
+
+## P49 Spring Security - 认证逻辑自定义 UserDetails 数据
+
+## P50 Spring Security - 方法级别鉴权
