@@ -126,3 +126,213 @@ Docker 运行的基本流程为：
 6. 当需要限制 Docker 容器运行资源或执行用户指令等操作时，则通过 Exec driver 来完成。
 7. Lib container 是一项独立的容器管理包，Network driver 以及 Exec driver 都是通过 Lib container 来实现具体对容器进行的操作。（包括 netlink, appmarmor, namespaces, cgroups, devices）
 
+# P11 centos7 上安装 docker
+
+1. 确定你是 CentOS7 及以上版本
+2. 卸载旧版本
+3. yum 安装 gcc 相关
+4. 安装需要的软件包
+5. 设置 stable 镜像仓库
+6. 更新 yum 软件包索引
+7. 安装 DOCKER CE
+8. 启动 docker
+9. 测试
+
+# P12 镜像加速器配置
+
+# P13 helloworld 分析介绍 3 要素配合
+
+# P14 为什么 Docker 会比 VM 虚拟机快
+
+1. **Docker 有着比虚拟机更少的抽象层**：由于 Docker 不需要 Hypervisor(虚拟机)实现硬件资源虚拟化，运行在 Docker 容器上的程序直接使用的都是实际物理机的硬件资源。因此在 CPU、内存利用率上 Docker 将会在效率上有明细优势。
+2. **Docker 利用的是宿主机的内核，而不需要加载操作系统 OS 内核**：当新建一个容器时，Docker 不需要和虚拟机一样重新加载一个操作系统内核。进而避免引寻、加载操作系统内核返回等比较费时费资源的过程，当新建一个虚拟机时，虚拟机软件需要加载 OS，返回新建过程是分钟级别的。而 Docker 由于直接利用宿主机的操作系统，则省略了返回过程，因此新建一个 Docker 容器只需要几秒钟。
+
+# P15 帮助启动类命令
+
+- 启动 Docker：systemctl start docker
+- 停止 Docker：systemctl stop docker
+- 重启 Docker：systemctl restart docker
+- 查看 Docker 状态：systemctl status docker
+- 开机启动：systemctl enable docker
+- 查看 Docker 概要信息：docker info
+- 查看 Docker 总体帮助文档：docker --help
+- 查看 Docker 命令帮助文档：docker 具体命令 --help
+
+# P16 镜像命令
+
+- docker images：列出本地主机上的镜像
+  - OPTIONS 说明：
+    - -a 列出本地所有的镜像（含历史映像层）
+    - -q 只显示镜像 ID
+  - 各个选项说明：
+    - REPOSITORY 表示镜像的仓库源
+    - TAG：镜像的标签版本号
+    - IMAGE ID：镜像 ID
+    - CREATED：镜像创建时间
+    - SIZE：镜像大小
+  - 同一个仓库源可以有多个 TAG 版本，代表这个仓库源的不同版本，我们使用 REPOSITORY:TAG 来定义不同的镜像。如果你不指定一个镜像的版本标签，例如你只使用 ubuntu，Docker 将默认使用 ubuntu:latest 镜像
+- docker search 某个镜像名字：搜索镜像
+  - NAME 镜像名称
+  - DESCRIPTION 镜像说明
+  - STARS 点赞数量
+  - OFFICIAL 是否是官方的
+  - AUTOMATED 是否是自动构建的
+- docker pull 某个镜像名字：下载镜像
+- docker system df 查看镜像/容器/数据卷所占的空间
+- docker rmi 某个镜像名字ID：删除镜像
+  - 删除单个： docker rmi -f 镜像ID
+  - 删除多个： docker rmi -f 镜像名1:TAG 镜像名2:TAG
+  - 删除全部： docker rmi -f $(docker images -qa)
+
+谈谈 Docker 虚悬镜像是什么？
+
+仓库名、标签都是 <none> 的镜像，俗称虚悬镜像（dangling image）
+
+# P17 ubuntu 容器说明
+
+容器命令：
+
+- 新建+启动容器：`docker run [OPTIONS] IMAGE [COMMAND] [ARG...]`
+- 列出当前所有正在运行的容器：`docker ps [OPTIONS]`
+- 退出容器：两种推出方式 exit 和 ctrl+p+q
+- 启动已停止运行的容器：`docker start 容器ID或容器名`
+- 重启容器：`docker restart 容器ID或容器名`
+- 停止容器：`docker stop 容器ID或容器名`
+- 强制停止容器：`docker kill 容器ID或容器名`
+- 删除已停止的容器：`docker rm 容器ID`
+
+# P18 容器命令 A
+
+新建+启动容器：`docker run [OPTIONS] IMAGE [COMMAND] [ARG...]`
+
+OPTIONS 说明：
+- `--name="容器新名字"` 为容器指定一个名称
+- `-d` 后台运行容器并返回容器 ID，也即启动守护式容器（后台运行）
+- `-i` 以交互模式运行容器，通常与 -t 同时使用
+- `-t` 为容器重新分配一个伪输入终端，通常与 -i 同时使用，也即启动交互式容器（前台有伪终端，等待交互）
+- `-P` 随机端口映射，大写P
+- `-p` 指定端口映射，小写p
+  - `-p hostPort:containerPort` 端口映射 -p 8080:80
+  - `-p ip:hostPort:containerPort` 配置监听地址 -p 10.0.0.100:8080:80
+  - `-p ip::containerPort` 随机分配端口 -p 10.0.0.100::80
+  - `-p hostPort:containerPort:udp` 指定协议 -p 8080:80:tcp
+  - `-p 81:80 -p 443:443` 指定多个
+
+# P19 容器命令 B
+
+列出当前所有正在运行的容器：`docker ps [OPTIONS]`
+
+- OPTIONS 说明
+  - `-a` 列出当前所有正在运行的容器+历史上运行过的
+  - `-l` 显示最近创建的容器
+  - `-n` 显示最近n个创建的容器
+  - `-q` 静默模式，只显示容器编号
+
+# P20 容器命令 C
+
+退出容器：两种推出方式 exit 和 ctrl+p+q
+
+- exit 退出，容器停止
+- ctrl+p+q 退出，容器不停止
+
+启动已停止运行的容器：`docker start 容器ID或容器名`
+
+重启容器：`docker restart 容器ID或容器名`
+
+停止容器：`docker stop 容器ID或容器名`
+
+强制停止容器：`docker kill 容器ID或容器名`
+
+删除已停止的容器：`docker rm 容器ID`
+- 一次性删除多个容器实例
+  - `docker rm -f $(docker ps -a -q)`
+  - `docker ps -a -q | xargs docker rm` 
+
+# P21 容器命令 D
+
+重要
+
+- 有镜像才能创建容器，这是根本前提
+- 启动守护式容器（后台服务器）：`docker run -d 容器名`
+- 查看容器日志：`docker logs 容器ID`
+- 查看容器内运行的进程：`docker top 容器ID`
+- 查看容器内部细节：`docker inspect 容器ID`
+- 进入正在运行的容器并以命令行交互：`docker exec -it 容器ID bashShell`
+  - 重新进入：`docker attach 容器ID`
+- 从容器内拷贝文件到主机上：`docker cp 容器ID:容器内路径 目的主机路径`
+- 导入和导出容器：`docker export 容器ID > 文件名.tar` 和 `cat 文件名.tar | docker import - 镜像用户/镜像名:镜像版本号`
+
+## 启动守护式容器（后台服务器）
+
+- 在大部分场景下，我们希望 Docker 的服务是在后台运行的，我们可以通过 -d 指定容器的后台运行模式
+- `docker run -d 容器名`
+- Redis 前后台启动演示 case
+  - 前台交互式启动: `docker run -it redis:6.0.8`
+  - 后台守护式启动: `docker run -d redis:6.0.8`
+- 问题：Docker 容器后台运行，就必须有一个前台进程。容器运行的命令如果不是那些一直挂起的命令（比如运行 top，tail），就是会自动退出的。
+  - 这个是 Docker 机制问题，比如你的 Web 容器，我们以 Nginx 为例，正常情况下，我们配置启动服务只需要启动响应的 service 即可。例如 service nginx start。但是，这样做，nginx 为后台进程模式运行，就导致 Docker 前台没有运行的应用，这样的容器后台启动后，会立即自杀，因为它觉得没事可做了。
+  - 所以最佳的解决方案是：将你要运行的程序以前台进程的形式运行，常见就是命令行模式，表示我还有交互操作，别中断
+
+## 进入正在运行的容器并以命令行交互
+
+- `docker exec -it 容器ID bashShell`
+- 重新进入：`docker attach 容器ID`
+- 上述两个区别
+  - attach 直接进入容器启动命令的终端，不会启动新的线程。用 exit 退出，会导致容器的停止
+  - exec 是在容器中打开新的终端，并且可以启动新的进程。用 exit 退出，不会导致容器的停止
+- 推荐使用 docker exec
+
+# P22 容器命令 E
+
+## 从容器内拷贝文件到主机上
+
+- 容器 -> 主机
+- `docker cp 容器ID:容器内路径 目的主机路径`
+
+## 导入和导出容器
+
+- export 导出容器的内容流作为一个 tar 归档文件【对应 import 命令】
+  - `docker export 容器ID > 文件名.tar`
+- import 从 tar 包中的内容创建一个新的文件系统再导入为镜像【对应 export】
+  - `cat 文件名.tar | docker import - 镜像用户/镜像名:镜像版本号`
+
+## 常用命令
+
+- `attach` 当前 shell 下 attach 连接指定运行镜像
+- `build` 通过 Dockerfile 定制镜像
+- `commit` 提交当前容器为新的镜像
+- `cp` 从容器中拷贝指定文件或者目录到宿主机中
+- `create` 创建一个新的容器，同 run，但不启动容器
+- `diff` 查看 docker 容器变化
+- `events` 从 docker 服务获取容器实时事件
+- `exec` 在已存在的容器上运行命令
+- `export` 导出容器的内容流作为一个 tar 归档文件【对应 import】
+- `history` 展示一个镜像形成历史
+- `images` 列出系统当前镜像
+- `import` 从 tar 包中的内容创建一个新的文件系统映像【对应 export】
+- `info` 显示系统相关信息
+- `inspect` 查看容器详细信息
+- `kill` 杀死指定 Docker 容器
+- `load` 从一个 tar 包中加载一个镜像【对应 save】
+- `login` 注册或者登录一个 Docker 源服务器
+- `logout` 从当前 Docker registry 退出
+- `logs` 输出当前容器日志信息
+- `port` 查看映射端口对应的容器内部源端口
+- `pause` 暂停容器
+- `ps` 列出容器列表
+- `pull` 从 Docker 镜像源服务器拉取指定镜像或者库镜像
+- `push` 推送指定镜像或者库镜像至 Docker 源服务器
+- `restart` 重启运行的容器
+- `rm` 移除一个或者多个容器
+- `rmi` 移除一个或多个镜像【无容器使用该镜像才可删除，否则需删除相关容器才可继续或 -f 强制删除】
+- `run` 创建一个新的容器并运行一个命令
+- `save` 保存一个镜像为一个 tar 包【对应 load】
+- `search` 在 Docker Hub 中搜索镜像
+- `start` 启动容器
+- `stop` 停止容器
+- `tag` 给源中镜像打标签
+- `top` 查看容器中运行的进程信息
+- `unpause` 取消暂停容器
+- `version` 查看 Docker 版本号
+- `wait` 截取容器停止时的退出状态值
+
