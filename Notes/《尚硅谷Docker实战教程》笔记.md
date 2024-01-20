@@ -246,7 +246,7 @@ OPTIONS 说明：
 删除已停止的容器：`docker rm 容器ID`
 - 一次性删除多个容器实例
   - `docker rm -f $(docker ps -a -q)`
-  - `docker ps -a -q | xargs docker rm` 
+  - `docker ps -a -q | xargs docker rm`
 
 # P21 容器命令 D
 
@@ -336,3 +336,329 @@ OPTIONS 说明：
 - `version` 查看 Docker 版本号
 - `wait` 截取容器停止时的退出状态值
 
+# P23 镜像的分层概念
+
+## 镜像是什么
+
+是一种轻量级、可执行的独立软件包，它包含运行某个软件所需的所有内容，我们把应用程序和配置依赖打包好形成一个可交付的运行环境（包括代码、运行时需要的库、环境变量和配置文件等），这个打包好的运行环境就是 image 镜像文件。
+
+只有通过这个镜像文件才能生成 Docker 容器实例（类似 Java 中 new 出来一个对象）
+
+## 分层的镜像
+
+以我们的 pull 为例，在下载的过程中我们可以看到 Docker 的镜像好像是在一层一层的下载
+
+## UnionFS(联合文件系统)
+
+UnionFS（联合文件系统）：Union 文件系统（UnionFS）是一种分层、轻量级并且高性能的文件系统，它支持对文件系统的修改作为一次提交来一层层的叠加，同时可以将不同目录挂载到同一个虚拟文件系统下（unite several directories into a single virtual filesystem）。Union 文件系统是 Docker 镜像的基础。镜像可以通过分层来进行继承，基于基础镜像（没有父镜像），可以制作各种具体的应用镜像。
+
+特性：一次同时加载多个文件系统，但从外面看起来，只能看到一个文件系统，联合加载会把各层文件系统叠加起来，这样最终的文件系统会包含所有底层的文件和目录。
+
+## Docker 镜像加载原理
+
+Docker 镜像实际上由一层一层的文件系统组成，这种层级的文件系统 UnionFS。
+
+bootfs(boot file system)主要包含 bootloader 和 kernel，bootloader 主要是引导加载 kernel，Linux 刚启动时会加载 bootfs 文件系统，在 Docker 镜像的最底层是引导文件系统 bootfs。这一层与我们典型的 Linux/Unix 系统是一样的，包含 boot 加载器和内核。当 boot 加载完成以后整个内核就在内存中了，此时内存的使用权已由 bootfs 转交给内核，此时系统也会卸载 bootfs。
+
+rootfs(root file system)，在 bootfs 之上，包含的就是典型 Linux 系统中的 /dev, /proc, /bin, /etc 等标准目录和文件。rootfs 就是各种不同的操作系统发行版，比如 Ubuntu，CentOS 等等。
+
+平时我们安装进虚拟机的 CentOS 都是好几个 G，为什么 Docker 这里才 200M？
+
+对于一个精简的 OS，rootfs 可以很小，只需要包括最基本的命令、工具和程序库就可以了，因为底层直接用 Host 的 kernel，自己只需要提供 rootfs 就行了。由此可见对于不同的 Linux 发行版，bootfs 基本是一致的，rootfs 会有差别，因此不同的发行版可以公用 bootfs。
+
+## 为什么 Docker 镜像要采用这种分层结构呢？
+
+镜像分层最大的一个好处就是共享资源，方便复制迁移，就是为了复用。
+
+比如说有多个镜像都从相同的 base 镜像构建而来，那么 Docker Host 只需在磁盘上保存一份 base 镜像；同时内存中也只需加载一份 base 镜像，就可以为所有容器服务了。而且镜像的每一层都可以被共享。
+
+## 重点理解
+
+Docker 镜像层都是只读的，容器层是可写的
+
+当容器启动时，一个新的可写层被加载到镜像的顶部。 这一层通常被称作“容器层”，“容器层”之下的都叫“镜像层”。
+
+所有对容器的改动——无论添加、删除、还是修改文件都只会发生在容器层中。只有容器层是可写的，容器层下面的所有镜像层都是只读的。
+
+# P24 commit 命令上集
+
+`docker commit` 提交容器副本使之成为一个新的镜像
+
+`docker commit -m="提交的描述信息" -a="作者" 容器ID 要创建的目标镜像名:[标签名]`
+
+# P25 commit 命令下集
+
+Docker 中的镜像分层，支持通过扩展现有镜像，创建新的镜像。类似于 Java 继承于一个 Base 基础类，自己再按需扩展。
+
+新镜像是从 base 镜像一层一层叠加生成的。每安装一个软件，就在现有镜像的基础上增加一层
+
+# P26 本地镜像发布到阿里云
+
+- 选择控制台，进入容器镜像服务
+- 选择个人实例
+- 命名空间
+- 仓库名称
+- 进入管理界面获得脚本
+
+1. 登录阿里云 Docker Registry
+  - `docker login --username=*** registry.cn-qingdao.aliyuncs.com`
+  - 用于登录的用户名为阿里云账号全名，密码为开通服务时设置的密码。您可以在访问凭证页面修改凭证密码。
+2. 将 Registry 中拉取镜像
+  - `docker pull registry.cn-qingdao.aliyuncs.com/atguigubj/myubuntu:[镜像版本号]`
+3. 将镜像推送到 Registry
+  - `docker login --username=*** registry.cn-qingdao.aliyuncs.com`
+  - `docker tag [ImageId] registry.cn-qingdao.aliyuncs.com/atguigubj/myubuntu:[镜像版本号]`
+  - `docker push registry.cn-qingdao.aliyuncs.com/atguigubj/myubuntu:[镜像版本号]`
+
+# P27 docker 私有库简介
+
+1. 官方 Docker Hub 地址：http://hub.docker.com/ 中国大陆访问太慢了且准备被阿里云取代的趋势，不太主流。
+
+2. DockerHub、阿里云这样的公共镜像仓库可能不太方便，涉及机密的公司不可能提供镜像给公网，所以需要创建一个本地私人仓库供给团队使用，基于公司内部项目构建镜像。
+
+Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库
+
+1. 下载镜像 Docker Registry
+2. 运行私有库 Registry，相当于本地有个私有 Docker Hub
+3. 案例演示创建一个新镜像，ubuntu 安装 ifconfig 命令
+4. curl 验证私服库上有什么镜像
+5. 将新镜像 zzyyubuntu:1.2 修改符合私服规范的 Tag
+6. 修改配置文件使之支持 http
+7. push 推送到私服库
+8. curl 验证私服库上有什么镜像2
+9. pull 到本地并运行
+
+# P28 新镜像推送私服库案例
+
+## 运行私有库 Registry，相当于本地有个私有 Docker Hub
+
+`docker run -d -p 5000:5000 -v /zzyyuse/myregistry/:/tmp/registry --privileged=true registry`
+
+默认情况下，仓库被创建在容器的 /var/lib/registry 目录下，建议自行用容器卷映射，方便于宿主机联调
+
+## 案例演示创建一个新镜像，ubuntu 安装 ifconfig 命令
+
+- 从 Hub 上下载 ubuntu 镜像到本地并成功运行
+- 原始的 Ubuntu 镜像是不带着 ifconfig 命令的
+- 外网连通的情况下，安装 ifconfig 命令并测试通过
+  - Docker 容器内执行上述两条命令：
+    - `apt-get update`
+    - `apt-get install net-tools`
+- 安装完成后，commit 我们自己的新镜像
+  - `docker commit -m="提交的描述信息" -a="作者" 容器ID 要创建的目标镜像名:[标签名]`
+  - 命令：在容器外执行，记得
+- 启动我们的新镜像并和原来的对比
+
+## curl 验证私服库上有什么镜像
+
+`curl -XGET http://192.168.111.162:5000/v2/_catalog`
+
+可以看到，目前私服库没有任何镜像上传过
+
+## 将新镜像 zzyyubuntu:1.2 修改符合私服规范的 Tag
+
+按照公式：`docker tag 镜像:Tag Host:Port/Repsitory:Tag`
+
+自己 host 主机 IP 地址，填写自己的，不要粘贴
+
+使用命令 docker tag 将 zzyyubuntu:1.2 这个镜像修改为 192.168.111.162:5000/zzyyubuntu:1.2
+
+## 修改配置文件使之支持 http
+
+`cat /etc/docker/daemon.json`
+
+`"insecure-registries":["192.168.111.162:500"]`
+
+上述理由：docker 默认不允许 http 方式推送镜像，通过配置选项来取消这个限制 ==> 修改完后如果不生效，建议重启 docker
+
+# P29 容器数据卷是什么
+
+## 坑：容器卷记得加入 --privileged=true
+
+Docker 挂载主机目录访问如果出现 cannot open directory .: Permission denied
+
+解决办法：在挂载目录后多加一个 --privileged=true 参数即可
+
+如果是 CentOS 7 安全模块会比之前系统版本加强，不安全的会先禁止，所以目录挂载的情况被默认为不安全的行为，在 SELinux 里面挂载目录被禁止掉了，如果要开启，我们一般使用 --privileged=true 命令，扩大容器的权限解决挂载目录没有权限的问题，也即使用该参数，container 内的 root 拥有真正的 root 权限，否则，container 内的 root 只是外部的一个普通用户权限。
+
+## 是什么
+
+卷就是目录或文件，存在于一个或多个容器中，由 docker 挂载到容器，但不属于联合文件系统，因此能够绕过 Union File System 提供一些用于持续存储或共享数据的特性。
+
+卷的设计目的就是数据的持久化，完全独立于容器的生命周期，因此 Docker 不会在容器删除时删除其挂载的数据卷。
+
+- 一句话：有点类似我们 Redis 里面的 rdb 和 aof 文件
+- 将 docker 容器内的数据保存进宿主机的磁盘中
+- 运行一个带有容器卷存储功能的容器实例 `docker run -it --privileged=true -v /宿主机绝对路径目录:/容器内目录 镜像名`
+
+# P30 容器数据卷能干嘛
+
+将运用和运行的环境打包成镜像，run 后形成容器实例运行，但是我们对数据的要求希望是持久化的
+
+Docker 容器产生的数据，如果不备份，那么当容器实例删除后，容器内的数据自然也就没有了。为了能保存数据，在 Docker 中我们使用卷。
+
+特点：
+1. 数据卷可在容器之间共享或重用数据
+2. 卷中的更改可以直接实时生效
+3. 数据卷中的更改不会包含在镜像的更新中
+4. 数据卷的生命周期一直持续到没有容器使用它为止
+
+# P31 容器卷和主机互通互联
+
+数据卷案例
+
+1. 宿主vs容器之间映射添加容器卷
+   - 直接命令添加
+     - 命令：`docker run -it --privileged=true -v /宿主机绝对路径目录:/容器内目录 镜像名`
+     - 查看数据卷是否挂载成功
+       - `docker inspect 容器ID`
+       - 查看 "Mounts" 里的 "Source"、"Destination"
+     - 容器和宿主机之间数据共享
+       1. docker 修改，主机同步获得
+       2. 主机修改，docker 同步获得
+       3. docker 容器 stop，主机修改，docker 容器重启看数据是否同步。
+2. 读写规则映射添加说明
+3. 卷的继承和共享
+
+# P32 容器卷ro和rw读写规则
+
+读写规则映射添加说明
+
+- 读写（默认）
+  - `docker run -it --privileged=true -v /宿主机绝对路径目录:/容器内目录:rw 镜像名`
+  - 默认同上案例，默认就是 rw
+- 只读
+  - 容器实例内部被限制，只能读取不能写
+  - `docker run -it --privileged=true -v /宿主机绝对路径目录:/容器内目录:ro 镜像名`
+  - 此时如果宿主机写入内容，可以同步给容器内，容器可以读到。
+
+# P33 容器卷之间的继承
+
+卷的继承和共享
+- 容器1完成和宿主机的映射
+  - `docker run -it --privileged=true -v /mydocker/u:/tmp --name u1 ubuntu`
+- 容器2继承容器1的卷规则
+  - `docker run -it --privileged=true --volume-from 父类 --name u2 ubuntu`
+
+# P34 docker 上安装常见软件说明
+
+总体步骤
+- 搜索镜像
+- 拉取镜像
+- 查看镜像
+- 启动镜像
+  - 服务端口映射
+- 停止镜像
+- 移除容器
+
+# P35 tomcat 安装上集
+
+- docker hub 上面查找 tomcat 镜像
+- 从 docker hub 上拉取 tomcat 镜像到本地
+- docker images 查看是否有拉取到的 tomcat
+- 使用 tomcat 镜像创建容器实例（也叫运行镜像）
+  - `docker run -it -p 8080:8080 tomcat`
+  - -p 小写，主机端口:docker容器端口
+  - -P 大写，随机分配端口
+  - i 交互
+  - t 终端
+  - d 后台
+- 访问首页
+  - 404
+
+- 免修改版说明
+
+# P36 tomcat 安装下集
+
+## 访问首页
+
+- 问题：404
+- 解决：可能没有映射端口或者没有关闭防火墙；把 webapps.dist 目录换成 webapps
+
+## 免修改版说明
+
+tomcat 8（jdk8）
+
+# P37 mysql 安装上集
+
+- docker hub 上面查找 mysql 镜像
+- 从 docker hub 上（阿里云加速器）拉取 mysql 镜像到本地标签为 5.7
+- 使用 mysql 5.7 镜像创建容器（也叫运行镜像）
+  - 简单版
+  - 实战版
+
+## 使用 mysql 5.7 镜像创建容器（也叫运行镜像）简单版
+
+- 使用 mysql 镜像
+  - `docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7`
+  - `docker ps`
+  - `docker exec -it 容器ID /bin/bash`
+  - `mysql -uroot -p`
+- 建库建表插入数据
+- 外部 Win10 也来连接运行在 docker 上的 mysql 容器实例服务
+- 问题
+  - 无法插入中文数据，报错
+    - docker 默认字符集编码隐患：`SHOW VARIABLES LIKE 'character%'` latin1
+  - 删掉容器后，里面的 mysql 数据怎么办？（容器数据卷）
+
+# P38 mysql 安装下集
+
+## 使用 mysql 5.7 镜像创建容器（也叫运行镜像）实战版
+
+- 新建 mysql 容器实例
+
+  - `docker run -d -p 3306:3306 --privileged=true -v /zzyyuse/mysql/log:/var/log/mysql -v /zzyyuse/mysql/data:/var/lib/mysql -v /zzyyuse/mysql/conf:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456 --name mysql mysql:5.7`
+
+- 新建 my.cnf
+
+  - 通过容器卷同步给 mysql 容器实例
+
+  - ```
+    [client]
+    default_character_set=utf8
+    [mysqld]
+    collation_server = utf8_general_ci
+    character_set_server = utf8
+    ```
+
+- 重新启动 mysql 容器实例再重新进入并查看字符编码
+
+  - `docker restart mysql`
+
+  - `docker exec -it mysql bash`
+
+  - `mysql -uroot -p`
+
+  - `SHOW VARIABLES LIKE 'character%'`
+
+- 再新建库新建表再插入中文测试
+
+- 结论
+
+  - 之前的 DB 无效
+  - 修改字符集操作+重启 mysql 容器实例之后的 DB 有效，需要新建
+  - 结论：docker 安装完 MySQL 并 run 出容器后，建议先修改完字符集编码后再新建 mysql 库-表-插数据
+
+- 假如将当前容器实例删除，再重新来一次，之前建的 db01 实例还有吗？
+
+# P39 redis 常规安装
+
+- 从 docker hub 上（阿里云加速器）拉取 redis 镜像到本地标签为 6.0.8
+- 入门命令
+- 命令提醒：容器卷记得加入 --privileged=true
+- 在 CentOS 宿主机下新建目录 /app/redis `mkdir -p /app/redis`
+- 将一个 redis.conf 文件模板拷贝进 /app/redis 目录下
+- /app/redis 目录下修改 redis.conf 文件
+  - 默认出厂的原始 redis.conf
+  - 开启 redis 验证 可选
+    - `requirepass 123`
+  - 允许 redis 外地连接 必须
+    - 注释掉`# bind 127.0.0.1`
+  - daemonize no
+    - 将 daemonize yes 注释起来或者 daemonize no 设置，因为该配置和 docker run 中 -d 参数冲突，会导致容器一直启动失败
+  - 开启 redis 数据持久化 `appendonly yes` 可选
+- 使用 redis 6.0.8 镜像创建容器（也叫运行镜像）
+  - `docker run -p 6379:6379 --name myr3 --privileged=true -v /app/redis/redis.conf:/etc/redis/redis.conf -v /app/redis/data:/data -d redis:6.0.8 redis-server /etc/redis/redis.conf`
+- 测试 redis-cli 连接上来
+- 请证明 docker 启动使用了我们自己指定的配置文件
+- 测试 redis-cli 连接上来第 2 次
