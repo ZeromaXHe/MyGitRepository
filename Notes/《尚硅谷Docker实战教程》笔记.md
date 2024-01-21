@@ -1186,3 +1186,215 @@ CMD echo 'action is success'
 `docker image prune`
 
 虚悬镜像已经失去存在价值，可以删除
+
+# P63 新建微服务工程并形成 jar 包
+
+- 通过 IDEA 新建一个普通微服务模块
+  - 建 Module
+  - 改 POM
+  - 写 YML
+  - 主启动
+  - 业务类
+- 通过 dockerfile 发布微服务部署到 docker 容器
+
+# P64 dockerfile 发布微服务部署到 docker 容器
+
+通过 dockerfile 发布微服务部署到 docker 容器
+
+- IDEA 工具里面搞定微服务 jar 包
+
+- 编写 Dockerfile
+
+  - Dockerfile 内容
+    ```dockerfile
+    # 基础镜像使用 java
+    FROM java
+    # 作者
+    MAINTAINER zzyy
+    # VOLUME 指定临时文件目录为 /tmp，在主机 /var/lib/docker 目录下创建了一个临时文件并链接到容器的 /tmp
+    VOLUME /tmp
+    # 将 jar 包添加到容器中并更名为 zzyy_docker.jar
+    ADD docker_boot-0.0.1-SNAPSHOT.jar zzyy_docker.jar
+    # 运行 jar 包
+    RUN bash -c 'touch /zzyy_docker.jar'
+    ENTRYPOINT ["java", "-jar", "/zzyy_docker.jar"]
+    # 暴露 6001 端口作为微服务
+    EXPOSE 6001
+    ```
+
+  - 将微服务 jar 包和 Dockerfile 文件上传到同一个目录下
+
+- 构建镜像
+
+  - `docker build -t zzyy_docker:1.6 .`
+  - 打包成镜像文件
+
+- 运行容器
+
+  - `docker run -d -p 6001:6001 zzyy_docker:1.6`
+
+- 访问测试
+
+# P65 测试容器上的微服务
+
+# P66 docker network 简介
+
+## 是什么 
+
+- docker 不启动，默认网络情况
+  - ens33（linux 宿主机的 ip 地址）
+  - lo（本地回环链路 127.0.0.1）
+  - virbr0
+    - 在 CentOS 7 的安装过程中如果有选择相关虚拟化的服务安装系统后，启动网卡时会发现有一个以网桥连接的私网地址的 virbr0 网卡（virbr0 网卡：它还有一个固定的默认 IP 地址 192.168.122.1），是做虚拟机网桥的使用的，其作用是为连接其上的虚拟机网卡提供 NAT 访问外网的功能。
+- docker 启动后，网络情况
+  - docker0
+    - 会产生一个名为 docker 0 的虚拟网桥
+
+# P67 docker network 常用命令
+
+查看 docker 网络模式命令：`docker network ls`
+
+默认创建 3 大网络模式
+
+- bridge
+- host
+- none
+
+## 常用基本命令
+
+- All 命令
+- 查看网络 `docker network ls`
+- 查看网络源数据 `docker network inspect 网络名字`
+- 删除网络 `docker network rm 网络名字`
+- 案例
+
+# P68 docker network 能干嘛
+
+## 能干嘛
+
+- 容器间的互联和通信以及端口映射
+- 容器 IP 变动时候可以通过服务名直接网络通信而不受到影响
+
+# P69 docker network 网络模式有几种
+
+## 网络模式
+
+- 总体介绍
+  - bridge：使用 `--network bridge` 指定。为每一个容器分配、设置 IP 等，并将容器连接到一个 docker0 虚拟网桥，默认为该模式。
+  - host：使用 `--network host` 指定。容器将不会虚拟出自己的网卡，配置自己的 IP 等，而是使用宿主机的 IP 和端口
+  - none：使用 `--network none` 指定。容器有独立的 Network namespace，但并没有对其进行任何网络设置，如分配 veth pair 和网桥连接，IP 等。
+  - container：使用 `--network container：NAME` 或者容器 ID 指定。新创建的容器不会创建自己的网卡和配置自己的 IP，而是和一个指定的容器共享 IP、端口范围等
+- 容器实例内默认网络 IP 生产规则
+  - 说明
+  - 结论
+- 案例说明
+
+# P70 docker network 底层 ip 和容器映射变化
+
+## 容器实例内默认网络 IP 生产规则
+
+- 说明
+  1. 先启动两个 ubuntu 容器实例：`docker run -it --name u1 ubuntu bash`、`docker run -it --name u2 ubuntu bash`
+  2. docker inspect 容器ID or 容器名字：
+  3. 关闭 u2 实例，新建 u3，查看 ip 变化：`docker run -it --name u3 ubuntu bash`
+- 结论：docker 容器内部的 ip 是有可能会发生改变的
+
+# P71 docker network 之 bridge
+
+## bridge 是什么
+
+Docker 服务默认会创建一个 docker0 网桥（其上有一个 docker0 内部接口），该桥接网络的名称为 docker0，它在内核层连通了其他的物理或虚拟网卡，这就将所有容器和本地主机都放到同一个物理网络。Docker 默认指定了 docker0 接口的 IP 地址和子网掩码，让主机和容器之间可以通过网桥相互通信。
+
+查看 bridge 网络的详细信息，并通过 grep 获取名称项：
+
+`docker network inspect bridge | grep name`
+
+## 案例
+
+说明
+
+1.  Docker 使用 Linux 桥接，在宿主机虚拟一个 Docker 容器网桥（docker0），Docker 启动一个容器时会根据 Docker 网桥的网段分配给容器一个 IP 地址，称为 Container-IP，同时 Docker 网桥是每个容器的默认网关。因为在同一宿主机内的容器都接入同一个网桥，这样容器之间就能够通过容器的 Container-IP 直接通信。
+2. docker run 的时候，没有指定 network 的话默认使用的网桥模式就是 bridge，使用的就是 docker0，在宿主机 ifconfig，就可以看到 docker0 和自己 create 的 network（后面讲）eth0，eth1，eth2……代表网卡一，网卡二，网卡三……，lo 代表 127.0.0.1，即 localhost，inet addr 用来表示网卡的 IP 地址
+3.  网桥 docker0 创建一对对等虚拟设备接口一个叫 veth，另一个叫 eth0，成对匹配。
+   1. 整个宿主机的网桥模式都是 docker0，类似一个交换机有一堆接口，每个接口叫 veth，在本地主机和容器内分别创建一个虚拟接口，并让他们彼此联通（这样一对接口叫 veth pair）
+   2. 每个容器实例内部也有一块网卡，每个接口叫 eth0
+   3. docker0 上面的每个 veth 匹配某个容器实例内部的 eth0，两两配对，一一匹配。
+
+通过上述，将宿主机上所有容器都连接到这个内部网络上，两个容器在同一个网络下，会从这个网关下各自拿到分配的 ip，此时两个容器的网络是互通的。
+
+# P72 docker network 之 host
+
+## host 是什么
+
+直接使用宿主机的 IP 地址与外界进行通信，不再需要额外进行 NAT 转换
+
+## 案例
+
+- 说明
+  - 容器将不会获得一个独立的 Network Namespace，而是和宿主机共用一个 Network Namespace。容器将不会虚拟出自己的网卡而是使用宿主机的 IP 和端口。
+- 代码
+  - 警告：不要指定端口映射（如 -p  8083:8080）
+    - 问题：docker 启动时会遇见 `WARNING: Published ports are discarded when using host network mode`
+    - 原因：docker 启动时指定 --network=host 或 -net=host，如果还指定了 -p 映射端口，那这个时候就会有此警告。并且通过 -p 设置的参数将不会起到任何作用，端口号会以主机端口号为主，重复时则递增。
+    - 解决：解决的办法就是使用 docker 的其他网络模式
+
+# P73 docker network 之 none
+
+## none 是什么
+
+禁用网络功能，只有 lo 标识（就是 127.0.0.1 表示本地回环）
+
+在 none 模式下，并不为 Docker 容器进行任何网络配置。
+
+也就是说，这个 Docker 容器没有网卡、IP、路由等信息，只有一个 lo
+
+需要我们自己为 Docker 容器添加网卡、配置 IP 等。
+
+# P74 docker network 之 container
+
+## container 是什么
+
+container 网络模式
+
+新建的容器和已经存在的一个容器共享一个网络 ip 配置而不是和宿主机共享。新创建的容器不会创建自己的网卡，配置自己的 IP，而是和一个指定的容器共享 IP、端口范围等。同样，两个容器除了网络方面，其他的如文件系统、进程列表等还是隔离的。
+
+## 案例
+
+无法用 tomcat 演示
+
+- Alpine 操作系统是一个面向安全的轻型 Linux 发行版
+- 运行结果，验证共同搭桥
+- 假如此时关闭 alpine1，再看看 alpine2
+
+# P75 docker network 之自定义网络上集
+
+自定义网络
+
+- 过时的 link
+- 是什么
+- 案例
+  - before
+  - after
+
+# P76 docker network 之自定义网络中集
+
+before
+
+- 案例
+  - 启动两个 tomcat 容器实例
+  - 并用 docker exec 进入各自容器实例内部
+- 问题
+  - 按照 IP 地址 ping 是 OK 的
+  - 按照服务名 ping 结果？ping 不通
+
+# P77 docker network 之自定义网络下集
+
+after
+
+- 案例
+  - 自定义桥接网络，自定义网络默认使用的是桥接网络 bridge
+  - 新建自定义网络：`docker network create zzyy_network`
+  - 新建容器加入上一步新建的自定义网络
+  - 互相 ping 测试
+- 问题结论
+  - 自定义网络本身就维护好了主机名和 ip 的对应关系（ip 和域名都能通）
