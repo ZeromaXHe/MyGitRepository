@@ -1,3 +1,5 @@
+https://www.bilibili.com/video/BV1gr4y1U7CY
+
 # P1 课程简介
 
 # P2 docker为什么出现
@@ -662,3 +664,525 @@ tomcat 8（jdk8）
 - 测试 redis-cli 连接上来
 - 请证明 docker 启动使用了我们自己指定的配置文件
 - 测试 redis-cli 连接上来第 2 次
+
+# P40 高级篇简介
+
+1. Docker 复杂安装详说
+2. DockerFile 解析
+3. Docker 微服务实战
+4. Docker 网络
+5. Docker-compose 容器编排
+6. Docker 轻量级可视化工具 Protainer
+7. Docker 容器监控之 CAdvisor + InfluxDB + Granfana
+8. 终章总结
+
+# P41 mysql 主从复制 docker 版
+
+5.7
+
+## 主从搭建步骤
+
+1. 新建主服务器容器实例 3307
+
+   - `docker run -p 3307:3306 --name mysql-master -v /mydata/mysql-master/log:/var/log/mysql -v /mydata/mysql-master/data:/var/lib/mysql -v /mydata/mysql-master/conf:/etc/mysql -e MYSQL_ROOT_PASSWORD=root -d mysql:5.7`
+
+2. 进入 /mydata/mysql-master/conf 目录下新建 my.cnf
+
+   - ```
+     [mysqld]
+     ## 设置 server_id，同一局域网中需要唯一
+     server_id=101
+     ## 指定不需要同步的数据库名称
+     binlog-ignore-db=mysql
+     ## 开启二进制日志功能
+     log-bin=mall-mysql-bin
+     ## 设置二进制日志使用内存大小（事务）
+     binlog_cache_size=1M
+     ## 设置使用的二进制日志格式（mixed，statement,row）
+     binlog_format=mixed
+     ## 二进制日志过期清理时间。默认值为0，表示不自动清理
+     expire_logs_days=7
+     ## 跳过主从复制中遇到的所有错误或指定类型的错误，避免 slave 端复制中断。
+     ## 如：1062 错误是指一些主键重复，1032 错误是因为主从数据库数据不一致
+     slave_skip_errors=1062
+     ```
+
+3. 修改完配置后重启 master 实例
+
+   - `docker restart mysql-master`
+
+4. 进入 mysql-master 容器
+
+   - `docker exec -it mysql-master /bin/bash`
+   - `mysql -uroot -proot`
+
+5. master 容器实例内创建数据同步用户
+
+   - `CREATE USER 'slave'@'%' IDENTIFIED BY '123456'`
+   - `GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'slave'@'%'`
+
+6. 新建从服务器容器实例 3308
+
+   - `docker run -p 3308:3306 --name mysql-slave -v /mydata/mysql-slave/log:/var/log/mysql -v /mydata/mysql-slave/data:/var/lib/mysql -v /mydata/mysql-slave/conf:/etc/mysql -e MYSQL_ROOT_PASSWORD=root -d mysql:5.7`
+
+7. 进入 /mydata/mysql-slave/conf 目录下新建 my.cnf
+
+   - ```
+     [mysqld]
+     ## 设置 server_id，同一局域网中需要唯一
+     server_id=102
+     ## 指定不需要同步的数据库名称
+     binlog-ignore-db=mysql
+     ## 开启二进制日志功能,以备 Slave 作为其它数据库实例的 Master 时使用
+     log-bin=mall-mysql-slave1-bin
+     ## 设置二进制日志使用内存大小（事务）
+     binlog_cache_size=1M
+     ## 设置使用的二进制日志格式（mixed，statement,row）
+     binlog_format=mixed
+     ## 二进制日志过期清理时间。默认值为0，表示不自动清理
+     expire_logs_days=7
+     ## 跳过主从复制中遇到的所有错误或指定类型的错误，避免 slave 端复制中断。
+     ## 如：1062 错误是指一些主键重复，1032 错误是因为主从数据库数据不一致
+     slave_skip_errors=1062
+     ## relay_log 配置中继日志
+     relay_log=mall-mysql-relay-bin
+     ## log_slave_updates 表示 slave 将复制事件写进自己的二进制日志
+     log_slave_updates=1
+     ## slave 设置为只读（具有 super 权限的用户除外）
+     read_only=1
+     ```
+
+8. 修改完配置后重启 slave 实例
+
+   - `docker restart mysql-slave`
+
+9. 在主数据库中查看主从同步状态
+
+   - `show master status;`
+
+10. 进入 mysql-slave 容器
+
+    - `docker exec -it mysql-slave /bin/bash`
+    - `mysql -uroot -proot`
+
+11. 在从数据库中配置主从复制
+
+    - `change master to master_host='宿主机ip', master_user='slave', master_password='123456', master_port=3307, master_log_file='mall-mysql-bin.000001', master_log_pos=617, master_connect_retry=30`
+    - master_host: 主数据库的 IP 地址
+    - master_port: 主数据库的运行端口
+    - master_user: 在主数据库创建的用于同步数据的用户账号
+    - master_password: 在主数据库创建的用于同步数据的用户密码
+    - master_log_file: 指定从数据库要复制数据的日志文件，通过查看主数据的状态，获取 File 参数
+    - master_log_pos: 指定从数据库从哪个位置开始复制数据，通过查看主数据的状态，获取 Position 参数
+    - master_connect_retry: 连接失败重试的时间间隔，单位为秒
+
+12. 在从数据库中查看主从同步状态
+
+    - `show slave status \G;` (\G 可加可不加，效果是按键值对的方式纵向排列)
+    - Slave_IO_Running: No
+    - Slave_SQL_Running: No
+
+13. 在从数据库中开启主从同步
+
+    - `start slave;`
+
+14. 查看从数据库状态发现已经同步
+
+    - `show slave status \G;` 
+    - Slave_IO_Running: Yes
+    - Slave_SQL_Running: Yes
+
+15. 主从复制测试
+
+# P42 分布式存储之哈希取余算法
+
+cluster（集群）模式-docker版
+
+哈希槽分区进行亿级数据存储
+
+- 面试题：1~2亿条数据需要缓存，请问如何设计这个存储案例
+- 回答：单机单台 100% 不可能，肯定是分布式存储，用 Redis 如何落地？
+- 上述问题阿里 P6 ~ P7 工程案例和场景设计类必考题目，一般业界有 3 种解决方案
+  - 哈希取余分区
+  - 一致性哈希算法分区
+  - 哈希槽分区
+
+
+
+哈希取余分区
+
+- 2 亿条记录就是 2 亿个 kv，我们单机不行必须要分布式多机，假设有 3 台机器构成一个集群，用户每次读写操作都是根据公式：hash(key) % N 个机器台数，计算出哈希值，用来决定数据映射到哪一个节点上
+- 优点：
+  - 简单粗暴，直接有效，只需要预估好数据规划好节点，例如 3 台、8 台、10 台，就能保证一段时间的数据支撑。使用 Hash 算法让固定的一部分请求落到同一台服务器上，这样每台服务器固定处理一部分请求（并维护这些请求的信息），起到负载均衡+分而治之的作用。
+- 缺点：
+  - 原来规划好的节点，进行扩容或者缩容就比较麻烦了。不管扩缩，每次数据变动导致节点有变动，映射关系需要重新进行计算，在服务器个数固定不变时没有问题，如果需要弹性扩容或故障停机的情况下，原来的取模公式就会发生变化：Hash(key)/3 会变成 Hash(key)/?。此时地址经过取余运算的结果将发生很大的变化，根据公式获取的服务器也会变得不可控。
+  - 某个 Redis 机器宕机了，由于台数数量变化，会导致 hash 取余全部数据重新洗牌。
+
+# P43 分布式存储之一致性哈希算法
+
+## 是什么
+
+- 一致性哈希算法在 1997 年由麻省理工学院提出的，设计目的是为了解决分布式缓存数据变动和映射问题。
+- 某个机器宕机了，分母数量改变了，自然取余数不 OK 了
+
+## 能干嘛
+
+- 提出一致性 Hash 解决方案。目的是当服务器个数发生变动时，尽量减少影响客户端到服务器的映射关系
+
+## 3大步骤
+
+- 算法构建一致性哈希环
+  - 一致性哈希算法必然有个 hash 函数并按照算法产生 hash 值，这个算法的所有可能哈希值会构成一个全量集，这个集合可以成为一个 hash 空间`[0, 2^32 - 1]`，这个是一个线性空间，但是在算法中，我们通过适当的逻辑控制将它首尾相连（0 = 2^32），这样让它逻辑上形成了一个环形空间。
+  - 它也是按照使用取模的方法。前面笔记介绍的节点取模法是对节点（服务器）的数量进行取模。而一致性 Hash 算法是对 2^32 取模，简单来说，一致性 Hash 算法将整个哈希值空间组织成一个虚拟的圆环，如假设某哈希函数 H 的值空间为 0 ~ 2^32 - 1（即哈希值是一个 32 位无符号整形），整个哈希环如下图：整个空间按顺时针方向组织，圆环的正上方的点代表 0，0 点右侧的第一个点代表 1，以此类推，2、3、4…… 直到 2^32 - 1，也就是说 0 点左侧的第一个点。0 和 2^32-1 在零点钟方向重合，我们把这个由 2^32 个点组成的圆环称为 Hash 环
+- 服务器 IP 节点映射
+  - 将集群中各个 IP 节点映射到环上的某一个位置。
+  - 将各个服务器使用 Hash 进行一个哈希，具体可以选择服务器的 IP 或主机名作为关键字进行哈希，这样每台机器就能确定其在哈希环上的位置。假如 4 个节点 Node A、B、C、D，经过 IP 地址的哈希函数计算（hash(ip)），使用 IP 地址哈希后在环空间的位置如下
+- key 落到服务器的落键规则
+  - 当我们需要存储一个 kv 键值对时，首先计算 key 的 hash 值，hash(key)，将这个 key 使用相同的函数 Hash 计算出哈希值并确定此数据在环上的位置，从此位置沿环顺时针“行走”，第一台遇到的服务器就是其应该定位到的服务器，并将该键值对存储在该节点上。
+
+## 优点
+
+- 一致性哈希算法的容错性
+  - 假如 Node C 宕机，可以看到此时对象 A、B、D 不会受到影响，只有 C 对象被重定位到 Node D。一般的，在一致性 Hash 算法中，如果一台服务器不可用，则受影响的数据仅仅是此服务器到其环空间中前一台服务器（即沿着逆时针方向行走遇到的第一台服务器）之间数据，其它不会受到影响。简单说，就是 C 挂了，受到影响的只是 B、C 之间的数据，并且这些数据会转移到 D 进行存储。
+- 一致性哈希算法的扩展性
+  - 数据量增加了，需要增加一台节点 Node X，X 的位置在 A 和 B 之间，那受到影响的也就是 A 到 X 之间的数据，重新把 A 到 X 的数据录入到 X 上即可，不会导致 hash 取余全部数据重新洗牌。
+
+## 缺点
+
+- 一致性哈希算法的数据倾斜问题
+  - 一致性Hash算法在服务节点太少时，容易因为节点分布不均匀而造成数据倾斜（被缓存的对象大部分集中缓存在某一台服务器上）问题
+
+## 总结
+
+为了在节点发生改变时尽可能少的迁移数据
+
+将所有的存储节点排列在首尾相接的 Hash 环上，每个 key 在计算 Hash 后会顺时针找到临近的存储节点存放。而当有节点加入或退出时仅影响该节点在 Hash 环上顺时针相邻的后续节点。
+
+- 优点：加入和删除节点只影响哈希环中顺时针方向的相邻的节点，对其他节点无影响
+- 缺点：数据的分布和节点的位置有关，因为这些节点不是均匀分布在哈希环上的，所以数据在进行存储时达不到均匀分布的效果。
+
+# P44 分布式存储之哈希槽算法
+
+## 是什么
+
+为什么出现
+
+- 一致性哈希算法的数据倾斜问题
+- 哈希槽实质就是一个数组，数组[0, 2^14-1] 形成 hash slot 空间
+
+能干什么
+
+- 解决均匀分配的问题，在数据和节点之间又加入了一层，把这层称为哈希槽（slot），用于管理数据和节点之间的关系，现在就相当于节点上放的是槽，槽里放的是数据。
+- 槽解决的是粒度问题，相当于把粒度变大了，这样便于数据移动。
+- 哈希解决的是映射问题，使用 key 的哈希值来计算所在的槽，便于数据分配。
+
+多少个 hash 槽
+
+- 一个集群只能有 16384 个槽，编号 0~16383（0 ~ 2^14-1）。这些槽会分配给集群中的所有主节点，分配策略没有要求。可以指定哪些编号的槽分配给哪个主节点。集群会记录节点和槽的对应关系。解决了节点和槽的关系后，接下来就需要对 key 求哈希值，然后对 16384 取余，余数是几 key 就落入对应的槽里，slot = CRC16(key) % 16384。以槽为单位移动数据，因为槽的数目是固定的，处理起来比较容易，这样数据移动问题就解决了。
+- 为什么是 16384 个？
+  - CRC 16 算法产生的 hash 值有 16 bit，该算法可以产生 2^16 = 65536 个值。为什么不 mod 65536 而选择 mod 16384？
+  - 说明1：
+    - 正常的心跳数据包带有节点的完整配置，可以用幂等方式用旧的节点替换旧节点，以便更新旧的配置。
+    - 这意味着它们包含原始节点的插槽配置，该节点使用 2k 的空间和 16k 的插槽，但是使用 65k 的插槽会使用 8k 的空间。
+    - 同时，由于其他设计折衷，Redis 集群不太可能扩展到 1000 个以上的主节点。
+    - 因此 16k 处于正确的范围内，以确保每个主机具有足够的插槽，最多可容纳 1000 个矩阵，但数量足够少，可以轻松地将插槽配置作为原始位图传播。请注意，在小型群集中，位图将难以压缩，因为当 N 较小时，位图将设置的 slot / N 位占设置位的很大百分比。
+  - 说明2：
+    1. 如果槽位为 65536，发送心跳信息的消息头达 8k，发送的心跳包过于庞大
+    2. Redis 的集群主节点数量基本不可能超过 1000 个
+    3. 槽位越小，节点少的情况下，压缩比高，容易传输
+
+## 哈希槽计算
+
+Redis 集群中内置了 16384 个哈希槽，Redis 会根据节点数量大致均等的将哈希槽映射到不同的节点。当需要在 Redis 集群中放置一个 key-value 时，Redis 先对 key 使用 CRC16 算法算出一个结果，然后把结果对 16384 求余数，这样每个 key 都会对应一个编号在 0~16383 之间的哈希槽，也就是映射到某个节点上。
+
+# P45 3主3从redis集群配置上集
+
+3主3从redis集群配置
+
+- 关闭防火墙+启动docker后台服务
+- 新建6个docker容器实例
+  - `docker run -d --name redis-node-1 --net host --privileged=true -v /data/redis/share/redis-node-1:/data redis:6.0.8 --cluster-enabled yes --appendonly yes --port 6381`
+  - `docker run -d --name redis-node-2 --net host --privileged=true -v /data/redis/share/redis-node-2:/data redis:6.0.8 --cluster-enabled yes --appendonly yes --port 6382`
+  - ……
+  - `docker run` 创建并运行 docker 容器实例
+  - `--name redis-node-6` 容器名字
+  - `--net host` 使用宿主机的 IP 和端口，默认
+  - `--privileged=true` 获取宿主机 root 用户权限
+  - `-v /data/redis/share/redis-node-6:/data` 容器卷，宿主机地址：docker 内部地址
+  - `redis:6.0.8` redis 镜像和版本号
+  - `--cluster-enabled yes` 开启 redis 集群
+  - `--appendonly yes` 开启持久化
+  - `--port 6386` redis 端口号
+- 进入容器redis-node-1并为6台机器构建集群关系
+  - 进入容器 `docker exec -it redis-node-1 /bin/bash`
+  - 构建主从关系
+  - 一切 OK 的话，3主3从搞定
+- 链接进入6381作为切入点，查看集群状态
+
+
+
+## 构建主从关系
+
+注意，进入 docker 容器后才能执行以下命令，且注意自己的真实 IP 地址
+
+```shell
+redis-cli --cluster create 192.168.111.147:6381 192.168.111.147:6382 192.168.111.147:6383 192.168.111.147:6384 192.168.111.147:6385 192.168.111.147:6386 --cluster-replicas 1
+```
+
+`--cluster-replicas 1` 表示为每一个 master 创建一个 slave 节点
+
+# P46 3主3从redis集群配置中集
+
+## 链接进入6381作为切入点，查看集群状态
+
+- 连接进入 6381 作为切入点，查看节点状态
+- cluster info
+- cluster nodes
+
+# P47 3主3从redis集群配置下集
+
+# P48 redis集群读写error说明
+
+## 主从容错切换迁移案例
+
+- 数据读写存储
+  - 启动 6 机构成的集群并通过 exec 进入
+  - 对 6381 新增两个 key（error）
+  - 防止路由失效加参数 -c 并新增两个 key `redis-cli -p 6381 -c`
+  - 查看集群信息 `redis-cli --cluster check 192.168.111.147:6381`
+- 容错切换迁移
+
+# P49 redis 集群读写路由增强正确案例
+
+# P50 查看集群信息 cluster check
+
+# P51 主从容错切换迁移
+
+## 容错切换迁移
+
+- 主 6381 和从机切换，先停止主机 6381
+- 再次查看集群信息
+  - `docker exec -it redis-node-2 /bin/bash`
+  - `redis-cli -p 6382 -c`
+  - `cluster nodes`
+- 先还原之前的 3 主 3 从
+- 查看集群状态
+
+# P52 主从扩容需求分析
+
+# P53 主从扩容案例演示
+
+## 主从扩容案例
+
+- 新建 6387、6388 两个节点+新建后启动+查看是否 8 节点
+  - `docker run -d --name redis-node-7 --net host --privileged=true -v /data/redis/share/redis-node-7:/data redis:6.0.8 --cluster-enabled yes --appendonly yes --port 6387`
+  - `docker run -d --name redis-node-8 --net host --privileged=true -v /data/redis/share/redis-node-8:/data redis:6.0.8 --cluster-enabled yes --appendonly yes --port 6388`
+  - `docker ps`
+- 进入 6387 容器实例内部 `docker exec -it redis-node-7 /bin/bash`
+- 将新增的 6387 节点（空槽号）作为 master 节点加入原集群
+  - `redis-cli --cluster add-node 自己实际IP地址:6387 自己实际IP地址:6381`
+  - 6387 就是将要作为 master 新增节点
+  - 6381 就是原来集群节点里面的领路人，相当于 6387 拜托 6381 从而找到组织加入集群
+- 检查集群情况第 1 次
+  - `redis-cli --cluster check 真实IP地址:6381`
+  - 0 slots | 0 slaves
+- 重新分配槽号
+  - 重新分配槽号命令：`redis-cli --cluster reshard IP地址:端口号`
+  - `redis-cli --cluster reshard 192.168.111.157:6381`
+- 检查集群情况第 2 次
+- 为主节点 6387 分配从节点 6388
+  - 命令：`redis-cli --cluster add-node ip:新slave端口 ip:新master端口 --cluster-slave --cluster-master-id 新主机节点ID`
+  - `redis-cli --cluster add-node 192.168.111.147:6388 192.168.111.147:6387 --cluster-slave --cluster-master-id e4781f644d4a4e4d4b4d107157b9ba8144631451`
+- 检查集群情况第 3 次
+
+# P54 主从缩容需求分析
+
+1. 先清除从节点 6388
+2. 清出来的槽号重新分配
+3. 再删除 6387
+4. 恢复成 3 主 3 从
+
+# P55 主从缩容案例演示
+
+## 主从缩容案例
+
+- 目的：6387 和 6388 下线
+- 检查集群情况 1 获得 6388 的节点 ID
+  - `redis-cli --cluster check 192.168.111.147:6382`
+- 从集群中将 4 号从节点 6388 删除
+  - 命令：`redis-cli --cluster del-node ip:从机端口 从机6388节点ID`
+  - `redis-cli --cluster del-node 192.168.111.147:6388 5d149074b7e57b802287d1797a874ed7a1a284a8`
+- 将 6387 的槽号清空，重新分配，本例将清出来的槽号都给 6381
+  - `redis-cli --cluster reshard 192.168.111.147:6381`
+- 检查集群情况第二次
+- 将 6387 删除
+  - 命令：`redis-cli --cluster del-node ip:端口 6387节点ID`
+  - `redis-cli --cluster del-node 192.168.111.147:6387 e4781f644d4a4e4d4b4d107157b9ba8144631451`
+- 检查集群情况第三次
+
+# P56 分布式存储案例小总结
+
+# P57 Dockerfile 简介
+
+## 是什么
+
+- Dockerfile 是用来构建 Docker 镜像的文本文件，是由一条条构建镜像所需的指令和参数构成的脚本
+- 概述
+- 官网
+  - https://docs.docker.com/engine/reference/builder
+- 构建三步骤
+  - 编写 Dockerfile 文件
+  - docker build 命令构建镜像
+  - docker run 依镜像运行容器实例
+
+# P58 Dockerfile 构建过程解析
+
+## Dockerfile 内容基础知识
+
+1. 每条保留字指令都必须为大写字母且后面要跟随至少一个参数
+2. 指令按照从上到下，顺序执行
+3. `#` 表示注释
+4. 每条指令都会创建一个新的镜像层并对镜像进行提交
+
+## Docker 执行 Dockerfile 的大致流程
+
+1. docker 从基础镜像运行一个容器
+2. 执行一条指令并对容器做出修改
+3. 执行类似 docker commit 的操作提交一个新的镜像层
+4. docker 再基于刚提交的镜像运行一个新容器
+5. 执行 dockerfile 中的下一条指令直到所有指令都执行完成
+
+## 小总结
+
+从应用软件的角度来看，Dockerfile、Docker 镜像与 Docker 容器分别代表软件的三个不同阶段
+
+- Dockerfile 是软件的原材料
+- Docker 镜像是软件的交付品
+- Docker 容器则可以认为是软件镜像的运行态，也即依照镜像运行的容器实例
+
+Dockerfile 面向开发，Docker 镜像成为交付标准，Docker 容器则涉及部署与运维，三者缺一不可，合力充当 Docker 体系的基石。
+
+1. Dockerfile，需要定义一个 Dockerfile，Dockerfile 定义了进程需要的一切东西。Dockerfile 涉及的内容包括执行代码或者是文件、环境变量、依赖包、运行时环境、动态链接库、操作系统的发行版、服务进程和内核进程（当应用进程需要和系统服务和内核进程打交道，这时需要考虑如何设计 namespace 的权限控制）等等。
+2. Docker 镜像，在用 Dockerfile 定义一个文件之后，docker build 时会产生一个 Docker 镜像，当运行 Docker 镜像时会真正开始提供服务
+3. Docker 容器，容器是直接提供服务的。
+
+# P59 Dockerfile 保留字简介
+
+- 参考 tomcat8 的 dockerfile 入门
+  - https://github.com/docker-library/tomcat
+- `FROM`：基础镜像，当前新镜像是基于哪个镜像的，指定一个已经存在的镜像作为模板，第一条必须是 FROM
+- `MAINTAINER`：镜像维护者的姓名和邮箱地址
+- `RUN`：容器构建时需要运行的命令
+  - 两种格式：shell 格式和 exec 格式
+    - shell 格式: `RUN <命令>`
+    - exec 格式：`RUN ["可执行文件", "参数1", "参数2"...]`
+  - RUN 是在 docker build 时运行
+- `EXPOSE`：当前容器对外暴露出的端口
+- `WORKDIR`：指定在创建容器后，终端默认登陆的进来工作目录，一个落脚点
+- `USER`：指定该镜像以什么样的用户去执行，如果都不指定，默认是 root
+- `ENV`：用来在构建镜像过程中设置环境变量
+  - `ENV MY_PATH /usr/mytest` 这个环境变量可以在后续的任何 RUN 指令中使用，这就如同在命令前面指定了环境变量前缀一样；也可以在其他指令中直接使用这些环境变量，比如：`WORKDIR $MY_PATH`
+- `ADD`：将宿主机目录下的文件拷贝进镜像且会自动处理 URL 和解压 tar 压缩包
+- `COPY`：类似 ADD，拷贝文件和目录到镜像中。将从构建上下文目录中<源路径>的文件/目录复制到新的一层的镜像内的<目标路径>位置
+- `VOLUME`：容器数据卷，用于数据保存和持久化工作
+- `CMD`：指定容器启动之后要干的事情
+  - 两种格式：shell 格式和 exec 格式
+    - shell 格式：`CMD <命令>`
+    - exec 格式：`CMD ["可执行文件", "参数1", "参数2"...]`
+    - 参数列表格式：`CMD ["参数1", "参数2"...]`，在指定了 `ENTRYPOINT` 指令后，用 `CMD` 指定具体的参数
+  - 注意
+    - Dockerfile 中可以有多个 CMD 指令，但只有最后一个会生效，CMD 会被 docker run 之后的参数替换
+    - 参考官网 Tomcat 的 dockerfile 演示讲解
+  - 它和前面 RUN 命令的区别
+    - CMD 是在 docker run 时运行
+    - RUN 是在 docker build 时运行
+- `ENTRYPOINT`：也是用来指定一个容器启动时要运行的命令
+  - 类似于 CMD 命令，但是 ENTRYPOINT 不会被 docker run 后面的命令覆盖，而且这些命令行参数会被当作参数送给 ENTRYPOINT 指令指定的程序
+  - 命令格式和案例说明
+    - 命令格式：`ENTRYPOINT ["可执行文件", "参数1", "参数2"...]`
+    - ENTRYPOINT 可以和 CMD 一起用，一般是变参才会使用 CMD，这里的 CMD 等于是在给 ENTRYPOINT 传参
+    - 当指定了 ENTRYPOINT 后，CMD 的含义就发生了变化，不再是直接运行其命令而是将 CMD 的内容作为参数传递给 ENTRYPOINT 指令，他两个组合会变成 `<ENTRYPOINT> "<CMD>"`
+  - 优点
+  - 注意
+
+# P60 centos 之 dockerfile 需求说明
+
+- 要求
+  - CentOS 7 镜像具备 vim + ifconfig +  jdk8
+  - JDK 的下载镜像地址
+- 编写
+- 构建
+- 运行
+- 再体会下 UnionFS（联合文件系统）
+
+# P61 centos 之 dockerfile 案例演示
+
+## 编写
+
+准备编写 Dockerfile 文件（大写字母D）
+
+```dockerfile
+FROM centos
+MAINTAINER zzyy<zzyybs@126.com>
+
+ENV MYPATH /usr/local
+WORKDIR $MYPATH
+
+# 安装 vim 编辑器
+RUN yum -y install vim
+# 安装 ifconfig 命令查看网络 IP
+RUN yum -y install net-tools
+# 安装 java8 及 lib 库
+RUN yum -y install glibc.i686
+RUN mkdir /usr/local/java
+# ADD 是相对路径 jar，把 jdk-8u171-linux-x64.tar.gz 添加到容器中，安装包必须要和 Dockerfile 文件在同一位置
+ADD jdk-8u171-linux-x64.tar.gz /usr/local/java/
+# 配置 java 环境变量
+ENV JAVA_HOME /usr/local/java/jdk1.8.0_171
+ENV JRE_HOME $JAVA_HOME/jre
+ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib:$CLASSPATH
+ENV PATH $JAVA_HOME/bin:$PATH
+
+EXPOSE 80
+
+CMD echo $MYPATH
+CMD echo "success------------ok"
+CMD /bin/bash
+```
+
+## 构建
+
+`docker build -t 新镜像名字:TAG .`
+
+注意，上面 TAG 后面有个空格有个点
+
+## 运行
+
+`docker run -it 新镜像名字:TAG`
+
+# P62 虚悬镜像
+
+最好别搞那么多 RUN，不然一个 RUN 对应 UnionFS 里面的一层
+
+## 虚悬镜像是什么
+
+仓库名、标签都是 `<none>` 的镜像，俗称 dangling image
+
+Dockerfile 写一个
+
+```dockerfile
+from ubuntu
+CMD echo 'action is success'
+```
+
+## 查看
+
+`docker image ls -f dangling=true`
+
+命令结果
+
+## 删除
+
+`docker image prune`
+
+虚悬镜像已经失去存在价值，可以删除
