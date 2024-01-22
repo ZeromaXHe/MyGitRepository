@@ -1,3 +1,5 @@
+尚硅谷《尚硅谷Docker实战教程（docker教程天花板）》2022-01-05
+
 https://www.bilibili.com/video/BV1gr4y1U7CY
 
 # P1 课程简介
@@ -672,8 +674,8 @@ tomcat 8（jdk8）
 3. Docker 微服务实战
 4. Docker 网络
 5. Docker-compose 容器编排
-6. Docker 轻量级可视化工具 Protainer
-7. Docker 容器监控之 CAdvisor + InfluxDB + Granfana
+6. Docker 轻量级可视化工具 Portainer
+7. Docker 容器监控之 CAdvisor + InfluxDB + Grafana
 8. 终章总结
 
 # P41 mysql 主从复制 docker 版
@@ -1398,3 +1400,344 @@ after
   - 互相 ping 测试
 - 问题结论
   - 自定义网络本身就维护好了主机名和 ip 的对应关系（ip 和域名都能通）
+
+# P78 compose 是什么能干嘛
+
+是什么
+
+- Docker-Compose 是 Docker 官方的开源项目，负责实现对 Docker 容器集群的快速编排
+- Compose 是 Docker 公司推出的一个工具软件，可以管理多个 Docker 容器组成一个应用。你需要定义一个 YAML 格式的配置文件 docker-compose.yml，写好多个容器之间的调用关系。然后，只要一个命令，就能同时启用/关闭这些容器
+
+能干嘛
+
+- docker 建议我们每一个容器中只运行一个服务，因为 docker 容器本身占用资源极少，所以最好是将每个服务单独的分割开来，但是这样我们又面临了一个问题：如果我需要同时部署多个服务，难道要每个服务单独写 Dockerfile 然后再构建镜像，构建容器？
+- 这样累都累死了，所以 docker 官方给我们提供了 docker-compose 多服务部署工具
+- 例如要实现一个 Web 微服务项目，除了 Web 服务器容器本身，往往还需要再加上后端的数据库 mysql 服务容器，redis 服务器，注册中心 eureka，甚至还包括负载均衡容器等等……
+- Compose 允许用户通过一个单独的 docker-compose.yml 模板文件（YAML 格式）来定义一组相关联的应用容器为一个项目（project）。
+- 可以很容易地用一个配置文件定义一个多容器的应用，然后使用一条指令安装这个应用的所有依赖，完成构建。Docker-compose 解决了容器与容器之间如何管理编排的问题。
+
+# P79 compose 下载安装步骤
+
+安装步骤
+
+- `curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose"`
+- `chmod +x /usr/local/bin/docker-compose`
+- `docker-compose --version`
+
+卸载步骤
+
+`sudo rm /usr/local/bin/docker-compose`
+
+# P80 compose 核心概念
+
+## compose 核心概念
+
+一文件：docker-compose.yml
+
+两要素：
+
+- 服务（service）：一个个应用容器实例，比如订单微服务、库存微服务、mysql 容器、nginx 容器或者 redis 容器
+- 工程（project）：由一组关联的应用容器组成的一个完整业务单元，在 docker-compose.yml 文件中定义。
+
+## compose 使用的三个步骤
+
+- 编写 Dockerfile 定义各个微服务应用并构建出对应的镜像文件
+- 使用 docker-compose.yml 定义一个完整业务单元，安排好整体应用中的各个容器服务。
+- 最后，执行 docker-compose up 命令来启动并运行整个应用程序，完成一键部署上线
+
+## compose 常用命令
+
+`docker-compose -h` 查看帮助
+
+`docker-compose up` 启动所有 docker-compose 服务
+
+`docker-compose up -d` 启动所有 docker-compose 服务并后台运行
+
+`docker-compose down` 停止并删除容器、网络、卷、镜像
+
+`docker-compose exec yml里面的服务id` 进入容器实例内部 `docker-compose exec docker-compose.yml文件中写的服务id /bin/bash`
+
+`docker-compose ps` 展示当前 docker-compose 编排过的运行的所有容器
+
+`docker-compose top` 展示当前 docker-compose  编排过的容器进程
+
+`docker-compose logs yml 里面的服务id` 查看容器输出日志
+
+`docker-compose config` 检查配置
+
+`docker-compose config -q` 检查配置，有问题才有输出
+
+`docker-compose restart` 重启服务
+
+`docker-compose start` 启动服务
+
+`docker-compose stop` 停止服务
+
+# P81 微服务改造升级并生成新镜像
+
+## compose 编排微服务
+
+- 改造升级微服务工程 docker_boot
+  - 以前的基础版
+  - SQL 建表建库
+  - 一键生成说明
+  - 改 POM
+  - 写 YML
+  - 主启动
+  - 业务类
+  - mvn package 命令将微服务形成新的 jar 包并上传到 Linux 服务器/mydocker目录下
+  - 编写 Dockerfile
+  - 构建镜像
+- 不用 Compose
+- swagger 测试
+  - `http://localhost:你的微服务端口/swagger-ui.html#/`
+- 上面成功了，有哪些问题？
+  - 先后顺序要求固定，先 mysql + redis 才能微服务访问成功
+  - 多个 run 命令……
+  - 容器间的启停或宕机，有可能导致 IP 地址对应的容器实例变化，映射出错，要么生产 IP 写死（可以但是不推荐），要么通过服务调用
+- 使用 Compose
+
+# P82 不用 compose 编排服务上集
+
+
+
+# P83 不用 compose 编排服务下集
+
+## 不用 Compose
+
+- 单独的 mysql 容器实例
+  - 新建 mysql 容器实例
+  - 进入 mysql 容器实例并新建库 db2021 + 新建表 t_user
+- 单独的 redis 容器实例
+- 微服务工程
+- 上面三个容器实例依次顺序启动成功
+
+# P84 使用 compose 编排服务上集
+
+
+
+# P85 使用 compose 编排服务中集
+
+## 使用 Compose
+
+- 服务编排，一套带走
+
+- 编写 docker-compose.yml 文件
+
+  - ```yaml
+    version: "3"
+    
+    services:
+    	microService:
+    		image: zzyy_docker:1.6
+    		container_name: ms01
+    		ports:
+    			- "6001:6001"
+    		volumes:
+    			- /app/microService:/data
+    		networks:
+    			- atguigu_net
+    		depends_on:
+    			- redis
+    			- mysql
+    	redis:
+    		image: redis:6.0.8
+    		ports:
+    			- "6379:6379"
+    		volumes:
+    			- /app/redis/redis.conf:/etc/redis/redis.conf
+    			- /app/redis/data:/data
+    		networks:
+    			- atguigu_net
+    		command: redis-server /etc/redis/redis.conf
+    	
+    	mysql:
+    		image: mysql:5.7
+    		environment:
+    			MYSQL_ROOT_PASSWORD: '123456'
+    			MYSQL_ALLOW_EMPTY_PASSWORD: 'no'
+    			MYSQL_DATA_BASE: 'db2021'
+    			MYSQL_USER: 'zzyy'
+    			MYSQL_PASSWORD: 'zzyy123'
+    		ports:
+    			- "3306:3306"
+    		volumes:
+    			- /app/mysql/db:/var/lib/mysql
+    			- /app/mysql/conf/my.cnf:/etc/my.cnf
+    			- /app/mysql/init:/docker-entry-point-initdb.d
+    		networks:
+    			- atguigu_net
+    		command: --default-authentication-plugin=mysql_native_password # 解决外部无法访问
+    
+    networks:
+    	atguigu_net:
+    ```
+
+- 第二次修改微服务工程 docker_boot
+
+  - 写 YML：通过服务名访问，IP 无关
+  - mvn package 命令将微服务形成新的 jar 包并上传到 Linux 服务器 /mydocker 目录下
+  - 编写 Dockerfile
+  - 构建镜像：`docker build -t zzyy_docker:1.6 .`
+
+- 执行  docker-compose up 或加上 -d
+
+- 进入 mysql 容器实例并新建库 db2021 + 新建表 t_user
+
+- 测试通过
+
+- Compose 常用命令
+
+- 关停
+
+# P86 使用 compose 编排服务下集
+
+# P87 Portainer 简介和安装
+
+## 是什么
+
+Portainer 是一款轻量级的应用，它提供了图形化界面，用于方便地管理 Docker 环境，包括单机环境和集群环境
+
+## 安装
+
+步骤
+
+- docker 命令安装
+  - `docker run -d -p 8000:8000 -p 9000:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer`
+- 第一次登陆需创建 admin，访问地址: xxx.xxx.xxx.xxx:9000
+- 设置 admin 用户和密码后首次登陆
+- 选择 local 选项卡后本地 docker 详细信息展示
+- 上一步的图形展示，能想得起对应命令吗？
+
+# P88 Portainer 常规操作
+
+# P89 Portainer 补充说明
+
+`--restart=always` 意味着如果 Docker 重启了，部署的 Docker 容器实例也会重新启动
+
+# P90 CIG容器重量级监控系统介绍
+
+Docker 容器监控之 CAdvisor + InfluxDB + Grafana
+
+## 原生命令
+
+- 操作
+  - `docker stats`
+- 问题
+  - 通过 docker stats 命令可以很方便的看到当前宿主机上所有容器的 CPU，内存以及网络流量等数据，一般公司够用了
+  - 但是，docker stats 统计结果只能是当前宿主机的全部容器，数据资料是实时的，没有地方存储、没有健康指标过线预警等功能。
+
+## 是什么
+
+容器监控三剑客
+
+- 一句话：CAdvisor 监控收集 + InfluxDB 存储数据 + Grafana 展示图表
+- CAdvisor
+  - CAdvisor 是一个容器资源监控工具，包括容器的内存、CPU、网络 IO、磁盘 IO 等监控，同时提供了一个 WEB 页面用于查看容器的实时运行状态。CAdvisor 默认存储 2 分钟的数据，而且只是针对单物理机。
+  - 不过，CAdvisor 提供了很多数据集成接口，支持 InfluxDB，Redis，Kafka，Elasticsearch 等集成，可以加上对应配置将监控数据发往这些数据库存储起来。
+  - CAdvisor 功能主要有两点：
+    - 展示 Host 和容器两个层次的监控数据。
+    - 展示历史变化数据。
+- InfluxDB
+  - InfluxDB 是用 Go 语言编写的一个开源分布式时序、事件和指标数据库，无需外部依赖。
+  - CAdvisor  默认只在本机保存最近 2 分钟的数据，为了持久化存储数据和统一收集展示监控数据，需要将数据存储到 InfluxDB 中。InfluxDB 是一个时序数据库，专门用于存储时序相关数据，很适合存储 CAdvisor 的数据。而且，CAdvisor 本身已经提供了 InfluxDB 的集成方法，启动容器时指定配置即可。
+  - InfluxDB 主要功能：
+    - 基于时间序列，支持与时间有关的相关函数（如最大、最小、求和等）
+    - 可度量性：你可以实时对大量数据进行计算
+    - 基于事件：它支持任意的事件数据
+- Grafana
+  - Grafana 是一个开源的数据监控分析可视化平台，支持多种数据源配置（支持的数据源包括 InfluxDB，MySQL，Elasticsearch，OpenTSDB，Graphite 等）和丰富的插件及模板功能，支持图标权限控制和报警。
+  - Grafana 主要特性：
+    - 灵活丰富的图形化选项
+    - 可以混合多种风格
+    - 支持白天和夜间模式
+    - 多个数据源
+- 总结
+
+# P91 CIG 结合 compose 一键搭建监控平台
+
+compose 容器编排，一套带走
+
+- 新建目录
+
+- 新建 3 件套组合的 docker-compose.yml
+
+  - ```yaml
+    services:
+    	influxdb:
+    		image: tuturn/influxdb:0.9
+    		restart: always
+    		environment:
+    			- PRE_CREATE_DB=cadvisor
+    		ports:
+    			- "8083:8083"
+    			- "8086:8086"
+    		volumes:
+    			- ./data/influxdb:/data
+    	cadvisor:
+    		image: google/cadvisor
+    		links:
+    			- influxdb:influxsrv
+    		command: -storage_driver=influxdb -storage_driver_db=cadvisor -storage_driver_host=influxsrv:8086
+    		restart: always
+    		ports:
+    			- "8080:8080"
+    		volumes:
+    			- /:/rootfs:ro
+    			- /var/run:/var/run:rw
+    			- /sys:/sys:ro
+    			- /var/lib/docker/:/var/lib/docker:ro
+    	grafana:
+    		user: "104"
+    		image: grafana/grafana
+    		user: "104"
+    		restart: always
+    		links:
+    			- influxdb:influxsrv
+    		ports:
+    			- "3000:3000"
+    		volumes:
+    			- grafana_data:/var/lib/grafana
+    		environment:
+    			- HTTP_USER=admin
+    			- HTTP_PASS=admin
+    			- INFLUXDB_HOST=influxsrv
+    			- INFLUXDB_PORT=8086
+    			- INFLUXDB_NAME=cadvisor
+    			- INFLUXDB_USER=root
+    ```
+
+- 启动 docker-compose 文件
+
+  - `docker-compose up`
+
+- 查看三个服务容器是否启动
+
+- 测试
+
+  - 浏览 CAdvisor 收集服务 http://ip:8080/
+  - 浏览 InfluxDB 存储服务 http://ip:8083/
+  - 浏览 Grafana 收集服务 http://ip:3000/
+
+# P92 CIG 三平台登陆验证通过
+
+
+
+# P93 CIG 添加 panel
+
+- 浏览 CAdvisor 收集服务 http://ip:8080/
+  - 第一次访问慢，请稍等
+  - CAdvisor 也有基础的图形展示功能，这里主要用它来作数据采集
+- 浏览 InfluxDB 存储服务 http://ip:8083/
+- 浏览 Grafana 收集服务 http://ip:3000/
+  - ip + 3000 端口的方式访问，默认账户密码 admin/admin
+  - 配置步骤
+    - 配置数据源
+    - 选择 InfluxDB 数据源
+    - 配置细节
+    - 配置面板 panel
+    - 到这里 CAdvisor + InfluxDB + Grafana 容器监控系统就
+
+# P94 CIG 配置监控业务规则
+
+# P95 终章总结
