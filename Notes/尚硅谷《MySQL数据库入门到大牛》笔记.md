@@ -1173,3 +1173,417 @@ default-character-set=utf8
 ```
 
 它起到的效果和执行一遍 `SET NAMES utf8` 是一样一样的，都会将那三个系统变量的值设置成 `utf8`。
+
+# P103 SQL 大小写规范与 sql_mode 的设置
+
+## 6 SQL 大小写规范
+
+### 6.1 Windows 和 Linux 平台区别
+
+在 SQL 中，关键字和函数名是不用区分字母大小写的
+
+Windows 系统默认大小写不敏感，但是 Linux 系统是大小写敏感的
+
+```mysql
+SHOW VARIABLES LIKE '%lower_case_table_names%';
+```
+
+lower_case_table_names 参数值的设置：
+
+- 默认为 0，大小写敏感。
+- 设置 1，大小写不敏感。创建的表，数据库都是以小写形式存放在磁盘上，对于 SQL 语句都是转换为小写对表和数据库进行查找。
+- 设置 2，创建的表和数据库依据语句上格式存放，凡是查找都是转换为小写进行。
+
+### 6.2 Linux 下大小写规则设置
+
+06:25
+
+当想设置为大小写不敏感时，要在 `my.cnf` 这个配置文件 `[mysqld]` 中写入 `lower_case_table_names=1`，然后重启服务器。
+
+此参数适用于 MySQL 5.7。MySQL 8 必须先删除数据目录
+
+### 6.3 SQL 编写建议
+
+09:15
+
+## 7 sql_mode 的合理设置
+
+10:30
+
+### 7.1 介绍
+
+sql_mode 会影响 MySQL 支持的 SQL 语法以及它执行的数据验证检查。通过设置 sql_mode，可以完成不同严格程度的数据校验，有效地保障数据准确性。
+
+- 5.6 的 mode 默认值为空（即：`NO_ENGINE_SUBSTITUTION`），其实表示的是一个空值，相当于没有什么模式设置，可以理解为宽松模式。在这种设置下是可以允许一些非法操作的，比如允许一些非法数据的插入。
+- 5.7 的 mode 是 `STRICT_TRANS_TABLES`，也就是严格模式。用于进行数据的严格校验，错误数据不能插入，报 error（错误），并且事务回滚
+
+### 7.2 宽松模式 vs 严格模式
+
+12:20
+
+`char(10)` 如果超过了设定的字段长度 10
+
+### 7.3 宽松模式再举例
+
+15:56
+
+### 7.4 模式查看和设置
+
+16:05
+
+查看当前的 sql_mode
+
+```mysql
+select @@session.sql_mode
+select @@global.sql_mode
+# 或者
+show variables like 'sql_mode';
+```
+
+临时设置方式：设置当前窗口中设置 sql_mode
+
+```mysql
+SET GLOBAL sql_mode = 'modes...'; # 全局
+SET SESSION sql_mode = 'modes...'; # 当前会话
+```
+
+永久设置方式：在 /etc/my.cnf 中配置 sql_mode
+
+```mysql
+[mysqld]
+sql_mode=ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+```
+
+# P104 MySQL 目录结构与表在文件系统中的表示
+
+## 1 MySQL 8 的主要目录结构
+
+```shell
+find / -name mysql
+```
+
+### 1.1 数据库文件的存放路径
+
+MySQL 数据库文件的存放路径：/var/lib/mysql/
+
+数据目录对应着一个系统变量`datadir`
+
+```mysql
+SHOW VARIABLES LIKE 'datadir';
+```
+
+### 1.2 相关命令目录
+
+/usr/bin（mysqladmin、mysqlbinlog、mysqldump 等命令）和 /usr/sbin
+
+### 1.3 配置文件目录
+
+/usr/share/mysql-8.0（命令及配置文件），/etc/mysql（如 my.cnf）
+
+## 2 数据库和文件系统的关系
+
+### 2.1 查看默认数据库
+
+```mysql
+SHOW DATABASES;
+```
+
+可以看到有 4 个数据库是属于 MySQL 自带的系统数据库。
+
+- `mysql`
+
+  MySQL 系统自带的核心数据库，它存储了 MySQL 的用户账户和权限信息，一些存储过程、事件的定义信息，一些运行过程中产生的日志信息，一些帮助信息以及时区信息等。
+
+- `information_schema`
+
+  MySQL 系统自带的数据库，这个数据库保存着 MySQL 服务器维护的所有其他数据库的信息，比如有哪些表、哪些视图、哪些触发器、哪些列、哪些索引。这些信息并不是真实的用户数据，而是一些描述性信息，有时候也称之为**元数据**。在系统数据库 `information_schema` 中提供了一些以 `innodb_sys` 开头的表，用于表示内部系统表。
+
+  ```mysql
+  USE information_schema;
+  SHOW TABLES LIKE 'innodb_sys%'
+  ```
+
+- `performance_schema`
+
+  MySQL 系统自带的数据库，这个数据库里主要保存 MySQL 服务器运行过程中的一些状态信息，可以用来监控 MySQL 服务的各类性能指标。包括统计最近执行了哪些语句，在执行过程的每个阶段都花费了多长时间，内存的使用情况等信息。
+
+- `sys`
+
+  MySQL 系统自带的数据库，这个数据库主要是通过视图的形式把 `information_schema` 和 `performance_schema` 结合起来，帮助系统管理员和开发人员监控 MySQL 的技术性能。
+
+### 2.2 数据库在文件系统中的表示
+
+12:35
+
+`db.opt` 5.7 存在，8 没有
+
+### 2.3 表在文件系统中的表示
+
+#### 2.3.1 InnoDB 存储引擎模式
+
+`.frm` 5.7 存在，8 没有（合并在 `.ibd` 里）
+
+`ibdata1` 系统表空间
+
+`.ibd` 独立表空间
+
+#### 2.3.2 MyISAM 存储引擎模式
+
+`.frm` 表结构 5.7 -> `.sdi` 8 存储元数据
+
+`.MYD` 数据（MYData）
+
+`.MYI` 索引（MYIndex）
+
+### 2.4 小结
+
+### 2.5 视图在文件系统中的表示
+
+我们知道 MySQL 中的视图其实是虚拟的表，也就是某个查询语句的一个别名而已，所以在存储视图的时候是不需要存储真实的数据的，只需要把它的结构存储起来就行了。和表一样，描述视图结构的文件也会被存储到所属数据库对应的子目录下边，只会存储一个`视图名.frm`的文件。
+
+### 2.6 其他的文件
+
+- 服务器进程文件
+- 服务器日志文件
+- 默认/自动生成的 SSL 和 RSA 证书和密钥文件
+
+# P105 用户的创建\修改\删除
+
+## 1 用户管理
+
+2:56
+
+MySQL 用户可以分为普通用户和 root 用户。root 用户是超级管理员，拥有所有权限，包括创建用户、删除用户和修改用户的密码等管理权限；普通用户只拥有被授予的各种权限。
+
+MySQL 提供了许多语句用来管理用户账号，这些语句可以用来管理包括登录和退出 MySQL 服务器，创建用户、删除用户、密码管理和权限管理等内容。
+
+MySQL 数据库的安全性需要通过账户管理来保证。
+
+### 1.1 登录 MySQL 服务器
+
+启动 MySQL 服务后，可以通过 mysql 命令来登录 MySQL 服务器，命令如下：
+
+```shell
+mysql -h hostname|hostIP -P port -u username -p DatabaseName -e "SQL语句"
+```
+
+### 1.2 创建用户
+
+7:25
+
+在 MySQL 数据库中，官方推荐使用 CREATE USER 语句创建新用户。MySQL 8 版本移除了 PASSWORD 加密方法，因此不再推荐使用 INSERT 语句直接操作 MySQL 中的 user 表来增加用户。
+
+使用 CREATE USER 来创建新用户时，必须拥有 CREATE USER 权限。每添加一个用户，CREATE USER 语句会在 MySQL.user 表中添加一条新纪录，但是新创建的账户没有任何权限。如果添加的账户已经存在，CREATE USER 语句就会返回一个错误。
+
+CREATE USER 语句的基本语法形式如下：
+
+```mysql
+CREATE USER 用户名 [IDENTIFIED BY '密码'] [,用户名 [INDENTIFIED BY '密码']];
+```
+
+### 1.3 修改用户
+
+14:42
+
+```mysql
+UPDATE mysql.user SET USER='li4' WHERE USER='wang5';
+FLUSH PRIVILEGES;
+```
+
+### 1.4 删除用户
+
+17:35
+
+在 MySQL 数据库中，可以使用 `DROP USER` 语句来删除普通用户，也可以直接在 mysql.user 表中删除用户。
+
+**方式1：使用 DROP 方式删除（推荐）**
+
+```mysql
+DROP USER user[, user];
+```
+
+默认@'%'
+
+**方式2：使用 DELETE 方式删除**
+
+```mysql
+DELETE FROM mysql.user WHERE Host='hostname' AND User='username';
+FLUSH PRIVILEGES; 
+```
+
+> 注意：不推荐通过 `DELETE` 进行删除，系统会有残留信息保留。而 `DROP USER` 命令会删除用户以及对应的权限，执行命令后你会发现 mysql.user 表和 mysql.db 表的相应记录都消失了。
+
+# P106 用户密码的设置和管理
+
+## 1.5 设置当前用户密码
+
+MySQL 8 中已移除了 PASSWORD() 函数
+
+旧的写法如下：
+
+```mysql
+# 修改当前用户的密码：（MySQL 5.7 测试有效）
+SET PASSWORD = PASSWORD('123456');
+```
+
+这里介绍推荐的写法：
+
+1、使用 ALTER USER 命令来修改当前用户密码
+
+```mysql
+ALTER USER USER() IDENTIFIED BY 'new_password';
+```
+
+2、使用 SET 语句来修改当前用户密码
+
+```mysql
+SET PASSWORD='new_password';
+```
+
+## 1.6 修改其他用户密码
+
+1、使用 ALTER 语句来修改普通用户的密码
+
+```mysql
+ALTER USER user [IDENTIFIED BY '新密码'][, user [IDENTIFIED BY '新密码']]...;
+```
+
+2、使用 SET 命令来修改普通用户的密码
+
+```mysql
+SET PASSWORD FOR 'username'@'hostname'='new_password';
+```
+
+3、使用 UPDATE 命令来修改普通用户的密码（不推荐）
+
+```mysql
+UPDATE MySQL.user SET authentication_string=PASSWORD('123456') WHERE User = 'username' AND Host = 'hostname';
+```
+
+### 1.7 MySQL 8 的密码管理（了解）
+
+09:53
+
+（1）密码过期：要求定期修改密码
+
+（2）密码重用限制：不允许使用旧密码
+
+（3）密码强度评估：要求使用高强度的密码
+
+# P107 权限管理与访问控制
+
+## 2 权限管理
+
+关于 MySQL 的权限简单的理解就是 MySQL 允许你做你权力以内的事情，不可以越界。比如只允许你执行 SELECT 操作，那么你就不能执行 UPDATE 操作。只允许你从某台机器上连接 MySQL，那么你就不能从除那台机器以外的其他机器连接 MySQL。
+
+### 2.1 权限列表
+
+1:28
+
+```mysql
+SHOW PRIVILEGES;
+```
+
+| 权限                    | user 表中对应的列      | 权限的范围           |
+| ----------------------- | ---------------------- | -------------------- |
+| CREATE                  | Create_priv            | 数据库、表或索引     |
+| DROP                    | Drop_priv              | 数据库、表或视图     |
+| GRANT OPTION            | Grant_priv             | 数据库、表或存储过程 |
+| REFERENCES              | References_priv        | 数据库或表           |
+| EVENT                   | Event_priv             | 数据库               |
+| ALTER                   | Alter_priv             | 数据库               |
+| DELETE                  | Delete_priv            | 表                   |
+| INDEX                   | Index_priv             | 表                   |
+| INSERT                  | Insert_priv            | 表                   |
+| SELECT                  | Select_priv            | 表或列               |
+| UPDATE                  | Update_priv            | 表或列               |
+| CREATE TEMPORARY TABLES | Create_tem_table_priv  | 表                   |
+| LOCK TABLES             | Lock_priv              | 表                   |
+| TRIGGER                 | Trigger_priv           | 表                   |
+| CREATE VIEW             | Create_view_priv       | 视图                 |
+| SHOW VIEW               | Show_view_priv         | 视图                 |
+| ALTER ROUTINE           | Alter_routine_priv     | 存储过程和函数       |
+| CREATE ROUTINE          | Create_routine_priv    | 存储过程和函数       |
+| EXECUTE                 | Execute_priv           | 存储过程和函数       |
+| FILE                    | File_priv              | 访问服务器上的文件   |
+| CREATE TABLESPACE       | Create_tablespace_priv | 服务器管理           |
+| CREATE USER             | Create_user_priv       | 服务器管理           |
+| PROCESS                 | Process_priv           | 存储过程和函数       |
+| RELOAD                  | Reload_priv            | 访问服务器上的文件   |
+| REPLICATION CLIENT      | Repl_client_priv       | 服务器管理           |
+| REPLICATION SLAVE       | Repl_slave_priv        | 服务器管理           |
+| SHOW DATABASES          | Show_db_priv           | 服务器管理           |
+| SHUTDOWN                | Shutdown_priv          | 服务器管理           |
+| SUPER                   | Super_priv             | 服务器管理           |
+
+| 权限分布 | 可能的设置的权限                                             |
+| -------- | ------------------------------------------------------------ |
+| 表权限   | Select, Insert, Update, Delete, Create, Drop, Grant, References, Index, Alter |
+| 列权限   | Select, Insert, Update, References                           |
+| 过程权限 | Execute, Alter Routine, Grant                                |
+
+### 2.2 授予权限的原则
+
+02:45
+
+### 2.3 授予权限
+
+04:12
+
+给用户授权的方式有 2 种，分别是通过把角色赋予用户给用户授权和直接给用户授权。
+
+```mysql
+GRANT 权限1，权限2，...权限n ON 数据库名称.表名称 TO 用户名@用户地址 [IDENTIFIED BY '密码口令'];
+```
+
+- `GRANT ALL PRIVILEGES ON ...` 所有库所有表的全部权限
+- 如果需要赋予包括 GRANT 的权限，添加参数 `WITH GRANT OPTION` 这个选项即可，表示该用户可以将自己拥有的权限授权给别人。
+- 可以使用 GRANT 重复给用户添加权限，权限叠加。
+
+> 横向分组
+>
+> 纵向分组
+
+### 2.4 查看权限
+
+15:52
+
+- 查看当前用户权限
+
+  ```mysql
+  SHOW GRANTS;
+  SHOW GRANTS FOR CURRENT_USER;
+  SHOW GRANTS FOR CURRENT_USER();
+  ```
+
+- 查看某用户的全局权限：
+
+  ```mysql
+  SHOW GRANTS FOR 'user'@'主机地址';
+  ```
+
+### 2.5 收回权限
+
+16:12
+
+- 收回权限命令
+
+  ```mysql
+  REVOKE 权限1，权限2，... 权限n ON 数据库名称.表名称 FROM 用户名@用户地址;
+  ```
+
+- `REVOKE ALL PRIVILEGES ON *.* FROM joe@'%'`
+
+## 3 权限表
+
+24:10
+
+MySQL 服务器通过权限表来控制用户对数据库的访问，权限表存放在 mysql 数据库中。MySQL 数据库系统会根据这些权限表的内容为每个用户赋予相应的权限。这些权限表中最重要的是 user 表、db 表。除此之外，还有 table_priv 表、column_priv 表和 proc_priv 表等。在 MySQL 启动时，服务器将这些数据库表中权限信息的内容读入内存。
+
+## 4 访问控制（了解）
+
+33:50
+
+### 4.1 连接核实阶段
+
+### 4.2 请求核实阶段
