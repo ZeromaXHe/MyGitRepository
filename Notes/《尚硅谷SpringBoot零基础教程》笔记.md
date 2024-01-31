@@ -367,3 +367,229 @@ SpringBoot 应用打包插件
 - 定制化
   - 修改配置文件
   - 自定义组件，自己给容器中放一个 `StringRedisTemplate`
+
+# P13 Yaml配置文件-基本用法
+
+# P14 复杂对象表示-使用 Properties 文件
+
+```properties
+person.name=张三
+person.age=18
+person.birthDay=2010/10/12 12:12:12
+person.like=true
+person.child.name=李四
+person.child.age=12
+person.child.birthDay=2018/10/12
+person.child.text[0]=abc
+person.child.text[1]=def
+person.dogs[0].name=小黑
+person.dogs[0].age=3
+person.dogs[1].name=小白
+person.dogs[1].age=2
+person.cats.c1.name=小蓝
+person.cats.c1.age=3
+person.cats.c2.name=小灰
+person.cats.c2.age=2
+```
+
+# P15 复杂对象表示-使用 yaml 文件
+
+```yaml
+person:
+	name: 张三
+	age: 18
+	birth-day: 2010/10/12 12:12:12
+	like: true
+	child:
+		name: 李四
+		age: 20
+		birth-day: 2018/10/12
+		text: ["abc", "def"]
+	dogs:
+		- name: 小黑
+		  age: 3
+		- name: 小白
+		  age: 2
+	cats:
+		c1:
+			name: 小蓝
+			age: 3
+		c2: {name: 小灰, age: 2} # 对象也可以用 {} 表示
+```
+
+# P16 复杂对象表示-yaml语法细节
+
+- birthDay 推荐写为 birth-day
+- 文本
+  - 单引号不会转义【\n 则为普通字符串显示】
+  - 双引号会转义【\n 会显示为换行符】
+- 大文本
+  - `|` 开头，大文本写在下层，保留文本格式，换行符正确显示
+  - `>` 开头，大文本写在下层，没有缩进则折叠换行符，有缩进就保留原格式
+- 多文档合并
+  - 使用 `---` 可以把多个 yaml 文档合并在一个文档中。每个文档区依然认为内容独立
+
+# P17 日志-整合原理
+
+日志门面
+
+- JCL (Jakarta Commons Logging)
+- **SLF4j (Simple Logging Facade for Java)**
+- jboss-logging
+
+日志实现
+
+- Log4j
+- JUL (java.util.logging)
+- Log4j2
+- **Logback**
+
+## 1、简介
+
+1. Spring 使用 `commons-logging` 作为内部日志，但底层日志实现是开放的。可对接其他日志框架
+   1. Spring 5 及以后 commons-logging 被 Spring 直接自己写了
+2. 支持 `jul`、`log4j2`、`logback`。SpringBoot 提供了默认的控制台输出配置，也可以配置输出为文件。
+3. `logback` 是默认使用的。
+4. 虽然日志框架很多，但是我们不用担心，使用 SpringBoot 的默认配置就能工作的很好。
+
+
+
+SpringBoot 怎么把日志默认配置好的
+
+1. 每个 starter 场景，都会导入一个核心场景 `spring-boot-starter`
+2. 核心场景引入了日志的所有功能 `spring-boot-starter-logging`
+3. 默认使用了 logback + slf4j 组合作为默认底层日志
+4. 日志是系统一启动就要用，`xxxAutoConfiguration` 是系统启动好了以后放好的组件，后来用的。
+5. 日志是利用监听器机制配置好的。`ApplicationListener`
+6. 日志所有的配置都可以通过修改配置文件实现，以 `logging` 开始的所有配置
+
+# P18 日志-日志格式
+
+## 2、日志格式
+
+默认输出格式：
+
+- 时间和日期：毫秒级精度
+- 日志级别：`ERROR`、`WARN`、`INFO`、`DEBUG`、`TRACE`
+- 进程 ID
+- `---`：消息分隔符
+- 线程名：使用[]包含
+- Logger 名：通常是产生日志的类名
+- 消息：日志记录的内容
+
+注意：Logback 没有 `FATAL` 级别，对应的是 `ERROR`
+
+
+
+默认值：参照 `spring-boot` 包 `additional-spring-configuration-metadata.json` 文件
+
+可修改为：`%d[yyyy-MM-dd HH:mm:ss.SSS] %-5level [%thread] %logger{15} ===> %msg%n`
+
+# P19 日志-日志级别
+
+- 由低到高：`ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF`
+  - 只会打印指定级别及以上级别的日志
+  - ALL：打印所有日志
+  - TRACE：追踪框架详细流程日志，一般不使用
+  - DEBUG：开发调试细节日志
+  - INFO：关键、感兴趣信息日志
+  - WARN：警告但不是错误的信息日志。比如：版本过时
+  - ERROR：业务错误日志，比如出现各种异常
+  - FATAL：致命错误日志，比如 JVM 系统崩溃
+  - OFF：关闭所有日志记录
+- 不指定级别的所有类，都使用 root 指定的级别作为默认级别
+- SpringBoot 日志默认级别是 INFO
+
+
+
+1. 在 `application.properties/yaml` 中配置 `logging.level.<logger-name>=<level>` 指定日志级别
+2. `level` 可取值范围：`TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF` 定义在 `LogLevel` 类中
+3. root 的 `logger-name` 叫 `root`，可以配置 `logging.level.root=warn`，代表所有未指定日志级别都使用 root 的 warn 级别
+
+# P20 日志-日志分组
+
+```properties
+logging.group.xxx=com.aaa,com.bbb,com.ccc
+logging.level.xxx=trace
+```
+
+SpringBoot 预定义了两个组：
+
+- web
+- sql
+
+# P21 日志-文件输出
+
+```properties
+# 指定日志文件的路径，日志文件默认名叫 spring.log
+logging.file.path=D:\\
+# 指定日志文件的名：file.name 和 path 的配置同时存在，只看 file.name
+# 1. 只写名字，就生成到当前项目同位置的 demo.log
+# 2. 写名字+路径：生成到指定位置的指定文件
+logging.file.name=demo.log
+```
+
+# P22 日志-归档与切割
+
+> 归档：每天的日志单独存到一个文档中
+>
+> 切割：每个文件 10 MB，超过大小切割成另外一个文件
+
+1. 每天的日志应该独立分割出来存档。如果使用 `logback`（SpringBoot 默认整合），可以通过 `application.properties/yaml` 文件指定日志滚动规则。
+2. 如果是其他日志系统，需要自行配置（添加 `log4j2.xml` 或 `log4j2-spring.xml`）
+3. 支持的滚动规则设置如下：
+
+| 配置项                                                 | 描述                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| `logging.logback.rollingpolicy.file-name-pattern`      | 日志存档的文件名格式（默认值：`${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz`） |
+| `logging.logback.rollingpolicy.clean-history-on-start` | 应用启动时是否清除以前存档（默认值：`false`）                |
+| `logging.logback.rollingpolicy.max-file-size`          | 存档前，每个日志文件的最大大小（默认值：`10MB`）             |
+| `logging.logback.rollingpolicy.total-size-cap`         | 日志文件被删除之前，可以容纳的最大大小（默认值：`0B`）。设置 `1GB` 则磁盘存储超过 1GB 日志后就会删除旧日志文件 |
+| `logging.logback.rollingpolicy.max-history`            | 日志文件保存的最大天数（默认值：7）                          |
+
+# P23 日志-自定义日志系统
+
+# P24 Web 开发-自动配置原理
+
+1. 整合 web 场景
+2. 引入了 `autoconfigure` 功能
+3. `@EnableAutoConfiguration` 注解使用 `@Import(AutoConfigurationImportSelector.class)` 批量导入组件
+4. 加载 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 文件中配置的所有组件
+5. 绑定了配置文件的一堆配置项
+   1. SpringMVC 的所有配置 `spring.mvc`
+   2. Web 场景通用配置 `spring.web`
+   3. 文件上传配置 `spring.servlet.multipart`
+   4. 服务器的配置 `server` 比如：编码方式
+
+# P25 Web 开发-默认效果
+
+默认效果：
+
+1. 包含了 `ContentNegotiatingViewResolver` 和 `BeanNameViewResolver` 组件，方便视图解析
+2. 默认的静态资源处理机制：静态资源放在 `static` 文件夹下即可直接访问
+3. 自动注册了 `Converter`、`GenericConverter`、`Formatter` 组件，适配常见数据类型转换和格式化需求
+4. 支持 `HttpMessageConverters`，可以方便返回 json 等数据类型
+5. 注册 `MessageCodesResolver`，方便国际化及错误消息处理
+6. 支持静态 `index.html`
+7. 自动使用 `ConfigurableWebBindingInitializer`，实现消息处理、数据绑定、类型转化等功能
+
+> 重要：
+>
+> - 如果要保持 boot mvc 的默认配置，并且自定义更多的 mvc 配置，如：interceptors，formatters，view controller 等。可以使用 `@Configuration` 注解添加一个 `WebMvcConfigurer` 类型的配置类，并不要标注 `@EnableWebMvc`。
+> - 如果想保持 boot mvc 的默认配置，但要自定义核心组件实例，比如：`RequestMappingHandlerMapping`、`RequestMappingHandlerAdapter` 或 `ExceptionHandlerExceptionResolver`，给容器中放一个 `WebMvcRegistration` 组件即可
+> - 如果想全面接管 Spring MVC，`@Configuration` 标注一个配置类，并加上 `@EnableWebMvc` 注解，实现 `WebMvcConfigurer` 接口
+
+最佳实践：
+
+三种方式
+
+|          |                                                              |                          |                                                         |
+| -------- | ------------------------------------------------------------ | ------------------------ | ------------------------------------------------------- |
+| 全自动   | 直接编写控制器逻辑                                           |                          | 全部使用自动配置默认效果                                |
+| 手自一体 | `@Configuration` + 配置 `WebMvcConfigurer` + 配置 `WebMvcRegistrations` | 不要标注 `@EnableWebMvc` | 自动配置效果<br />手动设置部分功能<br />定义MVC底层组件 |
+| 全手动   | `@Configuration` + 配置 `WebMvcConfigurer`                   | 标注 `@EnableWebMvc`     | 禁用自动配置效果<br />全手动配置                        |
+
+两种模式
+
+1. 前后分离模式：@RestController 响应 JSON 数据
+2. 前后不分离模式：@Controller + Thymeleaf 模板引擎
