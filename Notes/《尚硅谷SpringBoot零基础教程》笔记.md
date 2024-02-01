@@ -593,3 +593,536 @@ logging.file.name=demo.log
 
 1. 前后分离模式：@RestController 响应 JSON 数据
 2. 前后不分离模式：@Controller + Thymeleaf 模板引擎
+
+# P26 Web 开发 - WebMvcAutoConfiguration 原理
+
+## 1、生效条件
+
+```java
+@AutoConfiguration(after = { DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class, ValidationAutoConfiguration.class}) // 在这些自动配置之后
+@ConditionalOnWebApplication(type = Type.SERVLET) // 如果是 web 应用就生效，类型 SERVLET、REACTIVE 响应式
+@ConditionalOnClass({ Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class})
+@ConditionalOnMissingBean(WebMvcConfigurationSupport.class) // 容器中没有这个 Bean，才生效。默认就是没有
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10) // 优先级
+@ImportRuntimeHints(WebResourcesRuntimeHints.class)
+public class WebMvcAutoConfiguration {
+    ...
+}
+```
+
+## 2、效果
+
+1. 放了两个 Filter：
+
+   1. `HiddenHttpMethodFilter`：页面表单提交 Rest 请求（GET、POST、PUT、DELETE）
+   2. `FormContentFilter`：表单内容 Filter，GET（数据放 URL 后面）、POST（数据放请求体）请求可以携带数据，PUT、DELETE 的请求体数据会被忽略
+
+2. 给容器中放了 `WebMvcConfigurer` 组件，给 SpringMVC 添加各种定制功能
+
+   1. 所有的功能最终会和配置文件进行绑定
+      1. WebMvcProperties：`spring.mvc` 配置文件
+      2. WebProperties：`spring.web` 配置文件
+
+   ```java
+   @Configuration(proxyBeanMethods=false)
+   @Import(EnableWebMvcConfiguration.class) // 额外导入了其他配置
+   @EnableConfigurationProperties({ WebMvcProperties.class, WebProperties.class })
+   @Order(0)
+   public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer, ServletContextAware {
+       ...
+   }
+   ```
+
+   
+
+## 3、WebMvcConfigurer 接口
+
+提供了配置 SpringMvc 底层的所有组件入口
+
+1. 参数解析器 HandlerMethodArgumentResolver
+2. 跨域 CorsRegistry
+3. 格式化器 FormatterRegistry
+4. 拦截器 InterrceptorRegistry
+5. 资源处理器：处理静态资源规则 ResourceHandlerRegistry
+6. 返回值处理器 HandlerMethodReturnValueHandler
+7. 视图控制器 ViewControllerRegistry
+8. 异步支持 AsyncSupportConfigurer
+9. 内容协商 ContentNegotiationConfigurer
+10. 默认处理 默认接受: / DefaultServletHandlerConfigurer
+11. 配置异常解析器 HandlerExceptionResolver
+12. 消息转化器 HttpMessageConverter
+13. 路径匹配 PathMatchConfigurer
+14. 视图解析 ViewResolverRegistry
+15. 扩展异常解析器
+16. 扩展消息转换器
+
+# P27 Web 开发-静态资源规则【源码分析】
+
+```java
+@Override
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    if (!this.resourceProperties.isAddMappings()) {
+        logger.debug("Default resource handling disabled");
+        return;
+    }
+    // 1.
+    addResourceHandler(registry, this.mvcProperties.getWebjarsPathPattern(),
+                       "classpath:/META-INF/resources/webjars/");
+    addResourceHandler(registry, this.mvcProperties.getStaticPathPattern(), (registration) -> {
+        registration.addResourceLocations(this.resourceProperties.getStaticLocations());
+        if (this.servletContext != null) {
+            ServletContextResource resource = new ServletContextResource(this.servletContext, SERVLET_LO);
+            registration.addResourceLocations(resource);
+        }
+    });
+}
+```
+
+1. 规则一：访问 `/webjars/**` 路径就去 `classpath:/META-INF/resources/webjars/` 下找资源
+2. 规则二：访问 `/**` 路径就去静态资源默认的四个资源位置找资源
+   1. `classpath:/META-INF/resources/`
+   2. `classpath:/resources/`
+   3. `classpath:/static/`
+   4. `classpath:/public/`
+3. 规则三：静态资源默认都有缓存规则配置
+   1. 所有缓存的设置，直接通过配置文件：`spring.web`
+   2. cachePeriod：缓存周期；多久不用找服务器要新的。默认没有，以秒为单位
+   3. cacheControl：HTTP 缓存控制
+   4. useLastModified：是否使用最后一次修改。
+
+# P29 Web 开发-欢迎页规则【源码分析】
+
+## 5、EnableWebMvcConfiguration 源码
+
+```java
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(WebProperties.class)
+public static class EnableWebMvcConfiguration extends DelegatingWebMvcConfiguration implements ResourceLoaderAware {
+    ...
+}
+```
+
+SpringBoot 给容器中放 WebMvcConfigurationSupport 组件。我们如果自己放了 WebMvcConfigurationSupport 组件，Boot 的 WebMvcAutoConfiguration 都会失效
+
+1. `HandlerMapping`：根据请求路径找到哪个 Handler 能处理请求
+   1. `WelcomePageHandlerMapping`
+      1. 访问 `/**` 路径下的所有请求，都在以上四个静态资源路径下找，欢迎页也一样。
+      2. 找 `index.html`：只要静态资源的位置有一个 `index.html` 页面，项目启动默认访问
+
+# P29 Web 开发-Favicon 规则
+
+# P30 Web 开发-HTTP 缓存机制测试
+
+1. `spring.web`：
+   1. 配置国际化的区域信息
+   2. 静态资源策略（开启、处理链、缓存）
+
+```properties
+# 开启静态资源映射规则
+spring.web.resources.add-mappings=true
+# 设置缓存
+spring.web.resources.cache.period=3600
+# 缓存详细合并项控制，覆盖 period 配置: 
+# 浏览器第一次请求服务器，服务器告诉浏览器此资源缓存 7200 秒，7200 秒以内的所有此资源访问不用发给服务器请求，7200 秒以后发请求给服务器
+spring.web.resources.cache.cachecontrol.max-age=7200
+# 使用资源 last-modified 时间，来对比服务器和浏览器的资源是否相同没有变化。相同返回 304
+spring.web.resources.cache.use-last-modified=true
+```
+
+# P31 Web开发-【配置式】自定义静态资源
+
+```properties
+spring.web.static-locations=classpath:/a/,classpath:/b/
+
+# 2. `spring.mvc`：
+# 自定义 webjars 路径前缀
+spring.mvc.webjars-path-pattern=/wj/**
+# 静态资源访问路径前缀
+spring.mvc.static-path-pattern=/static/**
+```
+
+# P32 Web开发-【代码式】WebMvcConfigurer使用
+
+```java
+@Configuration
+public class MyConfig implements WebMvcConfigurer {
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 自动保留以前规则
+        // 自己写新的规则
+        registry.addResourceHandler("/static/**")
+            .addResourceLocations("classpath:/a/", "classpath:/b/")
+            .setCacheControl(CacheControl.maxAge(1180, TimeUnit.SECONDS));
+    }
+}
+```
+
+
+
+```java
+//@EnableWebMvc // 禁用 boot 的默认配置
+@Configuration // 这是一个配置类，给容器中放一个 WebMvcConfigurer 组件，就能自定义底层
+public class MyConfig {
+    @Bean
+    public WebMvcConfigurer webMvcConfigurer() {
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            // 自己写
+            registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/a/", "classpath:/b/")
+                .setCacheControl(CacheControl.maxAge(1180, TimeUnit.SECONDS));
+	    }
+    }
+}
+```
+
+## 为什么容器中放一个 WebMvcConfigurer 就能配置底层行为？
+
+1. WebMvcAutoConfiguration 是一个自动配置类，它里面有一个 `EnableWebMvcConfiguration`
+2. `EnableWebMvcConfiguration` 继承于 `DelegatingWebMvcConfiguration`，这两个都生效
+3. `DelegatingWebMvcConfiguration` 利用 DI 把容器中所有 `WebMvcConfigurer` 注入进来
+4. 别人调用 `DelegatingWebMvcConfiguration` 的方法配置底层规则，而它调用所有 `WebMvcConfigurer` 的配置底层方法
+
+# P33 路径匹配
+
+> Spring 5.3 之后加入了更多的请求路径匹配的实现策略；
+>
+> 以前只支持 `AntPathMatcher` 策略，现在提供了 `PathPatternParser` 策略。并且可以让我们指定到底使用哪种策略。
+
+## 1、Ant 风格路径用法
+
+Ant 风格的路径模式语法具有以下规则：
+
+- `*`：表示任意数量的字符
+- `?`：表示任意一个字符。
+- `**`：表示任意数量的目录。
+- `{}`：表示一个命名的模式占位符
+- `[]`：表示字符集合，例如 `[a-z]` 表示小写字母。
+
+注意：Ant 风格的路径模式语法中的特殊字符需要转义，如：
+
+- 要匹配文件路径中的星号，则需要转义为`\\*`
+- 要匹配文件路径中的问号，则需要转义为`\\?`
+
+## 2、模式切换
+
+> AntPathMatcher 和 PathPatternParser
+>
+> - `PathPatternParser` 在 JMH 基准测试下，有 6~8 倍吞吐量提升，降低 30% ~ 40% 空间分配率
+> - `PathPatternParser` 兼容 `AntPathMatcher` 语法，并支持更多类型的路径模式
+> - `PathPatternParser` “`**`” 多段匹配的支持仅允许在模式末尾使用
+
+```java
+@GetMapping("/a*/b?/{p1:[a-f]+}/**")
+public String hello(HttpServletRequest request, @PathVariable("p1") String path) {
+    log.info("路径变量p1: {}", path);
+    // 获取请求路径
+    String uri = request.getRequestURI();
+    return uri;
+}
+```
+
+总结:
+
+1. 使用默认的路径匹配规则，是由 `PathPatternParser` 提供的
+
+2. 如果路径中间需要有 `**`，替换成 ant 风格路径
+
+   ```properties
+   # 改变路径配置策略：
+   # ant_path_matcher 老板策略；
+   # path_pattern_parser 新版策略；默认
+   spring.mvc.pathmatch.matching-strategy=ant_path_matcher
+   ```
+
+# P34 Web开发-内容协商演示
+
+内容协商：一套系统适配多端数据返回
+
+多端内容适配
+
+- JSON
+- XML
+- 自定义协议数据
+
+## 1、默认规则
+
+SpringBoot 多端内容适配
+
+1. 基于请求头内容协商（默认开启）
+
+   ​	客户端向服务端发送请求，携带 HTTP 标准的 Accept 请求头。
+
+   1. Accept: `application/json`，`text/xml`，`text/yaml`
+   2. 服务器根据客户端请求头期望的数据类型进行动态返回
+
+2. 基于请求参数内容协商（需要开启）
+
+   1. 发送请求 `GET /projects/spring-boot?format=json`
+   2. 匹配到 `@GetMapping("/projects/spring-boot")`
+   3. 根据参数协商，优先返回 json 类型数据【需要开启参数匹配设置】
+   4. 发送请求 `GET /projects/spring-boot?format=xml` 优先返回 xml 类型数据
+
+## 2、效果展示
+
+> 请求同一个接口，可以返回 json 和 xml 不同格式数据
+
+1. 引入支持写出 xml 内容依赖
+
+   ```xml
+   <dependency>
+   	<groupId>com.fastxml.jackson.dataformat</groupId>
+       <artifactId>jackson-dataformat-xml</artifactId>
+   </dependency>
+   ```
+
+2. 标注注解
+
+   ```java
+   @JacksonXmlRootElement
+   ```
+
+   
+
+## 3、配置协商规则与支持类型
+
+1. 修改内容协商方式
+
+   ```properties
+   # 使用参数进行内容协商
+   spring.mvc.contentnegotiating.favor-parameter=true
+   #自定义参数名，默认为 format
+   spring.mvc.contentnegotiating.parameter-name=myparam
+   ```
+
+2. 大多数 MediaType 都是开箱即用的。也可以自定义内容类型，如：
+
+   ```properties
+   spring.mvc.contentnegotiating.media-types.yaml=text/yaml
+   ```
+
+## 4、自定义内容返回
+
+> 增加 yaml 返回支持
+
+```xml
+<dependency>
+	<groupId>com.fasterxml.jackson.dataformat</groupId>
+    <artifactId>jackson-dataformat-yaml</artifactId>
+</dependency>
+```
+
+
+
+# P35 Web 开发-HttpMessageConverter原理
+
+内容协商原理 - HttpMessageConverter
+
+- `HttpMessageConverter` 怎么工作？何时工作？
+- 定制 `HttpMessageConverter` 来实现多端内容协商
+- 编写 `WebMvcConfigurer` 提供的 `configureMessageConverters` 底层，修改底层的 MessageConverter
+
+## 1、@ResponseBody 由 HttpMessageConverter 处理
+
+> 标注了 @ResponseBody 的返回值 将会由支持它的 HttpMessageConverter 写给浏览器
+
+1. 如果 Controller 方法的返回值标注了 `@ResponseBody` 注解（`@ResponseBody` 由 `HttpMessageConverter` 处理）
+   1. 请求进来先到 `DispatchServlet` 的 `doDispatch()` 进行处理
+   2. 找到一个 `HandlerAdapter` 适配器。利用适配器执行目标方法
+   3. `RequestMappingHandlerAdapter` 来执行，调用 `invokeHandlerMethod()` 来执行目标方法
+   4. 目标方法执行之前，准备好两个东西
+      1. `HandlerMethodArgumentResolver`：参数解析器，确定目标方法每个参数值
+      2. `HandlerMethodReturnValueHandler`：返回值处理器，确定目标方法的返回值该怎么处理
+   5. `RequestMappingHandlerAdapter` 里面的 `invokeAndHandle(webRequest, mavContainer)` 真正执行目标方法
+   6. 目标方法执行完成，会返回返回值对象
+   7. 找到一个合适的返回值处理器 `HandlerMethodReturnValueHandler`
+   8. 最终找到 `RequestResponseBodyMethodProcessor` 能处理标注了 `@ResponseBody` 注解的方法
+   9. `RequestResponseBodyMethodProcessor` 调用 `writeWithMessageConverters()`，利用 `MessageConverter` 把返回值写出去
+2. `HttpMessageConverter` 会先进行内容协商
+   1. 遍历所有的 `MessageConverter` 看谁支持这种内容类型的数据
+   2. 默认 `MessageConverter` 有如下：
+   3. 最终因为要 `json` 所以 `MappingJackson2HttpMessageConverter` 支持写出 json
+   4. jackson 用 `ObjectMapper` 把对象写出去
+
+# P36 Web开发-默认HttpMessageConverters配置
+
+## 2、WebMvcAutoConfiguration 提供几种默认 HttpMessageConverters
+
+- `EnableWebMvcConfiguration` 通过 `addDefaultHttpMessageConverters` 添加了默认的 `MessageConverter`，如下：
+  - `ByteArrayHttpMessageConverter`：支持字节数据读写
+  - `StringHttpMessageConverter`：支持字符串读写
+  - `ResourceHttpMessageConverter`：支持资源读写
+  - `ResourceRegionHttpMessageConverter`：支持分区资源写出
+  - `AllEncompassingFormHttpMessageConverter`：支持表单 xml/json 读写
+  - `MappingJackson2HttpMessageConverter`：支持请求响应体 Json 读写
+
+# P37 Web开发-增加 Yaml 内容协商
+
+## WebMvcConfigurationSupport
+
+提供了很多的默认设置
+
+判断系统中是否有相应的类：`ClassUtils.isPresent()`，如果有，就加入相应的 `HttpMessageConverter`
+
+
+
+## 1、增加 yaml 返回支持
+
+导入依赖
+
+```xml
+<dependency>
+	<groupId>com.fasterxml.jackson.dataformat</groupId>
+    <artifactId>jackson-dataformat-yaml</artifactId>
+</dependency>
+```
+
+编写配置
+
+```properties
+# 新增一种媒体类型
+spring.mvc.contentnegotiation.media-types.yaml=text/yaml
+```
+
+增加 `HttpMessageConverter` 组件，专门负责把响应写出为 yaml
+
+```java
+@Override // 配置一个能把对象转为 yaml 的 messageConverter
+public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+    converters.add(new MyYamlHttpMessageConverter());
+}
+```
+
+```java
+public class MyYamlHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
+    private ObjectMapper objectMapper = null;
+    
+    public MyYamlHttpMessageConverter() {
+        // 告诉 SpringBoot 这个 MessageConverter 支持哪种媒体类型
+        super(new MediaType("text", "yaml", Charset.forName("UTF-8")));
+        YAMLFactory factory = new YAMLFactory()
+            .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
+        objectMapper = new ObjectMapper(factory);
+    }
+    
+    @Override
+    protected boolean supports(Class<?> clazz) {
+        // 只要是对象类型，不是基本类型
+        return true;
+    }
+    
+    @Override // @RequestBody
+    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+        return null;
+    }
+    
+    @Override // @ResponseBody
+    protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+        try(OutputStream body = outputMessage.getBody()) {
+	        this.objectMapper.writeValue(body, o);
+        }
+    }
+}
+```
+
+## 2、思考：如何增加其他
+
+- 配置媒体类型支持
+  - `spring.mvc.contentnegotiation.media-types.yaml=text/yaml`
+- 编写对应的 `HttpMessageConverter`
+- 把 `MessageConverter` 组件加入到底层
+
+# P38 Web开发-Thymeleaf整合
+
+模板引擎页面默认放在 `src/main/resources/templates`
+
+SpringBoot 包含以下模板引擎的自动配置
+
+- FreeMarker
+- Groovy
+- Thymeleaf
+- Mustache
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+</html>
+```
+
+
+
+## 1、Thymeleaf 整合
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+```
+
+自动配置原理
+
+1. 开启了 `org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration` 自动配置
+2. 属性绑定在 `ThymeleafProperties` 中，对应配置文件 `spring.thymeleaf` 内容
+3. 所有的模板页面默认在 `classpath:/templates` 文件夹下
+
+# P39 Web开发-Thymeleaf 核心语法
+
+## 1、核心语法
+
+`th:xxx`：动态渲染指定的 html 标签属性值、或者 th 指令（遍历、判断等）
+
+- `th:text`：标签体内文本值渲染；会转义
+
+- `th:utext`：标签体内文本值渲染；不会转义 html 标签，真正显示成 html 该有的样子
+
+- `th:属性`：标签指定属性渲染；动态替换任意 html 属性的值
+
+- `th:attr`：标签任意属性渲染
+
+- `th:if`、`th:each`、...：其他 th 指令
+
+- 例如：
+
+  ```html
+  <p th:text="${content}">原内容</p>
+  <a th:href="${url}">登录</a>
+  <img src="../../images/gtvglogo.png" 
+       th:attr="src=@{/images/gtvglogo.png},title=#{logo},alt=#{logo}"/>
+  ```
+
+表达式：用来动态取值
+
+- `${}`：变量取值；使用 Model 共享给页面的值都可以直接用 $ 取出来
+- `@{}`：url 路径
+- `#{}`：国际化消息
+- `~{}`：片段引用
+- `*{}`：变量选择：需要配合 `th:object` 绑定对象
+
+系统工具 & 内置对象：
+
+- `param`：请求参数对象
+- `session`：session 对象
+- `application`：application 对象
+- `#execInfo`：模板执行信息
+- `#message`：国际化消息
+- `#uris`：uri/url 工具
+- `#conversions`：类型转换工具
+- `#dates`：日期工具，是 `java.util.Date` 对象的工具类
+- `#calendars`：类似 #dates，只不过是 `java.util.Calendar` 对象的工具类
+- `#temporals`：JDK 8+ `java.time` API 工具类
+- `#numbers`：数字操作工具
+- `#strings`：字符串操作
+- `#objects`：对象操作
+- `#bools`：bool 操作
+- `#arrays`：array 工具
+- `#lists`：list 工具
+- `#sets`：set 工具
+- `#maps`：map 工具
+- `#aggregates`：集合聚合工具（sum、avg）
+- `#ids`：id 生成工具
+
+## 2、语法示例
+
+`||` 拼字符串
