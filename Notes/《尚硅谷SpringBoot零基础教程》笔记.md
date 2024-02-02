@@ -1126,3 +1126,530 @@ SpringBoot 包含以下模板引擎的自动配置
 ## 2、语法示例
 
 `||` 拼字符串
+
+# P40 Web开发-Thymeleaf 遍历
+
+## 3、属性设置
+
+1. `th:href="@{/product/list}"`
+2. `th:attr="class=${active}"`
+3. `th:attr="src=@{/images/gtvglogo.png},title=${logo},alt=#{logo}"`
+4. `th:checked="${user.active}"`
+
+## 4、遍历
+
+语法：`th:each="元素名,迭代状态 : ${集合}"`
+
+```html
+<tr th:each="prod: ${prods}">
+	<td th:text="${prod.name}">Onions</td>
+    <td th:text="${prod.price}">2.41</td>
+    <td th:text="${prod.inStock}? #{true} : #{false}">yes</td>
+</tr>
+<tr th:each="prod,iterStat : ${prods}" th:class="${iterStat.odd}? 'odd'">
+	<td th:text="${prod.name}">Onions</td>
+    <td th:text="${prod.price}">2.41</td>
+    <td th:text="${prod.inStock}? #{true} : #{false}">yes</td>
+</tr>
+```
+
+iterStat 有以下属性：
+
+- index：当前遍历元素的索引，从 0 开始
+- count：当前遍历元素的索引，从 1 开始
+- size：需要遍历元素的总数量
+- current：当前正在遍历的元素对象
+- even/odd：是否偶数/奇数行
+- first：是否第一个元素
+- last：是否最后一个元素
+
+# P41 Web 开发 - Thymeleaf 判断
+
+## 5、判断
+
+```html
+<a href="comment.html"
+   th:href="@{/product/comments(prodId=${prod.id})}"
+   th:if="${not #lists.isEmpty(prod.comments)}">
+    view
+</a>
+```
+
+```html
+<div th:switch="${user.role}">
+    <p th:case="'admin'">User is an adminstrator</p>
+    <p th:case="#{roles.manager}">User is a manager</p>
+    <p th:case="*">User is some other thing</p>
+</div>
+```
+
+
+
+# P42 Web 开发 - Thymeleaf 属性优先级
+
+## 6、属性优先级
+
+1. 片段包含 `th:insert`, `th:replace`
+2. 遍历 `th:each`
+3. 判断 `th:if`, `th:unless`, `th:switch`, `th:case`
+4. 定义本地变量 `th:object`, `th:with`
+5. 通用方式属性修改 `th:attr`, `th:attrprepend`, `th:attrappend`
+6. 指定属性修改 `th:value`, `th:href`, `th:src`
+7. 文本值 `th:text`, `th:utext`
+8. 片段指定 `th:fragment`
+9. 片段移除 `th:remove`
+
+## 7、行内写法
+
+`[[...]]` 或 `[(...)]`
+
+```html
+<p>Hello, [[$(session.user.name)]]!</p>
+```
+
+## 8、变量选择
+
+```html
+<div th:object="$(session.user)">
+    <p>Name: <span th:text="*(firstName)">Sebastian</span>.</p>
+    <p>Surname: <span th:text="*(lastName)">Pepper</span>.</p>
+    <p>Nationality: <span th:text="*(nationality)">Saturn</span>.</p>
+</div>
+```
+
+等同于
+
+```html
+<div>
+    <p>Name: <span th:text="${session.user.firstName}">Sebastian</span>.</p>
+    <p>Surname: <span th:text="${session.user.lastName)">Pepper</span>.</p>
+    <p>Nationality: <span th:text="${session.user.nationality)">Saturn</span>.</p>
+</div>
+```
+
+# P43 Web 开发 -Thymeleaf 模板引用
+
+## 9、模板布局
+
+- 定义模板： `th:fragment`
+- 引用模板：`~{templatename::selector}`
+- 插入模板：`th:insert`、`th:replace`
+
+# P44 Web 开发 - Thymeleaf 总结与 devtools
+
+## 10、devtools
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+</dependency>
+```
+
+修改页面后，`ctrl+F9` 刷新效果
+
+Java 代码的修改，如果 `devtools` 热启动了，可能会引起一些 bug，难以排查。
+
+# P45 Web 开发 - 国际化
+
+国际化自动配置参照 `MessageSourceAutoConfiguration`
+
+实现步骤：
+
+1. Spring Boot 在类路径下查找 `messages` 资源绑定文件。文件名为：`messages.properties`
+2. 多语言可以定义多个消息文件，命名为 `message_区域代码.properties`，如：
+   1. `messages.properties`：默认
+   2. `messages_zh_CN.properties`：中文环境
+   3. `messages_en_US.properties`：英文环境
+3. 在程序中可以自动注入 `MessageSource` 组件，获取国际化的配置项值
+4. 在页面中可以使用表达式 `#{}` 获取国际化的配置项值
+
+
+
+```java
+@Autowired
+MessageSource messageSource;
+
+@GetMapping("/haha")
+public String haha(HttpServletRequest request) {
+    Locale locale = request.getLocale();
+    // 利用代码的方式获取国际化配置文件中的指定的配置项的值
+    return messageSource.getMessage("login", null, locale);
+}
+```
+
+
+
+```properties
+# 国际化配置
+spring.message.basename=messages
+spring.message.encoding=UTF-8
+```
+
+# P46 Web 开发 - 错误处理机制
+
+错误处理的自动配置都在 `ErrorMvcAutoConfiguration` 中，两大核心机制：
+
+1. SpringBoot 会自适应处理错误，响应页面或 JSON 数据
+2. SpringMVC 的错误处理机制依然保留，MVC 处理不了，才会交给 boot 进行处理
+
+
+
+业务发生错误
+
+↓
+
+HandlerExceptionResolver 机制
+
+(@ExceptionHandler 机制能否处理 → @ResponseStatus 机制能否处理 → SpringMVC 定义的默认错误响应能否处理)
+
+↓
+
+SpringBoot 扩展异常处理机制
+
+（BasicErrorController → 内容协商：
+
+要 JSON 数据：DefaultErrorAttributes 获取错误信息并返回
+
+要页面：精确匹配【404、500】等错误状态码对应的页面 → 匹配名为【4xx、5xx】的页面 → 匹配名【error】的视图 → SpringBoot 提供默认名为【error】的视图）
+
+
+
+```properties
+# 当发生错误以后，错误请求转发给 /error
+server.error.path=/error
+```
+
+发生错误以后，转发给 /error 路径，SpringBoot 在底层写好一个 BasicErrorController 组件，专门处理这个请求
+
+规则：
+
+1. 解析一个错误页
+   1. 如果发生了 500、404、503、403 等等这些错误
+      1. 如果有模板引擎，默认在 `classpath:/templates/error/精确码.html`
+      2. 如果没有模板引擎，在静态资源文件夹下找 `精确码.html`
+   2. 如果匹配不到 `精确码.html` 这些精确的错误页，就去找 `5xx.html`、`4xx.html` 模糊匹配
+      1. 如果有模板引擎，默认在 `classpath:/templates/error/5xx.html`
+      2. 如果没有模板引擎，在静态资源文件夹下找 `5xx.html`
+2. 如果模板引擎路径 `templates` 下有 `error.html` 页面，就直接渲染
+
+# P47 Web 开发 - 错误处理最佳实战
+
+- 前后分离
+  - 后台发生的所有错误，`@ControllerAdvice + @ExceptionHandler` 进行统一异常处理
+- 服务端页面渲染
+  - 不可预知的一些 HTTP 码表示的服务器或客户端错误
+    - 给 `classpath:/templates/error/` 下面，放常用精确的错误码页面。
+    - 给 `classpath:/templates/error/` 下面，放通用模糊匹配的错误码页面。
+  - 发生业务错误
+    - 核心业务，每一种错误都应该代码控制，跳转到自己定制的错误页
+    - 通用业务，`classpath:/templates/error.html` 页面，显示通用的错误信息
+
+# P48 Web 开发-嵌入式容器
+
+> Servlet 容器：管理、运行 Servlet 组件（Servlet、Filter、Listener）的环境，一般指服务器
+
+## 1、自动配置原理
+
+- SpringBoot 默认嵌入 Tomcat 作为 Servlet 容器。
+- 自动配置类是 `ServletWebServerFactoryAutoConfiguration`、`EmbeddedWebServerFactoryCustomizerAutoConfiguration`
+
+
+
+1. `ServletWebServerFactoryAutoConfiguration` 自动配置了嵌入式容器场景
+2. 绑定了 `ServerProperties` 配置类，所有和服务器有关的配置 `server`
+3. `ServletWebServerFactoryAutoConfiguration` 导入了嵌入式的三大服务器 `Tomcat`、`Jetty`、`Undertow`
+   1. 导入 `Tomcat`、`Jetty`、`Undertow` 都有条件注解。系统中有这个类才行（也就是导了包）
+   2. 默认 `Tomcat` 配置生效
+   3. 都给容器中 `tServerWebServerFactory` 放了一个 web 服务器工厂（造 web 服务器的）
+   4. web 服务器工厂都有一个功能，`getWebServer()` 获取 web 服务器
+   5. `TomcatServletWebServerFactory` 创建 tomcat
+4. ServletWebServerFactory 什么时候会创建 WebServer 出来。
+5. `ServletWebServerApplicationContext` IOC 容器，启动的时候会调用创建 web 服务器 
+6. Spring 容器刷新（启动）的时候，会预留一个时机，刷新子容器。`onRefresh()`
+7. `refresh()` 容器刷新十二大步的刷新子容器会调用 `onRefresh()`
+
+
+
+```properties
+# server 开始的都是嵌入式容器（服务器）的配置
+# tomcat 调优，在 server.tomcat 这里
+server.tomcat.accept-count=
+```
+
+Web 场景的 Spring  容器启动，在 onRefresh 的时候会调用创建 web 服务器的方法。
+
+Web 服务器的创建是通过 WebServerFactory 搞定的，容器中又会根据导了什么包条件注解，启动相关的服务器配置，默认 `EmbeddedTomcat` 会给容器中放一个 `TomcatServletWebServerFactory`，导致项目启动，自动创建出 Tomcat。
+
+## 2、自定义
+
+切换服务器
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <exclusions>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-tomcat</artifactId>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jetty</artifactId>
+</dependency>
+```
+
+## 3、最佳实践
+
+用法：
+
+- 修改 `server` 下的相关配置就可以修改服务器参数
+- 通过给容器中放一个 `ServletWebServerFactory`，来禁用掉 SpringBoot 默认放的服务器工厂，实现自定义嵌入任意服务器。
+
+# P49 全面接管 SpringMVC
+
+- SpringBoot 默认配置好了 SpringMVC 的所有常用特性。
+- 如果我们需要全面接管 SpringMVC 的所有配置并禁用默认配置，仅需要编写一个 `WebMvcConfigurer` 配置类，并标注 `@EnableWebMvc` 即可。
+- 全手动模式
+  - `@EnableWebMvc`：禁用默认配置
+  - `WebMvcConfigurer` 组件：定义 MVC 的底层行为
+
+## 1、WebMvcAutoConfiguration 自动配置了哪些规则
+
+1. `WebMvcAutoConfiguration` web 场景的自动配置类
+
+   1. 支持 RESTful 的 Filter：HiddenHttpMethodFilter
+
+   2. 支持非 POST 请求，请求体携带数据：FormContentFilter
+
+   3. 导入 `EnableWebMvcConfiguration`
+
+      1. `RequestMappingHandlerAdapter`
+
+      2. `WelcomePageHandlerMapping`：欢迎页功能支持（模板引擎目录、静态资源目录放 index.html），项目访问就默认展示这个页面
+
+      3. `RequestMappingHandlerMapping`：找每个请求由谁处理的映射关系
+
+      4. `ExceptionHandlerExceptionResolver`
+
+      5. `LocaleResolver`：国际化解析器
+
+      6. `ThemeResolver`：主题解析器
+
+      7. `FlashMapManager`：临时数据共享
+
+      8. `FormattingConversionService`：数据格式化、类型转化
+
+         ```properties
+         # 自定义日期格式
+         spring.mvc.format.date=yyyy-MM-dd
+         spring.mvc.format.time=HH:mm:ss
+         ```
+
+      9. `Validator`：数据校验 `JSR303` 提供的数据校验功能
+
+      10. `WebBindingInitializer`：请求参数的封装与绑定
+
+      11. `ContentNegotiationManager`：内容协商管理器
+
+   4. `WebMvcAutoConfigurationAdapter` 配置生效，它是一个 `WebMvcConfigurer` 定义 mvc 底层组件
+
+      1. 定义好 `WebMvcConfigurer` 底层的默认功能；所有功能详见列表
+      2. 视图解析器：`InternalResourceViewResolver`
+      3. 视图解析器：`BeanNameViewResolver` 视图名（Controller 方法的返回值字符串）就是组件名
+      4. 内容协商解析器：`ContentNegotiatingViewResolver`
+      5. 请求上下文过滤器：`RequestContextFilter`：任意位置直接通过 `RequestContextHolder` 获取当前请求和响应的信息
+      6. 静态资源链规则
+      7. `ProblemDetailsExceptionHandler`：错误详情
+         1. SpringMVC 内部场景异常被它捕获
+
+   5. 定义了 MVC 默认的底层行为：`WebMvcConfigurer`
+
+## 2、@EnableWebMvc 禁用默认行为
+
+1. `@EnableWebMvc` 给容器中导入 `DelegatingWebMvcConfiguration` 组件，它是 `WebMvcConfigurationSupport`
+2. `WebMvcAutoConfiguration` 有一个核心的条件注解：`@ConditionalOnMissingBean(WebMvcConfigurationSupport.class)`，容器中没有 `WebMvcConfigurationSupport`，`WebMvcAutoConfiguration` 才生效。
+3. 所以禁用了默认行为
+
+## 3、WebMvcConfigurer 功能
+
+| 提供方法                           | 核心参数                                | 功能                                                         | 默认                                                         |
+| ---------------------------------- | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| addFormatter                       | FormatterRegistry                       | 类型转换：支持属性上 `@NumberFormat` 和 `@DatetimeFormat` 的数据类型转换 | GenericConversionService                                     |
+| getValidator                       | 无                                      | 数据校验：校验 Controller 上使用 `@Valid` 标注的参数合法性。需要导入 `starter-validator` | 无                                                           |
+| addInterceptors                    | InterceptorRegistry                     | 拦截器：拦截收到的所有请求                                   | 无                                                           |
+| configureContentNegotiation        | ContentNegotiationConfigurer            | 内容协商：支持多种数据格式返回。需要配合支持这种类型的 `HttpMessageConverter` | 支持 json                                                    |
+| configureMessageConverters         | `List<HttpMessageConverter<?>>`         | 消息转换器：标注 `@ResponseBody` 的返回值会利用 `MessageConverter` 直接写出去 | 8 个，支持 `byte`, `string`, `multipart`, `resource`, `json` |
+| addViewControllers                 | ViewControllerRegistry                  | 视图映射：直接将请求路径与物理视图映射。用于无 java 业务逻辑的直接视图页渲染 | 无<br />`<mvc:view-controller>`                              |
+| configureViewResolvers             | ViewResolverRegistry                    | 视图解析器：逻辑视图转为物理视图                             | ViewResolverComposite                                        |
+| addResourceHandlers                | ResourceHandlerRegistry                 | 静态资源处理：静态资源路径映射、缓存控制                     | ResourceHandlerRegistry                                      |
+| configureDefaultServiceHandling    | DefaultServletHandlerConfigurer         | 默认 Servlet：可以覆盖 Tomcat 的                             | 无                                                           |
+| configurePathMatch                 | PathMatchConfigurer                     | 路径匹配：自定义 URL 路径匹配。可以自动为所有路径加上指定前缀，比如 `/api` | 无                                                           |
+| configureAsyncSupport              | AsyncSupportConfigurer                  | 异步支持：                                                   | TaskExecutionAutoConfiguration                               |
+| addCorsMappings                    | CorsRegistry                            | 跨域：                                                       | 无                                                           |
+| addArgumentResolvers               | `List<HandlerMethodArgumentResolver>`   | 参数解析器：                                                 | mvc 默认提供                                                 |
+| addReturnValueHandlers             | `List<HandlerMethodReturnValueHandler>` | 返回值解析器：                                               | mvc 默认提供                                                 |
+| configureHandlerExceptionResolvers | `List<HandlerExceptionResolver>`        | 异常处理器：                                                 | 默认 3 个<br />ExceptionHandlerExceptionResolver<br />ResponseStatusExceptionResolver<br />DefaultHandlerExceptionResolver |
+| getMessageCodesResolver            | 无                                      | 消息码解析器：国际化使用                                     | 无                                                           |
+
+# P50 Web 开发 - 新特性 - ProblemDetails
+
+> RFC 7807: https://www.rfc-editor.org/rfc/rfc7807
+>
+> 错误信息返回新格式
+
+原理
+
+1. `ProblemDetailsExceptionHandler` 是一个 `@ControllerAdvice` 集中处理系统异常
+
+2. 处理 `@ExceptionHandler` 内的以下异常。如果系统出现以下异常，会被 Spring Boot 支持以 `RFC 7807` 规范方式返回错误数据
+
+3. ```properties
+   # ProblemDetails 默认是关闭的
+   spring.mvc.problemdetails.enabled=true
+   ```
+
+4. 
+
+默认效果：
+
+默认响应错误的 json。状态码 405
+
+```json
+{
+    "timestamp": "2023-04-18T11:13:05.515+00:00",
+    "status": 405,
+    "error": "Method Not Allowed",
+    "trace": "org.springframework.web.HttpRequestMethodNotSupportedException: Request method",
+    "message": "Method 'POST' is not supported.",
+    "path": "/list"
+}
+```
+
+开启 ProblemDetails 返回，使用新的 MediaType：
+
+`application/problem+json` + 额外扩展返回的数据
+
+```json
+{
+    "type": "about:blank",
+    "title": "Method Not Allowed",
+    "status": 405,
+    "detail": "Method 'POST' is not supported.",
+    "instance": "/list"
+}
+```
+
+# P51 Web 开发 - 新特性 - 函数式 Web
+
+> SpringMVC 5.2 以后允许我们使用函数式的方式，定义 Web 的请求处理流程。
+>
+> 函数式接口
+>
+> Web 请求处理的方式：
+>
+> 1. `@Controller + @RequestMapping`：耦合式（路由、业务耦合）
+> 2. 函数式 Web：分离式（路由、业务分离）
+
+```java
+@Configuration
+public class WebFunctionConfig {
+    /**
+     * 函数式 Web：
+     * 1. 给容器中放一个 Bean：类型是 RouterFunction<ServerResponse>
+     * 2. 每个业务准备一个自己的 Handler
+     * 
+     * 核心四大对象
+     * 1. RouterFunction：定义路由信息。发什么请求，谁来处理
+     * 2. RequestPredicate: 定义请求：请求谓语。请求方式（GET\POST）、请求参数
+     * 3. ServerRequest: 封装请求完整数据
+     * 4. ServerResponse：封装响应完整数据
+     */
+    @Bean
+    public RouterFunction<ServerResponse> userRoute(UserBizHandler userBizHandler/*这个会被自动注入进来*/) {
+        return RouterFunctions.route() // 开始定义路由信息
+            .GET("/user/{id}", RequestPredicates.accept(MediaType.ALL), userBizHandler::getUser)
+            .GET("/users", userBizHandler::getUsers)
+            .POST("/user", RequestPredicates.accept(MediaType.APPLICATION_JSON), userBizHandler::saveUser)
+            .PUT("/user/{id}", RequestPredicates.accept(MediaType.APPLICATION_JSON), userBizHandler::updateUser)
+            .DELETE("/user/{id}", userBizHandler::deleteUser)
+            .build();
+    }
+}
+```
+
+```java
+@Slf4j
+@Service
+public class UserBizHandler {
+    /**
+     * 查询指定 id 的用户
+     * @param request
+     * @return
+     */
+    public ServerResponse getUser(ServerRequest request) throws Exception {
+        String id = request.pathVariable("id");
+        log.info("查询{}用户信息", id);
+        // 业务处理
+        Person person = new Person(1L, "哈哈", "a@qq.com", 18, "admin");
+        // 构造响应
+        return ServerResponse
+            .ok()
+            .body(person);
+    }
+    
+    /**
+     * 获取所有用户
+     * @param request
+     * @return
+     */
+    public ServerResponse getUsers(ServerRequest request) throws Exception {
+        // 业务处理
+        List<Person> list = Arrays.asList(
+            new Person(1L, "哈哈", "a@qq.com", 18, "admin"),
+            new Person(2L, "哈哈2", "a2@qq.com", 12, "admin2")
+        )
+        // 构造响应
+        return ServerResponse
+            .ok()
+            .body(list); // 凡是 body 中的对象，就是以前 @ResponseBody 原理，利用 HttpMessageConverter 写出为 json
+    }
+    
+    /**
+     * 保存用户
+     * @param request
+     * @return
+     */
+    public ServerResponse saveUser(ServerRequest request) throws Exception {
+        // 提取请求体
+        Person body = request.body(Person.class);
+        log.info("保存用户信息: {}", body);
+        return ServerResponse.ok().build();
+    }
+    
+    /**
+     * 更新用户
+     * @param request
+     * @return
+     */
+    public ServerResponse updateUser(ServerRequest request) throws Exception {
+        // 提取请求体
+        Person body = request.body(Person.class);
+        log.info("用户信息更新: {}", body);
+        return ServerResponse.ok().build();
+    }
+    
+    /**
+     * 删除用户
+     * @param request
+     * @return
+     */
+    public ServerResponse updateUser(ServerRequest request) throws Exception {
+        String id = request.pathVariable("id");
+        log.info("删除用户信息完成: {}", id);
+        return ServerResponse.ok().build();
+    }
+}
+```
+
