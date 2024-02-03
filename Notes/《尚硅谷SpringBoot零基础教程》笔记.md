@@ -1653,3 +1653,687 @@ public class UserBizHandler {
 }
 ```
 
+# P52 数据访问 - SSM 整合
+
+> SpringBoot 整合 `Spring`、`SpringMVC`、`MyBatis` 进行数据访问场景开发
+
+## 1、创建 SSM 整合项目
+
+```xml
+<dependency>
+	<groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>3.0.1</version>
+</dependency>
+<dependency>
+	<groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+## 2、配置数据源
+
+```properties
+# 1. 先配置数据源信息
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.type=com.zaxxer.hikari.HikariDataSource
+spring.datasource.url=jdbc:mysql://localhost:3306/test
+spring.datasource.username=root
+spring.datasource.password=123456
+# 2. 配置整合 MyBatis
+# 指定 mapper 映射文件位置
+mybatis.mapper-locations=classpath:/mapper/*.xml
+# 参数项调整
+mybatis.configuration.map-underscore-to-camel-case=true
+```
+
+```java
+/**
+ * 1. @MapperScan【批量扫描注解】：告诉 MyBatis，扫描哪个包下面的所有接口
+ * 2. 使用 mybatis.mapper-locations 告诉 MyBatis，每个接口的 xml 文件都在哪里
+ * 3. MyBatis 自动关联绑定。
+ */
+@MapperScan(basePackages="com.atguigu.boot3.ssm.mapper")
+@SpringBootApplication
+public class Boot305SsmApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(Boot305SsmApplication.class, args);
+    }
+}
+```
+
+# P53 数据访问-自动配置分析
+
+**SSM 整合总结：**
+
+1. 导入 `mybatis-spring-boot-starter`
+2. 配置数据源信息
+3. 配置 mybatis 的 mapper 接口扫描与 xml 映射文件扫描
+4. 编写 bean，mapper，生成 xml，编写 sql 进行 crud
+5. 效果
+   1. 所有 sql 写在 xml 中
+   2. 所有 mybatis 配置写在 application.properties 下面
+
+- `DataSourceAutoConfiguration`：配置了数据源等基本信息
+  - `mybatis-spring-boot-starter` 导入 `spring-boot-starter-jdbc`，jdbc 是操作数据库的场景
+  - `jdbc` 场景的几个自动配置
+    - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - 数据源的自动配置类
+      - 所有和数据源有关的配置都绑定在 `DataSourceProperties`
+      - 默认使用 `HikariDataSource`
+    - org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+      - 给容器中放一个 `JdbcTemplate` 操作数据库
+    - org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration
+      - 基于 XA 二阶段提交协议的分布式事务数据源
+    - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+      - 支持事务
+  - 具有的底层能力：数据源、JdbcTemplate、事务
+- `MyBatisAutoConfiguration`：配置了 MyBatis 的整合流程
+  - `mybatis-spring-boot-starter` 导入 `mybatis-spring-boot-autoconfigure`（mybatis 的自动配置包）
+  - 默认加载两个自动配置类
+    - org.mybatis.spring.boot.autoconfigure.MybatisLanguageDriverAutoConfiguration
+    - org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
+      - 必须在数据源配置好之后才配置
+      - 给容器中放 `SqlSessionFactory` 组件，创建和数据库的一次会话
+      - 给容器中放 `SqlSessionTemplate` 组件，操作数据库
+  - MyBatis 的所有配置都绑定在 `MybatisProperties`
+  - 每个 Mapper 接口的代理对象是怎么创建放到容器中。详见 @MapperScan 原理：
+    - 利用 `@Import(MapperScannerRegister.class)` 批量给容器中注册组件。解析指定的包路径里面的每一个类，为每个 Mapper 接口类，创建 Bean 定义信息，注册到容器中
+
+
+
+> 如何分析哪个场景导入后，开启了哪些自动配置类。
+>
+> 找：`classpath:/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 文件中配置的所有值，就是要开启的自动配置类，但是每个类可能有条件注解，基于条件注解判断哪个自动配置类生效了。
+
+
+
+```properties
+# 开启调试模式，详细打印开启了哪些自动配置
+debug=true
+# Positive matches（生效的自动配置）
+# Negative matches（不生效的自动配置）
+```
+
+## Druid 数据源
+
+暂不支持 SpringBoot 3
+
+- 导入 druid-starter
+- 写配置
+- 分析自动配置了哪些东西，怎么用
+
+# P54 基础特性 - SpringApplication
+
+## 1.1 自定义 banner
+
+1. 类路径添加 `banner.txt` 或设置 `spring.banner.location` 就可以定制 banner
+
+2. ```properties
+   spring.banner.location=classpath:banner.txt
+   spring.main.banner-mode=off
+   ```
+
+## 1.2 自定义 SpringApplication
+
+```java
+@SpringBootApplication // 主程序
+public class Boot306FeaturesApplication {
+    public static void main(String[] args) {
+        // 1. SpringApplication: Boot 应用的核心 API 入口
+//        SpringApplication.run(Boot306FeaturesApplication.class, args);
+        // 1. 自定义 SpringApplication 的底层设置
+        SpringApplication application = new SpringApplication(Boot306FeaturesApplication.class);
+        // 程序化调整 SpringApplication 的参数
+//        application.setDefaultProperties();
+        // 配置文件优先
+        application.setBannerMode(Banner.Mode.CONSOLE);
+        // 2. SpringApplication 运行起来
+        application.run(args);
+    }
+}
+```
+
+## 1.3 FluentBuilder API
+
+```java
+new SpringApplicationBuilder()
+    .sources(Parent.class)
+    .child(Application.class)
+    .bannerMode(Banner.Mode.OFF)
+    .run(args);
+```
+
+# P55 基础特性 - Profiles 环境隔离用法
+
+> 环境隔离能力：快速切换开发、测试、生产环境
+>
+> 步骤：
+>
+> 1. 标识环境：指定哪些组件、配置在哪个生效
+>
+>    1. 区分出几个环境：dev（开发环境）、test（测试环境）、prod（生产环境）
+>
+>    2. 指定每个组件在哪个环境下生效；default 环境：默认环境
+>
+>       通过：@Profile({"test"}) 标注
+>
+>       组件没有标注 @Profile 代表任意时候都生效
+>
+>    3. 默认只有激活指定的环境，这些组件才会生效
+>
+> 2. 激活环境
+>
+>    1. 配置文件激活：`spring.profiles.active=dev`
+>    2. 命令行激活：`java -jar xxx.jar --spring.profiles.active=prod`
+>
+> 3. 切换环境：这个环境对应的所有组件和配置就应该生效
+
+## 2.1 使用
+
+### 2.1.1 指定环境
+
+- Spring Profiles 提供一种隔离配置的方式，使其仅在特定环境生效；
+- 任何 `@Component`、`@Configuration` 或 `@ConfigurationProperties` 可以使用 `@Profile` 标记，来指定何时被加载。【容器中的组件都可以被 `@Profile` 标记】
+
+### 2.1.2 环境激活
+
+1. 配置激活指定环境
+
+   ```properties
+   spring.profiles.active=production,hsqldb
+   ```
+
+2. 也可以使用命令行激活。`--spring.profiles.active=dev,hsqldb`
+
+3. 还可以配置默认环境；不标注 @Profile 的组件永远都存在。
+
+   1. 以前默认环境叫 default
+   2. `spring.profiles.default=test`
+
+4. 推荐使用激活方式激活指定环境
+
+### 2.1.3 环境包含
+
+注意：
+
+1. `spring.profiles.active` 和 `spring.profiles.default` 只能用到无 profile 的文件中，如果在 `application-dev.yaml` 中编写就是无效的
+
+2. 也可以额外添加生效文件，而不是激活替换。比如：
+
+   ```properties
+   # 包含指定环境，不管你激活哪个环境，这个都要有。总是要生效的环境
+   spring.profiles.include[0]=common
+   spring.profiles.include[1]=local
+   ```
+
+
+
+最佳实战：
+
+- 生效的环境 = 激活的环境/默认环境 + 包含的环境
+- 项目里面这么用
+  - 基础的配置 `mybatis`、`log`、`xxx`：写到包含环境中
+  - 需要动态切换变化的 `db`、`redis`：写到激活的环境中
+
+## 2.2 Profile 分组
+
+创建 `prod` 组，指定包含 `db` 和 `mq` 配置
+
+```properties
+spring.profile.group.prod[0]=db
+spring.profile.group.prod[1]=mq
+# 另一种写法
+spring.profile.group.prod=db,mq
+```
+
+使用 `--spring.profiles.active=prod`，就会激活 `prod`，`db`，`mq` 配置文件
+
+# P56 基础特性 - Profile 配置文件
+
+## 2.3 Profile 配置文件
+
+- `application-{profile}.properties` 可以作为指定环境的配置文件
+- 激活这个环境，配置就会生效。最终生效的所有配置是
+  - `application.properties`：主配置文件，任意时候都生效
+  - `application-{profile}.properties`：指定环境配置文件，激活指定环境生效
+- 效果：
+  - 项目的所有生效配置项 = 激活环境配置文件的所有项 + 主配置文件和配置文件不冲突的所有项
+  - 如果发生了配置冲突，以激活的环境配置文件为准
+
+# P57 基础特性 - 外部化配置
+
+> 场景：线上应用如何快速修改配置，并应用最新配置？
+>
+> - SpringBoot 使用 配置优先级 + 外部配置 简化配置更新、简化运维
+> - 只需要给 `jar` 应用所在的文件夹放一个 `application.properties` 最新配置文件，重启项目就能自动应用最新配置
+
+## 3.1 配置优先级
+
+Spring Boot 允许将配置外部化，以便可以在不同的环境中使用相同的应用程序代码。
+
+我们可以使用各种外部配置源，包括 `Java Properties 文件`、`YAML 文件`、`环境变量` 和 `命令行参数`。
+
+`@Value` 可以获得值，也可以用 `@ConfigurationProperties` 将所有属性绑定到 `java object` 中
+
+以下是 SpringBoot 属性源加载程序。后面的会覆盖前面的值。由低到高，高优先级配置覆盖低优先级
+
+1. 默认属性（通过 `SpringApplication.setDefaultProperties()` 指定的）
+2. `@PropertySource` 指定加载的配置（需要写在 `@Configuration` 类上才可生效）、`spring.config.import`
+3. 配置文件（application.properties/yml 等）
+4. `RandomValuePropertySource` 支持的 `random.*` 配置（如：@Value("${random.int}")）
+5. OS 环境变量
+6. Java 系统属性（`System.getProperties()`）
+7. JNDI 属性（来自 `java.comp/env`）
+8. `ServletContext` 初始化参数
+9. `ServletConfig` 初始化参数
+10. `SPRING_APPLICATION_JSON` 属性（内置在环境变量或系统属性中的 JSON）
+11. 命令行参数
+12. 测试属性。（`@SpringBootTest` 进行测试时指定的属性）
+13. 测试类 `@TestPropertySource` 注解
+14. Devtools 设置的全局属性。（`$HOME/.config/spring-boot`）
+
+> 结论：配置可以写到很多位置，常见的优先级顺序：
+>
+> - `命令行` > `配置文件` > `SpringApplication 配置`
+
+配置文件优先级如下：（后面覆盖前面）
+
+1. jar 包内的 `application.properties/yml`
+2. jar 包内的 `application-{profile}.properties/yml`
+3. jar 包外的 `application.properties/yml`
+4. jar 包外的 `application-{profile}.properties/yml`
+
+建议：用一种格式的配置文件。如果 `.properties` 和 `.yml` 同时存在，则 `.properties` 优先
+
+> 结论：包外 > 包内；同级情况：profile 配置 > application 配置
+
+所有参数均可由命令行传入，使用 `--参数项=参数值`，将会被添加到环境变量中，并优先于配置文件。
+
+比如 `java -jar app.jar --name="Spring"`，可以使用 `@Value("${name}")` 获取
+
+## 3.2 外部配置
+
+Spring Boot 应用启动时会自动寻找 `application.properties` 和 `application.yaml` 位置，进行加载。顺序如下：（后面覆盖前面）
+
+1. 类路径
+   1. 类根路径
+   2. 类下 `/config` 包
+2. 当前路径（项目所在的位置）
+   1. 当前路径
+   2. 当前下 `/config` 子目录
+   3. `/config` 目录的直接子目录 
+
+
+
+最终效果：优先级由高到低，前面覆盖后面
+
+- 命令行 > 包外 config 直接子目录 > 包外 config 目录 > 包外根目录 > 包内目录
+- 同级比较：
+  - profile 配置 > 默认配置
+  - properties 配置 > yaml 配置
+
+
+
+# P58 基础特性 - 单元测试
+
+## 4.1 整合
+
+SpringBoot 提供一系列测试工具集及注解方便我们进行测试。
+
+`spring-boot-test` 提供核心测试能力，`spring-boot-test-autoconfigure` 提供测试的一些自动配置。
+
+我们只需要导入 `spring-boot-starter-test` 即可整合测试
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+`spring-boot-starter-test` 默认提供了以下库供我们测试使用
+
+- JUnit 5
+- Spring Test
+- AssertJ
+- Hamcrest
+- Mockito
+- JSONassert
+- JsonPath
+
+
+
+```java
+// 测试类也必须在主程序所在的包及其子包
+@SpringBootTest // 具备测试 SpringBoot 应用容器中所有组件的功能
+class Boot306FeaturesApplicationTests {
+    @Test
+    void contextLoads() {
+        System.out.println("a");
+    }
+}
+```
+
+## 4.2 组件测试
+
+直接 `@Autowired` 容器中的组件进行测试
+
+### 4.2.1 注解
+
+JUnit 5 的注解与 JUnit 4 的注解有所变化
+
+- @Test：表示方法是测试方法。但是与 JUnit4 的 @Test 不同，它的职责非常单一不能声明任何属性，拓展的测试将会由 Jupiter 提供额外测试
+- @ParameterizedTest：表示方法是参数化测试
+- @RepeatedTest：表示方法可重复执行
+- @DisplayName：为测试类或者测试方法设置展示名称
+- @BeforeEach：表示在每个单元测试之前执行
+- @AfterEach：表示在每个单元测试之后执行
+- @BeforeAll：表示在所有单元测试之前执行
+- @AfterAll：表示在所有单元测试之后执行
+- @Tag：表示单元测试类别，类似于 JUnit4 中的 @Categories
+- @Disabled：表示测试类或测试方法不执行，类似于 JUnit4 中的 @Ignore
+- @Timeout：表示测试方法运行如果超过了指定时间将会返回错误
+- @ExtendWith：为测试类或测试方法提供扩展类引用
+
+### 4.2.2 断言
+
+| 方法              | 说明                                 |
+| ----------------- | ------------------------------------ |
+| assertEquals      | 判断两个对象或两个原始类型是否相等   |
+| assertNotEquals   | 判断两个对象或两个原始类型是否不相等 |
+| assertSame        | 判断两个对象引用是否指向同一个对象   |
+| assertNotSame     | 判断两个对象引用是否指向不同的对象   |
+| assertTrue        | 判断给定的布尔值是否为 true          |
+| assertFalse       | 判断给定的布尔值是否为 false         |
+| assertNull        | 判断给定的对象引用是否为 null        |
+| assertNotNull     | 判断给定的对象引用是否不为 null      |
+| assertArrayEquals | 数组断言                             |
+| assertAll         | 组合断言                             |
+| assertThrows      | 异常断言                             |
+| assertTimeout     | 超时断言                             |
+| fail              | 快速失败                             |
+
+### 4.2.3 嵌套测试
+
+> JUnit 5 可以通过 Java 中的内部类和 @Nested 注解实现嵌套测试，从而可以更好的把相关的测试方法组织在一起。在内部类中可以使用 @BeforeEach 和 @AfterEach 注解，而且嵌套的层次没有限制。
+
+### 4.2.4 参数化测试
+
+参数化测试是 JUnit 5 很重要的一个新特性，它使得用不同的参数多次运行测试成为了可能，也为我们的单元测试带来许多便利。
+
+利用 @ValueSource 等注解，指定入参，我们将可以使用不同的参数进行多次单元测试，省去了很多冗余代码。
+
+@ValueSource：为参数化测试指定入参来源，支持八大基础类以及 String 类型，Class 类型
+
+@NullSource：表示为参数化测试提供一个 null 的入参
+
+@EnumSource：表示为参数化测试提供一个枚举入参
+
+@CsvFileSource：表示读取指定 CSV 文件内容作为参数化测试入参
+
+@MethodSource：表示读取指定方法的返回值作为参数化测试入参（注意方法返回需要是一个流）
+
+# P59 核心原理 - 生命周期监听
+
+场景：监听应用的生命周期
+
+## 1、监听器
+
+自定义 `SpringApplicationRunListener` 来监听事件
+
+1. 编写 `SpringApplicationRunListener` 实现类
+
+2. 在 `META-INF/spring.factories` 中配置 `org.springframework.boot.SpringApplicationRunListener=自己的Listener`，还可以指定一个有参构造器，接受两个参数 `(SpringAppication application, String[] args)`
+
+3. Spring Boot 在 `spring-boot.jar` 中配置了默认的 Listener，如下：
+
+   `org.springframework.boot.SpringApplicationRunListener=org.springframework.boot.context.event.EventPublishingRunListener`
+
+```java
+public class MyAppListener implements SpringApplicationRunListener {
+    @Override
+    public void starting(ConfigurableBootstrapContext bootstrapContext) {
+        System.out.println("===== starting =====");
+    }
+    
+    @Override
+    public void environmentPrepared(ConfigurableBootstrapContext bootstrapContext, ConfigurableEnvironment environment) {
+        System.out.println("===== environmentPrepared =====");
+    }
+    
+    @Override
+    public void contextPrepared(ConfigurableApplicationContext context) {
+        System.out.println("===== contextPrepared =====");
+    }
+    
+    @Override
+    public void contextLoaded(ConfigurableApplicationContext context) {
+        System.out.println("===== contextLoaded =====");
+    }
+    
+    @Override
+    public void started(ConfigurableApplicationContext context, Duration timeTaken) {
+        System.out.println("===== started =====");
+    }
+    
+    @Override
+    public void ready(ConfigurableApplicationContext context, Duration timeTaken) {
+        System.out.println("===== ready =====");
+    }
+    
+    @Override
+    public void failed(ConfigurableApplicationContext context, Duration timeTaken) {
+        System.out.println("===== failed =====");
+    }
+}
+```
+
+
+
+## 2、生命周期全流程
+
+BootstrapRegistryInitializer
+
+↓
+
+引导（starting 启动 → environmentPrepared 环境准备完成）
+
+↓ （ApplicationContextInitializer）
+
+启动（contextPrepared：ioc 创建、准备完成、主程序未加载 → contextLoaded：ioc 加载，并未刷新 → started：ioc 刷新，runner 未调用 → ready：ioc 刷新，runner 调用完成）
+
+failed 启动失败
+
+↓
+
+运行（context.isRunning() 运行中）
+
+
+
+> 具体看 SpringApplication 的 run() 方法源码
+
+Listener 先要到 META-INF/spring.factories 读到
+
+1. 引导： 利用 BootstrapContext 引导整个项目启动
+   1. starting：应用开始，SpringApplication 的 run 方法一调用，只要有了 BootstrapContext 就执行
+   2. environmentPrepared：环境准备好（把启动参数等绑定到环境变量中），但是 ioc 还没有创建：【调一次】
+2. 启动：
+   1. contextPrepared：ioc 容器创建并准备好，但是 sources（主配置类）没加载。并关闭引导启动器【调一次】
+   2. contextLoaded：ioc 容器加载。主配置类加载进去了。但是 ioc 容器还没刷新（我们的 bean 没创建）。
+   3. started：ioc 容器刷新了（所有 bean 造好了），但是 runner 没调用
+   4. ready：所有 runner 调用完了
+3. 运行
+   1. 以前步骤都正确执行，代表容器 running
+
+# P60 核心原理 - 9 大事件与探针
+
+## 1、各种回调监听器
+
+- BootstrapRegistryInitializer：感知特定阶段 - 引导初始化
+  - `META-INF/spring.factories`
+  - 创建引导上下文 `BootstrapContext` 的时候触发
+  - 场景：进行密钥校对授权
+- ApplicationContextInitializer：感知特定阶段 -  IOC 容器初始化
+  - `META-INF/spring.factories`
+- ApplicationListener：感知全阶段：基于事件机制，感知事件。一旦到了哪个阶段可以做别的事情
+  - `@Bean` 或 `@EventListener`
+  - `SpringApplication.addListeners(...)` 或 `SpringApplicationBuilder.listeners(...)`
+  - `META-INF/spring.factories`
+- SpringApplicationRunListener：感知全阶段生命周期 + 各种全阶段都能自定义操作；功能更完善
+  - `META-INF/spring.factories`
+- ApplicationRunner：感知特定阶段 - 应用就绪 Ready
+  - `@Bean`
+- CommandLineRunner：感知特定阶段 - 应用就绪 Ready
+  - `@Bean`
+
+```java
+public class MyListener implements ApplicationListener<ApplicationEvent> {
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        System.out.println("===== 事件到达 =====" + event);
+    }
+}
+```
+
+最佳实战：
+
+- 如果项目启动前做事：`BootstrapRegistryInitializer` 和 `ApplicationContextInitializer`
+- 如果想要在项目启动完成后做事：`ApplicationRunner` 和 `CommandLineRunner`
+- 如果要干涉生命周期做事：`SpringApplicationRunListener`
+- 如果想要用事件机制：`ApplicationListener`
+
+## 2、完整触发流程
+
+9 种事件 触发顺序 & 时机
+
+1. `ApplicationStartEvent`：应用启动但未做任何事情，除过注册 Listeners 和 Initializers
+2. `ApplicationEnvironmentPreparedEvent`：Environment 准备好，但 context 未创建
+3. `ApplicationContextInitializedEvent`：ApplicationContext 准备好，ApplicationContextInitializers 调用，但是任何 bean 未加载
+4. `ApplicationPreparedEvent`：容器刷新之前，bean 定义信息加载
+5. `ApplicationStartedEvent`：容器刷新完成，runner 未调用
+6. `AvailabilityChangeEvent`：`LivenessState.CORRECT` 应用存活；存活探针
+7. `ApplicationReadyEvent`：任何 runner 被调用
+8. `AvailabilityChangeEvent`：`ReadinessState.ACCEPTING_TRAFFIC` 应用就绪，可以接请求；就绪探针
+9. `ApplicationFailedEvent`：启动出错
+
+感知应用是否存活了：植物状态
+
+应用是否就绪了：能响应请求
+
+# P61 核心原理 - 事件驱动开发
+
+## 3、SpringBoot 事件驱动开发
+
+- 事件发布：`ApplicationEventPublisherAware` 或注入：`ApplicationEventMulticaster`
+- 事件监听：组件 + `@EventListener`
+
+```java
+public class LoginSuccessEvent extends ApplicationEvent {
+    public LoginSuccessEvent(String source) {
+        super(source);
+    }
+}
+```
+
+```java
+@Service
+public class EventPublisher implements ApplicationEventPublisherAware {
+    /**
+     * 底层发送事件用的组件，SpringBoot 会通过 ApplicationEventPublisherAware 接口自动注入给我们
+     * 事件是广播出去的，所有监听这个事件的监听器都可以收到
+     */
+    ApplicationEventPublisher applicationEventPublisher;
+    
+    public void sendEvent(ApplicationEvent event) {
+        // 调用底层 API 发送事件
+        applicationEventPublisher.publishEvent(event);
+    }
+    
+    /**
+     * 会被自动调用，把真正事件的底层组件给我们注入进来
+     */
+    @Override
+    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
+}
+```
+
+```java
+@GetMapping("/login")
+public String login() {
+    // 1. 创建事件信息
+    LoginSuccessEvent event = new LoginSuccessEvent("登录");
+    // 2. 发送事件
+    eventPublisher.sendEvent(event);
+    
+    return "登录成功";
+}
+```
+
+接受事件：
+
+```java
+@Order(2)
+@Service
+public class AccountService implements ApplicationListener<LoginSuccessEvent> {
+    @Override
+    public void onApplicationEvent(LoginSuccessEvent event) {
+		String source = (String) event.getSource();
+        System.out.println("账户：" + source);
+    }
+}
+```
+
+另一种接收事件：
+
+```java
+@Service
+public class CouponService {
+    @Order(1)
+    @EventListener
+    public void onEvent(LoginSuccessEvent loginSuccessEvent) {
+        String source = (String) event.getSource();
+        System.out.println("优惠券：" + source);
+    }
+}
+```
+
+# P62 核心原理 - 自动配置与 SPI
+
+应用关注的三大核心：场景、配置、组件
+
+## 1、自动配置流程
+
+1. 导入 `starter`
+2. 依赖导入 `autoconfigure`
+3. 寻找类路径下 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 文件
+4. 加载所有自动配置类 `xxxAutoConfiguration`
+   1. 给容器中配置功能组件
+   2. 组件参数绑定到属性类中，`xxxProperties`
+   3. 属性类和配置文件前缀项绑定
+   4. `@Conditional` 派生的条件注解进行判断是否组件生效
+5. 效果：
+   1. 修改配置文件，修改底层参数
+   2. 所有场景自动配置好直接使用
+   3. 可以注入 SpringBoot 配置好的组件随时使用
+
+## 2、SPI 机制
+
+> ChatGPT 3.5 回答：
+>
+> - Java 中的 SPI（Service Provider Interface）是一种软件设计模式，用于在应用程序中动态地发现和加载组件。SPI 的思想是，定义一个接口或抽象类，然后通过在 classpath 中定义实现该接口的类来实现对组件的动态发现和加载。
+> - SPI 的主要目的是解决在应用程序中使用可插拔组件的问题。例如，一个应用程序可能需要使用不同的日志框架或数据库连接池，但是这些组件的选择可能取决于运行时的条件。通过使用 SPI，应用程序可以在运行时发现并加载适当的组件，而无需在代码中硬编码这些组件的实现类。
+> - 在 Java 中，SPI 的实现方式是通过在 META-INF/services 目录下创建一个以服务接口全限定名为名字的文件，文件中包含实现该服务接口的类的全限定名。当应用程序启动时，Java 的 SPI 机制会自动扫描 classpath 中的这些文件，并根据文件中指定的类名来加载实现类。
+> - 通过使用 SPI，应用程序可以实现更灵活、可扩展的架构，同时也可以避免硬编码依赖关系和增加代码的可维护性。
+
+## 3、功能开关
+
+- 自动配置：全部都配置好，什么都不用管。自动批量导入
+  - 项目一启动，SPI 文件中指定的所有都加载
+- `@EnableXxx`：手动控制哪些功能的开启；手动导入
+  - 开启 xxx 功能
+  - 都是利用 @Import 把此功能要用的组件导入进去
