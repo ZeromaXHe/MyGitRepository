@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://pxr1ektyw34c"]
+
+[ext_resource type="Script" path="res://resource_loader/loaded_scene.gd" id="1_dcjfp"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_f3w3e"]
+
+[node name="LoadedScene" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_dcjfp")
+
+[node name="Sprite2D" type="TextureRect" parent="."]
+layout_mode = 0
+texture = ExtResource("1_f3w3e")
