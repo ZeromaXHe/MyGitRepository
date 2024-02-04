@@ -2337,3 +2337,114 @@ public class CouponService {
 - `@EnableXxx`：手动控制哪些功能的开启；手动导入
   - 开启 xxx 功能
   - 都是利用 @Import 把此功能要用的组件导入进去
+
+# P63 核心原理 - @SpringBootApplication 源码解析
+
+```java
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class), @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class)})
+```
+
+## @SpringBootConfiguration 
+
+就是 @Configuration，容器中的组件、配置类， Spring IOC 启动就会加载创建这个类对象
+
+## @EnableAutoConfiguration：开启自动配置
+
+上面有 @AutoConfigurationPackage 和 @Import(AutoConfigurationImportSelector.class)
+
+@AutoConfigurationPackage：扫描主程序包；加载自己的组件
+
+- 上面有 `@Import(AutoConfigurationPackages.Registrar.class)`，利用它想要给容器中导入组件。
+- 把主程序所在的包的所有组件导入进来。
+- 为什么 SpringBoot 默认只扫描主程序所在的包及其子包
+
+@Import(AutoConfigurationImportSelector.class)：加载所有自动配置类；加载 starter 导入的组件
+
+- ```java
+  protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttribute attribute) {
+  	List<String> configurations = ImportCandidates.load(AutoConfiguration.class, getBeanClassLoader()).getCandidates();
+      // ...
+  }
+  ```
+
+- 扫描 SPI 文件：`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+
+## @ComponentScan
+
+组件扫描：排除一些组件
+
+排除前面已经扫描进来的配置类和自动配置类
+
+# P64 核心原理 - 生命周期启动加载机制
+
+Spring 容器刷新过程（AbstractApplicationContext 的 refresh() 方法）
+
+- 工厂 BeanFactory
+  - prepareRefresh 环境准备
+  - obtainFreshBeanFactory 获取工厂
+  - prepareBeanFactory 准备工厂
+  - postProcessBeanFactory 预留处理
+  - invokeBeanFactoryPostProcessors 工厂可扩展后置处理机制 （准备工厂的时候加载自动配置类，扫描主程序以及子包）
+- 组件 Bean
+  - registerBeanPostProcessors 注册 Bean 后置处理器
+  - initMessageSource 初始化消息
+  - initApplicationEventMulticaster 初始化事件派发
+  - onRefresh 预留接口，子类回调
+  - registerListeners 注册监听器
+  - finishBeanFactoryInitialization 完成初始化（所有组件创建）（所有的组件——如业务组件 @Configuration、@Component、@Bean、@Controller、@Service、@Repository —— 在这里被创建）
+  - finishRefresh 刷新完成
+
+# P65 核心原理 - 自定义 starter 逐级抽取过程
+
+- 创建自定义 starter 项目，引入 `spring-boot-starter` 基础依赖
+- 编写模块功能，引入模块所有需要的依赖。编写 `xxxAutoConfiguration` 自动配置类
+- 编写配置文件 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 指定启动需要加载的自动配置
+- 其他项目引入即可使用
+
+## 1、业务代码
+
+配置文件自动补全，需要导入以下依赖，重启项目：
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+    <optional>true</optional>
+</dependency>
+```
+
+## 2、基本抽取
+
+- 创建 starter 项目，把公共代码需要的所有依赖导入
+- 把公共代码复制进来
+- 自己写一个 `XxxAutoConfiguration`，给容器中导入这个场景需要的所有组件（`@Import`）
+  - 为什么这些组件默认不会扫描进去？
+  - starter 所在的包和引入它的项目的主程序所在的包不是父子层级
+- 别人引用这个 `starter`，直接导入这个 `XxxAutoConfiguration`，就能把这个场景的组件导入进来
+- 功能生效
+- 测试编写配置文件
+
+## 3、使用 Enable 机制
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Documented
+@Import(RobotAutoConfiguration.class)
+public @interface EnableRobot {
+    
+}
+```
+
+别人引入 `starter` 需要使用 `@EnableRobot` 开启功能
+
+## 4、完全自动配置
+
+- 依赖 SpringBoot 的 SPI 机制
+- `META-INF/spring/org.springframework.boot.configure.AutoConfiguration.imports` 文件中编写好我们自动配置类的全类名即可
+- 项目启动，自动加载我们的自动配置类
+
+# P66 第一部分小结
+
