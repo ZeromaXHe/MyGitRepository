@@ -107,8 +107,8 @@ public class MyApplicationContext {
             }
 
             // Aware
-            if (instance instanceof BeanNameAware) {
-                ((BeanNameAware) instance).setBeanName(beanName);
+            if (instance instanceof BeanNameAware i) {
+                i.setBeanName(beanName);
             }
 
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
@@ -116,8 +116,8 @@ public class MyApplicationContext {
             }
 
             // 初始化
-            if (instance instanceof InitializingBean) {
-                ((InitializingBean) instance).afterPropertiesSet();
+            if (instance instanceof InitializingBean i) {
+                i.afterPropertiesSet();
             }
 
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
