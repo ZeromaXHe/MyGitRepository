@@ -4328,16 +4328,652 @@ EXPLAIN SELECT * FROM s1 UNION ALL SELECT * FROM s2;
 - 在所有组中，id 值越大，优先级越高，越先执行
 - 关注点：id 号每个号码，表示一趟独立的查询，一个 sql 的查询趟数越少越好
 
+# P137 EXPLAIN 的 select_type、partitions、type、possible_keys、key、key_len 剖析
+
 #### 3、select_type
 
 一条大的查询语句里边可以包含若干个 SELECT 关键字，每个 SELECT 关键字代表着一个小的查询语句，而每个 SELECT 关键字的 FROM 子句中都可以包含若干张表（这些表用来做连接查询），每一张表都对应着执行计划输出中的一条记录。对于在同一个 SELECT 关键字中的表来说，它们的 id 值是相同的。
 
 MySQL 为每一个 SELECT 关键字代表的小查询都定义了一个称之为 `select_type` 的属性，意思是我们只要知道了某个小查询的 `select_type` 属性，就知道了这个小查询在整个大查询中扮演了一个什么角色，我们看一下 select_type 都能取哪些值，请看官方文档：
 
-| 名称    | 描述                                          |
-| ------- | --------------------------------------------- |
-| SIMPLE  | Simple SELECT (not using UNION or subqueries) |
-| PRIMARY | Outermost SELECT                              |
-| UNION   | Second or later SELECT statement in a UNION   |
-|         |                                               |
+| 名称                 | 描述                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| SIMPLE               | Simple SELECT (not using UNION or subqueries)                |
+| PRIMARY              | Outermost SELECT                                             |
+| UNION                | Second or later SELECT statement in a UNION                  |
+| UNION RESULT         | Result of a UNION                                            |
+| SUBQUERY             | First SELECT in subquery                                     |
+| DEPENDENT SUBQUERY   | First SELECT in subquery, dependent on outer query           |
+| DEPENDENT UNION      | Second or later SELECT statement in a UNION, dependent on outer query |
+| DERIVED              | Derived table                                                |
+| MATERIALIZED         | Materialized subquery                                        |
+| UNCACHEABLE SUBQUERY | A subquery for which the result cannot be cached and must be re-evaluated for each row of the outer query |
+| UNCACHEABLE UNION    | The second or later select in a UNION that belongs to an uncacheable subquery (see UNCACHEABLE SUBQUERY) |
 
+具体分析如下：
+
+- `SIMPLE`
+
+  查询语句中不包含 `UNION` 或者子查询的查询都算作是 `SIMPLE` 类型，比方说下边这个单表查询的 `select_type` 的值就是 `SIMPLE`：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1;
+  ```
+
+  当然，连接查询也算是 `SIMPLE` 类型，比如：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 INNER JOIN s2;
+  ```
+
+- `PRIMARY`
+
+  对于包含 `UNION`、`UNION ALL` 或者子查询的大查询组成的，其中最左边的那个查询的 `select_type` 值就是 `PRIMARY`，比方说：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 UNION SELECT * FROM s2;
+  ```
+
+  从结果中可以看到，最左边的小查询 `SELECT * FROM s1` 对应的是执行计划中的第一条记录，它的 `select_type` 值就是 `PRIMARY`。
+
+- `UNION`
+
+  对于包含 `UNION` 或者 `UNION ALL` 的大查询来说，它是由几个小查询组成的，其中除了最左边的那个小查询以外，其余的小查询的 `select_type` 值就是 `UNION`，可以对比上一个例子的效果
+
+- `UNION RESULT`
+
+  `MySQL` 选择使用临时表来完成 `UNION` 查询的去重工作，针对该临时表的查询的 `select_type` 就是 `UNION RESULT`，例子上边有。
+
+- `SUBQUERY`
+
+  如果包含子查询的查询语句不能够转为对应的 `semi-join` 的形式，并且该子查询是不相关子查询，并且查询优化器决定采用将该子查询物化的方案来执行该子查询时，该子查询的第一个 `SELECT` 关键字代表的那个查询的 `select_type` 就是 `SUBQUERY`，比如下边这个查询：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 IN (SELECT key1 FROM s2) OR key3 = 'a';
+  ```
+
+- `MATERIALIZED`
+
+  当查询优化器在执行包含子查询的语句时，选择将子查询物化之后与外层查询进行连接查询时，该子查询对应的 `select_type` 属性就是 `MATERIALIZED`，比如下边这个查询：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 IN (SELECT key1 FROM s2);
+  ```
+
+#### 4、partitions（可略）
+
+- 代表分区表中的命中情况，非分区表，该项为 `NULL`。
+
+- 如果想详细了解，可以如下方式测试。创建分区表：
+
+  ```mysql
+  -- 创建分区表
+  -- 按照 id 分区，id < 100 p0 分区，其他 p1 分区
+  CREATE TABLE user_partitions (
+      id INT auto_increment,
+      NAME VARCHAR(12), PRIMARY KEY(id)
+  ) PARTITION BY RANGE(id)(
+      PARTITION p0 VALUES less than (100),
+      PARTITION p1 VALUES less than MAXVALUE
+  );
+  ```
+
+  ```mysql
+  DESC SELECT * FROM user_partitions WHERE id>200;
+  ```
+
+  查询 id 大于 200（200>100, p1 分区）的记录，查看执行计划，partitions 是 p1，符合我们的分区规则
+
+#### 5、type
+
+执行计划的一条记录就代表着 MySQL 对某个表的执行查询时的访问方法，又称“访问类型”，其中的 `type` 列就表明了这个访问方法是啥，是较为重要的一个指标。比如，看到 `type` 列的值是 `ref`，表明 `MySQL` 即将使用 `ref` 访问方法来执行对 `s1` 表的查询。
+
+完整的访问方法如下：`system`，`count`，`eq_ref`，`ref`，`fulltext`，`ref_or_null`，`index_merge`，`unique_subquery`，`index_subquery`，`range`，`index`，`ALL`。
+
+我们详细解释一下：
+
+- `system`
+
+  当表中只有一条记录并且该表使用的存储引擎的统计数据是精确的，比如 MyISAM、Memory，那么对该表的访问方法就是 `system`。比方说我们新建一个 `MyISAM` 表，并为其插入一条记录：
+
+  ```mysql
+  CREATE TABLE t(i int) Engine=MyISAM;
+  INSERT INTO t VALUES(1);
+  ```
+
+  然后我们看一下查询这个表的执行计划：
+
+  ```mysql
+  EXPLAIN SELECT * FROM t;
+  ```
+
+  可以看到 `type` 列的值就是 `system` 了
+
+  > 测试：可以把表改成使用 InnoDB 存储引擎，试试看执行计划的 `type` 列是什么？ALL
+
+- `const`
+
+  当我们根据主键或者唯一二级索引列与常数进行等值匹配时，对单表的访问方法就是 `const`，比如：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE id = 10005;
+  ```
+
+- `eq_ref`
+
+  在连接查询时，如果被驱动表是通过主键或者唯一二级索引列等值匹配的方式进行访问的（如果该主键或者唯一二级索引是联合索引的话，所有的索引列都必须进行等值比较）则对该被驱动表的访问方法就是 `eq_ref`，比方说
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 INNER JOIN s2 ON s1.id = s2.id;
+  ```
+
+  从执行计划的结果中可以看出，MySQL 打算将 s2 作为驱动表，s1 作为被驱动表，重点关注 s1 的访问方法是 `eq_ref`，表明在访问 s1 表的时候可以通过主键的等值匹配来访问。
+
+- `ref`
+
+  当通过普通的二级索引列与常量进行等值匹配时来查询某个表，那么对该表的访问方法就可能是 `ref`，比方说下边这个查询：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 = 'a';
+  ```
+
+- `fulltext`
+
+  全文索引
+
+- `ref_or_null`
+
+  当对普通二级索引进行等值匹配查询，该索引列的值也可以是 `NULL` 值时，那么对该表的访问方法就可能是 `ref_or_null`，比如说：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 = 'a' OR key1 IS NULL
+  ```
+
+- `index_merge`
+
+  一般情况下对于某个表的查询只能使用到一个索引，但单表访问方法时在某些场景下可以使用 `Intersection`、`Union`、`Sort-Union` 这三种索引合并的方式来执行查询。我们看一下执行计划中是怎么体现 MySQL 使用索引合并的方式来对某个表执行查询的：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 = 'a' OR key3 = 'a';
+  ```
+
+  从执行计划的 `type` 列的值是 `index_merge` 就可以看出，MySQL 打算使用索引合并的方式来执行对 s1 表的查询。
+
+- `unique_subquery`
+
+  类似于两表连接中的被驱动表的 `eq_ref` 访问方法，`unique_subquery` 是针对在一些包含 `IN` 子查询的查询语句中，如果查询优化器决定将 `IN` 子查询转换为 `EXISTS` 子查询，而且子查询可以使用到主键进行等值匹配的话，那么该子查询执行计划的 `type` 列的值就是 `unique_subquery`，比如下边的这个查询语句：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key2 IN (SELECT id FROM s2 WHERE s1.key1 = s2.key1) OR key3 = 'a';
+  ```
+
+  可以看到执行计划的第二条记录的 `type` 值就是 `unique_subquery`，说明在执行子查询时会使用到 `id` 列的索引
+
+- `index_subquery`
+
+  `index_subquery` 与 `unique_subquery` 类似，只不过访问子查询中的表时使用的是普通的索引，比如这样：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE common_field IN (SELECT key3 FROM s2 WHERE s1.key1 = s2.key1) OR key3 = 'a';
+  ```
+
+- `range`
+
+  如果使用索引获取某些特定范围的记录，那么就可能使用到 `range` 访问方法，比如下边的这个查询。
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 IN ('a', 'b', 'c')
+  ```
+
+  或者
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 >= 'a' AND key1 <= 'b'
+  ```
+
+- `index`
+
+  当我们可以使用索引覆盖，但需要扫描全部的索引记录时，该表的访问方法就是 `index`，比如这样：
+
+  ```mysql
+  EXPLAIN SELECT key_part2 FROM s1 WHERE key_part3 = 'a';
+  ```
+
+  上述查询中搜索列表中只有 `key_part2` 一个列，而且搜索条件中也只有 `key_part3` 一个列，这两个列又恰好包含在 `idx_key_part` 这个索引中，可是搜索条件 `key_part3` 不能直接使用该索引进行 `ref` 或者 `range` 方式的访问，只能扫描整个 `idx_key_part` 索引的记录，所以查询计划的 `type` 列的值就是 `index`。
+
+  > 再一次强调，对于使用 InnoDB 存储引擎的表来说，二级索引的记录只包含索引列和主键列的值，而聚簇索引中包含用户定义的全部列以及一些隐藏列，所以扫描二级索引的代价比直接全表扫描，也就是扫描聚簇索引的代价更低一些。
+
+- `ALL`
+
+  最熟悉的全表扫描，就不多说了，直接看例子：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1;
+  ```
+
+  一般来说，这些访问方法中除了 `ALL` 这个访问方法外，其余的访问方法都能用到索引，除了 `index_merge` 访问方法外，其余的访问方法都最多只能用到一个索引。
+
+**小结：**
+
+结果值从最好到最坏依次是：
+
+**system > const > eq_ref > ref** > fulltext > ref_or_null > index_merge > unique_subquery > index_subquery > **range > index > ALL**
+
+其中比较重要的几个提取出来（见粗体）。SQL 性能优化的目标：至少要达到 range 级别，要求是 ref 级别，最好是 consts 级别。（阿里巴巴开发手册要求）
+
+#### 6、possible_keys 和 key
+
+在 EXPLAIN 语句输出的执行计划中，`possible_keys` 列表示在某个查询语句中，对某个表执行单表查询时可能用到的索引有哪些。一般查询涉及到的字段上若存在索引，则该索引将被列出，但不一定被查询使用。`key` 列表示实际用到的索引有哪些，如果为 NULL，则没有使用索引。比方说下边这个查询：
+
+```mysql
+EXPLAIN SELECT * FROM s1 WHERE key1 > 'z' AND key3 = 'a';
+```
+
+上述执行计划的 `possible_keys` 列的值是 `idx_key1, idx_key3`，表示该查询可能使用到 `idx_key1, idx_key3` 两个索引，然后 `key` 列的值是 `idx_key3`，表示经过查询优化器计算使用不同索引的成本后，最后决定使用
+
+#### 7、key_len
+
+实际使用到的索引长度（即：字节数）
+
+帮你检查是否充分的利用上了索引，值越大越好，主要针对于联合索引，有一定的参考意义。
+
+# P138 EXPLAIN 中 ref、rows、filtered、extra 剖析
+
+#### 8、ref
+
+显示索引的哪一列被使用了，如果可能的话，是一个常数。哪些列或常量。哪些列或常量被用于查找索引列上的值。
+
+当使用索引列等值匹配的条件去执行查询时，也就是在访问方法是 `const`、`eq_ref`、`ref`、`ref_or_null`、`unique_subquery`、`index_subquery` 其中之一时，`ref` 列展示的就是与索引列作等值匹配的结构是什么，比如只是一个常数或者是某个列。大家看下边这个查询：
+
+```mysql
+EXPLAIN SELECT * FROM s1 WHERE key1 = 'a';
+```
+
+可以看到 `ref` 列的值是 `const`，表明在使用 `idx_key1` 索引执行查询时，与 `key1` 列作等值匹配的对象是一个常数，当然有时候更复杂一点：
+
+```mysql
+EXPLAIN SELECT * FROM s1 INNER JOIN s2 ON s1.id = s2.id;
+```
+
+#### 9、rows
+
+预估的需要读取的记录条数
+
+值越小越好
+
+#### 10、filtered
+
+某个表经过搜索条件过滤后剩余记录条数的百分比
+
+如果使用的是索引执行的单表扫描，那么计算时需要估计出满足除使用到对应索引的搜索条件外的其他搜索条件的记录有多少条。
+
+对于单表查询来说，这个 filtered 列的值没有什么意义，我们更关注在连接查询中驱动表对应的执行计划记录的 filtered 值，它决定了被驱动表要执行的次数（即：rows * filtered）
+
+#### 11、extra
+
+顾名思义，`Extra` 列是用来说明一些额外信息的，包含不适合在其他列中显示但十分重要的额外信息。我们可以通过这些额外信息来更准确的理解 MySQL 到底将如何执行给定的查询语句。MySQL 提供的额外信息有好几十个，我们就不一个一个介绍了，所以我们只挑比较重要的额外信息介绍给大家。
+
+- `No tables used`
+
+  当查询语句的没有 `FROM` 子句时将会提示该额外信息，比如：
+
+  ```mysql
+  EXPLAIN SELECT 1;
+  ```
+
+- `Impossible WHERE`
+
+  查询语句的 `WHERE` 子句永远为 `FALSE` 时将会提示该额外信息，比方说：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE 1 != 1;
+  ```
+
+- `Using where`
+
+  不用读取表中所有信息，仅通过索引就可以获取所需数据，这发生在对表的全部的请求列都是同一个索引的部分的时候，表示 mysql 服务器将在存储引擎检索行后再进行过滤。表明使用了 where 过滤。
+
+  当我们使用全表扫描来执行对某个表的查询，并且该语句的 `WHERE` 子句中有针对该表的搜索条件时，在 `Extra` 列中会提示上述额外信息。比如下边这个查询：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE common_field = 'a';
+  ```
+
+  当使用索引访问来执行对某个表的查询，并且该语句的 `WHERE` 子句中有除了该索引包含的列之外的其他搜索条件时，在 `Extra` 列中也会提示上述额外信息。比如下边这个查询虽然使用 `idx_key1` 索引执行查询，但是搜索条件中除了包含 `key1` 的搜索条件 `key1 = 'a'`，还包含 `common_field` 的搜索条件，所以 `Extra` 列会显示 `Using where` 的提示：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 = 'a' AND common_field = 'a';
+  ```
+
+- `No matching min/max row`
+
+  当查询列表处有 `MIN` 或者 `MAX` 聚集函数，但是并没有符合 `WHERE` 子句中的搜索条件的记录时，将会提示该额外信息，比方说：
+
+  ```mysql
+  EXPLAIN SELECT MIN(key1) FROM s1 WHERE key1 = 'abcdefg';
+  ```
+
+- `Using index`
+
+  当我们的查询列表以及搜索条件中只包含属于某个索引的列，也就是在可以使用索引覆盖的情况下，在 `Extra` 列将会提示该额外信息。比方说下边这个查询中只需要用到 `idx_key1` 而不需要回表操作：
+
+  ```mysql
+  EXPLAIN SELECT key1 FROM s1 WHERE key1 = 'a';
+  ```
+
+- `Using index condition`
+
+  有些搜索条件中虽然出现了索引列，但却不能使用到索引，比如下边这个查询：
+
+  ```mysql
+  SELECT * FROM s1 WHERE key1 > 'z' AND key1 LIKE '%a';
+  ```
+
+  其中 `key1 > 'z'` 可以使用到索引，但是 `key1 LIKE '%a'` 却无法使用到索引，在以前版本的 MySQL 中，是按照下边步骤来执行这个查询的：
+
+  - 先根据 `key1 > 'z'` 这个条件，从二级索引 `idx_key1` 中获取到对应的二级索引记录。
+  - 根据上一步骤得到的二级索引记录中的主键值进行回表，找到完整的用户记录再检测该记录是否符合 `key1 LIKE '%a'` 这个条件，将符合条件的记录加入到最后的结果集。
+
+  但是虽然 `key1 LIKE '%a'` 不能组成范围区间参与 `range` 访问方法的执行，但这个条件毕竟只涉及到了 `key1` 列，所以 MySQL 把上边的步骤改进了一下：
+
+  - 先根据 `key1 > 'z'` 这个条件，定位到二级索引 `idx_key1` 中对应的二级索引记录。
+  - 对于指定的二级索引记录，先不着急回表，而是先检测一下该记录是否满足 `key1 LIKE '%a'` 这个条件，如果这个条件不满足，则该二级索引记录压根儿就没必要回表。
+  - 对于满足 `key1 LIKE '%a'` 这个条件的二级索引记录执行回表操作。
+
+  我们说回表操作其实是一个随机 IO，比较耗时，所以上述修改虽然只改进了一点点，但是可以省去好多回表操作的成本。MySQL 把他们的这个改进称之为**索引条件下推**（英文名：Index Condition Pushdown）
+
+  如果在查询语句的执行过程中将要使用索引条件下推这个特性，在 Extra 列中将会显示 `Using index condition`，比如这样：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 > 'z' AND key1 LIKE '%b';
+  ```
+
+- `Using join buffer (Block Nested Loop)`
+
+  在连接查询执行过程中，当被驱动表不能有效的利用索引加快访问速度，MySQL 一般会为其分配一块名叫 `join buffer` 的内存块来加快查询速度，也就是我们所讲的基于块的嵌套循环算法，比如下边这个查询语句：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 INNER JOIN s2 ON s1.common_field = s2.common_field;
+  ```
+
+  可以在对 s2 表的执行计划的 Extra 列显示了两个提示：
+
+  - `Using join buffer (Block Nested Loop)`：这是因为对表 s2 的访问不能有效利用索引，只好退而求其次，使用 `join buffer` 来减少对 s2 表的访问次数，从而提高性能。
+  - `Using where`：可以看到查询语句中有一个 `s1.common_field = s2.common_field` 条件，因为 s1 是驱动表，s2 是被驱动表，所以在访问 s2 表时，`s1.common_field` 的值已经确定下来了，所以实际上查询 s2 表的条件就是 `s2.common_field = 一个常数`，所以提示了 `Using where` 的额外信息。
+
+- `Not exists`
+
+  当我们使用左（外）连接时，如果 `WHERE` 子句中包含要求被驱动表的某个列等于 `NULL` 值的搜索条件，而且那个列又是不允许存储 `NULL` 值的，那么在该表的执行计划的 Extra 列就会提示 `Not exists` 额外信息，比如这样：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 LEFT JOIN s2 ON s1.key1 = s2.key1 WHERE s2.id IS NULL;
+  ```
+
+  上述查询中 s1 表是驱动表，s2 表是被驱动表，`s2.id` 列是不允许存储 `NULL` 值的，而 `WHERE`子句中又包含 `s2.id IS NULL` 的搜索条件，这意味着必定是驱动表的记录在被驱动表中找不到匹配 `ON` 子句条件的记录才会把该驱动表的记录加入到最终的结果集，所以对于某条驱动表中的记录来说，如果能在被驱动表中找到 1 条符合 `ON` 子句条件的记录，那么该驱动表的记录就不会被加入到最终的结果集，也就是说我们没有必要到被驱动表中找到全部符合 ON 子句条件的记录，这样可以稍微节省一点性能。
+
+  > 小贴士：右（外）连接可以被转换为左（外）连接，所以就不提右（外）连接的情况了。
+
+- `Using intersect(...)`、`Using union(...)` 和 `Using sort_union(...)`
+
+  如果执行计划的 `Extra` 列出现了 `Using intersect(...)` 提示，说明准备使用 `Intersect` 索引合并的方式执行查询，括号中的 ... 表示需要进行索引合并的索引名称；如果出现了 `Using union(...)` 提示，说明准备使用 `Union` 索引合并的方式执行查询；出现了 `Using sort_union(...)` 提示，说明准备使用 `Sort-Union` 索引合并的方式执行查询。比如这个查询的执行计划：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 WHERE key1 = 'a' OR key3 = 'a';
+  ```
+
+  其中 `Extra` 列就显示了 `Using union(idx_key3, idx_key1)`，表明 `MySQL` 即将使用 `idx_key3` 和 `idx_key1` 这两个索引进行 `Union` 索引合并的方式执行查询。
+
+- `Zero limit`
+
+  当我们的 `LIMIT` 子句参数为 0 时，表示压根不打算从表中读出任何记录，将会提示该额外信息，比如这样：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 LIMIT 0;
+  ```
+
+- `Using filesort`
+
+  有一些情况下对结果集中的记录进行排序是可以使用到索引的，比如下边这个查询：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 ORDER BY key1 LIMIT 10;
+  ```
+
+  这个查询语句可以利用 `idx_key1` 索引直接取出 `key1` 列的 10 条记录，然后再进行回表操作就好了。但是很多情况下排序操作无法使用到索引，只能在内存中（记录较少的时候）或者磁盘中（记录较多的时候）进行排序，MySQL 把这种在内存中或者磁盘上进行排序的方式统称为文件排序（英文名：`filesort`）。如果某个查询需要使用文件排序的方式执行查询，就会在执行计划的 `Extra` 列中显示 `Using filesort` 提示，比如这样：
+
+  ```mysql
+  EXPLAIN SELECT * FROM s1 ORDER BY common_field LIMIT 10;
+  ```
+
+  需要注意的是，如果查询中需要使用 `filesort` 的方式进行排序的记录非常多，那么这个过程是很耗费性能的，我们最好想办法将使用文件排序的执行方式改为使用索引进行排序。
+
+- `Using temporary`
+
+  在许多查询的执行过程中，MySQL 可能会借助临时表来完成一些功能，比如去重、排序之类的，比如我们在执行许多包含 `DISTINCT`、`GROUP BY`、`UNION` 等子句的查询过程中，如果不能有效利用索引来完成查询，MySQL 很有可能寻求通过建立内部的临时表来执行查询。如果查询中使用到了内部的临时表，在执行计划的 `Extra` 列将显示 `Using temporary` 提示，比方说这样：
+
+  ```mysql
+  EXPLAIN SELECT DISTINCT common_field FROM s1;
+  ```
+
+  再比如：
+
+  ```mysql
+  EXPLAIN SELECT common_field, COUNT(*) AS amount FROM s1 GROUP BY common_field;
+  ```
+
+  执行计划中出现 `Using temporary` 并不是一个好的征兆，因为建立与维护临时表要付出很大成本的，所以我们最好使用索引来替代掉使用临时表，比方说下边这个包含 `GROUP BY` 子句的查询就不需要使用临时表：
+
+  ```mysql
+  EXPLAIN SELECT key1, COUNT(*) AS amount FROM s1 GROUP BY key1;
+  ```
+
+  从 `Extra` 的 `Using index` 的提示里我们可以看出，上述查询只需要扫描 `idx_key1` 索引就可以搞定了，不再需要临时表了。
+
+- `其它`
+
+  其他特殊情况这里省略。
+
+#### 12、小结
+
+- EXPLAIN 不考虑各种 Cache
+- EXPLAIN 不能显示 MySQL 在执行查询时所作的优化工作
+- EXPLAIN 不会告诉你关于触发器、存储过程的信息或用户自定义函数对查询的影响情况
+- 部分统计信息是估算的，并非精确值
+
+# P139 EXPLAIN 的 4 种格式与查看优化器重写 SQL
+
+## 7、EXPLAIN 的进一步使用
+
+### 7.1 EXPLAIN 四种输出格式
+
+这里谈谈 EXPLAIN 的输出格式。EXPLAIN 可以输出四种格式：传统格式，JSON 格式，TREE 格式以及可视化输出。用户可以根据需要选择适用于自己的格式。
+
+#### 1、传统格式
+
+传统格式简单明了，输出是一个表格形式，概要说明查询计划。
+
+```mysql
+EXPLAIN SELECT s1.key1, s2.key1 FROM s1 LEFT JOIN s2 ON s1.key1 = s2.key1 WHERE s2.common_field IS NOT NULL;
+```
+
+#### 2、JSON 格式
+
+第1种格式中介绍的 `EXPLAIN` 语句输出中缺少了一个衡量执行计划好坏的重要属性——`成本`。而 JSON 格式是四种格式里面输出信息最详尽的格式，里面包含了执行的成本信息。
+
+- JSON 格式：在 EXPLAIN 单词和真正的查询语句中间加上 `FORMAT=JSON`。
+
+  ```mysql
+  EXPLAIN FORMAT=JSON SELECT ...
+  ```
+
+- EXPLAIN 的 Column 与 JSON 的对应关系：（来源于 MySQL 5.7 文档）
+
+  | Column        | JSON Name     | Meaning                                        |
+  | ------------- | ------------- | ---------------------------------------------- |
+  | id            | select_id     | The SELECT identifier                          |
+  | select_type   | None          | The SELECT type                                |
+  | table         | table_name    | The table for the output row                   |
+  | partitions    | partitions    | The matching partitions                        |
+  | type          | access_type   | The join type                                  |
+  | possible_keys | possible_keys | The possible indexes to choose                 |
+  | key           | key           | The index actually chosen                      |
+  | key_len       | key_length    | The length of the chosen key                   |
+  | ref           | ref           | The columns compared to the index              |
+  | rows          | rows          | Estimate of rows to be examined                |
+  | filtered      | filtered      | Percentage of rows filtered by table condition |
+  | Extra         | None          | Additional information                         |
+
+这样我们就可以得到一个 json 格式的执行计划，里面包含该计划花费的成本，比如这样：
+
+```mysql
+EXPLAIN FORMAT=JSON SELECT * FROM s1 INNER JOIN s2 ON s1.key1 = s2.key2 WHERE s1.common_field = 'a'\G
+************ 1. row *************
+EXPLAIN: {
+	"query_block": {
+		"select_id": 1, # 整个查询语句只有一个 SELECT 关键字，该关键字对应的 id 号为 1
+		"cost_info": {
+			"query_cost": "3197.16" # 整个查询的执行成本预计为 3197.16
+		},
+		"nested_loop": [ # 几个表之间采用嵌套循环连接算法执行
+            # 以下是参与嵌套循环连接算法的各个表的信息
+            {
+            	"table": {
+            		"table_name": "s1", # s1 表是驱动表
+            		"access_type": "ALL", # 访问方法为 ALL，意味着使用全表扫描访问
+            		"possible_keys": [
+                        "idx_key1"
+                    ],
+            		"rows_examined_per_scan": 9688, # 查询一次 s1 表大致需要扫描 9688 条记录
+            		"rows_produced_per_join": 968, # 驱动表 s1 的扇出是 968
+            		"filtered": "10.00", # condition filtering 代表的百分比
+            		"cost_info": {
+            			"read_cost": "1840.84",
+            			"eval_cost": "193.75",
+            			"prefix_cost": "2034.60", # 单次查询 s1 表总共的成本
+            			"data_read_per_join": "1M" # 读取的数据量
+		            },
+            		"used_columns": [ # 执行查询中涉及到的列
+                        "id",
+                        "key1",
+                        "key2",
+                        "key3",
+                        "key_part1",
+                        "key_part2",
+                        "key_part3",
+                        "common_field"
+                    ],
+            		# 对 s1 表访问时针对单表查询的条件
+            		"attached_condition": "((`atguigu`.`s1`.`common_field` = 'a') and (`atguigu`.`s1`.`key1` is not null))"
+            	}
+            },
+            {
+            	"table": {
+            		"table_name": "s2", # s2 表是被驱动表
+            		"access_type": "ref", # 访问方法为 ref，意味着使用索引等值匹配的方式访问
+            		"possible_keys": [ # 可能使用的索引
+                        "idx_key2"
+                    ],
+            		"key": "idx_key2", # 实际使用的索引
+            		"used_key_parts": [ # 使用到的索引列
+                        "key2"
+                    ],
+            		"key_length": "5", # key_len
+            		"ref": [ # 与 key2 列进行等值匹配的对象
+                        "atguigu.s1.key1"
+                    ]
+            		"rows_examined_per_scan": 1, # 查询一次 s2 表大致需要扫描 1 条记录
+            		"rows_produced_per_join": 968, # 被驱动表 s2 的扇出是 968（由于后边没有多余的表进行连接，所以这个值也没啥用）
+            		"filtered": "100.00", # condition filtering 代表的百分比
+            		# s2 使用索引进行查询的搜索条件
+            		"index_condition": "(`atguigu`.`s1`.`key1` = `atguigu`.`s2`.`key2`)",
+            		"cost_info": {
+            			"read_cost": "968.80",
+            			"eval_cost": "193.76",
+            			"prefix_cost": "3197.16", # 单次查询 s1、多次查询 s2 表总共的成本
+            			"data_read_per_join": "1M" # 读取的数据量
+		            },
+            		"used_columns": [ # 执行查询中涉及到的列
+                        "id",
+                        "key1",
+                        "key2",
+                        "key3",
+                        "key_part1",
+                        "key_part2",
+                        "key_part3",
+                        "common_field"
+                    ]
+            	}
+            }
+        ]
+	}
+}
+```
+
+我们使用 `#` 后边跟随注释的形式为大家解释了 `EXPLAIN FORMAT=JSON` 语句的输出内容，但是大家可能有疑问 `"cost_info"` 里边的成本看着怪怪的，它们是怎么计算出来的？先看 `s1` 表的 `"cost_info"` 部分：
+
+```json
+"cost_info": {
+    "read_cost": "1840.84",
+    "eval_cost": "193.76",
+    "prefix_cost": "2034.60",
+    "data_read_per_join": "1M"
+}
+```
+
+- `read_cost` 是由下边这两部分组成的：
+
+  - `IO` 成本
+  - 检测 `rows * (1 - filter)` 条记录的 `CPU` 成本
+
+  > 小贴士：rows 和 filter 都是我们前边介绍执行计划的输出列，在 JSON 格式的执行计划中，rows 相当于 rows_examined_per_scan， filtered 名称不变
+
+- `eval_cost` 是这样计算的：
+
+  检测 `rows * filter` 条记录的成本
+
+- `prefix_cost` 就是单独查询 `s1` 表的成本，也就是：`read_cost + eval_cost`
+
+- `data_read_per_join` 表示在此次查询中需要读取的数据量。
+
+对于 `s2` 表的 `"cost_info"` 部分是这样的：
+
+```json
+"cost_info": {
+    "read_cost": "968.80",
+    "eval_cost": "193.76",
+    "prefix_cost": "3197.16",
+    "data_read_per_join": "1M"
+}
+```
+
+由于 `s2` 表是被驱动表，所以可能被读取多次，这里的 `read_cost` 和 `eval_cost` 是访问多次 `s2` 表后累加起来的值，大家主要关注里边儿的 `prefix_cost` 的值代表的是整个连接查询预计的成本，也就是单次查询 `s1` 表和多次查询 `s2` 表后的成本的和，也就是：
+
+```
+968.80 + 193.76 + 2034.60 = 3197.16
+```
+
+#### 3、TREE 格式
+
+TREE 格式是 8.0.16 版本之后引入的新格式，主要根据查询的各个部分之间的关系和各部分的执行顺序来描述如何查询。
+
+```mysql
+EXPLAIN FORMAT=tree SELECT * FROM s1 INNER JOIN s2 ON s1.key1 = s2.key2 WHERE s1.common_field = 'a'\G
+```
+
+#### 4、可视化输出
+
+可视化输出，可以通过 MySQL Workbench 可视化查看 MySQL 的执行计划。通过点击 Workbench 的放大镜图标，即可生成可视化的查询计划。
+
+### 7.2 SHOW WARNINGS 的使用
+
+在我们使用 `EXPLAIN` 语句查看了某个查询的执行计划后，紧接着还可以使用 `SHOW WARNINGS`  语句查看与这个查询的执行计划有关的一些扩展信息，比如这样：
+
+```mysql
+EXPLAIN SELECT s1.key1, s2.key1 FROM s1 LEFT JOIN s2 ON s1.key1 = s2.key1 WHERE s2.common_field IS NOT NULL;
+```
+
+```mysql
+SHOW WARNINGS\G
+```
+
+大家可以看到 `SHOW WARNINGS` 展示出来的信息有三个字段，分别是 `Level`、`Code`、`Message`。我们最常见的就是 Code 为 1003 的信息，当 Code 值为 1003 时，`Message` 字段展示的信息类似于查询优化器将我们的查询语句重写后的语句。比如我们上边的查询本来是一个左（外）连接查询，但是有一个 s2.common_field IS NOT NULL 的条件，这就会导致查询优化器把左（外）连接查询优化为内连接查询，从 `SHOW WARNINGS` 的 `Message` 字段也可以看出来，原本的 LEFT JOIN 已经变成了 JOIN。
