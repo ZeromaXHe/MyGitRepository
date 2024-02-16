@@ -4977,3 +4977,1823 @@ SHOW WARNINGS\G
 ```
 
 大家可以看到 `SHOW WARNINGS` 展示出来的信息有三个字段，分别是 `Level`、`Code`、`Message`。我们最常见的就是 Code 为 1003 的信息，当 Code 值为 1003 时，`Message` 字段展示的信息类似于查询优化器将我们的查询语句重写后的语句。比如我们上边的查询本来是一个左（外）连接查询，但是有一个 s2.common_field IS NOT NULL 的条件，这就会导致查询优化器把左（外）连接查询优化为内连接查询，从 `SHOW WARNINGS` 的 `Message` 字段也可以看出来，原本的 LEFT JOIN 已经变成了 JOIN。
+
+但是大家一定要注意，我们说 `Message` 字段展示的信息类似于查询优化器将我们的查询语句重写后的语句，并不是等价于，也就是说 `Message` 字段展示的信息并不是标准的查询语句，在很多情况下并不能直接拿到黑框框中运行，它只能作为帮助我们理解 MySQL 将如何执行查询语句的一个参考依据而已。
+
+# P140 trace 分析优化器执行计划与 Sys schema 使用
+
+## 8、分析优化器执行计划：trace
+
+`OPTIMIZER_TRACE` 是 MySQL 5.6 引入的一项跟踪功能，它可以跟踪优化器做出的各种决策（比如访问表的方法、各种开销计算、各种转换等），并将跟踪结果记录到 `INFOMATION_SCHEMA.OPTIMIZER_TRACE` 表中。
+
+此功能默认关闭。开启 trace，并设置格式为 JSON，同时设置 trace 最大能够使用的内存大小，避免解析过程中因为默认内存过小而不能够完整展示。
+
+```mysql
+SET optimizer_trace="enabled=on", end_markers_in_json=on;
+SET optimizer_trace_max_mem_size=1000000;
+```
+
+开启后，可分析如下语句：
+
+- SELECT
+- INSERT
+- REPLACE
+- UPDATE
+- DELETE
+- EXPLAIN
+- SET
+- DECLARE
+- CASE
+- IF
+- RETURN
+- CALL
+
+测试：执行如下 SQL 语句
+
+```mysql
+SELECT * FROM student WHERE id < 10;
+```
+
+最后，查询 information_schema.optimizer_trace 就可以知道 MySQL 是如何执行 SQL 的：
+
+```mysql
+SELECT * FROM information_schema.optimizer_trace\G
+********** 1. row ***********
+# 第 1 部分：查询语句
+QUERY: select * from student where id < 10
+# 第 2 部分：QUERY 字段对应语句的跟踪信息
+TRACE: {
+	"steps": [
+        {
+        	"join_preparation": { # 预备工作
+                "select#": 1,
+                "steps": [
+                    {
+                        "expanded_query": "/* select#1 */ select `student`.`id` as `id`, `student`.`stuno` as `stuno`, `student`.`name` as `name`, `student`.`age` as `age`, `student`.`classId` as `classId` from `student` where (`student`.`id` < 10)"
+                    }
+                ] # steps
+            } # join_preparation
+        },
+        {
+        	"join_optimization": { # 进行优化
+        		"select#": 1,
+        		"steps": [
+                    {
+                    	"condition_processing": { # 条件处理
+                    		"condition": "WHERE",
+                    		"original_condition": "(`student`.`id` < 10)",
+                    		"steps": [
+                                {
+                                	"transformation": "equality_propagation",
+                                	"resulting_condition": "(`student`.`id` < 10)"
+                                },
+                                {
+                                	"transformation": "constant_propagation",
+                                	"resulting_condition": "(`student`.`id` < 10)"
+                                },
+                                {
+                                	"transformation": "trivial_condition_removal",
+                                	"resulting_condition": "(`student`.`id` < 10)"
+                                }
+                            ] # steps
+                    	} # condition_processing
+                    },
+                    {
+                    	"substitute_generated_columns": { # 替换生成的列
+                    	}
+                    },
+                    {
+                    	"table_dependencies": [ # 表的依赖关系
+                            {
+                            	"table": "`student`",
+                            	"range_analysis": {
+                            		"table_scan": {
+                            			"rows": 3973767,
+                            			"cost": 408558
+                            		}, # 扫描表
+                            		"potential_range_indexes": [ # 潜在的范围索引
+                                        {
+                                        	"index": "PRIMARY",
+                                        	"usable": true,
+                                        	"key_parts": [
+                                                "id"
+                                            ]
+                                        }
+                                    ],
+                            		"setup_range_conditions": [ # 设置范围条件
+                                    ],
+                            		"group_index_range": {
+                            			"chosen": false,
+                            			"cause": "not_group_by_or_distinct"
+                            		},
+                            		"skip_scan_range": {
+                            			"potential_skip_scan_indexes": [
+                                            {
+                                            	"index": "PRIMARY",
+                                            	"usable": false,
+                                            	"cause": "query_references_nonkey_column"
+                                            }
+                                        ]
+                            		},
+                            		"analyzing_range_alternatives": { # 分析范围选项
+                            			"range_scan_alternatives": [
+                                            {
+                                                "index": "PRIMARY",
+                                                "ranges": [
+                                                    "id < 10"
+                                                ],
+                                                "index_dives_for_eq_ranges": true,
+                                                "rowid_ordered": true,
+                                                "using_mrr": false,
+                                                "index_only": false,
+                                                "cows": 9,
+                                                "cost": 1.91986,
+                                                "chosen": true
+                                            }
+                                        ],
+                            			"analyzing_roworder_intersect": {
+                            				"usable": false,
+                            				"cause": "too_few_roworder_scans"
+                            			}
+                            		}, # analyzing_range_alternatives
+                            		"chosen_range_access_summary": { # 选择范围访问摘要
+                            			"range_access_plan": {
+                            				"type": "range_scan",
+                            				"index": "PRIMARY",
+                            				"rows": 9,
+                            				"ranges": [
+                                                "id < 10"
+                                            ]
+                            			},
+                            			"rows_for_plan": 9,
+                            			"cost_for_plan": 1.91986,
+                            			"chosen": true
+                            		} # chosen_range_access_summary
+                            	} # range_analysis
+                            }
+                        ] # rows_estimation
+                    },
+                    {
+                    	"considered_execution_plans": [ # 考虑执行计划
+                            {
+                            	"plan_prefix": [
+                                ],
+                            	"table": "`student`",
+                            	"best_access_path": { # 最佳访问路径
+                            		"considered_access_paths": [
+                                        {
+                                        	"rows_to_scan": 9,
+                                        	"access_type": "range",
+                                        	"range_details": {
+                                        		"used_index": "PRIMARY"
+                                        	},
+                                        	"resulting_rows": 9,
+                                        	"cost": 2.81986,
+                                        	"chosen": true
+                                        }
+                                    ] # considered_access_paths
+                            	}, # best_access_path
+                            	"condition_filtering_pct": 100, # 行过滤百分比
+                            	"rows_for_plan": 9,
+                            	"cost_for_plan": 2.81986,
+                            	"chosen": true
+                            }
+                        ] # considered_execution_plans
+                    },
+                    {
+                    	"attaching_conditions_to_tables": { # 将条件附加到表上
+                    		"original_condition": "(`student`.`id` < 10)",
+                    		"attached_conditions_computation": [
+                            ],
+                    		"attached_conditions_summary": [ # 附加条件概要
+                                {
+                                	"table": "`student`",
+                                	"attached": "(`student`.`id` < 10)"
+                                }
+                            ] # attached_conditions_summary
+                    	} # attaching_conditions_to_tables
+                    },
+                    {
+                    	"finalizing_table_conditions": [
+                            {
+                            	"table": "`student`",
+                            	"original_table_condition": "(`student`.`id` < 10)",
+                            	"final_table_condition": "(`student`.`id` < 10)"
+                            }
+                        ] # finalizing_table_conditions
+                    },
+                    {
+                    	"refine_plan": [ # 精简计划
+                            {
+                            	"table": "`student`"
+                            }
+                        ] # refine_plan
+                    }
+                ] # steps
+        	} # join_optimization
+        },
+        {
+        	"join_execution": { # 执行
+        		"select#": 1,
+        		"steps": [
+                ]
+        	} # join_execution
+        }
+    ] # steps
+}
+# 第 3 部分：跟踪信息过长时，被截断的跟踪信息的字节数
+MISSING_BYTES_BEYOND_MAX_MEM_SIZE: 0 # 丢失的超出最大容量的字节
+# 第 4 部分：执行跟踪语句的用户是否有查看对象的权限。当不具有权限时，该列信息为 1 且 TRACE 字段为空，一般在调用带有 SQL SECURITY DEFINER 的视图或者是存储过程的情况下，会出现此问题。
+INSUFFICIENT_PRIVILEGES: 0 # 缺失权限
+```
+
+## 9、MySQL 监控分析视图- sys schema
+
+关于 MySQL 的性能监控和问题诊断，我们一般都从 performance_schema 中去获取想要的数据，在 MySQL 5.7.7 版本中新增 sys schema，它将 performance_schema 和 information_schema 中的数据以更容易理解的方式总结归纳为“视图”，其目的就是为了降低查询 performance_schema 的复杂度，让 DBA 能够快速的定位问题。下面看看这些库中都有哪些监控表和视图，掌握了这些，在我们开发和运维的过程中就起到了事半功倍的效果。
+
+### 9.1 Sys schema 视图摘要
+
+1. 主机相关：以 host_summary 开头，主要汇总了 IO 延迟的信息。
+2. InnoDB 相关：以 innodb 开头，汇总了 innodb buffer 信息和事务等待 innodb 锁的信息。
+3. I/O 相关：以 io 开头，汇总了等待 I/O、I/O 使用量情况。
+4. 内存使用情况：以 memory 开头，从主机、线程、事件等角度展示内存的使用情况
+5. 连接与会话信息： processlist 和 session 相关视图，总结了会话相关信息。
+6. 表相关：以 schema_table 开头的视图，展示了表的统计信息。
+7. 索引信息：统计了索引的使用情况，包含冗余索引和未使用的索引情况。
+8. 语句相关：以 statement 开头，包含执行全表扫描、使用临时表、排序等的语句信息。
+9. 用户相关：以 user 开头的视图，统计了用户使用的文件 I/O、执行语句统计信息。
+10. 等待事件相关信息：以 wait 开头，展示等待事件的延迟情况。
+
+### 9.2 Sys schema 视图使用场景
+
+索引情况
+
+```mysql
+# 1. 查询冗余索引
+select * from sys.schema_redundant_indexes;
+# 2. 查询未使用过的索引
+select * from sys.schema_unused_indexes;
+# 3. 查询索引的使用情况
+select index_name, rows_selected, rows_inserted, rows_updated, rows_deleted from sys.schema_index_statistics where table_schema='dbname';
+```
+
+表相关
+
+```mysql
+# 1. 查询表的访问量
+select table_schema, table_name, sum(io_read_requests + io_write_requests) as io from sys.schema_table_statistics group by table_schema, table_name order by io desc;
+# 2. 查询占用 bufferpool 较多的表
+select object_schema, object_name, allocated, data from sys.innodb_buffer_stats_by_table order by allocated limit 10;
+# 3. 查看表的全表扫描情况
+select * from sys.statements_with_full_table_scans where db='dbname';
+```
+
+语句相关
+
+```mysql
+# 1. 监控 SQL 执行的频率
+select db, exec_count, query from sys.statement_analysis 
+order by exec_count desc;
+# 2. 监控使用了排序的 SQL
+select db, exec_count, first_seen, last_seen, query
+from sys.statements_with_sorting limit 1;
+# 3. 监控使用了临时表或者磁盘临时表的 SQL
+select db, exec_count, tmp_tables, tmp, disk_tables, query
+from sys.statement_analysis where tmp_tables > 0 or tmp_disk_tables > 0
+order by (tmp_tables + tmp_disk_tables) desc;
+```
+
+IO 相关
+
+```mysql
+# 1. 查看消耗磁盘 IO 的文件
+select file, avg_read, avg_write, avg_read + avg_write as avg_io
+from sys.io_global_by_file_by_bytes order by avg_read limit 10; 
+```
+
+Innodb 相关
+
+```mysql
+# 1. 行锁阻塞情况
+select * from sys.innodb_lock_waits;
+```
+
+> 风险提示：
+>
+> 通过 sys 库去查询时，MySQL 会消耗大量资源去收集相关信息，严重的可能会导致业务请求被阻塞，从而引起故障。建议生产上不要频繁的去查询 sys 或者 performance_schema、information_schema 来完成监控、巡检等工作。
+
+# P141 数据准备与索引失效的 11 种情况1
+
+第10章 索引优化与查询优化
+
+都有哪些维度可以进行数据库调优？简言之：
+
+- 索引失效、没有充分利用到索引——索引建立
+- 关联查询太多 JOIN（设计缺陷或不得已的需求）——SQL 优化
+- 服务器调优及各个参数设置（缓冲、线程数等）——调整 my.cnf
+- 数据过多——分库分表
+
+关于数据库调优的知识点非常分散。不同的 DBMS，不同的公司，不同的职位，不同的项目遇到的问题都不尽相同。这里我们分为三个章节进行细致讲解。
+
+虽然 SQL 查询优化的技术有很多，但是大方向上完全可以分成物理查询优化和逻辑查询优化两大块。
+
+- 物理查询优化是通过索引和表连接方式等技术来进行优化，这里重点需要掌握索引的使用。
+- 逻辑查询优化就是通过 SQL 等价变化提升查询效率，直白一点就是说，换一种查询写法执行效率可能更高。
+
+## 1、数据准备
+
+步骤1：建表
+
+步骤2：设置参数
+
+步骤3：创建函数
+
+步骤4：创建存储过程
+
+步骤5：调用存储过程
+
+步骤6：删除某表上的索引
+
+## 2、索引失效案例
+
+MySQL 中提高性能的一个最有效的方式是对数据表设计合理的索引。索引提供了高效访问数据的方法，并且加快查询的速度，因此索引对查询的速度有着至关重要的影响。
+
+- 使用索引可以快速地定位表中的某条记录，从而提高数据库查询的速度，提高数据库的性能。
+- 如果查询时没有使用索引，查询语句就会扫描表中所有记录。在数据量大的情况下，这样查询的速度会很慢。
+
+大多数情况下都（默认）采用 B+ 树来构建所有。只是空间列类型的所有使用 R-树，并且 MEMORY 表还支持 hash 索引。
+
+其实，用不用索引，最终都是优化器说了算。优化器是基于什么的优化器？基于 cost 开销（CostBaseOptimizer），它不是基于规则（Rule-BasedOptimizer），也不是基于语义。怎么样开销小就怎么来。另外，**SQL 语句是否使用索引，跟数据库版本、数据量、数据选择度都有关系**。
+
+### 2.1 全值匹配我最爱
+
+### 2.2 最佳左前缀法则
+
+在 MySQL 建立联合索引时会遵守最佳左前缀匹配原则，即最左优先，在检索数据时从联合索引的最左边开始匹配。
+
+如果索引了多列，要遵守最左前缀法则。指的是查询从索引的最左前列开始并且不跳过索引中的列。
+
+结论：MySQL 可以为多个字段创建索引，一个索引可以包括 16 个字段。对于多列索引，**过滤条件要使用索引必须按照索引建立时的顺序，依次满足，一旦跳过某个字段，索引后面的字段都无法被使用**。如果查询条件中没有使用这些字段中第 1 个字段时，多列（或联合）索引不会被使用。
+
+> 拓展：Alibaba《Java 开发手册》
+>
+> 索引文件具有 B-Tree 的最左前缀匹配特性，如果左边的值未确定，那么无法使用此索引。
+
+### 2.3 主键插入顺序
+
+对于一个使用 `InnoDB` 存储引擎的表来说，在我们没有显式的创建索引时，表中的数据实际上都是存储在聚簇索引的叶子节点的。而记录又是存储在数据页中的，数据页和记录又是按照记录主键值从小到大的顺序进行排序，所以如果我们插入的记录的主键值是依次增大的话，那我们每插满一个数据页就换到下一个数据页继续插，而如果我们插入的主键值忽大忽小的话，就比较麻烦了。
+
+数据页已经满了，再插进来怎么办呢？我们需要把当前页面分裂成两个页面，把本页中的一些记录移动到新创建的这个页中。页面分裂和记录移位意味着什么？意味着：性能损耗！所以如果我们想尽量避免这样无谓的性能损耗，最好让插入的记录的主键值依次递增，这样就不会发生这样的性能损耗了。所以我们建议：让主键具有 `AUTO_INCREMENT`，让存储引擎自己为表生成主键，而不是我们手动插入。
+
+我们自定义的主键 `id` 拥有 `AUTO_INCREMENT` 属性，在插入记录时存储引擎会自动为我们填入自增的主键值这样的主键占用空间少，顺序写入，减少页分裂。
+
+### 2.4 计算、函数、类型转换（自动或手动）导致索引失效
+
+### 2.5 类型转换导致索引失效
+
+结论：设计实体类属性时，一定要与数据库字段类型相对应。否则，就会出现类型转换的情况。
+
+# P142 索引失效的 11 种情况2
+
+### 2.6 范围条件右边的列索引失效
+
+- 范围右边的列不能使用。比如：（<）（<=）（>）（>=）和 between 等
+
+- 如果这种 sql 出现较多，应该建立：
+
+  ```mysql
+  CREATE INDEX idx_age_name_classid ON student(age,name,classid);
+  ```
+
+- 将范围查询条件放置语句最后：
+
+  ```mysql
+  EXPLAIN SELECT SQL_NO_CACHE * FROM student WHERE student.age = 30 AND student.name = 'abc' AND student.classId > 20;
+  ```
+
+> 应用开发中范围查询，例如：金额查询，日期查询往往都是范围查询。应将查询条件放置 where 语句最后。
+
+### 2.7 不等于（!= 或者 <>）索引失效
+
+### 2.8 is null 可以使用索引，is not null 无法使用索引
+
+> 结论：最好在设计数据表的时候就将字段设置为 NOT NULL 约束，比如你可以将 INT 类型的字段，默认值设置为 0。将字符类型的默认值设置为空字符串（''）。
+>
+> 扩展：同理，在查询中使用 `not like` 也无法使用索引，导致全表扫描。
+
+### 2.9 like 以通配符 % 开头索引失效
+
+在使用 LIKE 关键字进行查询的查询语句中，如果匹配字符串的第一个字符为“%”，索引就不会起作用。只有“%”不在第一个位置，索引才会起作用。
+
+> 拓展：Alibaba 《Java 开发手册》
+>
+> 【强制】页面搜索严禁左模糊或者全模糊，如果需要请走搜索引擎来解决。
+
+### 2.10 OR 前后存在非索引的列，索引失效
+
+在 WHERE 子句中，如果在 OR 前的条件列进行了索引，而在 OR 后的条件列没有进行索引，那么索引会失效。也就是说，**OR 前后的两个条件中的列都是索引时，查询中才使用索引**。
+
+因为 OR 的含义就是两个只要满足一个即可，因此只有一个条件列进行了索引是没有意义的，只要有条件列没有进行索引，就会进行全表扫描，因此索引的条件也会失效。
+
+简单来说就是对两个字段分别进行了扫描，然后将这两个结果集进行了合并。这样做的好处就是避免了全表扫描。
+
+### 2.11 数据库和表的字符集统一使用 utf8mb4
+
+统一使用 utf8mb4（5.5.3 版本以上支持）兼容性更好，统一字符集可以避免由于字符集转换产生的乱码。不同的字符集进行比较前需要进行转换会造成索引失效。
+
+### 2.12 练习及一般性建议
+
+练习：假设：index(a,b,c)
+
+| Where 语句                                              | 索引是否被使用                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------ |
+| where a = 3                                             | Y, 使用到 a                                                  |
+| where a = 3 and b = 5                                   | Y, 使用到 a, b                                               |
+| where a = 3 and b = 5 and c = 4                         | Y, 使用到 a, b, c                                            |
+| where b = 3 或者 where b = 3 and c = 4 或者 where c = 4 | N                                                            |
+| where a = 3 and c = 5                                   | 使用到 a，但是 c 不可以，b 中间断了                          |
+| where a = 3 and b > 4 and c = 5                         | 使用到 a 和 b，c 不能用在范围之后，b 断了                    |
+| where a is null and b is not null                       | is null 支持索引 但是 is not null 不支持。索引 a 可以使用索引，但是 b 不可以使用 |
+| where a <> 3                                            | 不能使用索引                                                 |
+| where abs(a) = 3                                        | 不能使用索引                                                 |
+| where a = 3 and b like 'kk%' and c = 4                  | Y, 使用到 a, b, c                                            |
+| where a = 3 and b like '%kk' and c = 4                  | Y, 使用到 a                                                  |
+| where a = 3 and b like '%kk%' and c = 4                 | Y, 使用到 a                                                  |
+| where a = 3 and b like '%kk%' and c = 4                 | Y, 使用到 a, b, c                                            |
+
+一般性建议：
+
+- 对于单列索引，尽量选择针对当前 query 过滤性更好的索引
+- 在选择组合索引的时候，当前 query 中过滤性最好的字段在索引字段顺序中，位置越靠前越好。
+- 在选择组合索引的时候，尽量选择能够包含当前 query 中的 where 子句中更多字段的索引。
+- 在选择组合索引的时候，如果某个字段可能出现范围查询时，尽量把这个字段放在索引次序的最后面。
+
+总之，书写 SQL 语句时，尽量避免造成索引失效的情况。
+
+# P143 外连接与内连接的查询优化
+
+## 3、关联查询优化
+
+### 3.1 数据准备
+
+### 3.2 采用左外连接
+
+下面开始 EXPLAIN 分析
+
+```mysql
+EXPLAIN SELECT SQL_NO_CACHE * FROM `type` LEFT JOIN book ON type.card = book.card;
+```
+
+结论：type 有 ALL
+
+添加索引优化
+
+```mysql
+ALTER TABLE book ADD INDEX Y(card); # 【被驱动表】，可以避免全表扫描
+```
+
+可以看到第二行的 type 变为了 ref，rows 也变成了优化比较明显。这是由左连接特性决定的。LEFT JOIN 条件用于确定如何从右表搜索行，左边一定都有，所以右边是我们的关键点，一定需要建立索引。
+
+只在驱动表索引无法避免全表扫描
+
+### 3.3 采用内连接
+
+换成 inner join（MySQL 自动选择驱动表）
+
+```mysql
+EXPLAIN SELECT SQL_NO_CACHE * FROM type INNER JOIN book ON type.card = book.card;
+```
+
+结论：
+
+- 对于内连接来说，查询优化器可以决定谁作为驱动表，谁作为被驱动表出现的
+- 对于内连接来讲，如果表的连接条件中只能有一个字段有索引，则有索引的字段所在的表会被作为被驱动表出现
+- 对于内连接来说，在两个表的连接条件都存在索引的情况下，会选择小表作为驱动表。“小表驱动大表”
+
+# P144 JOIN 语句的底层原理
+
+## 3.4 JOIN 语句原理
+
+join 方式连接多个表，本质就是各个表之间数据的循环匹配。MySQL 5.5 版本之前，MySQL 只支持一种表间关联方式，就是嵌套循环（Nested Loop Join）。如果关联表的数据量很大，则 join 关联的执行事件会非常长。在 MySQL 5.5 以后的版本中，MySQL 通过引入 BNLJ 算法来优化嵌套执行。
+
+### 1、驱动表和被驱动表
+
+驱动表就是主表，被驱动表就是从表、非驱动表。
+
+- 对于内连接来说：
+
+  ```mysql
+  SELECT * FROM A JOIN B ON ...
+  ```
+
+  A 一定是驱动表吗？不一定，优化器会根据你查询语句做优化，决定先查哪张表。先查询的那张表就是驱动表，反之就是被驱动表。通过 explain 关键字可以查看。
+
+- 对于外连接来说：
+
+  ```mysql
+  SELECT * FROM A LEFT JOIN B ON ...
+  # 或
+  SELECT * FROM B RIGHT JOIN A ON ...
+  ```
+
+  通常，大家会认为 A 就是驱动表，B 就是被驱动表。但也未必。
+
+### 2、Simple Nested-Loop Join（简单嵌套循环连接）
+
+算法相当简单，从表 A 中取出一条数据 1，遍历表 B，将匹配到的数据放到 result。以此类推，驱动表 A 中的每一条记录与被驱动表 B 的记录进行判断
+
+可以看到这种方式效率是非常低的，以上述表 A 数据 100 条，表 B 数据 1000 条计算，则 A * B = 10 万次。开销统计如下：
+
+| 开销统计         | SNLJ      |
+| ---------------- | --------- |
+| 外表扫描次数     | 1         |
+| 内表扫描次数     | A         |
+| 读取记录数       | A + B * A |
+| JOIN 比较次数    | B * A     |
+| 回表读取记录次数 | 0         |
+
+当然 mysql 肯定不会这么粗暴的去进行表的连接，所以就出现了后面的两种对 Nested-Loop Join 优化算法。
+
+### 3、Index Nested-Loop Join（索引嵌套循环连接）
+
+Index Nested-Loop Join 其优化的思路主要是为了减少内层表数据的匹配次数，所以要求被驱动表上必须有索引才行。通过外层表匹配条件直接与内层表索引进行匹配，避免和内存表的每条记录去进行比较，这样极大的减少了对内层表的匹配次数。
+
+驱动表中的每条记录通过被驱动表的所有进行访问，因为索引查询的成本是比较固定的，故 mysql 优化器都倾向于使用记录少的表作为驱动表（外表）。
+
+| 开销统计         | SNLJ      | INLJ                   |
+| ---------------- | --------- | ---------------------- |
+| 外表扫描次数     | 1         | 1                      |
+| 内表扫描次数     | A         | 0                      |
+| 读取记录数       | A + B * A | A + B(match)           |
+| JOIN 比较次数    | B * A     | A * Index(Height)      |
+| 回表读取记录次数 | 0         | B(match) (if possible) |
+
+如果被驱动表加索引，效率是非常高的，但如果索引不是主键索引，所以还得进行一次回表查询。相比，被驱动表的索引是主键索引，效率会更高。
+
+### 4、Block Nested-Loop Join（块嵌套循环连接）
+
+如果存在索引，那么会使用 index 的方式进行 join，如果 join 的列没有索引，被驱动表要扫描的次数太多了。每次访问被驱动表，其表中的记录都会被加载到内存中，然后再从驱动表中取一条与其匹配，匹配结束后清除内存，然后再从驱动表中加载一条记录，然后把被驱动表的记录在加载到内存匹配，这样周而复始，大大增加了 IO 的次数。为了减少被驱动表的 IO 次数，就出现了 Block Nested-Loop Join 的方式。
+
+不再是逐条获取驱动表的数据，而是一块一块的获取，引入了 join buffer 缓冲区，将驱动表 join 相关的部分数据列（大小受 join buffer 的限制）缓存到 join buffer 中，然后全表扫描被驱动表，被驱动表的每一条记录一次性和 join buffer 中的所有驱动表记录进行匹配（内存中操作），将简单嵌套循环中的多次比较合并成一次，降低了被驱动表的访问频率。
+
+> 注意：
+>
+> 这里缓存的不只是关联表的列，select 后面的列也会缓存起来。
+>
+> 在一个有 N 个 join 关联的 sql 中会分配 N - 1 个 join buffer。所以查询的时候尽量减少不必要的字段，可以让 join buffer 中可以存放更多的列。
+
+| 开销统计         | SNLJ      | INLJ                   | BNLJ                                              |
+| ---------------- | --------- | ---------------------- | ------------------------------------------------- |
+| 外表扫描次数     | 1         | 1                      | 1                                                 |
+| 内表扫描次数     | A         | 0                      | A * used_column_size / join_buffer_size + 1       |
+| 读取记录数       | A + B * A | A + B(match)           | A + B * (A * used_column_size / join_buffer_size) |
+| JOIN 比较次数    | B * A     | A * Index(Height)      | B * A                                             |
+| 回表读取记录次数 | 0         | B(match) (if possible) | 0                                                 |
+
+参数设置：
+
+- block_nested_loop
+
+  通过 `show variables like '%optimizer_switch%'` 查看 `block_nested_loop` 状态。默认是开启的。 
+
+- join_buffer_size
+
+  驱动表能不能一次加载完，要看 join buffer 能不能存储所有的数据，默认情况下 `join_buffer_size=256k`。
+
+  ```mysql
+  show variables like '%join_buffer%';
+  ```
+
+  join_buffer_size 的最大值在 32 位系统可以申请 4G，而在 64 位操作系统下可以申请大于 4G 的 Join Buffer 空间（64 位 Windows 除外，其大值会被截断为 4 GB 并发出警告）。
+
+### 5、Join 小结
+
+1. 整体效率比较：INLJ > BNLJ > SNLJ
+2. 永远用小结果集驱动大结果集（其本质就是减少外层循环的数据数量）（小的度量单位指的是 表行数 * 每行大小）
+3. 为被驱动表匹配的条件增加索引（减少内层表的循环匹配次数）
+4. 增大 join buffer size 的大小（一次缓存的数据越多，那么内层包的扫表次数就越少）
+5. 减少驱动表不必要的字段查询（字段越少，join buffer 所缓存的数据就越多）
+
+### 6、Hash Join
+
+从 MySQL 的 8.0.20 版本开始将废弃 BNLJ，因为从 MySQL 8.0.18 版本开始就加入了 hash join 默认都会使用 hash join
+
+- Nested Loop：
+
+  对于被连接的数据子集的情况，Nested Loop 是个较好的选择。
+
+- Hash Join 是做大数据集连接时的常用方式，优化器使用两个表中较少（相对较小）的表利用 Join Key 在内存中建立散列表，然后扫描较大的表并探测散列表，找出与 Hash 表匹配的行。
+
+  - 这种方式适用于较小的表完全可以放于内存中的情况，这样总成本就是访问两个表的成本之和。
+  - 在表很大的情况下并不能完全放入内存，这时优化器会将它分割成若干不同的分区，不能放入内存的部分就把该分区写入磁盘的临时段，此时要求有较大的临时段从而尽量提高 I/O 的性能。
+  - 它能够很好的工作于没有索引的大表和并行查询的环境中，并提供最好的性能。大多数人都说它是 Join 的重型升降机。Hash Join 只能应用于等值连接（如 WHERE A.COL1 = B.COL2），这是由 Hash 的特点决定的。
+
+| 类别     | Nested Loop                                                  | Hash Join                                                    |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 使用条件 | 任何条件                                                     | 等值连接（=）                                                |
+| 相关资源 | CPU、磁盘 I/O                                                | 内存、临时空间                                               |
+| 特点     | 当有高选择性索引或进行限制性搜索时效率比较高，能够快速返回第一次的搜索结果。 | 当缺乏索引或者索引条件模糊时，Hash Join 比 Nested Loop 有效。在数据仓库环境下，如果表的记录数多，效率高。 |
+| 缺点     | 当所有丢失或者查询条件限制不够时，效率很低；当表的记录数多时，效率低。 | 为建立哈希表，需要大量内存。第一次的结果返回较慢。           |
+
+所以，在决定哪个表做驱动表的时候，应该是两个表按照各自的条件过滤，过滤完成后，计算参与 join 的各个字段的总数据量，数据量小的那个表，就是“小表”，应该作为驱动表。
+
+# P145 子查询优化和排序优化
+
+### 3.5 小结
+
+- 保证被驱动表的 JOIN 字段已经创建了索引
+- 需要 JOIN 的字段，数据类型保持绝对一致。
+- LEFT JOIN 时，选择小表作为驱动表，大表作为被驱动表。减少外层循环的次数。
+- INNER JOIN 时，MySQL 会自动将小结果集的表选为驱动表。选择相信 MySQL 优化策略。
+- 能够直接多表关联的尽量直接关联，不用子查询。（减少查询的趟数）
+- 不建议使用子查询，建议将子查询 SQL 拆开结合程序多次查询，或使用 JOIN 来代替子查询。
+- 衍生表建不了索引
+
+## 4、子查询优化
+
+MySQL 从 4.1 版本开始支持子查询，使用子查询可以进行 SELECT 语句的嵌套查询，即一个 SELECT 查询的结果作为另一个 SELECT 语句的条件。子查询可以一次性完成很多逻辑上需要多个步骤才能完成的 SQL 操作。
+
+子查询是 MySQL 的一项重要的功能，可以帮助我们通过一个 SQL 语句实现比较复杂的查询。但是，子查询的执行效率不高。原因：
+
+1. 执行子查询时，MySQL 需要为内层查询语句的查询结果建立一个临时表，然后外层查询语句从临时表中查询记录。查询完毕后，再撤销这些临时表。这样会消耗过多的 CPU 和 IO 资源，产生大量的慢查询。
+2. 子查询的结果集存储的临时表，不论是内存临时表还是磁盘临时表都不会存在索引，所以查询性能会受到一定的影响。
+3. 对于返回结果集比较大的子查询，其对查询性能的影响也就越大。
+
+在 MySQL 中，可以使用连接（JOIN）查询来替代子查询。连接查询不需要建立临时表，其速度比子查询要快，如果查询中使用索引的话，性能就会更好。
+
+> 结论：尽量不要使用 NOT IN 或者 NOT EXISTS，用 LEFT JOIN xxx ON xx WHERE xx IS NULL 替代
+
+## 5、排序优化
+
+### 5.1 排序优化
+
+问题：在 WHERE 条件字段上加索引，但是为什么在 ORDER BY 字段上还要加索引呢？
+
+回答：
+
+在 MySQL 中，支持两种排序方式，分别是 `FileSort` 和 `Index` 排序。
+
+- Index 排序中，索引可以保证数据的有序性，不需要再进行排序，效率更高。
+- FileSort 排序则一般在内存中进行排序，占用 CPU 较多。如果待排结果较大，会产生临时文件 I/O 到磁盘进行排序的情况，效率较低。
+
+优化建议：
+
+1. SQL 中，可以在 WHERE 子句和 ORDER BY 子句中使用索引，目的是在 WHERE 子句中避免全表扫描，在 ORDER BY 子句避免使用 FileSort 排序。当然，某些情况下全表扫描，或者 FileSort 排序不一定比索引慢。但总的来说，我们还是要避免，以提高查询效率。
+2. 尽量使用 Index 完成 ORDER BY 排序。如果 WHERE 和 ORDER BY 后面是相同的列就使用单索引列；如果不同就是用联合索引。
+3. 无法使用 Index 时，需要对 FileSort 方式进行调优。
+
+### 5.2 测试
+
+删除 student 表和 class 表中已创建的索引。
+
+以下是否能使用到索引，能否去掉 using filesort
+
+**过程一：**
+
+```mysql
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY age, classid;
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY age, classid LIMIT 10;
+```
+
+**过程二： order by 时不 limit，索引失效：**
+
+``` mysql
+# 创建索引
+CREATE INDEX idx_age_classid_name ON student (age, classid, NAME);
+# 不限制，索引失效
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY age, classid;
+# 增加 LIMIT 过滤条件，使用上索引了。
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY age, classid LIMIT 10;
+```
+
+**过程三： order by 时顺序错误，索引失效**：
+
+```mysql
+# 创建索引 age, classid, stuno
+CREATE INDEX idx_age_classid_stuno ON student (age, classid, stuno);
+# 以下哪些索引失效？
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY classid LIMIT 10;
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY classid, NAME LIMIT 10;
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY age, classid, stuno LIMIT 10;
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY age, classid LIMIT 10;
+EXPLAIN SELECT SQL_NO_CACHE * FROM student ORDER BY age LIMIT 10;
+```
+
+**过程四：order by 时规则不一致，索引失效（顺序错，不索引；方向反，不索引）**
+
+```mysql
+EXPLAIN SELECT * FROM student ORDER BY age DESC, classid ASC LIMIT 10;
+EXPLAIN SELECT * FROM student ORDER BY classid DESC, NAME DESC LIMIT 10;
+EXPLAIN SELECT * FROM student ORDER BY age ASC, classid DESC LIMIT 10;
+EXPLAIN SELECT * FROM student ORDER BY age DESC, classid DESC LIMIT 10;
+```
+
+> 结论：ORDER BY 子句，尽量使用 index 方式排序，避免使用 FileSort 方式排序
+
+**过程五：无过滤，不索引**
+
+```mysql
+EXPLAIN SELECT * FROM student WHERE age = 45 ORDER BY classid;
+EXPLAIN SELECT * FROM student WHERE age = 45 ORDER BY classid, name;
+EXPLAIN SELECT * FROM student WHERE classid = 45 ORDER BY age;
+EXPLAIN SELECT * FROM student WHERE classid = 45 ORDER BY age limit 10;
+```
+
+**小结：**
+
+```mysql
+INDEX a_b_c(a, b, c)
+
+order by 能使用索引最左前缀
+- ORDER BY a
+- ORDER BY a, b
+- ORDER BY a, b, c
+- ORDER BY a DESC, b DESC, c DESC
+
+如果 WHERE 使用索引的最左前缀定义为常量，则 order by 能使用索引
+- WHERE a = const ORDER BY b, c
+- WHERE a = const AND b = const ORDER BY c
+- WHERE a = const ORDER BY b, c
+- WHERE a = const AND b > const ORDER BY b, c
+
+不能使用索引进行排序
+- ORDER BY a ASC, b DESC, c DESC # 排序不一致
+- WHERE g = const ORDER BY b, c # 丢失 a 索引
+- WHERE a = const ORDER BY c # 丢失 b 索引
+- WHERE a = const ORDER BY a, d # d 不是索引的一部分
+- WHERE a in (...) ORDER BY b, c # 对于排序来说，多个相等条件也是范围查询
+```
+
+### 5.3 案例实战
+
+ORDER BY 子句，尽量使用 Index 方式排序，避免使用 FileSort 方式排序。
+
+执行案例前先清除 student 上的索引，只留主键：
+
+> 结论：type 是 ALL，即最坏的情况。Extra 里还出现了 Using filesort，也是最坏的情况。优化是必须的。
+
+优化思路：
+
+**方案一：为了去掉 filesort 我们可以把索引建成**
+
+```mysql
+# 创建新索引
+CREATE INDEX idx_age_name ON student(age,NAME);
+
+EXPLAIN SELECT SQL_NO_CACHE * FROM student WHERE age = 30 AND stuno < 101000 ORDER BY NAME;
+```
+
+这样我们优化掉了 using filesort
+
+**方案二：尽量让 where 的过滤条件和排序使用上索引**
+
+建一个三个字段的组合索引：
+
+```mysql
+DROP INDEX idx_age_name ON student;
+CREATE INDEX idx_age_stuno_name ON student(age, stuno, NAME);
+EXPLAIN SELECT SQL_NO_CACHE * FROM student WHERE age = 30 AND stuno < 101000 ORDER BY NAME;
+```
+
+我们发现 using filesort 依然存在，所以 name 并没有用到索引，而且 type 还是 range 光看字面其实并不美好。原因是，因为 stuno 是一个范围过滤，所以索引后面的字段不会再使用索引了。
+
+结果竟然有 filesort 的 sql 运行速度，超过了已经优化掉 filesort 的 ssql，而且快了很多，几乎一瞬间就出现了结果。
+
+原因：
+
+所有的排序都是在条件过滤之后才执行的。所以，如果条件过滤掉大部分数据的话，剩下几百几千条数据进行排序其实并不是很消耗性能，即使索引优化了排序，但实际提升性能很有限。相对的 stuno < 101000 这个条件，如果没有用到索引的话，要对几万条的数据进行扫描，这是非常消耗性能的，所以索引放在这个字段上性价比最高，是最优选择。
+
+> 结论：
+>
+> 1. 两个索引同时存在，mysql 自动选择最优的方案。（对于这个例子，mysql 选择 idx_age_stuno_name）。但是，随着数据量的变化，选择的索引也会随之变化的。
+> 2. 当【范围条件】和【group by 或者 order by】的字段出现二选一时，优先观察条件字段的过滤数量，如果过滤的数据足够多，而需要排序的数据并不多时，优先把索引放在范围字段上。反之，亦然。
+
+### 5.4 filesort 算法：双路排序和单路排序
+
+排序的字段若如果不在索引列上，则 filesort 会有两种算法：**双路排序**和**单路排序**
+
+**双路排序（慢）**
+
+- MySQL 4.1 之前使用双路排序，字面意思就是两次扫描磁盘，最终得到数据，读取行指针和 order by 列，对他们进行排序，然后扫描已经排序好的列表，按照列表中的值重新从列表中读取对应的数据输出
+- 从磁盘取排序字段，在 buffer 进行排序，再从磁盘取其他字段。
+
+取一批数据，要对磁盘进行两次扫描，众所周知，IO 是很耗时的，所以在 mysql 4.1 之后，出现了第二种改进的算法，就是单路排序
+
+**单路排序（快）**
+
+从磁盘读取查询需要的所有列，按照 order by 列在 buffer 对它们进行排序，然后扫描排序后的列表进行输出，它的效率更快一些，避免了第二次读取数据。并且把随机 IO 变成了顺序 IO，但是它会使用的空间，因为它把每一行都保存在内存中了。
+
+**结论及引申出的问题**
+
+- 由于单路是后出的，总体而言好过双路
+- 但是用单路有问题
+  - 在 sort_buffer 中，单路比多路要多占用很多空间，因为单路是把所有字段都取出，所以有可能取出的数据的总大小超出了 `sort_buffer` 的容量，导致每次只能取 sort_buffer 容量大小的数据，进行排序（创建 tmp 文件，多路合并），排完再取 sort_buffer 容量大小，再排……从而多次 I/O。
+  - 单路本来想省一次 I/O 操作，反而导致大量的 I/O 操作，反而得不偿失。
+
+**优化策略**
+
+**1、尝试提高 sort_buffer_size**
+
+- 不管用哪种算法，提高这个参数都会提高效率，要根据系统的能力取提高，因为这个参数是针对每个进程（connection）的 1M - 8M 之间调整。MySQL 5.7， InnoDB 存储引擎默认值是 1048576 字节，1MB。
+
+  ```mysql
+  SHOW VARIABLES LIKE '%sort_buffer_size%';
+  ```
+
+**2、尝试提高 max_length_for_sort_data**
+
+- 提高这个参数，会提高用改进算法的概率。
+
+  ```mysql
+  SHOW VARIABLES LIKE '%max_length_for_sort_data%'; # 默认 1024 字节
+  ```
+
+- 但是如果设的太高，数据总容量超出 sort_buffer_size 的概率就增大，明显症状是高的磁盘 I/O 活动和低的处理器使用率。如果需要返回的列的总长度大于 max_length_for_sort_data，使用双路算法，否则使用单路算法。1024 - 8192 字节之间调整
+
+**3、Order by 时 select * 是一个大忌，最好只 Query 需要的字段。**原因：
+
+- 当 Query 的字段大小总和小于 `max_length_for_sort_data`，而且排序字段不是 TEXT|BLOB 类型时，会用改进后的算法——单路排序，否则用老算法——多路排序。
+- 两种算法的数据都有可能超过 sort_buffer_size 的容量，超出之后，会创建 tmp 文件进行合并排序，导致多次 I/O，但是用单路排序算法的风险会更大一些，所以要**提高 sort_buffer_size**。
+
+# P146 GROUP BY 优化、分页查询优化
+
+## 6、GROUP BY 优化
+
+- group by 使用索引的原则几乎跟 order by 一致，group by 即使没有过滤条件用到索引，也可以直接使用索引。
+- group by 先排序再分组，遵照索引建的最佳左前缀法则
+- 当无法使用索引列，增大 `max_length_for_sort_data` 和 `sort_buffer_size` 参数的设置
+- where 效率高于 having，能写在 where 限定的条件就不要写在 having 中了
+- 减少使用 order by，和业务沟通能不排序就不排序，或将排序放到程序端去做。Order by、group by、distinct 这些语句较为耗费 CPU，数据库的 CPU 资源是及其宝贵的。
+- 包含了 order by、group by、distinct 这些查询的语句，where 条件过滤出来的结果集请保持在 1000 行以内，否则 SQL 会很慢。
+
+## 7、优化分页查询
+
+一般分页查询时，通过创建覆盖索引能够比较好地提高性能。一个常见又非常头疼的问题就是 `limit 2000000, 10`，此时需要 MySQL 排序前 2000010 记录，仅仅返回 2000000 - 2000010 的记录，其他记录丢弃，查询排序的代价非常大。
+
+```mysql
+EXPLAIN SELECT * FROM student LIMIT 2000000,10;
+```
+
+**优化思路一**
+
+在索引上完成排序分页操作，最后根据主键关联回原表查询所需要的其他列内容。
+
+```mysql
+EXPLAIN SELECT * FROM student t, (SELECT id FROM student ORDER BY id LIMIT 2000000, 10) a WHERE t.id = a.id;
+```
+
+**优化思路二**
+
+该方案适用于主键自增的表，可以把 Limit 查询转换成某个位置的查询。
+
+```mysql
+EXPLAIN SELECT * FROM student WHERE id > 2000000 LIMIT 10;
+```
+
+# P147 覆盖索引的使用
+
+## 8、优先考虑覆盖索引
+
+### 8.1 什么是覆盖索引？
+
+**理解方式一：**索引是高效找到行的一个方法，但是一般数据库也能使用索引找到一个列的数据，因此它不必读取整个行。毕竟索引叶子节点存储了它们索引的数据；当能通过读取索引就可以得到想要的数据，那就不需要读取行了。**一个索引包含了满足查询结果的数据就叫做覆盖索引**。
+
+**理解方式二**：非聚簇符合索引的一种形式，它包括在查询里的 SELECT、JOIN 和 WHERE 子句用到的所有列（即建索引的字段正好是覆盖查询条件中所涉及的字段）。
+
+简单说就是，`索引列+主键`包含 SELECT 到 FROM 之间查询的列。
+
+### 8.2 覆盖索引的利弊
+
+**好处：**
+
+**1、避免 InnoDB 表进行索引的二次查询（回表）**
+
+InnoDB 是以聚集索引的顺序来存储的，对于 InnoDB 来说，二级索引在叶子节点中所保存的是行的主键信息，如果是用二级索引查询数据，在查找到相应的键值后，还需通过主键进行二次查询才能获取我们真实所需要的数据。
+
+在覆盖索引中，二级索引的键值中可以获取所要的数据，避免了对主键的二次查询，减少了 IO 操作，提升了查询效率。
+
+**2、可以把随机 IO 变成顺序 IO 加快查询效率**
+
+由于覆盖索引是按键值的顺序存储的，对于 IO 密集型的范围查找来说，对比随机从磁盘读取每一行的数据 IO 要少的多，因此引用覆盖索引在访问时也可以把磁盘的随机读取的 IO 转变成索引查找的顺序 IO。
+
+**由于覆盖索引可以减少树的搜索次数，显著提升查询性能，所以使用覆盖索引是一个常用的性能优化手段。**
+
+**弊端：**
+
+索引字段的维护总是有代价的。因此，在建立冗余索引来支持覆盖索引时就需要权衡考虑了。这是业务 DBA，或者称为业务数据架构师的工作。
+
+# P148 索引条件下推（ICP）
+
+## 10、索引下推
+
+### 10.1 使用前后对比
+
+Index Condition Pushdown（ICP）是 MySQL 5.6 中新特性，是一种在存储引擎层使用索引过滤数据的优化方式。
+
+- 如果没有 ICP，存储引擎会遍历索引以定位基表中的行，并将它们返回给 MySQL 服务器，由 MySQL 服务器评估 `WHERE` 后面的条件是否保留行。
+- 启用 ICP 后，如果部分 `WHERE` 条件可以仅使用索引中的列进行筛选，则 MySQL 服务器会把这部分 `WHERE` 条件放到存储引擎筛选。然后存储引擎通过使用索引条目来筛选数据，并且只有在满足这一条件时才从表中读取行。
+  - 好处：ICP 可以减少存储引擎必须访问基表的次数和 MySQL 服务器必须访问存储引擎的次数。
+  - 但是，ICP 的加速效果取决于存储引擎内通过 ICP 筛选掉的数据的比例。
+
+### 10.2 ICP 的开启/关闭
+
+- 默认情况下启用索引条件下推。可以通过设置系统变量 `optimizer_switch` 控制：`index_condition_pushdown`
+
+  ```mysql
+  # 打开索引下推
+  SET optimizer_switch = 'index_condition_pushdown=on';
+  # 关闭索引下推
+  SET optimizer_switch = 'index_condition_pushdown=off';
+  ```
+
+- 当使用索引条件下推时，`EXPLAIN` 语句输出结果中 `Extra` 列内容显示为 `Using index condition`。
+
+### 10.3 ICP 使用案例
+
+建表
+
+插入数据
+
+为该表定义联合索引 zip_last_first(zipcode, lastname, firstname)。如果我们知道了一个人的邮编，但是不确定这个人的姓氏，我们可以进行如下检索：
+
+```mysql
+SELECT * FROM people
+WHERE zipcode='000001'
+AND lastname LIKE '%张%'
+AND address LIKE '%北京市%';
+```
+
+执行查看 SQL 的查询计划，`Extra` 中显示了 `Using index condition`，这表示使用了索引下推。另外， Using where 表示条件中包含需要过滤的非索引列的数据，即 address LIKE '%北京市%' 这个条件并不是索引列，需要在服务端过滤掉。
+
+如果不想出现 Using where，把 address LIKE '%北京市%' 去掉即可
+
+这个表中存在两个索引，分别是：
+
+- 主键索引
+- 二级索引 zip_last_first
+
+下面我们关闭 ICP 查看执行计划
+
+```mysql
+SET optimizer_switch = 'index_condition_pushdown=off';
+```
+
+查看执行计划，已经没有了 Using index condition，表示没有使用 ICP
+
+```mysql
+EXPLAIN SELECT * FROM people
+WHERE zipcode='000001'
+AND lastname LIKE '%张%'
+AND address LIKE '%北京市%';
+```
+
+### 10.4 开启和关闭 ICP 的性能对比
+
+创建存储过程，主要目的就是插入很多 000001 的数据，这样查询的时候为了在存储引擎层做过滤，减少 IO，也为了减少缓冲池（缓存数据页，没有 IO）的作用。
+
+调用存储过程
+
+首先打开 `profiling`
+
+```mysql
+set profiling = 1;
+```
+
+执行 SQL 语句，此时默认打开索引下推。
+
+```mysql
+SELECT * FROM people WHERE zipcode='000001' AND lastname LIKE '%张%';
+```
+
+再次执行 SQL 语句，不使用索引下推
+
+```mysql
+SELECT /** no_icp(people) */ * FROM people WHERE zipcode = '000001' AND lastname LIKE '%张%';
+```
+
+查看当前会话所产生的所有 profiles
+
+```mysql
+show profiles\G;
+```
+
+结果如下。
+
+多次测试效率对比来看，使用 ICP 优化的查询效率会好一些。这里建议多存储一些数据效果更明显。
+
+### 10.5 ICP 的使用条件
+
+1. 如果表访问的类型为 range、ref、eq_ref 和 ref_or_null 可以使用 ICP
+2. ICP 可以用于 `InnoDB` 和 `MyISAM` 表，包括分区表 `InnoDB` 和 `MyISAM` 表
+3. 对于 `InnoDB` 表，ICP 仅用于二级索引。ICP 的目标是减少全行读取次数，从而减少 I/O 操作。
+4. 当 SQL 使用覆盖索引时，不支持 ICP。因为这种情况下使用 ICP 不会减少 I/O。
+5. 相关子查询的条件不能使用 ICP
+
+# P149 其他查询优化策略
+
+## 12、其他查询优化策略
+
+### 12.1 EXISTS 和 IN 的区分
+
+**问题：**
+
+不太理解哪种情况下应该使用 EXISTS，哪种情况应该用 IN。选择的标准是看能否使用表的索引吗？
+
+**回答：**
+
+索引是个前提，其实选择与否还是要看表的大小。你可以将选择的标准理解为小表驱动大表。在这种方式下效率是最高的。
+
+比如下面这样：
+
+```mysql
+SELECT * FROM A WHERE cc IN (SELECT cc FROM B);
+
+SELECT * FROM A WHERE EXISTS (SELECT cc FROM B WHERE B.cc=A.cc)
+```
+
+哪个表小就用哪个表来驱动，A 表小就用 EXISTS，B 表小就用 IN。
+
+### 12.2 COUNT(*) 与 COUNT(具体字段)效率
+
+问：在 MySQL 中统计数据表的行数，可以使用三种方式：`SELECT COUNT(*)`、`SELECT COUNT(1)` 和 `SELECT COUNT(具体字段)`, 使用这三者之间的查询效率是怎样的？
+
+答：
+
+前提：如果你要统计的是某个字段的非空数据行数，则另当别论，毕竟比较执行效率的前提是结果一样才可以。
+
+**环节1**：`COUNT(*)` 和 `COUNT(1)` 都是对所有结果进行 `COUNT`，`COUNT(*)` 和 `COUNT(1)` 本质上并没有区别（二者执行时间可能略有差别，不过你还是可以把它俩的执行效率看成是相等的）。如果有 WHERE 子句，则是对所有符合筛选条件的数据进行统计；如果没有 WHERE 子句，则是对数据表的数据行数进行统计。
+
+**环节2**：如果是 MyISAM 存储引擎，统计数据表的行数只需要 `O(1)` 的复杂度，这是因为每张 MyISAM 的数据表都有一个 meta 信息存储了 `row_count` 值，而一致性则由表级锁来保证。
+
+如果是 InnoDB 存储引擎，因为 InnoDB 支持事务，采用行级锁和 MVCC 机制，所以无法像 MyISAM 一样，维护一个 row_count 变量，因此需要采用扫描全表，进行循环+计数的方式来完成统计。
+
+**环节3**：在 InnoDB 引擎中，如果采用 `COUNT(具体字段)` 来统计数据行数，要尽量采用二级索引。因为主键采用的索引是聚簇索引，聚簇索引包含的信息多，明显会大于二级索引（非聚簇索引）。对于 `COUNT(*)` 和 `COUNT(1)` 来说，它们不需要查找具体的行，只是统计行数，系统会自动采用占用空间更小的二级索引来进行统计。
+
+如果有多个二级索引，会使用 key_len 小的二级索引进行扫描。当没有二级索引的时候，才会采用主键索引来进行统计。
+
+### 12.3 关于 SELECT(*)
+
+在表查询中，建议明确字段，不要使用 * 作为查询的字段列表，推荐使用 SELECT <字段列表> 查询。原因：
+
+1. MySQL 在解析过程中，会通过查询数据字典将 “*” 按序转换成所有列名，这会大大的耗费资源和时间。
+2. 无法使用覆盖索引
+
+### 12.4 LIMIT 1 对优化的影响
+
+针对的是会扫描全表的 SQL 语句，如果你可以确定结果集只有一条，那么加上 `LIMIT 1` 的时候，当找到一条结果的时候就不会继续扫描了，这样会加快查询速度。
+
+如果数据表已经对字段建立了唯一索引，那么可以通过索引进行查询，不会全表扫描的话，就不需要加上 `LIMIT 1` 了。
+
+### 12.5 多使用 COMMIT
+
+只要有可能，在程序中尽量多使用 COMMIT，这样程序的性能得到提高，需求也会因为 COMMIT 所释放的资源而减少。
+
+COMMIT 所释放的资源：
+
+- 回滚段上用于恢复数据的信息
+- 被程序语句获得的锁
+- redo / undo log buffer 中的空间
+- 管理上述 3 种资源中的内部花费
+
+# P150 淘宝数据库的主键如何设计
+
+## 13、淘宝数据库，主键如何设计的？
+
+聊一个实际问题：淘宝的数据库，主键是如何设计的？
+
+某些错的离谱的答案还在网上年复一年的流传着，甚至还成为了所谓的 MySQL 军规。其中，一个最明显的错误就是关于 MySQL 的主键设计。
+
+大部分人的回答如此自信：用 8 字节的 BIGINT 做主键，而不要用 INT。错！
+
+这样的回答，只站在了数据库这一层，而没有从业务的角度思考主键。主键就是一个自增 ID 吗？站在 2022 年的新年档口，用自增做主键，架构设计上可能连及格分都拿不到。
+
+### 13.1 自增 ID 的问题
+
+自增 ID 做主键，简单易懂，几乎所有数据库都支持自增类型，只是实现上各自有所不同而已。自增 ID 除了简单，其他都是缺点，总体来看存在以下几方面的问题：
+
+1. 可靠性不高
+
+   存在自增 ID 回溯的问题，这个问题直到最新版本的 MySQL 8.0 才修复。
+
+2. 安全性不高
+
+   对外暴露的接口可以非常容易猜测对应的信息。比如：/User/1/ 这样的接口，可以非常容易猜测用户 ID 的值为多少，总用户数量有多少，也可以非常容易地通过接口进行数据的爬取
+
+3. 性能差
+
+   自增 ID 的性能较差，需要在数据库服务器端生成。
+
+4. 交互多
+
+   业务还需要额外执行一次类似 `last_insert_id()` 的函数才能知道刚才插入的自增值，这需要多一次的网络交互。在海量并发的系统中，多 1 条 SQL，就多一次性能上的开销。
+
+5. 局部唯一性
+
+   最重要的一点，自增 ID 是局部唯一，只在当前数据库实例中唯一，而不是全局唯一，在任意服务器间都是唯一的。对于目前分布式系统来说，这简直就是噩梦。
+
+### 13.2 业务字段做主键
+
+为了能够唯一地标识一个会员的信息，需要为会员信息表设置一个主键。那么，怎么为这个表设置主键，才能达到我们理想的目标呢？这里我们考虑业务字段做主键。
+
+表数据如下：
+
+- cardno（卡号）
+- membername（名称）
+- memberphone（电话）
+- memberid（身份证号）
+- address（地址）
+- sex（性别）
+- birthday（生日）
+
+在这个表里，哪个字段比较合适呢？
+
+- **选择卡号（cardno）**
+
+  会员卡号（cardno）看起来比较合适，因为会员卡号不能为空，而且有唯一性，可以用来标识一条会员记录
+
+  不同的会员卡号对应不同的会员，字段“cardno”唯一地标识某一个会员。如果都是这样，会员卡号和会员一一对应，系统是可以正常运行的。
+
+  但实际情况是，会员卡号可能存在重复使用的情况。比如，张三因为工作变动搬离了原来的地址，不再到商家的门店消费了（退还了会员卡），于是张三就不再是这个商家门店的会员了。但是，商家不想让这个会员卡空着，就把卡号是“10000001”的会员卡发给了王五。
+
+  从系统设计的角度看，这个变化只是修改了会员信息表中卡号是“10000001”这个会员信息，并不会影响到数据一致性。也就是说，修改会员卡号是“10000001”的会员信息，系统的各个模块，都会获取到修改后的会员信息，不会出现“有的模块获取到修改之前的会员信息，有的模块获取到修改后的会员信息，而导致系统内部数据不一致”的情况。因此，从信息系统层面上看是没问题的。
+
+  但是从使用系统的业务层面来看，就有很大的问题了，会对商家造成影响。
+
+  比如，我们有一个销售流水表（trans），记录了所有的销售流水明细。
+
+- **选择会员电话或身份证号**
+
+  会员电话可以做主键吗？不行的。在实际操作中，手机号也存在被运营商收回，重新发给别人用的情况。
+
+  那身份证号行不行呢？好像可以。因为身份证绝不会重复，身份证号与一个人存在一一对应的关系。可问题是，身份证号属于个人隐私，顾客不一定愿意给你。要是强制要求会员必须登记身份证号，会把很多客人赶跑的。其实，客户电话也有这个问题，这也是我们在设计会员信息表的时候，允许身份证号和电话都为空的原因。
+
+  **所以建议尽量不要用跟业务有关的字段做主键。毕竟，作为项目设计的技术人员，我们谁也无法预测在项目的整个声明周期中，哪个业务字段会因为项目的业务需求而有重复，或者重用之类的情况出现。**
+
+  > 经验：
+  >
+  > 刚开始使用 MySQL 时，很多人都很容易犯的错误是喜欢用业务字段做主键，想当然地认为了解业务需求，但实际情况往往出乎意料，而更改主键设置的成本非常高。
+
+### 13.3 淘宝的主键设计
+
+在淘宝的电商业务中，订单服务是一个核心业务。请问，订单表的主键淘宝是如何设计的呢？是自增 id 吗？
+
+打开淘宝，看一下订单信息：
+
+订单号是 19 位的长度，且订单的最后 5 位都是一样的，都是 08113。且订单号的前面 14 位部分是单调递增的。
+
+大胆猜测，淘宝的订单 ID 设计应该是：
+
+```
+订单 ID = 时间 + 去重字段 + 用户 ID 后 6 位尾号
+```
+
+这样的设计能做到全局唯一，且对分布式系统查询极其友好。
+
+### 13.4 推荐的主键设计
+
+非核心业务：对应表的主键自增 ID，如告警、日志、监控等信息
+
+核心业务：**主键设计至少应该是全局唯一且是单调递增**。全局唯一保证在各系统之间都是唯一的，单调递增是希望插入时不影响数据库性能。
+
+这里推荐最简单的一种主键设计：UUID。
+
+**UUID 的特点：**
+
+全局唯一，占用 36 字节，数据无序，插入性能差。
+
+**认识 UUID：**
+
+- 为什么 UUID 是全局唯一的？
+- 为什么 UUID 占用 36 个字节？
+- 为什么 UUID 是无序的？
+
+MySQL 数据库的 UUID 组成如下所示：
+
+```
+UUID = 时间 + UUID 版本（16字节） - 时钟序列（4 字节） - MAC 地址（12 字节）
+```
+
+时间+版本（16字节）
+
+- 时间低位 32 位
+- 时间中位 16 位
+- 时间高位 12 位
+- UUID 版本 4 位
+
+为什么 UUID 是全局唯一的？
+
+在 UUID 中时间占用 60 位，存储的类似 TIMESTAMP 的时间戳，但表示的是从 1582-10-15 00:00:00.00 到现在的 100ns 的计数。可以看到 UUID 存储的时间精度比 TIMESTAMP 更高，时间维度发生重复的概率降低到 1/100ns.
+
+时钟序列是为了避免时钟被回拨导致产生时间重复的可能性。MAC 地址用于全局唯一。
+
+为什么 UUID 占用 36 个字节？
+
+UUID 根据字符串进行存储，设计时还带有无用“-”字符串，因此总共需要 36 个字节。
+
+为什么 UUID 是随机无序的呢？
+
+因为 UUID 的设计中，将时间低位放在最前面，而这部分的数据是一直在变化的，并且是无序。
+
+**改造 UUID**
+
+若将时间高低位互换，则时间就是单调递增的了，也就变得单调递增了。MySQL 8.0 可以更换时间低位和时间高位的存储方式，这样 UUID 就是有序的 UUID 了。
+
+MySQL 8.0 还解决了 UUID 存在的空间占用的问题，除去了 UUID 字符串中无意义的“-”字符串，并且将字符串用二进制类型保存，这样存储空间降低为 16 字节。
+
+可以通过 MySQL 8.0 提供的 uuid_to_bin 函数实现上述功能，同样的，MySQL 也提供了 bin_to_uuid 函数进行转化：
+
+```mysql
+SET @uuid = UUID();
+SELECT @uuid, uuid_to_bin(@@uuid), uuid_to_bin(@uuid, TRUE);
+```
+
+通过函数 uuid_to_bin(@uuid, true) 将 UUID 转化为有序 UUID 了。全局唯一 + 单调递增，这不就是我们想要的主键！
+
+**4、有序 UUID 性能测试**
+
+16 字节的有序 UUID，相比之前 8 字节的自增 ID，性能和存储空间对比究竟如何呢？
+
+我们来做一个测试，插入 1 亿条数据，每条数据占用 500 字节，含有 3 个二级索引，最终的结果如下所示：
+
+|           | 时间（秒） | 表大小（G） |
+| --------- | ---------- | ----------- |
+| 自增 ID   | 2712       | 240         |
+| UUID      | 3396       | 250         |
+| 有序 UUID | 2624       | 243         |
+
+从上图可以看到插入 1 亿条数据有序 UUID 是最快的，而且在实际业务使用中有序 UUID 在业务端就可以生成。还可以进一步减少 SQL 的交互次数。
+
+另外，虽然有序 UUID 相比自增 ID 多了 8 个字节，但实际只增了 3G 的存储空间，还可以接受。
+
+> 在当今的互联网环境中，非常不推荐自增 ID 作为主键的数据库设计。更推荐类似有序 UUID 的全局唯一的实现。
+>
+> 另外在真实的业务系统中，主键还可以加入业务和系统属性，如用户的尾号，机房的信息等。这样的主键设计就更为考验架构师的水平了。
+
+**如果不是 MySQL 8.0 怎么办？**
+
+手动赋值字段做主键！
+
+可以在总部 MySQL 数据库中，有一个管理信息表，在这个表中添加一个字段，专门用来记录当前会员编号的最大值。
+
+# P151 范式概述与第一范式
+
+第11章_数据库的设计规范
+
+## 1、为什么需要数据库设计
+
+**我们在设计数据表的时候，要考虑很多问题。**比如：
+
+- 用户都需要什么数据？需要在数据表中保存哪些数据？
+- 如何保证数据表中数据的正确性，当插入、删除、更新的时候该进行怎样的约束检查？
+- 如何降低数据表的数据冗余度，保证数据表不会因为用户量的增长而迅速扩张？
+- 如何让负责数据库维护的人员更方便地使用数据库？
+- 使用数据库的应用场景也各不相同，可以说针对不同的情况，设计出来的数据表可能千差万别。
+
+**现实情况中，面临的场景：**
+
+当数据库运行了一段时间之后，我们才发现数据表设计的有问题。重新调整数据表的结构，就需要做数据迁移，还有可能影响程序的业务逻辑，以及网站正常的访问。
+
+**如果是糟糕的数据库设计可能会造成以下问题：**
+
+- 数据冗余、信息重复，存储空间浪费
+- 数据更新、插入、删除的异常
+- 无法正确表示信息
+- 丢失有效信息
+- 程序性能差
+
+**良好的数据库设计则有以下优点：**
+
+- 节省数据的存储空间
+- 能够保证数据的完整性
+- 方便进行数据库应用系统的开发
+
+总之，开始设置数据库的时候，我们就需要重视数据表的设计。为了建立冗余较小、结构合理的数据库，设计数据库时必须遵循一定的规则。
+
+## 2、范式
+
+### 2.1 范式简介
+
+**在关系数据库中，关于数据表设计的基本原则、规则就称为范式。**可以理解为，一张数据表的设计结构需要满足的某种设计标准的级别。要想设计一个结构合理的关系型数据库，必须满足一定的范式。
+
+范式的英文名称是 `Normal Form`，简称 `NF`。它是英国人 E.F.Codd 在上世纪70年代提出关系数据库模型后总结出来的。范式是关系数据库理论的基础，也是我们在设计数据库结构过程中所要遵循的规则和指导方法。
+
+### 2.2 范式都包括哪些
+
+目前关系型数据库有六种常见范式，按照范式级别，从低到高分别是：**第一范式（1NF）、第二范式（2NF）、第三范式（3NF）、巴斯·科德范式（BCNF）、第四范式（4NF）和第五范式（5NF，又称完美范式）**。
+
+数据库的范式设计越高阶，冗余度就越低，同时高阶的范式一定符合低价范式的要求，满足最低要求的范式是第一范式（1NF）。在第一范式的基础上进一步满足更多规范要求的称为第二范式（2NF），其余范式依此类推。
+
+一般来说，在关系型数据库设计中，最高也就遵循到 `BCNF`，普遍还是 `3NF`。但也不绝对，有时候为了提高某些查询性能，我们还需要破坏范式规则，也就是`反规范化`。
+
+### 2.3 键和相关属性的概念
+
+范式的定义会使用到主键和候选键，数据库中键（Key）由一个或者多个属性组成。数据表中常用的几种键和属性的定义：
+
+- **超键**：能唯一标识元组的属性集叫做超键。
+- **候选键**：如果超键不包括多余的属性，那么这个超键就是候选键。
+- **主键**：用户可以从候选键中选择一个作为主键。
+- **外键**：如果数据表 R1 中的某属性集不是 R1 的主键，而是另一个数据表 R2 的主键，那么这个属性集就是数据表 R1 的外键。
+- **主属性**：包含在任一候选键中的属性称为主属性。
+- **非主属性**：与主属性相对，指的是不包含在任何一个候选键中的属性。
+
+通常，我们也将候选键称之为“**码**”，把主键也称为“**主码**”。因为键可能是由多个属性组成的，针对单个属性，我们还可以用主属性和非主属性来进行区分。
+
+### 2.4 第一范式（1st NF）
+
+第一范式主要是确保数据表中每个字段的值必须具有**原子性**，也就是说数据表中每个字段的值为**不可再次拆分**的最小数据单元。
+
+我们在设计某个字段的时候，对于字段 X 来说，不能把字段 X 拆分成字段 X-1 和字段 X-2。事实上，任何的 DBMS 都会满足第一范式的要求，不会将字段进行拆分。
+
+属性的原子性是**主观的**。例如姓名应该使用 1 个（fullname）、2 个（firstname 和 lastname）还是 3 个（firstname、middlename 和 lastname）属性表示呢？答案取决于应用程序。如果应用程序需要分别处理雇员的姓名部分（如：用于搜索目的），则有必要把它们分开。否则，不需要。
+
+# P152 第二范式与第三范式
+
+### 2.5 第二范式（2nd NF）
+
+第二范式要求，在满足第一范式的基础上，还要**满足数据表里的每一条数据记录，都是可唯一标识的。而且所有非主键字段，都必须完全依赖主键，不能只依赖主键的一部分。**如果知道主键的所有属性的值，就可以检索到任何元组（行）的任何属性的任何值。（要求中的主键，其实可以扩展替换为候选键）。
+
+对于非主属性来说，并非完全依赖候选键。这样会产生怎样的问题呢？
+
+1. **数据冗余**：如果一个球员可以参加 m 场比赛，那么球员的姓名和年龄就重复了 m-1 次。一个比赛也可能会有 n 个球员参加，比赛的时间和地点就重复了 n-1 次。
+2. **插入异常**：如果我们想要添加一场新的比赛，但是这时还没有确定参加的球员都有谁，那么就没法插入。
+3. **删除异常**：如果我要删除某个球员编号，如果没有单独保存比赛表的话，就会同时把比赛信息删除掉。
+4. **更新异常**：如果我们调整了某个比赛的时间，那么数据表中所有这个比赛的时间都需要进行调整，否则就会出现一场比赛时间不同的情况。
+
+> 1NF 告诉我们字段属性需要是原子性的，而 2NF 告诉我们一张表就是一个独立的对象，一张表只表达一个意思。
+
+> 小结：第二范式（2NF）要求实体的属性完全依赖主关键字。如果存在不完全依赖，那么这个属性和主关键字的这一部分应该分离出来形成一个新的实体，新实体与元实体之间是一对多的关系。
+
+### 2.6 第三范式（3rd NF）
+
+第三范式是在第二范式的基础上，确保数据表中的每一个非主键字段都和主键字段直接相关，也就是说，**要求数据表中的所有非主键字段不能依赖于其他非主键字段**。（即，不能存在非主属性 A 依赖于非主属性 B，非主属性 B 依赖于主键 C 的情况，即存在“A -> B -> C”的决定关系）通俗地讲，该规则的意思是所有**非主键属性**之间不能有依赖关系，必须**相互独立**。
+
+这里的主键可以拓展为候选键。
+
+> 符合 3NF 后的数据模型通俗地讲，2NF 和 3NF 通常以这句话概括：“每个非键属性依赖于键，依赖于整个键，并且除了键别无他物”。
+
+### 2.7 小结
+
+关于数据表的设计，有三个范式要遵循。
+
+1. 第一范式（1NF），确保每列保持**原子性**
+
+   数据库的每一列都是不可分割的原子数据项，不可再分的最小数据单元，而不能是集合、数组、记录等非原子数据项。
+
+2. 第二范式（2NF），确保每列都和主键**完全依赖**
+
+   尤其在复合主键的情况下，非主键部分不应该依赖于部分主键。
+
+3. 第三范式（3NF）确保每列都和主键列**直接相关**，而不是间接相关
+
+**范式的优点**：数据的标准化有助于消除数据库中的**数据冗余**，第三范式（3NF）通常被认为在性能、扩展性的数据完整性方面达到了最好的平衡。
+
+**范式的缺点**：范式的使用，可能**降低查询的效率**。因为范式等级越高，设计出来的数据表就越多、越精细，数据的冗余度越低，进行数据查询的时候就可能需要**关联多张表**，这不但代价昂贵，也可能使一些**索引策略无效**。
+
+范式只是提出了设计的标准，实际上设计数据表时，未必一定要符合这些标准。开发中，我们会出现为了性能和读取效率违反范式化的原则，通过**增加少量的冗余**或重复的数据来提高数据库的**读性能**，减少关联查询，join 表的次数，实现**空间换取时间**的目的。因此在实际的设计过程中要理论结合实际，灵活运用。
+
+> 范式本身没有优劣之分，只有适用场景不同。没有完美的设计，只有合适的设计，我们在数据表的设计中，还需要根据需求将范式和反范式混合适用。
+
+# P153 反范式化的应用
+
+## 3、反范式化
+
+### 3.1 概述
+
+有的时候不能简单按照规范要求设计数据表，因为有的数据看似冗余，其实对业务来说十分重要。这个时候，我们就要遵循**业务优先**的原则，首先满足业务需求，再尽量减少冗余。
+
+如果数据库中的数据量比较大，系统的 UV 和 PV 访问频次比较高，则完全按照 MySQL 的三大范式设计数据表，读数据时会产生大量的关联查询，在一定程度上会影响数据库的读性能。如果我们想对查询效率进行优化，**反范式优化**也是一种优化思路。此时，可以通过在数据表中**增加冗余字段**来提高数据库的读性能。
+
+**规范化 vs 性能**
+
+> 1. 为满足某种商业目标，数据库性能比规范化数据库更重要
+> 2. 在数据规范化的同时，要综合考虑数据库的性能
+> 3. 通过在给定的表中添加额外的字段，以大量减少需要从中搜索信息所需的时间
+> 4. 通过在给定的表中插入计算列，以方便查询
+
+### 3.2 应用举例
+
+### 3.3 反范式的新问题
+
+反范式可以通过空间换时间，提升查询的效率，但是反范式也会带来一些新问题：
+
+- 存储**空间变大**了
+- 一个表中字段做了修改，另一个表中冗余的字段也需要做同步修改，否则**数据不一致**
+- 若采用存储过程来支持数据的更新、删除等额外操作，如果更新频繁，会非常**消耗系统资源**
+- 在**数据量小**的情况下，反范式不能体现性能的优势，可能还会让数据库的设计更加**复杂**
+
+### 3.4 反范式的适用场景
+
+当冗余信息有价值或者能**大幅度提高查询效率**的时候，我们才会采取反范式的优化。
+
+#### 1、增加冗余字段的建议
+
+增加冗余字段一定要符合如下两个条件。只有满足这两个条件，才可以考虑增加冗余字段。
+
+1. 这个冗余字段**不需要经常进行修改**
+2. 这个冗余字段**查询的时候不可或缺**。
+
+#### 2、历史快照、历史数据的需要
+
+在现实生活中，我们经常需要一些冗余信息，比如订单中的收货人信息，包括姓名、电话和地址等。每次发生的**订单收货信息**都属于**历史快照**，需要进行保存，但用户可以随时修改自己的信息，这时保存这些冗余信息是非常有必要的。
+
+反范式优化也常用在**数据仓库**的设计中，因为数据仓库通常**存储历史数据**，对增删改的实时性要求不强，对历史数据的分析需求强。这时适当允许数据的冗余度，更方便进行数据分析。
+
+我简单总结下数据仓库和数据库在使用上的区别：
+
+1. 数据库设计的目的在于**捕获数据**，而数据仓库设计的目的在于**分析数据**；
+2. 数据库对数据的**增删改实时性**要求强，需要存储在线的用户数据，而数据仓库存储的一般是**历史数据**；
+3. 数据库设计需要**尽量避免冗余**，但为了提高查询效率也允许一定的**冗余度**，而数据仓库在设计上更偏向采用反范式设计。
+
+# P154 巴斯范式、第四范式、第五范式和域键范式
+
+## 4、BCNF（巴斯范式）
+
+人们在 3NF 的基础上进行了改进，提出了**巴斯范式（BCNF），也叫做巴斯-科德范式（Boyce-Codd Normal Form）**。BCNF 被认为没有新的设计规范加入，只是对第三范式中设计规范要求更强，使得数据库冗余度更小。所以，称为是**修正的第三范式**，或**扩充的第三范式**，BCNF 不被称为第四范式。
+
+若一个关系达到了第三范式，并且它只有一个候选键，或者它的每个候选键都是单属性，则该关系自然达到 BC 范式。
+
+一般来说，一个数据库设计符合 3NF 或 BCNF 就可以了。
+
+**1、案例**
+
+我们分析如下表的范式情况：
+
+在这个表中，一个仓库只有一个管理员，同时一个管理员也只管理一个仓库。我们先来梳理下这些属性之间的依赖关系。
+
+仓库名决定了管理员，管理员也决定了仓库名，同时（仓库名，物品名）的属性集合可以决定数量这个属性。这样，我们就可以找到数据表的候选键。
+
+**候选键**：是（管理员，物品名）和（仓库名，物品名），然后我们从候选键中选择一个作为**主键**，比如（仓库名，物品名）。
+
+**主属性**：包含在任一候选键中的属性，也就是仓库名，管理员和物品名。
+
+**非主属性**：数量这个属性。
+
+**2、是否符合三范式**
+
+如何判断一张表的范式呢？我们需要根据范式的等级，从低到高来进行判断。
+
+首先，数据表每个属性都是原子性的，符合 1NF 的要求；
+
+其次，数据表中非主属性“数量”都与候选键全部依赖，（仓库名，物品名）决定数量，（管理员，物品名）决定数量。因此，数据表符合 2NF 的要求；
+
+最后，数据表中的非主属性，不传递依赖于候选键。因此符合 3NF 的要求。
+
+**3、存在的问题**
+
+既然数据表已经符合了 3NF 的要求，是不是就不存在问题了呢？我们来看下面的情况：
+
+1. 增加一个仓库，但是还没有存放任何物品。根据数据表实体完整性的要求，主键不能有空值，因此会出现**插入异常**；
+2. 如果仓库更换了管理员，我们就可能会**修改数据表中的多条记录**；
+3. 如果仓库里的商品都卖空了，那么此时仓库名称和相应的管理员名称也会随之被删除。
+
+你能看到，即便数据表符合 3NF 的要求，同样可能存在插入，更新和删除数据的异常情况。
+
+**4、问题解决**
+
+首先我们需要确认造成异常的原因：主属性仓库名对于候选键（管理员，物品名）是部分依赖的关系，这样就有可能导致上面的异常情况。因此引入 BCNF，**它在 3NF 的基础上消除了主属性对候选键的部分依赖或者传递依赖关系**。
+
+- 如果在关系 R 中，U 为主键，A 属性是主键的一个属性，若存在 A -> Y，Y 为主属性，则该关系不属于 BCNF。
+
+根据 BCNF 的要求，我们需要把仓库管理关系 warehouse_keeper 表拆分成下面这样：
+
+**仓库表**：（仓库名，管理员）
+
+**库存表**：（仓库名，物品名，数量）
+
+这样就不存在主属性对于候选键的部分依赖或传递依赖，上面数据表的设计就符合 BCNF。
+
+再举例：
+
+有一个**学生导师表**，其中包含字段：学生 ID，专业，导师，专业 GPA，这其中学生 ID 和专业是联合主键。
+
+| StudentId | Major    | Advisor | MajGPA |
+| --------- | -------- | ------- | ------ |
+| 1         | 人工智能 | Edward  | 4.0    |
+| 2         | 大数据   | William | 3.8    |
+| 1         | 大数据   | William | 3.7    |
+| 3         | 大数据   | Joseph  | 4.0    |
+
+这个表的设计满足三范式，但是这里存在另一个依赖关系，“专业”依赖于“导师”，也就是说每个导师只做一个专业方面的导师，只要知道了是哪个导师，我们自然就知道是哪个专业的了。
+
+所以这个表的部分主键 Major 依赖于非主键属性 Advisor，那么我们可以进行以下的调整，拆分成 2 个表：
+
+学生导师表：
+
+| StudentId | Advisor | MajGPA |
+| --------- | ------- | ------ |
+| 1         | Edward  | 4.0    |
+| 2         | William | 3.8    |
+| 1         | William | 3.7    |
+| 3         | Joseph  | 4.0    |
+
+导师表：
+
+| Advisor | Major    |
+| ------- | -------- |
+| Edward  | 人工智能 |
+| William | 大数据   |
+| Joseph  | 大数据   |
+
+## 5、第四范式
+
+多值依赖的概念：
+
+- **多值依赖**即属性之间的一对多关系，记为 K →→ A。
+- **函数依赖**事实上是单值依赖，所以不能表达属性值之间的一对多关系。
+- **平凡的多值依赖**：全集 U = K + A，一个 K 可以对应于多个 A，即 K →→ A。此时整个表就是一组一对多关系。
+- **非平凡的多值依赖**：全集 U = K + A + B，一个 K 可以对应于多个 A，也可以对应于多个 B，A 与 B 互相独立，即 K →→ A, K →→ B。整个表有多组一对多关系，且有：“一”部分是相同的属性集合，“多”部分是互相独立的属性集合。
+
+第四范式即在满足巴斯-科德范式（BCNF）的基础上，消除非平凡且非函数依赖的多值依赖（即把同一表内的多对多关系删除）。
+
+**举例1：**职工表（职工编号，职工孩子姓名，职工选修课程）。
+
+在这个表中，同一个职工可能会多个职工孩子姓名。同样，同一个职工也可能会有多个职工选修课程，即这里存在着多值事实，不符合第四范式。
+
+如果要符合第四范式，只需要将上表分为两个表，使它们只有一个多值事实，例如：**职工表一**（职工编号，职工孩子姓名），**职工表二**（职工编号，职工选修课程），两个表都只有一个多值事实，所以符合第四范式。
+
+**举例2**：
+
+比如我们建立课程、教师、教材的模型。我们规定，每门课程有对应的一组教师，每门课程也有对应的一组教材，一门课程使用的教材和教师没有关系。我们建立的关系表如下：
+
+课程 ID，教师 ID，教材 ID；这三列作为联合主键。
+
+为了表述方便，我们用 Name 代替 ID，这样更容易看懂：
+
+| Course | Teacher | Book       |
+| ------ | ------- | ---------- |
+| 英语   | Bill    | 人教版英语 |
+| 英语   | Bill    | 美版英语   |
+| 英语   | Jay     | 美版英语   |
+| 高数   | William | 人教版高数 |
+| 高数   | Dave    | 美版高数   |
+
+这个表除了主键，就没有其他字段了，所以肯定满足 BC 范式，但是却存在**多值依赖**导致的异常。
+
+假如我们下学期想采用一本新的英语高数教材，但是还没确定具体哪个老师来教，那么我们就无法在这个表中维护 Course 高数和 Book 英版高数教材的关系。
+
+解决办法是我们把这个多值依赖的表拆解成 2 个表，分别建立关系。这是我们拆分后的表：
+
+| Course | Teacher |
+| ------ | ------- |
+| 英语   | Bill    |
+| 英语   | Jay     |
+| 高数   | William |
+| 高数   | Dave    |
+
+以及
+
+| Course | Book       |
+| ------ | ---------- |
+| 英语   | 人教版英语 |
+| 英语   | 美版英语   |
+| 高数   | 人教版高数 |
+| 高数   | 美版高数   |
+
+## 6、第五范式、域键范式
+
+除了第四范式外，我们还有更高级的第五范式（又称完美范式）和域键范式（DKNF）。
+
+在满足第四范式（4NF）的基础上，消除不是由候选键所蕴含的连接依赖。**如果关系模式 R 中的每一个连接依赖均由 R 的候选键所隐含**，则称此关系模式符合第五范式。
+
+函数依赖是多值依赖的一种特殊情况，而多值依赖实际上是连接依赖的一种特殊情况。但连接依赖不像函数依赖和多值依赖可以由**语义直接导出**，而是在**关系连接运算**时才反映出来。存在连接依赖的关系模式仍可能遇到数据冗余及插入、修改、删除异常等问题。
+
+第五范式处理的是**无损连接问题**，这个范式基本**没有实际意义**，因为无损连接很少出现，而且难以察觉。而域键范式试图定义一个**终极范式**，该范式考虑所有的依赖和约束类型，但是实用价值也是最小的，只存在理论研究中。
+
+# P155 范式的实战案例
+
+# P156 ER 建模与转换数据表的过程
+
+## 8、ER 模型
+
+数据库设计是牵一发而动全身的。那有没有什么办法提前看到数据库的全貌呢？比如需要哪些数据表、数据表中应该有哪些字段，数据表与数据表之间有什么关系、通过什么字段进行连接，等等。这样我们才能进行整体的梳理和设计。
+
+其实，ER 模型就是一个这样的工具。ER 模型也叫作**实体关系模型**，是用来描述现实生活中客观存在的事务、事物的属性，以及事物之间关系的一种数据模型。**在开发基于数据库的信息系统的设计阶段，通常使用 ER 模型来描述信息需求和信息特性，帮助我们理清业务逻辑，从而设计出优秀的数据库**。
+
+### 8.1 ER 模型包括哪些要素？
+
+**ER 模型中有三个要素，分别是实体、属性和关系。**
+
+**实体**，可以看做是数据对象，往往对应于现实生活中的真实存在的个体。在 ER 模型中，用**矩形**来表示。实体分为两类，分别是**强实体**和**弱实体**。强实体是指不依赖于其他实体的实体；弱实体是指对另一个实体有很强的依赖关系的实体。
+
+**属性**，则是指实体的特性。比如超市的地址、联系电话、员工数等。在 ER 模型中用**椭圆形**来表示。
+
+**关系**，则是指实体之间的联系。比如超市把商品卖给顾客，就是一种超市与顾客之间的联系。在 ER 模型中用**菱形**来表示。
+
+注意：实体和属性不容易区分。这里提供一个原则：我们要从系统整体的角度出发去看，**可以独立存在的是实体，不可再分的是属性**。也就是说，属性不能包含其他属性。
+
+### 8.2 关系的类型
+
+在 ER 模型的 3 个要素中，关系又可以分为 3 种类型，分别是 一对一、一对多、多对多。
+
+**一对一**：指实体之间的关系是一一对应的，比如个人与身份证信息之间的关系就是一对一的关系。一个人只能有一个身份证信息，一个身份证信息也只属于一个人。
+
+**一对多**：指一边的实体通过关系，可以对应多个另外一边的实体。相反，另一边的实体通过这个关系，则只能对应唯一的一边的实体。比如说，我们新建一个班级表，而每个班级都有多个学生，每个学生则对应一个班级，班级对学生就是一对多的关系。
+
+**多对多**：指关系两边的实体都可以通过关系对应多个对方的实体。比如在进货模块中，供货商与超市之间的关系就是多对多的关系，一个供货商可以给多个超市供货，一个超市也可以从多个供货商那里采购商品。再比如一个选课表，有许多科目，每个科目有很多学生选，而每个学生又可以选择多个科目，这就是多对多的关系。
+
+### 8.3 建模分析
+
+ER 模型看起来比较麻烦，但是对我们把控项目整体非常重要。如果你只是开发一个小应用，或许简单设计几个表够用了，一旦要设计有一定规模的应用，在项目的初始阶段，建立完整的 ER 模型就非常关键了。开发应用项目的实质，其实就是**建模**。
+
+### 8.4 ER 模型的细化
+
+### 8.5 ER 模型图转换成数据表
+
+通过绘制 ER 模型，我们理清了业务逻辑，现在，我们就要进行非常重要的一步了：把绘制好的 ER 模型，转换成具体的数据表，下面介绍下转换的原则：
+
+1. 一个**实体**通常转换成一个**数据表**
+2. 一个**多对多的关系**，通常也转换成一个**数据表**
+3. 一个**1对1**，或者**1对多**的关系，往往通过表的**外键**来表达，而不是设计一个新的数据表；
+4. 把**属性**转换成表的**字段**
+
+#### 1、一个实体转换成一个数据表
+
+二级分类单独拆分出一张表。
+
+查询二级分类的时候 IS NOT NULL 条件是无法使用到索引的。无论是业务需求还是数据库表的规范来看都应该拆分为两张表
+
+#### 2、一个多对多的关系转换成一个数据表
+
+针对这种情况需要设计一个独立的表来表示，这种表一般称为**中间表**。
+
+#### 3、通过外键来表达 1 对多的关系
+
+外键约束主要是在数据库层面上**保证数据的一致性**，但是因为插入和更新数据需要检查外键，理论上**性能会有所下降**，对性能是负面的影响。
+
+实际的项目，不建议使用外键，一方面是**降低开发的复杂度**（有外键的话主从表类的操作必须先操作主表），另外是有外键在**处理数据的时候非常麻烦**。在电商平台，由于**并发业务量比较大**，所以一般不设置外键，以免影响数据库**性能**。
+
+在应用层面做数据的**一致性检查**，本来就是一个正常的功能需求。如学生选课的场景，课程肯定不是输入的，而是通过下拉或查找等方式从系统中进行选取，就能够保证是合法的课程 ID，因此就不需要靠数据库的外键来检查了。
+
+#### 4、把属性转换成表的字段
+
+# P157 数据库的设计原则和日常 SQL 编写规范
+
+## 9、数据表的设计原则
+
+综合以上内容，总结出数据表设计的一般原则：“三少一多”
+
+**1、数据表的个数越少越好**
+
+RDBMS 的核心在于对实体和联系的定义，也就是 E-R 图（Entity Relationship Diagram），数据表越少，证明实体和联系设计得越简洁，既方便理解又方便操作。
+
+**2、数据表中的字段个数越少越好**
+
+字段个数越多，数据冗余的可能性越大。设置字段个数少的前提是各个字段相互独立，而不是某个字段的取值可以由其他字段计算出来。当然字段个数少是相对的，我们通常会在**数据冗余**和**检索效率**中进行平衡。
+
+**3、数据表中联合主键的字段个数越少越好**
+
+设置主键是为了确定唯一性，当一个字段无法确定唯一性的时候，就需要采用联合主键的方式（也就是用多个字段来定义一个主键）。联合主键中的字段越多，**占用的索引空间越大**，不仅会加大理解难度，还会增加运行时间和索引空间，因此联合主键的字段个数越少越好。
+
+**4、使用主键和外键越多越好**
+
+数据库的设计实际上就是定义各种表，以及各种字段之间的关系。这些关系越多，证明这些实体之间的冗余度越低，**利用度越高**。这样做的好处在于不仅保证了数据表之间的**独立性**，还能提升相互之间的关联使用率。
+
+“三少一多”原则的核心就是**简单可复用**，简单是指用更少的表、更少的字段、更少的联合主键字段来完成数据表的设计。可复用是指通过主键、外键的使用来增强数据表之间的复用率。因为一个主键可以理解是一张表的代表。键设计得越多，证明它们之间的利用率越高。
+
+> 注意：这个原则并不是绝对的，有时候我们需要牺牲数据的冗余度来换取数据处理的效率。
+
+## 10、数据库对象编写建议
+
+前面我们讲了数据库的设计规范，下面给出的这些规范适用于大多数公司，按照下面的规范来使用数据库，这样数据库可以发挥出更高的性能。
+
+### 10.1 关于库
+
+1. 【强制】库的名称必须控制在 32 个字符以内，只能使用英文字母、数字和下划线，建议以英文字母开头。
+
+2. 【强制】库名中英文**一律小写**，不同单词采用**下划线**分割。须见名知意。
+
+3. 【强制】库的名称格式：业务系统名称_子系统名。
+
+4. 【强制】库名禁止使用关键字（如 type, order 等）。
+
+5. 【强制】创建数据库时必须**显式指定字符集**，并且字符集只能是 utf8 或者是 utf8mb4。
+
+   创建数据库 SQL 举例：`CREATE DATABASE crm_fund DEFAULT CHARACTER SET 'utf8';`
+
+6. 【建议】对于程序连接数据库账号，遵循**权限最小原则**
+
+   使用数据库账号只能在一个 DB 下使用，不准跨库。程序使用的账号**原则上不准有 drop 权限**。
+
+7. 【建议】临时库以 `tmp_` 为前缀，并以日期为后缀；
+
+   备份库以 `bak_` 为前缀，并以日期为后缀。
+
+### 10.2 关于表、列
+
+1. 【强制】表和列的名称必须控制在 32 个字符以内，表名只能使用英文字母、数字和下划线，建议以**英文字母开头**。
+
+2. 【强制】**表名、列名一律小写**，不同单词采用下划线分割。须见名知意。
+
+3. 【强制】表名要求有模块名强相关，同一模块的表名尽量使用**统一前缀**。比如：crm_fund_item
+
+4. 【强制】创建表时必须**显式指定字符集**为 utf8 或 utf8mb4。
+
+5. 【强制】表名、列名禁止使用关键字（如 type, order 等）。
+
+6. 【强制】创建表时必须**显式指定表存储引擎**类型。如无特殊要求，一律为 InnoDB。
+
+7. 【强制】建表必须有 comment。
+
+8. 【强制】字段命名应尽可能使用表达实际含义的英文单词或**缩写**。如：公司 ID，不要使用 corporation_id，而用 corp_id 即可。
+
+9. 【强制】布尔值类型的字段命名为 `is_描述`。如 member 表上表示是否为 enabled 的会员的字段命名为 is_enabled。
+
+10. 【强制】禁止在数据库中存储图片、文件等大的二进制数据
+
+    通常文件很大，短时间内造成数据量快速增长，数据库进行数据库读取时，通常会进行大量的随机 IO 操作，文件很大时，IO 操作很耗时。通常存储于文件服务器，数据库只存储文件地址信息。
+
+11. 【强制】建表时关于主键：`表必须有主键`
+
+    1. 强制要求主键为 id，类型为 int 或 bigint，且为 auto_increment 建议使用 unsigned 无符号型。
+    2. 标识表里每一行主体的字段不要设为主键，建议设为其他字段如 user_id, order_id 等，并建立 unique key 索引。因为如果设为主键且主键值为随机插入，则会导致 InnoDB 内部页分裂和大量随机 I/O，性能下降。
+
+12. 【建议】核心表（如用户表）必须有行数据的**创建时间字段**（create_time）和**最后更新时间字段**（update_time），便于查问题。
+
+13. 【建议】表中所有字段尽量都是 `NOT NULL` 属性，业务可以根据需要定义 `DEFAULT 值`。
+
+    因为使用 NULL 值会存在每一行都会占用额外存储空间、数据迁移容易出错、聚合函数计算结果偏差等问题。
+
+14. 【建议】所有存储相同数据的**列名和列类型必须一致**（一般作为关联列，如果查询时关联列类型不一致会自动进行数据类型隐式转换，会造成列上的索引失效，导致查询效率降低）。
+
+15. 【建议】中间表（或临时表）用于保留中间结果集，名称以 `tmp_` 开头。
+
+    备份表用于备份或抓取源表快照，名称以 `bak_` 开头。中间表和备份表定期清理。
+
+16. 【示范】一个较为规范的建表语句：
+
+    ```mysql
+    CREATE TABLE user_info {
+    	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+    	`user_id` bigint(11) NOT NULL COMMENT '用户 id',
+    	`username` varchar(45) NOT NULL COMMENT '真实姓名',
+    	`email` varchar(30) NOT NULL COMMENT '用户邮箱',
+    	...
+    	`create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    	`update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+    	`user_review_status` tinyint NOT NULL COMMENT '用户资料审核状态，1 为通过，2 为审核中，3 为未通过，4 为还未提交审核',
+    	PRIMARY KEY (`id`),
+    	UNIQUE KEY `uniq_user_id` (`user_id`),
+    	KEY `idx_username` (`username`),
+    	KEY `idx_create_time_status` (`create_time`, `user_review_status`)
+    } ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='网站用户基本信息'
+    ```
+
+17. 【建议】创建表时，可以使用可视化工具。这样可以确保表、字段相关的约定都能设置上。
+
+    实际上，我们通常很少自己写 DDL 语句，可以使用一些可视化工具来创建和操作数据库和数据表。
+
+    可视化工具除了方便，还能直接帮我们将数据库的结构定义转化为 SQL 语言，方便数据库和数据表结构的导出和导入。
+
+### 10.3 关于索引
+
+1. 【强制】InnoDB 表必须主键为 id int/bigint auto_increment，且主键值**禁止被更新**。
+
+2. 【强制】InnoDB 和 MyISAM 存储引擎表，索引类型必须为 `BTREE`。
+
+3. 【建议】主键的名称以 `pk_` 开头，唯一键以 `uni_` 或 `uk_` 开头，普通索引以 `idx_` 开头，一律使用小写格式，以字段的名称或缩写作为后缀。
+
+4. 【建议】多单词组成的 columnname，取前几个单词首字母，加末单词组成 column_name。如：sample 表 member_id 上的索引：idx_sample_mid
+
+5. 【建议】单个表上索引个数**不能超过 6 个**
+
+6. 【建议】在建立索引时，多考虑建立**联合索引**，并把区分度最高的字段放在最前面。
+
+7. 【建议】在多表 JOIN 的 SQL 里，保证被驱动表的连接列上有索引，这样 JOIN 执行效率最高。
+
+8. 【建议】建表或加索引时，保证表里互相不存在**冗余索引**。
+
+   比如：如果表里已经存在 key(a,b)，则 key(a) 为冗余索引，需要删除。
+
+### 10.4 SQL 编写
+
+1. 【强制】程序端 SELECT 语句必须指定具体字段名称，禁止写成 `*`。
+
+2. 【建议】程序端 insert 语句指定具体字段名称，不要写成 `INSERT INTO t1 VALUES (...)`。
+
+3. 【建议】除静态表或小表（100 行以内），DML 语句必须有 WHERE 条件，且使用索引查找。
+
+4. 【建议】INSERT INTO ... VALUES(XX), (XX), (XX).. 这里 XX 的值不要超过 5000 个。值过多虽然上线很快，但会引起主从同步延迟。
+
+5. 【建议】SELECT 语句不要使用 UNION，推荐使用 UNION ALL，并且 UNION 子句个数限制在 5 个以内。
+
+6. 【建议】线上环境，多表 JOIN 不要超过 5 个表。
+
+7. 【建议】减少使用 ORDER BY，和业务沟通能不排序就不排序，或将排序放到程序端去做。ORDER BY、GROUP BY、DISTINCT 这些语句较为耗费 CPU，数据库的 CPU 资源是极其宝贵的。
+
+8. 【建议】包含了 ORDER BY、GROUP BY、DISTINCT 这些查询的语句，WHERE 条件过滤出来的结果集请保持在 1000 行以内，否则 SQL 会很慢。
+
+9. 【建议】对单表的多次 alter 操作必须合并为一次
+
+   对于超过 100W 行的大表进行 alter table，必须经过 DBA 审核，并在业务低峰期进行，多个 alter 需要整合在一起。因为 alter table 会产生**表锁**，期间阻塞对于该表的所有写入，对于业务可能会产生极大影响。
+
+10. 【建议】批量操作数据时，需要控制事务处理间隔时间，进行必要的 sleep。
+
+11. 【建议】事务里包含 SQL 不超过 5 个。
+
+    因为过长的事务会导致锁数据较久，MySQL 内部缓存、连接消耗过多等问题。
+
+12. 【建议】事务里更新语句尽量基于主键或 UNIQUE KEY，如 `UPDATE ... WHERE id = XX;`
+
+    否则会产生间隙锁，内部扩大锁定范围，导致系统性能下降，产生死锁。
+
+# P158 PowerDesigner 创建概念、物理数据模型
