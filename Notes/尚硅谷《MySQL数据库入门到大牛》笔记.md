@@ -9976,8 +9976,1041 @@ start -> Master（数据更新 -> 1. 写入 binlog -> binlog 文件 -> 2. 发送
 
 复制的最大问题：**延时**
 
-## 2.2 复制的基本原则
+### 2.2 复制的基本原则
 
 - 每个 `Slave` 只有一个 `Master`
 - 每个 `Slave` 只能有一个唯一的服务器 ID
 - 每个 `Master` 可以有多个 `Slave`
+
+# P192 一主一从架构搭建与主从同步的实现
+
+## 3、一主一从架构搭建
+
+一台**主机**用于处理所有**写请求**，一台**从机**负责所有**读请求**，架构图如下：
+
+```mermaid
+graph LR
+Java[Java 程序] --作为数据源访问--> MyCat
+MyCat --写请求--> Master
+MyCat --读请求--> Slave
+Slave --MySQL主从复制--> Master
+```
+
+### 3.1 准备工作
+
+1. 准备 **2 台** CentOS 虚拟机
+2. 每台虚拟机上需要安装好 MySQL（可以是 MySQL 8.0）
+
+说明：前面我们讲过如何克隆一台 CentOS。大家可以在一台 CentOS 上安装好 MySQL，进而通过克隆的方式复制出 1 台包含 MySQL 的虚拟机。
+
+注意：克隆的方式需要修改新克隆出来主机的：1. **MAC 地址** 2. **hostname** 3. **IP 地址** 4. **UUID**
+
+此外，克隆的方式生成的虚拟机（包含 MySQL Server），则克隆的虚拟机 MySQL Server 的 UUID 相同，必须修改，否则在有些场景会报错。比如：`show slave status\G`，报如下的错误：
+
+```
+Last_IO_Error: Fatal error: The slave I/O thread stops because master and slave have equal MySQL server UUIDs; these UUIDs must be different for replication to work.
+```
+
+修改 MySQL Server 的 UUID 方式：
+
+```shell
+vim /var/lib/mysql/auto.cnf
+systemctl restart mysqld
+```
+
+### 3.2 主机配置文件
+
+建议 mysql 版本一致且后台以服务运行，主从所有配置项都配置在 `[mysqld] `节点下，且都是小写字母。
+
+具体参数配置如下：
+
+- 必选
+
+  ```properties
+  # [必须]主服务器唯一 ID
+  server-id=1
+  # [必须]启用二进制日志，指明路径，比如：自己本地的路径 /log/mysqlbin
+  log-bin=atguigu-bin
+  ```
+
+- 可选
+
+  ```properties
+  # [可选]0（默认）表示读写（主机），1 表示只读（从机）
+  read-only=0
+  # 设置日志文件保留的时长，单位是秒
+  binlog_expire_logs_seconds=6000
+  # 控制单个二进制日志大小，此参数的最大和默认值是 1GB
+  max_binlog_size=200M
+  # [可选]设置不要复制的数据库
+  binlog-ignore-db=test
+  # [可选]设置需要复制的数据库，默认全部记录，比如：binlog-do-db=atguigu_master_slave
+  binlog-do-db=需要复制的主数据库名字
+  # [可选]设置 binlog 格式
+  binlog_format=STATEMENT
+  ```
+
+  重启后台 mysql 服务，使配置生效。
+
+  > 注意：
+  >
+  > 先搭建完主从复制，再创建数据库。
+  >
+  > MySQL 主从复制起始时，从机不继承主机数据。
+
+**binlog 格式设置：**
+
+格式1：**STATEMENT 模式**（基于 SQL 语句的复制（statement-based replication, SBR））
+
+```properties
+binlog_format=STATEMENT
+```
+
+没一条会修改数据的 sql 语句会记录到 binlog 中。这是默认的 binlog 格式。
+
+- SBR 的优点：
+  - 历史悠久，技术成熟
+  - 不需要记录每一行的变化，减少了 binlog 日志量，文件较小
+  - binlog 中包含了所有数据库更改信息，可以据此来审核数据库的安全等情况
+  - binlog 可以用于实时的还原，而不仅仅用于复制
+  - 主从版本可以不一样，从服务器版本可以比主服务器版本高
+- SBR 的缺点：
+  - 不是所有的 UPDATE 语句都能被复制，尤其是包含不确定操作的时候
+- 使用以下函数的语句也无法被复制：LOAD_FILE()、UUID()、USER()、FOUND_ROWS()、SYSDATE() （除非启动时启用了 --sysdate-is-now 选项）
+  - INSERT ... SELECT 会产生比 RBR 更多的行级锁
+  - 复制需要进行全表扫描（WHERE 语句中没有使用到索引）的 UPDATE 时，需要比 RBR 请求更多的行级锁
+  - 对于有 AUTO_INCREMENT 字段的 InnoDB 表而言，INSERT 语句会阻塞其他 INSERT 语句
+  - 对于一些复杂的语句，在从服务器上耗资源情况会更严重，而 RBR 模式下，只会对那个发生变化的记录产生影响
+  - 执行复杂语句如果出错的话，会消耗更多资源
+  - 数据表必须几乎和主服务器保持一致才行，否则可能会导致复制出错
+
+**2、ROW 模式（基于行的复制（row-based replication, RBR））**
+
+```properties
+binlog_format=ROW
+```
+
+5.1.5 版本的 MySQL 才开始支持，不记录每条 sql 语句的上下文信息，仅记录哪条数据被修改了，修改成什么样了。
+
+- RBR 的优点：
+  - 任何情况都可以被复制，这对复制来说是最安全可靠的。（比如：不会出现某些特定情况下的存储过程、function、trigger 的调用和触发无法被正确复制的问题）
+  - 多数情况下，从服务器上的表如果有主键的话，复制就会快了很多
+  - 复制以下几种语句时的行锁更少： INSERT ... SELECT、包含 AUTO_INCREMENT 字段的 INSERT、没有附带条件或者并没有修改很多记录的 UPDATE 或 DELETE 语句
+  - 执行 INSERT、UPDATE、DELETE 语句时锁更少
+  - 从服务器上采用多线程来执行复制成为可能
+- RBR 的缺点：
+  - binlog 大了很多
+  - 复杂的回滚时 binlog 中会包含大量的数据
+  - 主服务器上执行 UPDATE 语句时，所有发生变化的记录都会写到 binlog 中，而 SBR 只会写一次，这会导致频繁发生 binlog 的并发写问题
+  - 无法从 binlog 中看到都复制了些什么语句
+
+**3、MIXED 模式（混合模式复制（mixed-based replication, MBR））**
+
+```properties
+binlog_format=MIXED
+```
+
+从 5.1.8 版本开始，MySQL 提供了 Mixed 格式，实际上就是 Statement 与 Row 的结合。
+
+在 Mixed 模式下，一般的语句修改使用 statement 格式保存 binlog。如一些函数，statement 无法完成主从复制的操作，则采用 row 格式保存 binlog。
+
+MySQL 会根据执行的每一条具体的 sql 语句来区分对待记录的日志形式，也就是在 Statement 和 Row 之间选择一种。
+
+### 3.3 从机配置文件
+
+要求主从所有配置项都配置在 `my.cnf` 的 `[mysqld]` 栏位下，且都是小写字母。
+
+- 必选
+
+  ```properties
+  # [必须]从服务器唯一 ID
+  server-id=2
+  ```
+
+- 可选
+
+  ```properties
+  # [可选]启用中继日志
+  relay-log=mysql-relay
+  ```
+
+重启后台 mysql 服务，使配置生效
+
+> 注意：主从机都关闭防火墙
+>
+> service iptables stop # CentOS 6
+>
+> systemctl stop firewalld.service # CentOS 7
+
+### 3.4 主机：建立账户并授权
+
+```mysql
+# 在主机 MySQL 里执行授权主从复制的命令
+GRANT REPLICATION SLAVE ON *.* TO 'slave1'@'从机器数据库IP' IDENTIFIED BY 'abc123'; # 5.5, 5.7
+```
+
+**注意：如果使用的是 MySQL 8，需要如下的方式建立账户，并授权 slave**：
+
+```mysql
+CREATE USER 'slave1'@'%' IDENTIFIED BY '123456';
+
+GRANT REPLICATION SLAVE ON *.* TO 'slave1'@'%';
+
+# 此语句必须执行，否则见下面。
+ALTER USER 'slave1'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+
+flush privileges;
+```
+
+> 注意：在从机执行 show slave status\G 时报错：
+>
+> Last_IO_Error: error connecting to master 'slave1@192.168.1.150:3306' - retry-time: 60 retries: 1 message: Authentication plugin ‘caching_sha2_password' reported error: Authentication requires secure connection.
+
+查询 master 的状态，并记录下 File 和 Position 的值。
+
+```mysql
+show master status;
+```
+
+- 记录下 File 和 Position 的值
+
+  > 注意：执行完此步骤后**不要再操作主服务器 MySQL**，防止主服务器状态值变化。
+
+### 3.5 从机：配置需要复制的主机
+
+**步骤1：**从机上复制主机的命令
+
+```mysql
+CHANGE MASTER TO
+MASTER_HOST='主机的 IP 地址',
+MASTER_USER='主机用户名',
+MASTER_PASSWORD='主机用户名的密码',
+MASTER_LOG_FILE='mysql-bin.具体数字',
+MASTER_LOG_POS=具体值;
+```
+
+举例：
+
+```mysql
+CHANGE MASTER TO
+MASTER_HOST='192.168.1.150', MASTER_USER='slave1', MASTER_PASSWORD='123456', MASRER_LOG_FILE='atguigu-bin.000007', MASTER_LOG_POS=154;
+```
+
+**步骤2：**
+
+```mysql
+# 启动 slave 同步
+START SLAVE;
+```
+
+如果报错：
+
+```
+ERROR 1872 (HY000): Slave failed to initialize relay log info structure from the repository
+```
+
+可以执行如下操作，删除之前的 relay_log 信息。然后重新执行 CHANGE MASTER TO ... 语句即可。
+
+```mysql
+reset slave; # 删除 SLAVE 数据库的 relaylog 日志文件。然后重新启用新的 relaylog 文件
+```
+
+接着，查看同步状态：
+
+```mysql
+SHOW SLAVE STATUS\G;
+```
+
+> 上面两个参数都是 Yes（Slave_IO_Running、Slave_SQL_Running），则说明主从配置成功！
+
+显示如下的情况（Slave_IO_Running: Connecting, Slave_SQL_Running: Yes），就是不正确的。可能错误的原因有：
+
+1. 网络不通
+2. 账户密码错误
+3. 防火墙
+4. mysql 配置文件问题
+5. 连接服务器语法
+6. 主服务器 mysql 权限
+
+### 3.6 测试
+
+主机新建库、新建表、insert 记录，从机复制：
+
+```mysql
+CREATE DATABASE atguigu_master_slave;
+
+CREATE TABLE mytbl(id INT, NAME VARCHAR(16));
+
+INSERT INTO mytbl VALUES (1, 'zhang3');
+
+INSERT INTO mytbl VALUES (2, @@hostname);
+```
+
+### 3.7 停止主从同步
+
+- 停止主从同步命令：
+
+  ```mysql
+  stop slave;
+  ```
+
+- 如何重新配置主从
+
+  如果停止从服务器复制功能，再使用需要重新配置主从。否则会报错如下：
+
+  ```
+  ERROR 3021 (HY000): This operation cannot be performed with a running slave io thread; run STOP SLAVE IO_THREAD FOR CHANNEL '' first.
+  ```
+
+  重新配置主从，需要在从机上执行：
+
+  ```mysql
+  stop slave;
+  
+  reset master; # 删除 Master 中所有的 binlog 文件，并将日志索引文件清空，重新开始
+  ```
+
+### 3.8 后续
+
+**搭建主从复制：双主双从**
+
+一个主机 m1 用于处理所有写请求，它的从机 s1 和另一台主机 m2 还有它的从机 s2 负责所有读请求。当 m1 主机宕机后，m2 主机负责写请求，m1、m2 互为备机。架构图如下：
+
+```mermaid
+graph LR
+Java[Java 程序] --作为数据源访问--> MyCat
+MyCat --写请求--> m1[Master]
+MyCat --读请求--> s1[Slave]
+s1 --MySQL主从复制--> m1
+m1 --互相复制--> m2[Master]
+m2 --> m1
+s2[Slave] --MySQL主从复制-->m2
+```
+
+# P193 binlog 的 format 设置说明
+
+# P194 数据同步一致性问题解决
+
+## 4、同步数据一致性问题
+
+**主从同步的要求：**
+
+- 读库和写库的数据一致（最终一致）；
+- 写数据必须写到写库
+- 读数据必须到读库（不一定）
+
+### 4.1 理解主从延迟问题
+
+进行主从同步的内容是二进制日志，它是一个文件，在进行**网络传输**的过程中就一定会**存在主从延迟**（比如 500ms），这样就可能造成用户在从库上读取的数据不是最新的数据，也就是主从同步中的**数据不一致性**问题。
+
+**举例：**导致主从延迟的时间点主要包括以下三个：
+
+1. 主库 A 执行完成一个事务，写入 binlog，我们把这个时刻记为 T1；
+2. 之后传给从库 B，我们把从库 B 接收完这个 binlog 的时刻记为 T2；
+3. 从库 B 执行完成这个事务，我们把这个时刻记为 T3。
+
+### 4.3 如何减少主从延迟
+
+1. 降低多线程大事务并发的概率，优化业务逻辑
+2. 优化 SQL，避免慢 SQL，**减少批量操作**，建议写脚本以 update-sleep 这样的形式完成。
+3. **提高从库机器的配置**，减少主库写 binlog 和从库读 binlog 的效率差。
+4. 尽量采用**短的链路**，也就是主库和从库服务器的距离尽量要短，提升端口带宽，减少 binlog 传输的网络延时。
+5. 实时性要求的业务读强制走主库，从库只做灾备，备份。
+
+### 4.4 如何解决一致性问题
+
+如果操作的数据存储在同一个数据库中，那么对数据进行更新的时候，可以对记录加写锁，这样在读取的时候就不会发生数据不一致的情况。但这时从库的作用就是**备份**，并没有起到**读写分离**，分担主库**读压力**的作用。
+
+读写分离情况下，解决主从同步中数据不一致的问题，就是解决主从之间**数据复制方式**的问题，如果按照数据一致性**从弱到强**来进行划分，有以下 3 种复制方式。
+
+**方法1：异步复制**
+
+异步模式就是客户端提交 COMMIT 之后不需要等从库返回任何结果，而是直接将结果返回客户端，这样做的好处是不会影响主库写的效率，但可能会存在主库宕机，而 Binlog 还没同步到从库的情况，也就是此时的主库和从库数据不一致。这时候从从库中选择一个作为新主，那么新主则可能缺少原来主服务器中已提交的事务。所以，这种复制模式下的数据一致性是最弱的。
+
+**方法2：半同步复制**
+
+MySQL 5.5 版本之后开始支持半同步复制的方式。原理是在客户端提交 COMMIT 之后不直接将结果返回给客户端，而是等待至少有一个从库接收到了 Binlog，并且写入到中继日志中，再返回给客户端。
+
+这样做的好处就是提高了数据的一致性，当然相比于异步复制来说，至少多增加了一个网络连接的延迟，降低了主库写的效率。
+
+在 MySQL 5.7 版本中还增加了一个 `rpl_semi_sync_master_wait_for_slave_count` 参数，可以对应答的从库数量进行设置，默认为 `1`，也就是说只要有 1 个从库进行了响应，就可以返回给客户端。如果将这个参数调大，可以提升数据一致性的强度，但也会增加主库等待从库响应的时间。
+
+**方法3：组复制**
+
+异步复制和半同步复制都无法最终保证数据的一致性问题，半同步复制是通过判断从库响应的个数来决定是否返回给客户端，虽然数据一致性相比于异步复制有提升，但仍然无法满足对数据一致性要求高的场景，比如金融领域。MGR 很好地弥补了这两种复制模式的不足。
+
+组复制技术，简称 MGR（MySQL Group Replication）。是 MySQL 在 5.7.17 版本中推出的一种新的数据复制技术，这种复制技术是基于 Paxos 协议的状态机复制。
+
+**MGR 是如何工作的**
+
+首先我们将多个节点共同组成一个复制组，在**执行读写（RW）事务**的时候，需要通过一致性协议层（Consensus 层）的同意，也就是读写事务想要进行提交，必须要经过组里“大多数人”（对应 Node 节点）的同意，大多数指的是同意的节点数量需要大于 （N/2+1），这样才可以进行提交，而不是原发起方一个说了算。而针对**只读（RO）事务**则不需要经过组内同意，直接 COMMIT 即可。
+
+在一个复制组内有多个节点组成，它们各自维护了自己的数据副本，并且在一致性协议层实现了原子消息和全局有序消息，从而保证组内数据的一致性。
+
+MGR 将 MySQL 带入了数据强一致性的时代，是一个划时代的创新，其中一个重要的原因就是 MGR 是基于 Paxos 协议的。Paxos 算法是由 2013 年的图灵奖获得者 Leslie Lamport 于 1990 年提出的，有关这个算法的决策机制可以搜一下。事实上，Paxos 算法提出来之后就作为**分布式一致性算法**被广泛应用，比如 Apache 的 Zookeeper 也是基于 Paxos 实现的。
+
+## 5、知识延申
+
+在主从架构的配置中，如果想要采取读写分离的策略，我们可以**自己编写程序**，也可以通过**第三方的中间件**来实现。
+
+- 自己编写程序的好处就在于比较自主，我们可以自己判断哪些查询在从库上来执行，针对实时性要求高的需求，我们还可以考虑哪些查询可以在主库上执行。同时，程序直接连接数据库，减少了中间件层，相当于减少了性能损耗。
+- 采用中间件的方法有很明显的优势，**功能强大**，**使用简单**。但因为在客户端和数据库之间增加了中间件层会有一些**性能损耗**，同时商业中间件也是有使用成本的。我们也可以考虑采取一些优秀的开源工具。
+  1. **Cobar** 属于阿里 B2B 事业群，始于 2008 年，在阿里服役 3 年多，接管 3000+ 个 MySQL 数据库的 schema，集群日处理在线 SQL 请求 50 亿次以上。由于 Cobar 发起人的离职，Cobar 停止维护。
+  2. **Mycat** 是开源社区在阿里 cobar 基础上进行二次开发，解决了 cobar 存在的问题，并且加入了许多新的功能在其中。青出于蓝而胜于蓝。
+  3. **OneProxy** 基于 MySQL 官方的 proxy 思想利用 c 语言进行开发的，OneProxy 是一款商业**收费**的中间件。舍弃了一些功能，专注在**性能和稳定性上**
+  4. **kingshard** 由小团队用 go 语言开发，还需要发展，需要不断完善
+  5. **Vitess** 是 Youtube 生产在使用，架构很复杂。不支持 MySQL 原生协议，使用**需要大量改造成本**。
+  6. **Atlas** 是 360 团队基于 mysql proxy 改写，功能还需完善，高并发下不稳定。
+  7. **MaxScale** 是 mariadb（MySQL 原作者维护的一个版本）研发的中间件
+  8. **MySQLRoute** 是 MySQL 官方 Oracle 公司发布的中间件
+
+主备切换：
+
+- 主动切换
+- 被动切换
+- 如何判断主库出问题了？如何解决过程中的数据不一致性问题？
+
+# P195 数据备份概述与 mysqldump 实现逻辑备份数据
+
+第19章 数据库备份与恢复
+
+在任何数据库环境中，总会有**不确定的意外**情况发生，比如例外的停电、计算机系统中的各种软硬件故障、人为破坏、管理员误操作等是不可避免的，这些情况可能会导致**数据的丢失**、**服务器瘫痪**等严重的后果。存在多个服务器时，会出现主从服务器之间的**数据同步问题**。
+
+为了有效防止数据丢失，并将损失降到最低，应**定期**对 MySQL 数据库服务器做**备份**。如果数据库中数据丢失或者出现错误，可以使用备份的数据**进行恢复**。主从服务器之间的数据同步问题可以通过复制功能实现。
+
+## 1、物理备份与逻辑备份
+
+**物理备份：**备份数据文件，转储数据库物理文件到某一目录。物理备份恢复速度比较快，但占用空间比较大，MySQL 中可以用 `xtrabackup` 工具来进行物理备份。
+
+**逻辑备份：**对数据库对象利用工具进行导出工作，汇总入备份文件内。逻辑备份恢复速度慢，但占用空间小，更灵活。MySQL 中常用的逻辑备份工具为 `mysqldump`。逻辑备份就是**备份 sql 语句**，在恢复的时候执行备份的 sql 语句实现数据库数据的重现。
+
+## 2、mysqldump 实现逻辑备份
+
+mysqldump 是 MySQL 提供的一个非常有用的数据库备份工具。
+
+### 2.1 备份一个数据库
+
+mysqldump 命令执行时，可以将数据库备份成一个**文本文件**，该文件中实际上包含多个 `CREATE` 和 `INSERT` 语句，使用这些语句可以重新创建表和插入数据。
+
+- 查出需要备份的表的结构，在文本文件中生成一个 CREATE 语句
+- 将表中的所有记录转换成一条 INSERT 语句。
+
+**基本语法：**
+
+```shell
+mysqldump -u 用户名称 -h 主机名称 -p密码 待备份的数据库名称[tbname, [tbname...]]> 备份文件名称.sql
+```
+
+> 说明：
+>
+> 备份的文件并非一定要求后缀名为 .sql，例如后缀名为 .txt 的文件也是可以的。
+
+举例：使用 root 用户备份 atguigu 数据库：
+
+```shell
+mysqldump -uroot -p atguigu>atguigu.sql # 备份文件存储在当前目录下
+mysqldump -uroot -p atguigudb1 > /var/lib/mysql/atguigu.sql
+```
+
+**备份文件剖析：**
+
+- `--` 开头的都是 SQL 语句的注释；
+- 以 `/*!` 开头、`*/` 结尾的语句为可执行的 MySQL 注释，这些语句可以被 MySQL 执行，但在其他数据库管理系统中被作为注释忽略，这可以提高数据库的可移植性；
+- 文件开头指明了备份文件使用的 MySQLdump 工具的版本号；接下来是备份账户的名称和主机信息，以及备份的数据库的名称；最后是 MySQL 服务器的版本号，在这里为 8.0.26
+- 备份文件接下来的部分是一些 SET 语句，这些语句将一些系统变量值赋给用户定义变量，以确保被恢复的数据库的系统变量和原来备份时的变量相同
+- 备份文件的最后几行 MySQL 使用 SET 语句恢复服务器系统变量原来的值。
+- 后面的 DROP 语句、CREATE 语句和 INSERT 语句都是还原时使用的。例如，“DROP TABLE IF EXISTS 'student'” 语句用来判断数据库中是否还有名为 student 的表，如果存在，就删除这个表；CREATE 语句用来创建 student 的表；INSERT 语句用来还原数据。
+- 备份文件开始的一些语句以数字开头。这些数字代表了 MySQL 版本号，告诉我们这些语句只有在指定的 MySQL 版本或者比该版本高的情况下才能执行。例如，40101 表明这些语句只有在 MySQL 版本号为 4.01.01 或者更高的条件下才可以被执行。文件的最后记录了备份的时间。
+
+### 2.2 备份全部数据库
+
+若想用 mysqldump 备份整个实例，可以使用 `--all-databases` 或 `-A` 参数：
+
+```shell
+mysqldump -uroot -pxxxxxx --all-databases > all_database.sql
+mysqldump -uroot -pxxxxxx -A > all_database.sql
+```
+
+### 2.3 备份部分数据库
+
+使用 `--databases` 或 `-B` 参数了，该参数后面跟数据库名称，多个数据库间用空格隔开。如果指定 databases 参数，备份文件中会存在创建数据库的语句，如果不指定参数，则不存在。语法如下：
+
+```shell
+mysqldump -u user -h host -p --databases [数据库的名称1 [数据库的名称2...]] > 备份文件名称.sql
+```
+
+举例：
+
+```shell
+mysqldump -uroot -p --databases atguigu atguigu12 >two_database.sql
+```
+
+或
+
+```shell
+mysqldump -uroot -p -B atguigu atguigu12 > two_database.sql
+```
+
+### 2.4 备份部分表
+
+比如，在表变更前做个备份。语法如下：
+
+```shell
+mysqldump -u user -h host -p 数据库的名称 [表名1 [表名2...]] > 备份文件名称.sql
+```
+
+举例：备份 atguigu 数据库下的 book 表
+
+```shell
+mysqldump -uroot -p atguigu book> book.sql
+```
+
+可以看到，book 文件和备份e库文件类似。不同的是，book 文件只包含 book 表的 DROP、CREATE 和 INSERT 语句。
+
+备份多张表使用下面的命令，比如备份 book 和 account 表：
+
+```shell
+# 备份多张表
+mysqldump -uroot -p atguigu book account > 2_tables_bak.sql
+```
+
+### 2.5 备份单表的部分数据
+
+有些时候一张表的数据量很大，我们只需要部分数据。这时就可以使用 `--where` 选项了。where 后面附带需要满足的条件。
+
+举例：备份 student 表中 id 小于 10 的数据：
+
+```shell
+mysqldump -uroot -p atguigu student --where "id < 10 " > student_part_id10_low_bak.sql
+```
+
+### 2.6 排除某些表的备份
+
+如果我们想备份某个库，但是某些表数据量很大或者与业务关联不大，这个时候可以考虑排除掉这些表，同样的，选项 `--ignore-table` 可以完成这个功能。
+
+```shell
+mysqldump -uroot -p atguigu --ignore-table=atguigu.student > no_stu_bak.sql
+```
+
+通过如下指定判定文件中没有 student 表结构：
+
+```shell
+grep "student" no_stu_bak.sql
+```
+
+### 2.7 只备份结构或只备份数据
+
+只备份结构的话可以使用 `--no-data` 简写为 `-d` 选项；只备份数据可以使用 `--no-create-info` 简写为 `-t` 选项。
+
+- 只备份结构
+
+  ```shell
+  mysqldump -uroot -p atguigu --no-data > atguigu_no_data_back.sql
+  # 使用 grep 命令，没有找到 INSERT 相关语句，表示没有数据备份。
+  grep "INSERT" atguigu_no_data_back.sql
+  ```
+
+- 只备份数据
+
+  ```shell
+  mysqldump -uroot -p atguigu --no-create-info > atguigu_no_create_info_bak.sql
+  # 使用 grep 命令，没有找到 create 相关语句，表示没有数据结构。
+  grep "CREATE" atguigu_no_create_info_bak.sql
+  ```
+
+### 2.8 备份中包含存储过程、函数、事件
+
+mysqldump 备份默认是不包含存储过程，自定义函数及事件的。可以使用 `--routines` 或 `-R` 选项来备份存储过程及函数，使用 `--events` 或 `-E` 参数来备份事件。
+
+举例：备份整个 atguigu 库，包含存储过程及事件：
+
+- 使用下面的 SQL 可以查看当前库有哪些存储过程或者函数
+
+  ```mysql
+  SELECT SPECIFIC_NAME, ROUTINE_TYPE, ROUTINE_SCHEMA FROM information_schema.Routines WHERE ROUTINE_SCHEMA="atguigu";
+  ```
+
+- 下面备份 atguigu 库的数据，函数以及存储过程。
+
+  ```shell
+  mysqldump -uroot -p -R -E --databases atguigu > fun_atguigu_bak.sql
+  ```
+
+- 查询备份文件中是否存在函数，如下所示，可以看到确实包含了函数。
+
+  ```shell
+  grep -C 5 "rand_num" fun_atguigu_bak.sql
+  ```
+
+### 2.9 mysqldump 常用选项
+
+mysqldump 其他常用选项如下：
+
+```shell
+--add-drop-database # 在每个 CREATE DATABASE 语句前添加 DROP DATABASE 语句
+--add-drop-tables # 在每个 CREATE TABLE 语句前添加 DROP TABLE 语句
+--add-locking # 用 LOCK TABLES 和 UNLOCK TABLES 语句引用每个表转储，重载转储文件时插入得更快。
+--all-database， -A # 转储所有数据库中的所有表，与使用 --database 选项相同，在命令行中命名所有数据库。
+--comment[=0|1] # 如果设置为 0，禁止转储文件中的其他信息，例如程序版本、服务器版本和主机，--skip-comments 与 --comments=0 的结果相同，默认值为 1，即包括额外信息。
+--compact # 产生少量输出，该选项禁用注释并启用 --skip-add-drop-tables、--no-set-names、--skip-disable-keys 和 --skip-add-locking 选项。
+--compatible=name
+--complete_insert, -c
+--debug[=debug_options], -#[debug_options]
+--delete, -D
+--default-character-set=charset
+--delete-master-logs
+--extended-insert, -e
+--flush-logs, -F
+--force, -f
+--lock-all-tables, -x
+--lock-tables, -l
+--no-create-db, -n
+--no-create-info, -t
+--no-data, -d
+--opt
+--password[=password], -p[password]
+-port=port_num, -P port_num
+--protocol={TCP|SOCKET|PIPE|MEMORY}
+--replace, -r -replace 和 --ignore
+--silent, -s
+--socket=path, -S path
+--user=user_name, -u user_name
+--verbose, -v
+--xml, -X
+```
+
+运行帮助命令 `mysqldump --help` 可以获得特定版本的完整选项列表
+
+> 提示
+>
+> 如果运行 mysqldump 没有 --quick 或 --opt 选项，mysqldump 在转储结果前将整个结果集装入内存。如果转储大数据库可能会出现问题，该选项默认启用，但可以用 --skip-opt 禁用。如果使用最新版本的 mysqldump 程序备份数据，并用于恢复到比较旧版本的 MySQL 服务器中，则不要使用 --opt 或 -e 选项。
+
+# P196 演示 mysql 实现逻辑恢复数据
+
+## 3、mysql 命令恢复数据
+
+使用 mysqldump 命令将数据库中的数据备份成一个文本文件。需要恢复时，可以使用 **mysql 命令**来恢复备份的数据。
+
+mysql 命令可以执行备份文件中的 **CREATE 语句**和 **INSERT 语句**。通过 CREATE 语句来创建数据库和表。通过 INSERT 语句来插入备份的数据。
+
+基本语法：
+
+```shell
+mysql -u root -p [dbname] < backup.sql
+```
+
+其中，dbname 参数表示数据库名称。该参数是可选参数，可以指定数据库名，也可以不指定。指定数据库名时，表示还原该数据库下的表。此时需要确保 MySQL 服务器中已经创建了该名的数据库。不指定数据库名时，表示还原文件中所有的数据库。此时 sql 文件中包含有 CREATE DATABASE 语句，不需要 MySQL 服务器中已存在这些数据库。
+
+### 3.1 单库备份中恢复单库
+
+使用 root 用户，将之前练习中备份的 atguigu.sql 文件中的备份导入数据库中，命令如下：
+
+如果备份文件中包含了创建数据库的语句，则恢复的时候不需要指定数据库名称，如下所示
+
+```shell
+mysql -uroot -p < atguigu.sql
+```
+
+否则需要指定数据库名称，如下所示
+
+```shell
+mysql -uroot -p atguigu4< atguigu.sql
+```
+
+### 3.2 全量备份恢复
+
+如果我们现在有昨天的全量备份，现在想整个恢复，则可以这样操作：
+
+```shell
+mysql -u root -p < all.sql
+mysql -uroot -pxxxxxx < all.sql
+```
+
+执行完后，MySQL 数据库中就已经恢复了 all.sql 文件中的所有数据库。
+
+> 补充
+>
+> 如果使用 --all-databases 参数备份了所有的数据库，那么恢复时不需要指定数据库。对应的 sql 文件包含有 CREATE DATABASE 语句，可通过该语句创建数据库。创建数据库后，可以执行 sql 文件中的 USE 语句选择数据库，再创建表并插入记录。
+
+### 3.3 从全量备份中恢复单库
+
+可能有这样的需求，比如说我们只想恢复某一个库，但是我们有的是整个实例的备份，这个时候我们可以从全量备份中分离出单个库的备份。
+
+举例：
+
+```shell
+sed -n '/^-- Current Database: `atguigu`/,/^-- Current Database: `/p' all_database.sql > atguigu.sql
+# 分离完成后我们再导入 atguigu.sql 即可恢复单个库
+```
+
+### 3.4 从单库备份中恢复单表
+
+这个需求还是比较常见的。比如说我们知道哪个表误操作了，那么就可以用单表恢复的方式来恢复。
+
+举例：我们有 atguigu 整库的备份，但是由于 class 表误操作，需要单独恢复出这张表。
+
+```mysql
+cat atguigu.sql | sed -e '/./{H;$!d;}' -e 'x;/CREATE TABLE `class`/!d;q' > class_structure.sql
+cat atguigu.sql | grep --ignore-case 'insert into `class`' > class_data.sql
+# 用 shell 语法分离出创建表的语句及插入数据的语句后 再依次导出即可完成恢复
+use atguigu;
+source class_structure.sql;
+source class_data.sql;
+```
+
+# P197 物理备份和物理恢复的演示、表数据的导出和导入
+
+## 4、物理备份：直接复制整个数据库
+
+直接将 MySQL 中的数据库文件复制出来。这种方法最简单，速度也最快。MySQL 的数据库目录位置不一定相同：
+
+- 在 Windows 平台下，MySQL 8.0 存放数据库的目录通常默认为“C:\ProgramData\MySQL\MySQL Server 8.0\Data” 或者其他用户自定义目录；
+- 在 Linux 平台下，数据库目录位置通常为 /var/lib/mysql/;
+- 在 MAC OSX 平台下，数据库目录位置通常为“/usr/local/mysql/data”
+
+但为了保证备份的一致性。需要保证：
+
+- 方式1：备份前，将服务器停止。
+- 方式2：备份前，对相关表执行 `FLUSH TABLES WITH READ LOCK` 操作。这样当复制数据库目录中的文件时，允许其他客户继续查询表。同时，FLUSH TABLES 语句来确保开始备份前所有激活的索引页写入磁盘。
+
+这样方式方便、快速，但不是最好的备份方法，因为实际情况可能**不允许停止 MySQL 服务器**或者**锁住表**，而且这种方法**对 InnoDB 存储引擎**的表不适用。对于 MyISAM 存储引擎的表，这样备份和还原很方便，但是还原时最好是相同版本的 MySQL 数据库，否则可能会存在文件类型不同的情况。
+
+注意，物理备份完毕后，执行 `UNLOCK TABLES` 来结算其他客户对表的修改行为。
+
+> 说明：
+>
+> 在 MySQL 版本号中，第一个数字表示主版本号，主版本号相同的 MySQL 数据库文件格式相同
+
+此外，还可以考虑使用相关工具实现备份。比如 `MySQLhotcopy` 工具。MySQLhotcopy 是一个 Perl 脚本，它使用 LOCK TABLES、FLUSH TABLES 和 cp 或 scp 来快速备份数据库。它是备份数据库或单个表最快的途径，但它只能运行在数据库目录所在的机器上，并且只能备份 MyISAM 类型的表。多用于 mysql 5.5 之前。
+
+## 5、物理恢复：直接复制到数据库目录
+
+**步骤：**
+
+1. 演示删除备份的数据库中指定表的数据
+2. 将备份的数据库数据拷贝到数据目录下，并重启 MySQL 服务器
+3. 查询相关表的数据是否恢复。需要使用下面的 `chown` 操作。
+
+**要求：**
+
+- 必须确保备份数据的数据库和待恢复的数据库服务器的主版本号相同。
+
+  - 因为只有 MySQL 数据库主版本号相同时，才能保证这两个 MySQL 数据库文件类型是相同的。
+
+- 这种方式对 **MyISAM 类型的表比较有效**，对于 InnoDB 类型的表则不可用。
+
+  - 因为 InnoDB 表的表空间不能直接复制。
+
+- 在 Linux 操作系统下，复制到数据库目录后，一定要将数据库的用户和组变成 mysql，命令如下：
+
+  ```shell
+  chown -R mysql.mysql /var/lib/mysql/dbname
+  ```
+
+其中，两个 mysql 分别表示组和用户；“-R” 参数可以改变文件夹下的所有子文件的用户和组；“dbname” 参数表示数据库目录。
+
+> 提示
+>
+> Linux 操作系统下的权限设置非常严格。通常情况下，MySQL 数据库只有 root 用户和 mysql 用户才可以访问，因此将数据库目录复制到指定文件夹后，一定要使用 chown 命令将文件夹的用户组变为 mysql，将用户变为 mysql。
+
+## 6、表的导出与导入
+
+### 6.1 表的导出
+
+#### 1、使用 SELECT ... INTO OUTFILE 导出文本文件
+
+在 MySQL 中，可以使用 SELECT ... INTO OUTFILE 语句将表的内容导出成一个文本文件。
+
+**举例：**使用 SELECT ... INTO OUTFILE 将 atguigu 数据库中 account 表中的记录导出到文本文件。
+
+1. 选择数据库 atguigu，并查询 account 表，执行结果如下所示。
+
+2. mysql 默认对导出的目录有权限限制，也就是说使用命令行进行导出的时候，需要指定目录进行操作。
+
+   查询 secure_file_priv 值：
+
+   ```mysql
+   SHOW GLOBAL VARIABLES LIKE '%secure%';
+   ```
+
+   参数 secure_file_priv 的可选值和作用分别是：
+
+   - 如果设置为 empty，表示不限制文件生成的位置，这是不安全的设置；
+   - 如果设置为一个表示路径的字符串，就要求生成的文件只能放在这个指定的目录，或者它的子目录；
+   - 如果设置为 NULL，就表示禁止在这个 MySQL 实例上执行 select ... into outfile 操作。
+
+3. 上面结果中显示，secure_file_priv 变量的值为 /var/lib/mysql-files/，导出目录设置为该目录，SQL 语句如下。
+
+   ```mysql
+   SELECT * FROM account INTO OUTFILE "/var/lib/mysql-files/account.txt";
+   ```
+
+4. 查看 /var/lib/mysql-files/account.txt 文件。
+
+#### 2、使用 mysqldump 命令导出文本文件
+
+**举例1：**使用 mysqldump 命令将 atguigu 数据库中 account 表中的记录导出到文本文件：
+
+```shell
+mysqldump -uroot -p -T "/var/lib/mysql-files/" atguigu account
+```
+
+mysqldump 命令执行完毕后，在指定的目录 /var/lib/mysql-files/ 下生成了 account.sql 和 account.txt 文件。
+
+打开 account.sql 文件，其内容包含创建 account 表的 CREATE 语句。
+
+打开 account.txt 文件，其内容只包含 account 表中的数据。
+
+**举例2：**使用 mysqldump 将 atguigu 数据库中的 account 表导出到文本文件，使用 FIELDS 选项，要求字段之间使用逗号 `,` 间隔，所有字符类型字段值用双引号括起来：
+
+```shell
+mysqldump -uroot -p -T "/var/lib/mysql-files/" atguigu account --fields-terminated-by=',' --fields-optionally-enclosed-by='\""'
+```
+
+语句 mysqldump 语句执行成功之后，指定目录下会出现两个文件 account.sql 和 account.txt。
+
+打开 account.sql 文件，其内容包含创建 account 表的 CREATE 语句。
+
+打开 account.txt 文件，其内容包含创建 account 表的数据。从文件中可以看出，字段之间用逗号隔开，字符类型的值被双引号括起来。
+
+#### 3、使用 mysql 命令导出文本文件
+
+**举例1：**使用 mysql 语句导出 atguigu 数据时中的记录到文本文件：
+
+```shell
+mysql -uroot -p --execute="SELECT * FROM account;" atguigu> "/var/lib/mysql-files/account.txt"
+```
+
+打开 account.txt 文件，其内容包含创建 account 表的数据。
+
+**举例2：**将 atguigu 数据库 account 表中的记录导出到文本文件，使用 --vertical 参数将该条件记录分为多行显示：
+
+```shell
+mysql -uroot -p --vertical --execute="SELECT * FROM account;"  atguigu > "/var/lib/mysql-files/account_2.txt"
+```
+
+打开 account_2.txt 文件，其内容包含创建 account 表的数据。
+
+**举例3：**将 atguigu 数据库 account 表中的记录导出到 xml 文件，使用 --xml 参数，具体语句如下：
+
+```shell
+mysql -uroot -p --xml --execute="SELECT * FROM account;"  atguigu > "/var/lib/mysql-files/account_3.xml"
+```
+
+说明：如果要将表数据导出到 html 文件中，可以使用 `--html` 选项。然后可以使用浏览器打开。
+
+### 6.2 表的导入
+
+#### 1、使用 LOAD DATA INFILE 方式导入文本文件
+
+**举例1：**
+
+使用 SELECT ... INTO OUTFILE 将 atguigu 数据库中 account 表的记录导出到文本文件
+
+```mysql
+SELECT * FROM atguigu.account INTO OUTFILE '/var/lib/mysql-files/account_0.txt';
+```
+
+删除 account 表中的数据：
+
+```mysql
+DELETE FROM atguigu.account;
+```
+
+从文本文件 account.txt 中恢复数据
+
+```mysql
+LOAD DATA INFILE '/var/lib/mysql-files/account_0.txt' INTO TABLE atguigu.account;
+```
+
+**举例2：**
+
+选择数据库 atguigu，使用 SELECT ... INTO OUTFILE 将 atguigu 数据库 account 表中的记录导出到文本文件，使用 FIELDS 选项和 LINES 选项，要求字段之间使用逗号 `,` 间隔，所有字段值用双引号括起来：
+
+```mysql
+SELECT * FROM atguigu.account INTO OUTFILE '/var/lib/mysql-files/account_1.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '\"';
+```
+
+删除 account 表中的数据：
+
+```mysql
+DELETE FROM atguigu.account;
+```
+
+从 /var/lib/mysql-files/account.txt 中导入数据到 account 表中：
+
+```mysql
+LOAD DATA INFILE '/var/lib/mysql-files/account_1.txt' INTO TABLE atguigu.account FIELDS TERMINATED BY ',' ENCLOSED BY '\"';
+```
+
+#### 2、使用 mysqlimport 方式导入文本文件
+
+**举例：**
+
+导出文件 account.txt, 字段之间使用逗号 `,` 间隔，字段值用双引号括起来：
+
+```mysql
+SELECT * FROM atguigu.account INTO OUTFILE '/var/lib/mysql-files/account.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '\"';
+```
+
+删除 account 表中的数据：
+
+```mysql
+DELETE FROM atguigu.account;
+```
+
+使用 mysqlimport 命令将 account.txt 文件内容导入到数据库 atguigu 的 account 表中：
+
+```shell
+mysqlimport -uroot -p atguigu '/var/lib/mysql-files/account.txt' --fields-terminated-by=',' --fields-optionally-enclosed-by='\"'
+```
+
+除了前面介绍的几个选项之外，mysqlimport 支持需要选项，常见的选项有：
+
+- --columns=column_list, -c column_list
+- --compress, -C
+- -d, --delete
+- --force, -f
+- --host=host_name, -h host host_name
+- --ignore, -i
+- --ignore-lines=n
+- --local, -L
+- --lock-tables, -l
+- --password[=password], -p[password]
+- --port=port_num, -P port_num
+- --protocol={TCP|SOCKET|PIPE|MEMORY}
+- --replace, -r
+- --silent, -s
+- --user=username, -u user_name
+- --verbose, -v：冗长模式。打印出程序操作的详细信息。
+- --version, -V：显示版本信息并退出
+
+# P198 数据库迁移与如何删库不跑路
+
+## 7、数据库迁移
+
+### 7.1 概述
+
+数据迁移（data migration）是指选择、准备、提取和转换数据，并**将数据从一个计算机存储系统永久地传输到另一个计算机存储系统的过程。**此外，**验证迁移数据的完整性**和**退役原来旧的数据存储**，也被认为是整个数据迁移过程的一部分。
+
+数据库迁移的原因是多样的，包括服务器或存储设备更换、维护或升级，应用程序迁移，网站集成，灾难恢复和数据中心迁移。
+
+根据不同的需求可能要采取不同的迁移方案，但总体来讲，MySQL 数据迁移方案大致可以分为**物理迁移**和**逻辑迁移**两类。通常以尽可能**自动化**的方式执行，从而将人力资源从繁琐的任务中解放出来。
+
+### 7.2 迁移方案
+
+- 物理迁移
+
+  物理迁移适用于大数据量下整体迁移。使用物理迁移方案的优点是比较快速，但需要停机迁移并且要求 MySQL 版本及配置必须和原服务器相同，也可能引起未知问题。
+
+  物理迁移包括拷贝数据文件和使用 XtraBackup 备份工具两种。
+
+  不同服务器之间可以采用物理迁移，我们可以在新的服务器上安装好同版本的数据库软件，创建好相同目录，建议配置文件也要和原数据库相同，然后从原数据库方拷贝来数据文件及日志文件，配置好文件组权限，之后在新服务器这边使用 mysqld 命令启动数据库。
+
+- 逻辑迁移
+
+  逻辑迁移使用范围更广，无论是**部分迁移**还是**全量迁移**，都可以使用逻辑迁移。逻辑迁移中使用最多的就是通过 mysqldump 等备份工具。
+
+### 7.3 迁移注意点
+
+**1、相同版本的数据库之间迁移注意点**
+
+指的是在主版本号相同的 MySQL 数据库之间进行数据库移动。
+
+**方式1：**因为迁移前后 MySQL 数据库的**主版本号相同**，所以可以通过复制数据库目录来实现数据库迁移，但是物理迁移方式只适用于 MyISAM 引擎的表。对于 InnoDB 表，不能用直接复制文件的方式备份数据库。
+
+**方式2**：最常见的最安全的方式是使用 **mysqldump 命令**导出数据，然后在目标数据库服务器中使用 MySQL 命令导入。
+
+举例：
+
+```shell
+# host1 的机器中备份所有数据库，并将数据库迁移到名为 host2 的机器上
+mysqldump -h host1 -uroot -p --all-databases|
+mysql -h host2 -uroot -p
+```
+
+在上述语句中，"|"符号表示管道，其作用是将 mysqldump 备份的文件给 mysql 命令；“--all-databases” 表示要迁移所有的数据库。通过这种方式可以直接实现迁移。
+
+**2、不同版本的数据库之间迁移注意点**
+
+例如，原来很多服务器使用 5.7 版本的 MySQL 数据库，在 8.0 版本推出来以后，改进了 5.7 版本的很多缺陷，因此需要把数据库升级到 8.0 版本
+
+旧版本与新版本的 MySQL 可能使用不同的默认字符集，例如有的旧版本中使用 latin1 作为默认字符集，而最新版本的 MySQL 默认字符集为 utf8mb4。如果数据库中有中文数据，那么迁移过程中需要对**默认字符集进行修改**，不然可能无法正常显示数据。
+
+高版本的 MySQL 数据库通常都会**兼容低版本**，因此可以从低版本的 MySQL 迁移到高版本的 MySQL 数据库。
+
+**3、不同数据库之间迁移注意点**
+
+不同数据库之间迁移是指从其他类型的数据库迁移到 MySQL 数据库，或者从 MySQL 数据库迁移到其他类型的数据库。这种迁移没有普适的解决方法。
+
+迁移之前，需要了解不同数据库的架构，**比较它们之间的差异**。不同数据库中定义相同类型的数据的**关键字可能会不同**。例如，MySQL 中日期字段分为 DATE 和 TIME 两种，而 ORACLE 日期字段只有 DATE；SQL Server 数据库中有 ntext、Image 等数据类型，MySQL 数据库没有这些数据类型；MySQL 支持的 ENUM 和 SET 类型，这些 SQL Server 数据库不支持。
+
+另外，数据库厂商并没有完全按照 SQL 标准来设计数据库系统，导致不同的数据库系统的 **SQL 语句**有差别。例如，微软的 SQL Server 软件使用的是 T-SQL 语句，T-SQL 中包含了非标准的 SQL 语句，不能和 MySQL 的 SQL 语句兼容。
+
+不同类型数据库之间的差异造成了互相**迁移的困难**，这些差异其实是商业公司故意造成的技术壁垒。但是不同类型的数据库之前的迁移并**不是完全不可能**。例如，可以使用 `MyODBC` 实现 MySQL 和 SQL Server 之间的迁移。MySQL 官方提供的工具 `MySQL Migration Toolkit` 也可以在不同数据之间进行数据迁移。MySQL 迁移到 Oracle 时，需要使用 mysqldump 命令导出 sql 文件，然后，**手动更改** sql 文件中的 CREATE 语句。
+
+### 7.4 迁移小结
+
+- 物理迁移
+  - 适用场景：大数据量下的整体迁移
+  - 优点：迁移速度快
+  - 缺点：需停机、不灵活、可能有位置错误
+- 逻辑迁移
+  - 适用场景：各种场景
+  - 优点：兼容性高、灵活方便、可跨版本
+  - 缺点：迁移时间长
+  - 几点建议
+    - 排除不需要迁移的表
+    - 大表可以单独处理
+    - 注意数据库用户权限问题
+    - 迁移后要核实
+
+## 8、删库了不敢跑，能干点啥？
+
+传统的高可用架构是不能预防删数据的，因为主库的一个 drop table 命令，会通过 binlog 传给所有从库和级联从库，进而导致整个集群的实例都会执行这个命令。
+
+为了找到解决误删数据的更高效的方法，我们需要先对和 MySQL 相关的误删数据，做下分类：
+
+1. 使用 delete 语句误删数据行；
+2. 使用 drop table 或者 truncate table 语句误删数据表
+3. 使用 drop database 语句误删数据库；
+4. 使用 rm 命令误删整个 MySQL 实例。
+
+### 8.1 delete：误删行
+
+**处理措施1：数据恢复**
+
+使用 **Flashback 工具**恢复数据。
+
+原理：**修改 binlog** 内容，拿回原库重放。如果误删数据涉及到了多个事务的话，需要将事务的顺序调过来再执行。
+
+使用前提：binlog_format=row 和 binlog_row_image=FULL
+
+**处理措施2：预防**
+
+- 代码上线前，必须 **SQL 审查、审计**。
+- 建议可以打开**安全模式**，把 `sql_safe_updates` 参数设置为 `on`。强制要求加 where 条件且 where 后需要是索引字段，否则必须使用 limit。否则就会报错。
+
+### 8.2 truncate/drop：误删库/表
+
+**方案：**
+
+这种情况下恢复数据，需要使用**全量备份**与**增量日志**结合的方式。
+
+方案的前提：有定期的全量备份，并且实时备份 binlog。
+
+### 8.3 预防使用 truncate/drop 误删库/表
+
+**1、权限分离**
+
+**2、制定操作规范**
+
+**3、设置延迟复制备库**
+
+### 8.4 rm：误删 MySQL 实例
+
+HA 系统就会选出一个新的主库，从而保证整个集群的正常工作。
+
+但如果是恶意地把整个集群删除，那就需要考虑跨机房备份，跨城市备份
+
+# P199 最后寄语
