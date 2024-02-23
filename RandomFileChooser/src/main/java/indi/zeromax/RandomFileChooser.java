@@ -43,7 +43,7 @@ public class RandomFileChooser {
 
     static {
         String img_extensions = ".png,.jpg,.jpeg,.bmp,.gif,.bmp,.webp";
-        String video_extensions = ".avi,.mkv,.mp4,.wmv,.mpg,.mpeg,.mov,.flv,.swf";
+        String video_extensions = ".avi,.mkv,.mp4,.wmv,.mpg,.mpeg,.mov,.flv,.swf,.webm";
         String book_extensions = ".doc,.docx,.txt,.pdf";
         IMG_POSTFIXES.addAll(Arrays.asList(img_extensions.split(",")));
         VIDEO_POSTFIXES.addAll(Arrays.asList(video_extensions.split(",")));
