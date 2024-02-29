@@ -2350,3 +2350,358 @@ Resilience4J
 
 - 测试地址
 
+# P56 Resilience4j 之 RateLimiter 和常见限流算法
+
+限流（RateLimiter）
+
+- 官网
+
+  - 中文
+
+- 是什么
+
+  - 限流（频率控制）
+    - 限流 就是限制最大访问流量。系统能提供的最大并发是有限的，同时来的请求又太多，就需要限流。
+    - 比如商城秒杀业务，瞬时大量请求涌入，服务器忙不过就只好排队限流了。
+    - 所谓限流 ，就是通过对并发访问/请求进行限速，或者对一个时间窗口内的请求进行限速，以保护应用系统，一旦达到限制速率则可以拒绝服务、排队或等待、降级等处理
+
+- 面试题：说说常见限流算法
+
+  1. 漏斗算法（Leaky Bucket）
+     - 一个固定容量的漏桶，按照设定常量固定速率流出水滴，类似医院打吊针，不管你源头流量多大，我设定匀速流出。如果流入水滴超出了桶的容量，则流入的水滴将会溢出了（被丢弃），而漏桶容量是不变的。
+     - 缺点
+       - 这里有两个变量，一个是桶的大小，支持流量突发增多时可以存多少的水（burst），另一个是水桶漏洞的大小（rate）。因为漏桶的漏出速率是固定的参数，所以，即使网络中不存在资源冲突（没有发生拥塞），漏桶算法也不能使流突发（burst）到端口速率。**因此，漏桶算法对于存在突发特性的流量来说缺乏效率。**
+  2. 令牌桶算法（Token Bucket）
+     - SpringCloud 默认使用该算法
+     - 匀速添加一个令牌，每执行一个请求则从桶中丢弃一个令牌
+  3. 滚动时间窗口（tumbling time window）
+     - 允许固定数量的请求进入（比如 1 秒取 4 个数据相加，超过 25 值就 over）超过数量就拒绝或者排队，等下一个时间段进入。
+     - 由于是在一个时间间隔内进行限制，如果用户在上一个时间间隔结束前请求（但没有超过限制），同时在当前时间间隔刚开始请求（同样没超过限制），在各自的时间间隔内，这些请求都是正常的。下图统计了 3 次，but……
+     - 缺点：间隔临界的一段时间内的请求就会超过系统限制，可能导致系统被压垮
+       - 假如设定 1 分钟最多可以请求 100 次某个接口，如 12:00:00-12:00:59 时间段内没有数据请求，但 12:00:59 ~ 12:01:00 时间段内突然并发 100 次请求，紧接着瞬间跨入下一个计数周期计数器清零；在 12:01:00 ~ 12:01:01 内又有 100 次请求。那么就是说在时间临界点左右可能同时有 2 倍的峰值进行请求，从而造成后台处理请求加倍负载的 bug，导致系统运营能力不足，甚至导致系统崩溃
+     - double kill
+  4. 滑动时间窗口（sliding time window）
+     - 顾名思义，该时间窗口是滑动的。所以，从概念上讲，这里有两个方面的概念需要理解：
+       - 窗口：需要定义窗口的大小
+       - 滑动：需要定义在窗口中滑动的大小。但理论上讲滑动的大小不能超过窗口大小
+     - 滑动窗口算法是把固定时间片进行划分并且随着时间移动，移动方式为开始时间点变为时间列表中的第 2 个时间点，结束时间点增加一个时间点，不断重复 ，通过这种方式可以巧妙的避开计数器的临界点的问题。
+
+- cloud-provider-payment8001 支付微服务
+
+  修改 PayCircuitController 新增 myRatelimit 方法
+
+- PayFeignApi 接口新增限流 api 方法
+
+- 修改 cloud-consumer-feign-order80
+
+- 测试
+
+# P57 Resilience4j 之 RateLimiter 案例实战演示
+
+cloud-provider-payment8001 支付微服务
+
+修改 PayCircuitController 新增 myRatelimit 方法
+
+- ```java
+  @GetMapping(value = "/pay/ratelimit/{id}")
+  public String myRatelimit(@PathVariable("id") Integer id) {
+      return "Hello, ratelimit! inputId: " + id + "\t " + IdUtil.simpleUUID();
+  }
+  ```
+
+PayFeignApi 接口新增限流 api 方法
+
+- ```java
+  @GetMapping(value = "/pay/ratelimit/{id}")
+  public String myRatelimit(@PathVariable("id") Integer id);
+  ```
+
+修改 cloud-consumer-feign-order80
+
+- POM
+
+  - ```xml
+    <!-- resilience4j-ratelimiter -->
+    <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-ratelimiter</artifactId>
+    </dependency>
+    ```
+
+- YML
+
+  - ```yaml
+    # resilience4j ratelimiter 限流的例子
+    resilience4j:
+      ratelimiter:
+        configs:
+          default:
+            limitForPeriod: 2 # 在一次刷新周期内，允许执行的最大请求数
+            limitRefreshPeriod: 1s # 限流器每隔 limitRefreshPeriod 刷新一次，将允许处理的最大请求数量重置为 limitForPeriod
+            timeout-duration: 1 # 线程等待权限的默认等待时间
+        instances:
+          cloud-payment-service:
+            baseConfig: default
+    ```
+
+- order 的 controller
+
+  - @RateLimiter
+
+  - ```java
+    @GetMapping(value = "/feign/pay/ratelimit/{id}")
+    @RateLimiter(name = "cloud-payment-service", fallbackMethod = "myRatelimitFallback")
+    public String myRatelimit(@PathVariable("id") Integer id) {
+        return payFeignApi.myRatelimit(id);
+    }
+    
+    public String myRatelimitFallback(Interger id, Throwable t) {
+        return "你被限流了，禁止访问----/(ToT)/~~"
+    }
+    ```
+
+测试
+
+- 结果
+  - 刷新上述地址，正常后 F5 按钮狂刷一会儿，停止刷新看到被限流的效果
+
+# P58 Micrometer 之分布式链路追踪概述
+
+8、Sleuth（Micrometer）+ ZipKin 分布式链路追踪
+
+- Sleuth 目前也进入维护模式
+
+  - Sleuth 官宣，改头换面
+  - Sleuth 未来替换方案
+    - Micrometer Tracing
+
+- 分布式链路追踪概述
+
+  - 为什么会出现这个技术？
+
+    需要解决哪些问题？
+
+    - 问题
+      - 在微服务框架中，一个由客户端发起的请求在后端系统中会经过多个不同的服务节点调用来协同产生最后的请求结果，每一个前段请求都会形成一条复杂的分布式服务调用链路，链路中的任何一环出现高延时或错误都会引起整个请求最后的失败。
+
+  - 随着问题的复杂化 + 微服务的增多 + 调用链条的变长
+
+    画面不要太美丽
+
+  - 在分布式与微服务场景下需要解决的问题
+
+    - 如何实时观测系统的整体调用链路情况
+
+    - 如何快速发现并定位问题
+
+    - 如何尽可能精确的判断故障对系统的影响范围与影响程度
+
+    - 如何尽可能精确的梳理出服务之间的依赖关系，并判断出服务之间的依赖关系是否合理
+
+    - 如何尽可能精确的分析整个系统调用链路的性能与瓶颈点
+
+    - 如何尽可能精确的分析系统的存储瓶颈与容量规划
+
+    - 上述问题就是我们的落地议题答案：
+
+      分布式链路追踪技术要解决的问题，分布式链路追踪（Dustributed Tracing），就是将一次分布式请求还原成调用链路，进行日志记录，性能监控并将一次分布式请求的调用情况集中展示。比如各个服务节点上的耗时、请求具体到达哪台机器上、每个服务节点的请求状态等等。
+
+- 新一代 Spring Cloud Sleuth：Micrometer
+
+- 分布式链路追踪原理
+
+- Zipkin
+
+- Micrometer + ZipKin 搭建链路监控案例步骤
+
+# P59 Micrometer 之 Micrometer 和 zipkin 各自分工
+
+新一代 Spring Cloud Sleuth：Micrometer
+
+- （官网重要提示）
+
+  - 新一代 Sleuth
+    - sleuth 被 micrometer 替代
+  - 官网
+  - 说明
+    - 老项目还能用 Sleuth 开发吗
+    - 版本注意
+      - 不支持 Spring Boot 3.x
+
+- zipkin 呢？
+
+  - Spring Cloud Sleuth(micrometer) 提供了一套完整的**分布式链路追踪（Distributed Tracing）**解决方案且兼容支持了 zipkin 展现
+
+- 小总结
+
+  - 将一次分布式请求还原成调用链路，进行日志记录和性能监控，并将一次分布式请求的调用情况集中 web 展示
+
+- 行业内比较成熟的其他分布式链路追踪技术解决方案
+
+  - | 技术       | 说明                                                         |
+    | ---------- | ------------------------------------------------------------ |
+    | Cat        | 由大众点评开源，基于 Java 开发的实时应用监控平台，包括实时应用监控、业务监控。集成方案是通过代码埋点的方式来实现监控，比如：拦截器，过滤器等。对代码的侵入性很大，集成成本较高。风险较大。 |
+    | ZipKin     | 由 Twitter 公司开源，开放源代码分布式的跟踪系统，用于收集服务的定时数据，以解决微服务架构中的延迟问题，包括：数据的收集、存储、查找和展现。结合 spring-cloud-sleuth 使用较为简单，集成方便，但是功能较简单。 |
+    | Pinpoint   | Pinpoint 是一款开源的基于字节码注入的调用链分析，以及应用监控分析工具。特点是支持多种插件，UI 功能强大，接入端无代码侵入 |
+    | Skywalking | Skywalking 是国人开源的基于字节码注入的调用链分析，以及应用监控分析工具。特点是支持多种插件，UI 功能较强，接入端无代码侵入。 |
+
+# P60 Micrometer 之分布式链路追踪原理
+
+分布式链路追踪原理
+
+- 假定 3 个微服务调用的链路：
+
+  Service1 调用 Service2，Service2 调用 Service3 和 Service 4
+
+  - 00:58
+
+- 上一步完整的调用链路
+
+  - 01:30
+
+  - **那么一条链路追踪会在每个服务调用的时候加上 TraceID 和 SpanID**
+
+    链路通过 TraceId 唯一标识，Span 标识发起的请求信息，各 span 通过 parent id 关联起来（Span：标识调用链路来源，通俗的理解 span 就是一次请求信息）
+
+- 彻底把链路追踪整明白
+
+  - 07:20
+
+# P61 Micrometer 之 Zipkin 下载安装运行一套带走
+
+Zipkin
+
+- 官网
+
+- 是什么
+
+  - 00:46
+  - Zipkin 是一种分布式链路跟踪系统**图形化工具**。Zipkin 是 Twitter 开源的分布式跟踪系统，能够收集微服务运行过程中的实时调用链路信息，并能够将**这些调用链路信息展示到 Web 图形化界面上**供开发人员分析，开发人员能够从 ZipKin 中分析出调用链路中的性能瓶颈，识别出存在问题的应用程序，进而定位问题和解决问题。
+
+- Zipkin 为什么出现？
+
+  - 单有 Sleuth（Micrometer）行不行？
+
+    - 01:27
+
+    - 说明：
+
+      当没有配置 Sleuth 链路追踪的时候，INFO 信息里面是 [passjava-question,,,]，后面跟着三个空字符串。
+
+      当配置了  Sleuth 链路追踪的时候，追踪到的信息是 [passjava-question,504a5360ca906016,e55ff064b3941956,false]，第一个是 Trace ID，第二个是 Span ID。**只有日志没有图，观看不方便，不美观，so，**引入图形化 Zipkin 链路监控让你好看。
+
+- 下载 + 安装 + 运行一套带走
+
+  - 下载主页
+    - 支持 3 个方式
+  - 下载地址
+    - 03:47
+  - 运行 jar
+  - 运行控制台
+
+# P62 Micrometer 之监控链路案例整合实战
+
+Micrometer + ZipKin 搭建链路监控案例步骤
+
+- Micrometer + ZipKin 两者各自的分工
+  - Micrometer
+    - 数据采样
+  - ZipKin
+    - 图形展示
+- 步骤
+  - 总体父工程 POM
+    - 本案例
+      - 01:16
+      - 引入的 jar 包分别是什么意思
+        - 02:51
+    - all
+      - 04:44
+  - 服务提供者 8001
+    - cloud-provider-payment8001
+    - POM
+      - 06:37
+    - YML
+      - 07:31
+    - 新建业务类 PayMicrometerController
+      - 09:00
+  - Api 接口 PayFeignApi
+    - 09:38
+  - 服务调用者 80
+    - cloud-consumer-feign-order80
+    - POM
+      - 10:11
+      - All
+        - 10:44
+    - YML
+      - 11:00
+    - 新建业务类 OrderMicrometerController
+      - 11:40
+- 测试
+  - 本次案例，默认已经成功启动 ZipKin
+  - 依次启动 8001/80 两个微服务并注册进入 Consul
+  - 测试地址
+  - 打开浏览器访问：http://localhost:9411
+
+# P63 GateWay 之网关微服务定位和理论概述
+
+9、Gateway 新一代网关
+
+- 概述
+  - 是什么
+    - 官网
+      - 01:19
+      - Gateway 是在 Spring 生态系统之上构建的 API 网关服务，基于 Spring 6，Spring Boot 3 和 Project Reactor 等技术。它旨在为微服务架构提供一种简单有效的**统一的 API 路由管理方式**，并为它们提供跨领域的关注点，例如：安全性、监控/度量和恢复能力
+    - 体系定位
+      - 02:48
+      - Cloud 全家桶中有个很重要的组件就是网关，在 1.x 版本中都是采用的 Zuul 网关；但在 2.x 版本中，Zuul 的升级一直跳票，Spring Cloud 最后自己研发了一个网关 Spring Cloud Gateway 替代 Zuul。
+      - 一句话：gateway 是原 zuul 1.x 版的替代
+  - 微服务架构中网关在哪里
+    - 05:26
+  - 能干嘛
+    - 反向代理
+    - 鉴权
+    - 流量控制
+    - 熔断
+    - 日志监控
+  - 总结
+    - 07:28
+    - Spring Cloud Gateway 组件的核心是一系列的过滤器，通过这些过滤器可以将客户端发送的请求转发（路由）到对应的微服务。
+    - Spring Cloud Gateway 是加在整个微服务最前沿的防火墙和代理器，隐藏微服务节点 IP 端口信息，从而加强安全保护。Spring Cloud Gateway 本身也是一个微服务，需要注册进服务注册中心。
+- Gateway 三大核心
+- Gateway 工作流程
+- 入门配置
+- 9527 网关如何做路由映射
+- GateWay 高级特性
+- Gateway 整合阿里巴巴 Sentinel 实现容错
+
+# P64 GateWay 之路由断言过滤器三大核心
+
+Gateway 三大核心
+
+- 总述官网
+  - 00:35
+- 分
+  - Route（路由）
+    - 路由是构建网关的基本模块，它由 ID，目标 URI，一系列的断言和过滤器组成，如果断言为 true 则匹配该路由
+  - Predicate（断言）
+    - 参考的是 Java8 的 java.util.function.Predicate。开发人员可以匹配 HTTP 请求中的所有内容（例如请求头或请求参数），如果请求与断言相匹配则进行路由
+  - Filter（过滤）
+    - 指的是 Spring 框架中 GatewayFilter 的实例，使用过滤器，可以在请求被路由前或之后对请求进行修改
+- 总结
+  - 04:20
+  - web 前端请求，通过一些匹配条件，定位到真正的服务节点。并在这个转发过程的前后，进行一些精细化控制。predicate 就是我们的匹配条件；filter，就可以理解为一个无所不能的拦截器。有了这两个元素，再加上目标 uri，就可以实现一个具体的路由了。
+
+# P65 GateWay 之网关工作流程
+
+Gateway 工作流程
+
+- 官网总结
+  - 00:21
+  - 客户端向 Spring Cloud Gateway 发出请求。然后在 Gateway Handler Mapping 中找到与请求相匹配的路由，将其发送到 Gateway Web Handler。Handler 再通过指定的过滤器链来将请求发送到我们实际的服务执行业务逻辑，然后返回。
+  - 过滤器之间用虚线分开是因为过滤器可能会在发送代理请求之前（Pre）或之后（Post）执行业务逻辑。
+  - 在“pre”类型的过滤器可以做参数校验、权限校验、流量监控、日志输出、协议转换等；
+  - 在“post”类型的过滤器中可以响应内容、响应头的修改，日志的输出，流量监控等有着非常重要的作用。
+- 核心逻辑
+  - 路由转发 + 断言判断 + 执行过滤器链
+
+# P66 GateWay 之网关搭建入门配置步骤
