@@ -2123,3 +2123,810 @@ SpringBoot 是一个在 JavaEE 开发中非常常用的组件。可以用于 Kaf
    bin/kafka-console-producer.sh --bootstrap-server hadoop102:9092 --topic first
    ```
 
+# P75 调优_内容简介
+
+# P76 调优_硬件选择
+
+第1章 Kafka 硬件配置选择
+
+## 1.1 场景说明
+
+100万日活，每人每天 100 条日志，每天总共的日志条数是 100 万 * 100 条 = 1 亿条。
+
+1 亿/24 小时/60 分/60 秒 = 1150 条/每秒钟
+
+每条日志大小：0.5k ~ 2k（取 1k）。
+
+1150 条/每秒钟 * 1k ≈ 1m/s
+
+高峰期每秒钟：1150 条 * 20 倍 = 23000 条。
+
+每秒多少数据量：20MB/s
+
+## 1.2 服务器台数选择
+
+服务器台数 = 2 * (生产者峰值生产速率 * 副本 / 100) + 1
+
+= 2 * (20m/s * 2 / 100) + 1
+
+= 3 台
+
+建议 3 台服务器
+
+## 1.3 磁盘选择
+
+Kafka 底层主要是**顺序写**，固态硬盘和机械硬盘的顺序写速度差不多。
+
+**建议选择普通的机械硬盘。**
+
+每天总数据量：1 亿条 * 1k ≈ 100g
+
+100g * 副本 2 * 保存时间 3 天 / 0.7 ≈ 1T
+
+建议三台服务器硬盘总大小，大于等于 1T。
+
+## 1.4 内存选择
+
+Kafka 内存组成：堆内存 + 页缓存
+
+1）Kafka 堆内存建议每个节点：10g ~ 15g
+
+在 kafka-server-start.sh 中修改
+
+1. 查看 Kafka 进程号
+
+2. 根据 Kafka 进程号，查看 Kafka 的 GC 情况
+
+   参数说明：
+
+   - S0C：第一个幸存区的大小
+   - S1C：第二个幸存区的大小
+   - S0U：第一个幸存区的使用大小
+   - S1U：第二个幸存区的使用大小
+   - EC：伊甸园区的大小
+   - EU：伊甸园区的使用大小
+   - OC：老年代大小
+   - OU：老年代使用大小
+   - MC：方法区大小
+   - MU：方法区使用大小
+   - CCSC：压缩类空间大小
+   - CCSU：压缩类空间使用大小
+   - **YGC：年轻代垃圾回收次数**
+   - YGCT：年轻代垃圾回收消耗时间
+   - FGC：老年代垃圾回收次数
+   - FGCT：老年代垃圾回收消耗时间
+   - GCT：垃圾回收消耗总时间
+
+3. 根据 Kafka 进程号，查看 Kafka 的堆内存
+
+2）页缓存：页缓存是 Linux 系统服务器的内存。我们只需要保证 1 个 segment（1g）中 25% 的数据在内存中就好。
+
+每个节点页缓存大小 = (分区数 * 1g * 25%) / 节点数。例如 10 个分区，页缓存大小 = (10 * 1g * 25%) / 3 ≈ 1g
+
+建议服务器内存大于等于 11G。
+
+## 1.5 CPU 选择
+
+num.io.threads = 8 负责写磁盘的线程数，整个参数值要占总核数的 50%。
+
+num.replica.fetchers = 1 副本拉取线程数，这个参数占总核数的 50% 的 1/3
+
+num.network.threads = 3 数据传输线程数，这个参数占总核数的 50% 的 2/3
+
+建议 32 个 cpu core。
+
+## 1.6 网络选择
+
+网络带宽 = 峰值吞吐量 ≈ 20MB/s 选择千兆网卡即可。
+
+100Mbps 单位是 bit：10M/s 单位是 byte；1 byte = 8 bit，100 Mbps/8 = 12.5 M/s
+
+一般百兆的网卡（100 Mbps）、千兆的网卡（1000 Mbps）、万兆的网卡（10000 Mbps）。
+
+# P77 调优_生产者
+
+第2章 Kafka 生产者
+
+## 2.1 Kafka 生产者核心参数配置
+
+| 参数名称                              | 描述                                                         |
+| ------------------------------------- | ------------------------------------------------------------ |
+| bootstrap.servers                     | 生产者连接集群所需的 broker 地址清单。例如 hadoop102:9092,hadoop103:9092,hadoop104:9092，可以设置 1 个或者多个，中间用逗号隔开。注意这里并非需要所有的 broker 地址，因为生产者从给定的 broker 里查找到其他 broker 信息。 |
+| key.serializer 和 value.serializer    | 指定发送消息的 key 和 value 的序列化类型。一定要写全类名     |
+| buffer.memory                         | RecordAccumulator 缓冲区总大小，**默认 32m**。               |
+| batch.size                            | 缓冲区一批数据最大值，**默认 16k**。适当增加该值，可以提高吞吐量，但是如果该值设置太大，会导致数据传输延迟增加 |
+| linger.ms                             | 如果数据迟迟未达到 batch.size，sender 等待 linger.time 之后就会发送数据。单位 ms，**默认值 0ms**，表示没有延迟。生产环境建议该值大小为 5 ~ 100ms 之间。 |
+| acks                                  | 0：生产者发送过来的数据，不需要等数据落盘应答。<br />1：生产者发送过来的数据，Leader 收到数据后应答。<br />-1（all）：生产者发送过来的数据，Leader+ 和 isr 队列里面的所有节点收齐数据后应答。**默认值是 -1，-1 和 all 是等价的。** |
+| max.in.flight.requests.per.connection | 允许最多没有返回 ack 的次数，**默认为 5**，开启幂等性要保证该值是 1 ~ 5 的数字。 |
+| retries                               | 当消息发送出现错误的时候，系统会重发消息。retries 表示重试次数。**默认是 int 最大值，2147483647**。<br />如果设置了重试，还想保证消息的有序性，需要设置 MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION=1 否则在重试此失败消息的时候，其他的消息可能发送成功了。 |
+| retry.backoff.ms                      | 两次重试之间的时间间隔，默认是 100ms                         |
+| enable.idempotence                    | 是否开启幂等性，**默认 true**，开启幂等性                    |
+| compression.type                      | 生产者发送的所有数据的压缩方式。**默认是 none**，也就是不压缩。<br />支持压缩类型：**none、gzip、snappy、lz4 和 zstd**。 |
+
+## 2.2 生产者如何提高吞吐量
+
+| 参数名称         | 描述                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| buffer.memory    | RecordAccumulator 缓冲区总大小，**默认 32m**。               |
+| batch.size       | 缓冲区一批数据最大值，**默认 16k**。适当增加该值，可以提高吞吐量，但是如果该值设置太大，会导致数据传输延迟增加 |
+| linger.ms        | 如果数据迟迟未达到 batch.size，sender 等待 linger.time 之后就会发送数据。单位 ms，**默认值 0ms**，表示没有延迟。生产环境建议该值大小为 5 ~ 100ms 之间。 |
+| compression.type | 生产者发送的所有数据的压缩方式。**默认是 none**，也就是不压缩。<br />支持压缩类型：**none、gzip、snappy、lz4 和 zstd**。 |
+
+## 2.3 数据可靠性
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+| 参数名称 | 描述                                                         |
+| -------- | ------------------------------------------------------------ |
+| acks     | 0：生产者发送过来的数据，不需要等数据落盘应答。<br />1：生产者发送过来的数据，Leader 收到数据后应答。<br />-1（all）：生产者发送过来的数据，Leader+ 和 isr 队列里面的所有节点收齐数据后应答。**默认值是 -1，-1 和 all 是等价的。** |
+
+- 至少一次（At Least Once）= ACK 级别设置为 -1 + 分区副本大于等于 2 + ISR 里应答的最小副本数量大于等于 2
+
+## 2.4 数据去重
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+1. 配置参数
+
+   | 参数名称           | 描述                                      |
+   | ------------------ | ----------------------------------------- |
+   | enable.idempotence | 是否开启幂等性，**默认 true**，开启幂等性 |
+
+2. Kafka 的事务一共有如下 5 个 API
+
+   ```java
+   // 1 初始化事务
+   void initTransactions();
+   // 2 开启事务
+   void beginTransaction() throws ProducerFencedException;
+   // 3 在事务内提交已经消费的偏移量（主要用于消费者）
+   void sendOffsetsToTransaction(Map<TopicPartition, OffsetAndMetadata> offsets, String consumerGroupId) throws ProducerFencedException;
+   // 4 提交事务
+   void commitTransaction() throws ProducerFencedException;
+   // 5 放弃事务（类似于回滚事务的操作）
+   void abortTransaction() throws ProducerFencedException;
+   ```
+
+## 2.5 数据有序
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+**单分区内，有序（有条件的，不能乱序）；多分区，分区与分区间无序；**
+
+## 2.6 数据乱序
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+| 参数名称                              | 描述                                                         |
+| ------------------------------------- | ------------------------------------------------------------ |
+| enable.idempotence                    | 是否开启幂等性，**默认 true**，开启幂等性                    |
+| max.in.flight.requests.per.connection | 允许最多没有返回 ack 的次数，**默认为 5**，开启幂等性要保证该值是 1 ~ 5 的数字。 |
+
+# P78 调优_Broker 调优
+
+第3章  Kafka Broker
+
+## 3.1 Broker 核心参数配置
+
+| 参数名称                                | 描述                                                         |
+| --------------------------------------- | ------------------------------------------------------------ |
+| replica.lag.time.max.ms                 | ISR 中，如果 Follower 长时间未向 Leader 发送通信请求或同步数据，则该 Follower 将被踢出 ISR。该时间阈值，**默认 30s**。 |
+| auto.leader.rebalance.enable            | **默认是 true**。自动 Leader Partition 平衡，建议关闭。      |
+| leader.imbalance.per.broker.percentage  | **默认是 10%**。每个 broker 允许的不平衡的 leader 的比率。如果每个 broker 超过了这个值，控制器会触发 leader 的平衡。 |
+| leader.imbalance.check.interval.seconds | **默认值 300 秒。**检查 leader 负责是否平衡的间隔时间。      |
+| log.segment.bytes                       | Kafka 中 log 日志是分成一块块存储的，此配置是指 log 日志划分成块的大小，**默认值 1G**。 |
+| log.index.interval.bytes                | **默认 4kb**，kafka 里面每当写入了 4kb 大小的日志（.log），然后就往 index 文件里面记录一个索引 |
+| log.retention.hours                     | Kafka 中数据保存的时间，**默认 7 天**                        |
+| log.retention.minutes                   | Kafka 中数据保存的时间，**分钟级别**，默认关闭。             |
+| log.retention.ms                        | Kafka 中数据保存的时间，**毫秒级别**，默认关闭。             |
+| log.retention.check.interval.ms         | 检查数据是否保存超时的间隔，**默认是 5 分钟**。              |
+| log.retention.bytes                     | **默认等于 -1，表示无穷大。**超过设置的所有日志总大小，删除最早的 segment |
+| log.cleanup.policy                      | **默认是 delete**，表示所有数据启用删除策略；<br />如果设置值为 compact，表示所有数据启用压缩策略 |
+| num.io.threads                          | **默认是 8**。负责写磁盘的线程数。整个参数值要占总核数的 50% |
+| num.replica.fetchers                    | **默认是 1**。副本拉取线程数，这个参数占总核数的 50% 的 1/3  |
+| num.network.threads                     | **默认是 3**。数据传输线程数，这个参数占总核数的 50% 的 2/3  |
+| log.flush.interval.messages             | 强制页缓存刷写到磁盘的条数，默认是 long 的最大值，9223372036854775807。**一般不建议修改**，交给系统自己管理。 |
+| log.flush.interval.ms                   | 每隔多久，刷数据到磁盘，默认是 null。**一般不建议修改**，交给系统自己管理。 |
+
+## 3.2 服役新节点/退役旧节点
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+1. 创建一个要均衡的主题
+
+   ```shell
+   vim topics-to-move.json
+   ```
+
+   ```json
+   {
+       "topics": [
+           {"topic": "first"}
+       ],
+       "version": 1
+   }
+   ```
+
+2. 生成一个负载均衡的计划。
+
+   ```shell
+   bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --topics-to-move-json-file topics-to-move.json --broker-list "0,1,2,3" --generate
+   ```
+
+3. 创建副本存储计划（所有副本存储在 broker0、broker1、broker2、broker3 中）。
+
+   ```shell
+   vim increase-replication-factor.json
+   ```
+
+4. 执行副本存储计划
+
+   ```shell
+   bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --execute
+   ```
+
+5. 验证副本存储计划
+
+   ```shell
+   bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --verify
+   ```
+
+## 3.3 增加分区
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+1. 修改分区数（**注意：分区数只能增加，不能减少**）
+
+   ```shell
+   bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --alter --topic first --partitions 3
+   ```
+
+## 3.4 增加副本因子
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+1. 创建 topic
+
+   ```shell
+   bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --create --partitions 3 --replication-factor 1 --topic four
+   ```
+
+2. 手动增加副本存储
+
+   1. 创建副本存储计划（所有副本都指定存储在 broker0、broker1、broker2 中）。
+
+      ```shell
+      vim increase-replication-factor.json
+      ```
+
+      输入如下内容：
+
+      ```json
+      {"version":1,"partitions":[{"topic":"four","partition":0,"replicas":[0,1,2]},{"topic":"four","partition":1,"replicas":[0,1,2]},{"topic":"four","partition":2,"replicas":[0,1,2]}]}
+      ```
+
+   2. 执行副本存储计划
+
+      ```shell
+      bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --execute
+      ```
+
+## 3.5 手动调整分区副本存储
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+1. 创建副本存储计划（所有副本都执行存储在 broker0、broker1 中）
+
+   ```shell
+   vim increase-replication-factor.json
+   ```
+
+   输入如下内容：
+
+   ```json
+   {
+       "version":1,
+       "partitions":[{"topic":"four","partition":0,"replicas":[0,1]},{"topic":"four","partition":1,"replicas":[0,1]},{"topic":"four","partition":2,"replicas":[0,1]}]
+   }
+   ```
+
+2. 执行副本存储计划
+
+   ```shell
+   bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --execute
+   ```
+
+3. 验证副本存储计划
+
+   ```shell
+   bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --verify
+   ```
+
+## 3.6 Leader Partition 负载平衡
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+| 参数名称                                | 描述                                                         |
+| --------------------------------------- | ------------------------------------------------------------ |
+| auto.leader.rebalance.enable            | **默认是 true**。自动 Leader Partition 平衡。生产环境中，leader 重选举的代价比较大，可能会带来性能影响，**建议设置为 false 关闭**。 |
+| leader.imbalance.per.broker.percentage  | **默认是 10%**。每个 broker 允许的不平衡的 leader 的比率。如果每个 broker 超过了这个值，控制器会触发 leader 的平衡。 |
+| leader.imbalance.check.interval.seconds | **默认值 300 秒。**检查 leader 负责是否平衡的间隔时间。      |
+
+## 3.7 自动创建主题
+
+如果 broker 端配置参数 **auto.create.topics.enable** 设置为 true（默认值是 true），那么当生产者向一个未创建的主题发送消息时，会自动创建一个分区数为 num.partitions（默认值为 1）、副本因子为 default.replication.factor（默认值为 1）的主题。除此之外，当一个消费者开始从未知主题中读取消息时，或者当任意一个客户端向未知主题发送元数据请求时，都会自动创建一个相应主题。这种创建主题的方式是非预期的，增加了主题管理和维护的难度。**生产环境建议将该参数设置为 false。**
+
+1. 向一个没有提前创建 five 主题发送数据
+
+   ```shell
+   bin/kafka-console-producer.sh --bootstrap-server hadoop102:9092 --topic five
+   ```
+
+2. 查看 five 主题的详情
+
+   ```shell
+   bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --describe --topic five
+   ```
+
+# P79 调优_消费者调优
+
+第4章 Kafka 消费者
+
+## 4.1 Kafka 消费者核心参数配置
+
+| 参数名称                             | 描述                                                         |
+| ------------------------------------ | ------------------------------------------------------------ |
+| bootstrap.servers                    | 向 Kafka 集群建立初始连接用到的 host/port 列表。             |
+| key.deserializer 和 value.serializer | 指定接收消息的 key 和 value 的反序列化类型。一定要写全类名。 |
+| group.id                             | 标记消费者所属的消费者组。                                   |
+| enable.auto.commit                   | **默认值为 true**，消费者会自动周期性地向服务器提交偏移量。  |
+| auto.commit.interval.ms              | 如果设置了 enable.auto.commit 的值为 true，则该值定义了消费者偏移量向 Kafka 提交的频率，**默认 5s**。 |
+| auto.offset.reset                    | 当 Kafka 中没有初始偏移量或当前偏移量在服务器中不存在（如，数据被删除了），该如何处理？earliest：自动重置偏移量到最早的偏移量。**latest：默认，自动重置偏移量 为最新的偏移量。**none：如果消费者组原来的（previous）偏移量不存在，则向消费者抛异常。anything：向消费者抛异常。 |
+| offsets.topic.num.partitions         | __consumer_offsets 的分区数，**默认是 50 个分区。不建议修改。** |
+| heartbeat.interval.ms                | Kafka 消费者和 coordinator 之间的心跳时间，**默认 3s**。<br />该条目的值必须小于 session.timeout.ms，也不应该高于 session.timeout.ms 的 1/3。**不建议修改**。 |
+| session.timeout.ms                   | Kafka 消费者和 coordinator 之间连接超时时间，**默认 45s**。超过该值，该消费者被移除，消费者组执行再平衡。 |
+| max.poll.interval.ms                 | 消费者处理消息的最大时长，**默认是 5 分钟**。超过该值，该消费者被移除，消费者组执行再平衡。 |
+| fetch.max.bytes                      | 默认 **Default：52428800（50m）**。**消费者**获取服务器端一批消息最大的字节数。如果服务器端一批次的数据大于该值（50m）仍然可以拉取回来这批数据，因此，这不是一个绝对最大值。一批次的大小受 message.max.bytes（broker config）or max.message.bytes（topic config）影响。 |
+| max.poll.records                     | 一次 poll 拉取数据返回消息的最大条数，**默认是 500 条**。    |
+
+## 4.2 消费者再平衡
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+| 参数名称                      | 描述                                                         |
+| ----------------------------- | ------------------------------------------------------------ |
+| heartbeat.interval.ms         | Kafka 消费者和 coordinator 之间的心跳时间，**默认 3s**。<br />该条目的值必须小于 session.timeout.ms，也不应该高于 session.timeout.ms 的 1/3。 |
+| session.timeout.ms            | Kafka 消费者和 coordinator 之间连接超时时间，**默认 45s**。超过该值，该消费者被移除，消费者组执行再平衡。 |
+| max.poll.interval.ms          | 消费者处理消息的最大时长，**默认是 5 分钟**。超过该值，该消费者被移除，消费者组执行再平衡。 |
+| partition.assignment.strategy | 消费者分区分配策略，默认策略是 Range + CooperativeSticky。Kafka 可以同时使用多个分区分配策略。可以选择的策略包括：**Range、RoundRobin、Sticky、CooperativeSticky** |
+
+## 4.3 指定 Offset 消费
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+```java
+kafkaConsumer.seek(topic, 1000);
+```
+
+## 4.4 指定时间消费
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+```java
+HashMap<TopicPartition, Long> timestampToSearch = new HashMap<>();
+timestampToSearch.put(topicPartition, System.currentTimeMillis() - 1 * 24 * 3600 * 1000);
+kafkaConsumer.offsetsForTimes(timestampToSearch);
+```
+
+## 4.5 消费者事务
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+## 4.6 消费者如何提高吞吐量
+
+详见，尚硅谷大数据技术之 Kafka 3.0.0
+
+增加分区数：
+
+```shell
+bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --alter --topic first --partitions 3
+```
+
+| 参数名称         | 描述                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| fetch.max.bytes  | 默认 **Default：52428800（50m）**。**消费者**获取服务器端一批消息最大的字节数。如果服务器端一批次的数据大于该值（50m）仍然可以拉取回来这批数据，因此，这不是一个绝对最大值。一批次的大小受 message.max.bytes（broker config）or max.message.bytes（topic config）影响。 |
+| max.poll.records | 一次 poll 拉取数据返回消息的最大条数，**默认是 500 条**。    |
+
+# P80 调优_总体调优
+
+第5章 Kafka 总体
+
+## 5.1 如何提升吞吐量
+
+如何提升吞吐量？
+
+1）提升生产吞吐量
+
+1. buffer.memory：发送消息的缓冲区大小，默认值是 32m，可以增加到 64m。
+2. batch.size：默认是 16k，如果 batch 设置太小，会导致频繁网络请求，吞吐量下降；如果 batch 太大，会导致一条消息需要等待很久才能被发送出去，增加网络延时。
+3. linger.ms，这个值默认是 0，意思就是消息必须立即被发送。一般设置一个 5 ~ 100 毫秒，如果 linger.ms 设置的太小，会导致频繁网络请求，吞吐量下降；如果 linger.ms 太长，会导致一条消息需要等待很久才能被发送出去，增加网络延时。
+4. compression.type: 默认是 none，不压缩，但是也可以使用 lz4 压缩，效率还是不错的。压缩之后可以减小数据量，提升吞吐量，但是会加大 producer 端的 CPU 开销。
+
+2）增加分区
+
+3）消费者提高吞吐量
+
+1. 调整 fetch.max.bytes 大小，默认是 50m。
+2. 调整 max.poll.records 大小，默认是 500 条。
+
+4）增加下游消费者处理能力
+
+## 5.2 数据精确一次
+
+1）生产者角度
+
+- acks 设置为  -1（acks=-1）
+- 幂等性（enable.idempotence=true）+ 事务
+
+2）broker 服务端角度
+
+- 分区副本大于等于 2（--replication-factor 2）。
+- ISR 里应答的最小副本数量大于等于 2（min.insync.replicas=2）.
+
+3）消费者
+
+- **事务 + 手动提交 offset**（enable.auto.commit=false）
+- 消费者输出的目的地必须支持事务（MySQL、Kafka）。
+
+## 5.3 合理设置分区数
+
+1. 创建一个只有 1 个分区的 topic
+2. 测试这个 topic 的 producer 吞吐量和 consumer 吞吐量。
+3. 假设他们的值分别是 Tp 和 Tc，单位可以是 MB/s。
+4. 然后假设总的目标吞吐量是 Tt，那么分区数=Tt / min(Tp, Tc)
+
+例如：producer 吞吐量 = 20m/s；consumer 吞吐量 = 50m/s，期望吞吐量 100m/s
+
+分区数 = 100 / 20 = 5 分区
+
+分区数一般设置为：3-10个
+
+分区数不是越多越好，也不是越少越好，需要搭建完集群，进行压测，再灵活调整分区个数。
+
+## 5.4 单条日志大于 1m
+
+| 参数名称                | 描述                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| message.max.bytes       | 默认 1m，broker 端接收每个批次消息最大值                     |
+| max.request.size        | 默认 1m，生产者发往 broker 每个请求消息最大，针对 topic 级别设置消息体的大小。 |
+| replica.fetch.max.bytes | 默认 1m，副本同步数据，每个批次消息最大值                    |
+| fetch.max.bytes         | 默认 **Default：52428800（50m）**。**消费者**获取服务器端一批消息最大的字节数。如果服务器端一批次的数据大于该值（50m）仍然可以拉取回来这批数据，因此，这不是一个绝对最大值。一批次的大小受 message.max.bytes（broker config）or max.message.bytes（topic config）影响。 |
+
+## 5.5 服务器挂了
+
+在生产环境中，如果某个 Kafka 节点挂掉。
+
+正常处理方法：
+
+1. 先尝试重新启动一下，如果能启动正常，那直接解决了
+2. 如果重启不行，考虑增加内存、增加 CPU、网络带宽
+3. 如果将 Kafka 整个节点误删除，如果副本数大于等于 2，可以按照服役新节点的方式重新服役一个新节点，并执行负载均衡。
+
+# P81 调优_生产者压力测试
+
+## 5.6 集群压力测试
+
+1）Kafka 压测
+
+用 Kafka 官方自带的脚本，对 Kafka 进行压测。
+
+- 生产者压测：kafka-producer-perf-test.sh
+- 消费者压测：kafka-consumer-perf-test.sh
+
+2）Kafka Producer 压力测试
+
+1. 创建一个 test topic，设置为 3 个分区 3 个副本
+
+   ```shell
+   bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --create --replication-factor 3 --partitions 3 --topic test
+   ```
+
+2. 在 /opt/module/kafka/bin 目录下面有这两个文件。我们来测试一下
+
+   ```shell
+   bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=16384 linger.ms=0
+   ```
+
+   参数说明：
+
+   - record-size 是一条信息有多大，单位是字节，本次测试设置为 1k
+   - num-records 是总共发送多少条消息，本次测试设置为 100 万条
+   - throughput 是每秒多少条信息，设成 -1，表示不限流，尽可能快的生产数据，可测出生产者最大吞吐量。本次实验设置为每秒钟 1 万条。
+   - producer-props 后面可以配置生产者相关参数，batch.size 配置为 16k。
+
+   结果：9.76 MB/sec
+
+3. 调整 batch.size 大小
+
+   1. batch.size 默认值是 16k，本次实验 batch.size 设置为 32k
+
+      ```shell
+      bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=32768 linger.ms=0
+      ```
+
+      结果：9.76 MB/sec
+
+   2. batch.size 默认值是 16k，本次实验 batch.size 设置为 4k
+
+      ```shell
+      bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=4096 linger.ms=0
+      ```
+
+      结果：3.81 MB/sec
+
+4. 调整 linger.ms 时间
+
+   linger.ms 默认是 0ms，本次实验 linger.ms 设置为 50ms
+
+   ```shell
+   bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=4096 linger.ms=50
+   ```
+
+   结果：3.83 MB/sec
+
+5. 调整压缩方式
+
+   1. 默认的压缩方式是 none，本次实验 compression.type 设置为 snappy。
+
+      ```shell
+      bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=4096 linger.ms=50 compression.type=snappy
+      ```
+
+      结果：3.77 MB/sec
+
+   2. 默认的压缩方式是 none，本次实验 compression.type 设置为 zstd。
+
+      ```shell
+      bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=4096 linger.ms=50 compression.type=zstd
+      ```
+
+      结果：5.68 MB/sec
+
+   3. 默认的压缩方式是 none，本次实验 compression.type 设置为 gzip。
+
+      ```shell
+      bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=4096 linger.ms=50 compression.type=gzip
+      ```
+
+      结果：5.90 MB/sec
+
+   4. 默认的压缩方式是 none，本次实验 compression.type 设置为 lz4。
+
+      ```shell
+      bin/kafka-producer-perf-test.sh --topic test --record-size 1024 --num-records 1000000 --throughput 10000 --producer-props bootstrap.servers=hadoop102:9092,hadoop103:9092,hadoop104:9092 batch.size=4096 linger.ms=50 compression.type=lz4
+      ```
+
+      结果：3.72 MB/sec
+
+# P82 调优_消费者压力测试
+
+3）Kafka Consumer 压力测试
+
+1. 修改 /opt/module/kafka/config/consumer.properties 文件中的一次拉取条数为 500
+
+   ```properties
+   max.poll.records=500
+   ```
+
+2. 消费 100 万条日志进行压测
+
+   ```shell
+   bin/kafka-consumer-perf-test.sh --bootstrap-server hadoop102:9092,hadoop103:9092,hadoop104:9092 --topic test --messages 1000000 --consumer.config config/consumer.properties
+   ```
+
+   参数说明：
+
+   - --bootstrap-server 指定 Kafka 集群地址
+   - --topic 指定 topic 的名称
+   - --message 总共要消费的消息个数。本次实验 100 万条。
+
+   输出结果：81.2066m/s
+
+3. 一次拉取条数为 2000
+
+   1. 修改 /opt/module/kafka/config/consumer.properties 文件中的一次拉取条数为 500
+
+      ```properties
+      max.poll.records=500
+      ```
+
+   2. 再次执行
+
+      ```shell
+      bin/kafka-consumer-perf-test.sh --bootstrap-server hadoop102:9092,hadoop103:9092,hadoop104:9092 --topic test --messages 1000000 --consumer.config config/consumer.properties
+      ```
+
+      输出结果：138.0992m/s
+
+4. 调整 fetch.max.bytes 大小为 100m
+
+   1. 修改 /opt/module/kafka/config/consumer.properties 文件中的拉取一批数据大小为 100m
+
+      ```properties
+      fetch.max.bytes=104857600
+      ```
+
+   2. 再次执行
+
+      ```shell
+      bin/kafka-consumer-perf-test.sh --bootstrap-server hadoop102:9092,hadoop103:9092,hadoop104:9092 --topic test --messages 1000000 --consumer.config config/consumer.properties
+      ```
+
+      输出结果：145.2033m/s
+
+# P83 源码_环境准备
+
+第1章 源码环境准备
+
+## 1.1 源码下载地址
+
+## 1.2 安装 JDK & Scala
+
+需要在 Windows 本地安装 JDK 8 或者 JDK 8 以上版本
+
+需要在 Windows 本地安装 Scala 2.12
+
+## 1.3 加载源码
+
+将 kafka-3.0.0-src.tgz 源码包，解压到非中文目录。
+
+打开 IDEA，点击 File->Open...->源码包解压的位置
+
+## 1.4 安装 gradle
+
+Gradle 是类似于 maven 的代码管理工具。安卓程序管理通常采用 Gradle。
+
+IDEA 自动帮你下载安装，下载的时间比较长。
+
+# P84 源码_生产者原理回顾
+
+第2章 生产者源码
+
+# P85 源码_生产者初始化
+
+## 2.1 初始化
+
+生产者 main 线程初始化
+
+- 用户自定义生产者
+  CustomProducer.java
+- main
+- 创建 Kafka 生产者对象
+  new KafkaProducer
+- 连续点击三次 this 构造器
+- 获取事务 id
+  transactionalId
+- 获取客户端 id
+  clientId
+- 监控相关配置
+  new JmxReporter()
+- 分区器配置
+  this.partitioner
+- 序列化配置
+  keySerializer
+  valueSerializer
+- 拦截器配置
+  interceptorList
+- 单条信息的最大值，默认 1m
+  maxRequestSize
+- 缓存大小，默认32m
+  totalMemorySize
+- 创建缓存队列
+  new RecordAccumulator()
+  - 批次大下，默认 16k
+    BATCH_SIZE_CONFIG
+  - 是否压缩，默认 none
+    compressionType
+  - linger.ms，默认值 0
+    lingerMs()
+  - 重试间隔时间，默认值 100ms
+    retryBackoffMs
+- 连接 Kafka 集群
+  BOOTSTRAP_SERVERS_CONFIG
+- 从 Kafka 集群获取元数据
+  this.metadata
+- 创建 sender 线程
+  newSender
+- 启动发送线程
+  this.ioThread.start()
+
+生产者 sender 线程初始化
+
+1. 初始化 sender 线程
+   this.sender = newSender()
+   - 创建网络请求客户端
+     new NetworkClient()
+     - 缓存的发送请求，默认值是 5
+       maxInflightRequests
+     - 请求超时时间，默认是 30s
+       requestTimeoutMs
+     - socket 发送数据的缓冲区大小，默认值 128k
+       send.buffer.bytes
+     - socket 接收数据的缓冲区大小，默认值 32k
+       receive.buffer.bytes
+   - 配置应答级别（0, 1, -1）
+     configureAcks()
+   - 创建 sender
+     new Sender()
+     - 生产者发往 Kafka 集群单条信息的最大值，默认值 1m。
+       max.request.size
+     - 重试次数，默认值 Int 的最大值
+       retries
+2. 启动 sender 线程
+   this.ioThread = new KafkaThread(ioThreadName, **this.sender**, true);
+   this.ioThread**.start()**;
+
+sender 线程从缓冲区准备拉取数据，刚启动拉不到数据
+
+# P86 源码_生产者发送数据到缓存
+
+# P87 源码_生产者 Sender 线程
+
+# P88 源码_消费者原理回顾
+
+# P89 源码_消费者初始化
+
+## 3.1 初始化
+
+消费者初始化
+
+- 用户自定义消费者
+  CustomConsumer.java
+- main
+- 创建 Kafka 消费者对象
+  new KafkaConsumer
+- 连续点击三次 this 构造器
+- 获取消费者组
+  this.groupId
+- 获取客户端 id
+  this.clientId
+- 拦截器配置
+  interceptorList
+- key 和 value 反序列化
+  keyDeserializer/valueDeserializer
+- offset 从什么位置开始消费
+  offsetResetStrategy
+- 获取元数据
+  this.metadata
+- 连接 Kafka 集群
+  BOOTSTRAP_SERVERS_CONFIG
+- 心跳时间，默认 3s
+  heartbeatIntervalMs
+- 创建网络客户端
+  new NetworkClient()
+- 创建一个消费者客户端
+  new ConsumerNetworkClient()
+- 获取消费者分区分配策略
+  this.assignors
+- 创建消费者协调器
+  new ConsumerCoordinator()
+- 抓取数据配置
+  new Fetcher<>()
+
+# P90 源码_消费者订阅主题
+
+# P91 源码_消费总体流程
+
+# P92 源码_消费者组初始化流程
+
+# P93 源码_消费者组拉取和处理数据
+
+# P94 源码_消费者 Offset 提交
+
+## 3.4 消费者 Offset 提交
+
+# P95 源码_服务器端源码
+
+第4章 服务器源码
+
+# P96 课程结束
