@@ -1346,3 +1346,561 @@ ZAB 协议针对事务请求的处理过程类似于一个两阶段提交过程
 
 1. 完成 Leader 选举后，在正式开始工作之前（接收事务请求，然后提出新的 Proposal），**Leader 服务器会首先确认事务日志中所有的 Proposal 是否已经被集群中过半的服务器 Commit**。
 2. Leader 服务器需要确保所有的 Follower 服务器能够接收到每一条事务的 Proposal，并且能将所有已经提交的事务 Proposal 应用到内存数据中。**等到 Follower 将所有尚未同步的事务 Proposal 都从 Leader 服务器上同步过，并且应用到内存数据中以后，Leader 才会把该 Follower 加入到真正可用的 Follower 列表中。**
+
+# P33 算法基础_cap理论
+
+## 1.4 CAP
+
+CAP 理论告诉我们，一个分布式系统不可能同时满足以下三种
+
+- 一致性（C：Consistency）
+- 可用性（A：Available）
+- 分区容错性（P：Partition Tolerance）
+
+这三个基本需求，最多只能同时满足其中的两项，因为 P 是必须的，因此往往选择就在 CP 或者 AP 中
+
+1. **一致性（C：Consistency）**
+
+   在分布式环境中，一致性是指数据在**多个副本之间是否能够保持数据一致的特性**。在一致性的需求下，当一个系统在数据一致的状态下执行更新操作后，应该保证系统的数据仍然处于一致的状态。
+
+2. **可用性（A：Available）**
+
+   可用性是指**系统提供的服务必须一直处于可用的状态**，对于用户的每一个操作请求总是能够在**有限的时间内返回结果**。
+
+3. **分区容错性（P：Partition Tolerance）**
+
+   **分布式系统在遇到任何网络分区故障的时候，仍然需要能够保证对外提供满足一致性和可用性的服务**，除非是整个网络环境都发生了故障。
+
+**ZooKeeper 保证的是 CP**
+
+1. **ZooKeeper 不能保证每次服务请求的可用性。**（注：在极端环境下，ZooKeeper 可能会丢弃一些请求，消费者程序需要重新请求才能获得结果）。所以说，ZooKeeper 不能保证服务可用性。
+2. **进行 Leader 选举时集群都是不可用。**
+
+# P34 源码_辅助源码
+
+第2章 源码详解
+
+## 2.1 辅助源码
+
+### 2.1.1 持久化源码
+
+Leader 和 Follower 中的数据会在内存和磁盘中各保存一份。所以需要将内存中的数据持久化到磁盘中。
+
+在 org.apache.zookeeper.server.persistence 包下的相关类都是序列化相关的代码。
+
+1. 快照
+
+   ```java
+   public interface SnapShot {
+       // 反序列化方法
+       long deserialize(DataTree dt, Map<Long, Integer> sessions) throws IOException;
+       // 序列化方法
+       long serialize(DataTree dt, Map<Long, Integer> sessions, File name) throws IOException;
+       
+       /**
+        * 查找最近的快照文件
+        */
+       File findMostRecentSnapshot() throws IOException;
+       // 释放资源
+       void close() throws IOException;
+   }
+   ```
+
+2. 操作日志
+
+   ```java
+   public interface TxnLog {
+       // 设置服务状态
+       void setServerStats(ServerStats serverStats);
+       // 滚动日志
+       void rollLog() throws IOException;
+       // 追加
+       boolean append(TxnHeader hdr, Record r) throws IOException;
+       // 读取数据
+       TxnIterator read(long zxid) throws IOException;
+       long getLastLoggedZxid() throws IOException;
+       boolean truncate(long zxid) throws IOException;
+       long getDbId() throws IOException;
+       void commit() throws IOException;
+       long getTxnLogSyncElapsedTime();
+       void close() throws IOException;
+   }
+   ```
+
+### 2.1.2 序列化源码
+
+zookeeper-jute 代码时关于 Zookeeper 序列化相关源码
+
+序列化：定义类实现 OutputArchive 接口。重写各种数据类型方法
+
+反序列化：定义类实现 InputArchive 接口。重写各种数据类型方法
+
+interface Record 的实现类有：DataNode、MultiTransactionRecord、MultiResponse
+
+1. 序列化和反序列化方法
+
+   ```java
+   public interface Record {
+       // 序列化方法
+       public void serialize(OutputArchive archive, String tag) throws IOException;
+       // 反序列化方法
+       public void deserialize(InputArchive archive, String tag) throws IOException;
+   }
+   ```
+
+2. 迭代
+
+   ```java
+   public interface Index {
+       // 结束
+       public boolean done();
+       // 下一个
+       public void incr();
+   }
+   ```
+
+3. 序列化支持的数据类型
+
+   ```java
+   public interface OutputArchive {
+       
+   }
+   ```
+
+4. 反序列化支持的数据类型
+
+   ```java
+   public interface InputArchive {
+   }
+   ```
+
+   
+
+# P35 源码_服务端初始化源码 - 启动脚本
+
+## 2.2 ZK 服务端初始化源码解析
+
+- zkServer.sh start
+- nohup "$JAVA" + 一堆提交参数 + $ZOOMAIN（org.apache.zookeeper.server.quorum.QuorumPeerMain） + "$ZOOCFG"（zkEnv.sh 文件中 ZOOCFG = "zoo.cfg"）
+- 所以程序的入口 QuorumPeerMain.java
+- main()
+- 1 服务器启动入口
+  new QuorumPeerMain()
+- initializeAndRun
+  - 解析参数
+    parse
+    - parseProperties 解析 zoo.cfg -> setupQuorumPeerConfig -> setupMyId 解析 myid
+  - 过期快照删除
+    new DatadirCleanupManager
+    - getSnapRetainCount() = 3 最少保留 3 个快照 -> getPurgeInterval()=0 关闭清除功能 -> new PurgeTask 清理过期数据
+  - 通信初始化
+    runFromConfig
+    - createFactory -> zookeeper.serverCnxnFactory -> Default is `NIOServerCnxnFactory` 默认是 NIO 通信
+    - configure -> 初始化 NIO 服务端 socket，绑定 2181 端口
+  - 启动 zk
+    quorumPeer.start()
+
+# P36 源码_服务端初始化源码 - 解析参数
+
+# P37 源码_服务端初始化源码 - 过期快照删除
+
+# P38 源码_服务端初始化源码 - 通信初始化
+
+# P39 源码_服务端加载数据源码 - 编辑日志和快照
+
+## 2.3 ZK 服务端加载数据源码解析
+
+1. zk 中的数据模型，是一棵树，DataTree，每个节点，叫做 DataNode
+2. zk 集群中的 DataTree 时刻保持状态同步
+3. Zookeeper 集群中每个 zk 节点中，数据在内存和磁盘中都有一份完整的数据。
+   - 内存数据：DataTree
+   - 磁盘数据：快照文件 + 编辑日志
+
+
+
+- 程序的入口
+  QuorumPeerMain.java
+- main()
+- 1 初始化
+  initializeAndRun
+- 启动 zk
+  quorumPeer.start()
+- QuorumPeer.java
+  start()
+- loadDataBase()
+- zkDb.loadDataBase()
+- snapLog.restore
+  - 恢复快照
+    snapLog.deserialize 恢复快照
+    - deserialize(dt, sessions, ia) -> deserializeSnapshot -> dt.deserialize(ia, "tree") -> 循环将快照中数据恢复到 DataTree
+  - 加载编辑日志
+    fastForwardFromEdits 恢复编辑日志
+    - txnLog.read() 准备从快照的 zxid + 1 位置开始恢复
+    - while(true) {}
+      - processTransaction
+      - processTxn
+      - createNode()
+
+# P40 源码_选举源码 - 选举准备
+
+## 2.4 ZK 选举源码解析
+
+```mermaid
+graph TB
+subgraph QuorumPeer sid1 FastLeaderElection
+	subgraph WorkerReceiver
+		wrp(poll) ==> wro(offer)
+		wrp --- wro
+		wro --- wrp
+	end
+	wro --> rq(recequeue 处理选票) --> ea(选举算法 - 生成选票) --> sq(sendqueue 发送选票)
+	subgraph WorkerSender
+		wsp(poll) ==> wsts(toSend)
+		wsp --- wsts
+		wsts --- wsp
+	end
+	sq --> wsp
+end
+
+subgraph QuorumPeer sid1 QuorumCnxManager
+	subgraph Listener
+		lb(bind) ==> la(accept)
+		lb --- la
+		la --- lhc(handleConnection)
+		lhc --- lb
+	end
+	
+	subgraph queueSendMap
+		subgraph sendQueue
+			qsms3(sid3)
+			qsms2(sid2)
+		end
+	end
+	lhc --> qsms3
+	wsts --> qsms3
+	wsts --> qsms2
+	subgraph SendWorkerMap
+		subgraph sendWorker
+			swp(poll) ==> sws(send)
+			swp --- sws
+			sws --- swp
+		end
+		subgraph recvWorker
+			rwr(read) ==> rwa(add)
+			rwr --- rwa
+			rwa --- rwr
+		end
+	end
+	qsms2 --> swp
+	rwa --> rq1(recvQueue)
+end
+wsts --先投给自己sid1--> rq1
+rq1 --> wrp
+
+sws --发送投票给其他节点--> qps(QuorumPeer sid2)
+qps --接收其他节点投票--> rwr
+qps --connection--> la
+```
+
+### 2.4.1 选举准备
+
+- 所有程序的入口
+  QuorumPeerMain.java
+- main()
+- 1 初始化
+  InitializeAndRun
+- 启动 zk
+  quorumPeer.start()
+- QuorumPeer.java
+  start()
+  - loadDataBase()
+  - startLeaderElection()
+    - new Vote() 创建选票
+    - createElectionAlgorithm() 创建选举实例
+      - zk 总的发送的接收队列准备好
+        createCnxnManager() 负责选举过程中网络通信
+        - new QuorumCnxManager() ->  this.recvQueue、this.queueSendMap、this.senderWorkerMap、this.lastMessageSent 创建各种队列
+      - 网络通信消息监听
+        listener.start() 启动线程
+        - client = ss.accept();
+          阻塞，等待处理请求
+      - zk 与某一个 zk 的发送和接收队列准备好
+        new FastLeaderElection() 准备开始选举
+        - Sendqueue、recvqueue、this.messenger 初始化队列和信息
+
+# P41 源码_选举源码 - 选举执行
+
+### 2.4.2 选举执行
+
+- 所有程序的入口
+  QuorumPeerMain.java
+- main()
+- 1 初始化
+  InitializeAndRun
+- 启动 zk
+  quorumPeer.start()
+- QuorumPeer.java
+  start()
+- super.start()
+  执行选举
+- run()
+- case LOOKING:
+  setCurrentVote(makeLEStrategy().lookForLeader())
+- lookForLeader()
+  - updateProposal(getInitId(), getInitLastLoggedZxid(), getPeerEpoch())
+    更新选票（serverid, zxid, epoch）
+  - sendNotifications()
+    广播选票
+    - new ToSend()
+      创建选票
+    - sendqueue.offer(notmsg) 把发送选票放入发送队列
+      - WorkerSender 类中的 run()
+        sendqueue.poll() 时刻准备接收要发送的选票
+      - WorkerSender 类中的 run()
+        process() 处理要发送的选票
+        - toSend()
+          发送选票
+          - 判断如果是发给自己的消息，直接进入自己的 RecvQueue
+            addToRecvQueue()
+            - 将发送给自己的选票添加到 recvQueue.add(msg)
+            - 将要发送的消息添加到发送队列 queue.add()
+          - connectOne(sid)
+            将选票发送出去
+          - connectOne(sid, lastCommittedView.get(sid).electionAddr)
+          - initiateConnection()
+          - startConnection()
+            - new DataOutputStream()
+              通过输出流，向服务器发送数据
+            - new DataInputStream()
+              通过输入流读取对方发送过来的选票
+            - new SendWorker()
+              new RecvWorker()
+              初始化发送器和接收器
+              - sw.start(); rw.start();
+                启动发送器线程和接收器线程
+                - SendWorker 的 run()
+                  - pollSendQueue()
+                    send()
+                - RecvWorker 的 run()
+                  - addToRecvQueue() -> manager.pollRecvQueue() 取出投票，直到选举出 Leader
+
+# P42 源码_Leader和Follower状态同步源码 - 总体分析
+
+## 2.5 Follower 和 Leader 状态同步源码
+
+当选举结束后，每个节点都根据自己的角色更新自己的状态。选举出的 Leader 更新自己状态为 Leader，其他节点更新自己状态为 Follower。
+
+Leader 更新状态入口：leader.lead()
+
+Follower 更新状态入口：follower.followerLeader()
+
+注意：
+
+1. follower 必须要比 leader 知道自己的状态：epoch、zxid、sid
+
+   必须要找出谁是 leader；
+
+   发起请求连接 leader；
+
+   发送自己的信息给 leader；
+
+   leader 接收到信息，必须要返回对应的信息给 follower。
+
+2. 当 leader 得知 follower 的状态了，就确定需要做何种方式的数据同步 DIFF、TRUNC、SNAP
+
+3. 执行数据同步
+
+4. 当 leader 接收到超过半数 follower 的 ack 之后，进入正常工作状态，集群启动完成了
+
+最终总结同步的方式：
+
+1. DIFF 咱俩一样，不需要做什么
+2. TRUNC follower 的 zxid 比 leader 的 zxid 大，所以 Follower 要回滚
+3. COMMIT leader 的 zxid 比 follower 的 zxid 大，发送 Proposal 给 follower 提交执行
+4. 如果 follower 并没有任何数据，直接使用 SNAP 的方式来执行数据同步（直接把数据全部序列到 follower）
+
+```mermaid
+graph LR
+subgraph Leader 的 WorkerSender
+	bind --> accept ==> lh(LearnerHandler)
+	accept --- lh
+	lh --- accept
+end
+
+lh --> f1(Follower)
+lh --> lh1(LearnerHandler)
+lh --> lh2(LearnerHandler)
+lh2 --> f2(Follower)
+f2 --> lh2
+
+lh1 --1 FollowerInfo: server.id, acceptedEpoch--> f(Follower)
+lh1 --2 LeaderInfo: new epoch--> f
+lh1 --3 AckEpoch: zxid, currentEpoch--> f
+lh1 --4 DIFF/SNAP/TRUNC--> f
+lh1 --5 待同步的提案数据--> f
+lh1 --6 commit--> f
+lh1 --7 NewLeader--> f
+lh1 --8 Ack--> f
+lh1 --9 Uptodate: Leader 等待过半的 ACK--> f
+```
+
+1. 注册（1~3）
+
+2. 同步策略（4~7）
+
+   - DIFF（差异化同步）
+   - TRUNC（回滚同步）
+   - SNAP（全量同步）
+
+   状态同步（同步过程中，有可能重复提议和提交）
+
+3. 同步确认（8~9）
+
+### Follower 和 Leader 状态同步源码解析
+
+1. Leader.java lead()
+2. new LearnerCnxAccepter()
+3. cnxAcceptor.start()
+4. LearnerCnxAcceptor.run()
+   - s = ss.accept()
+     等待接收 follower 的状态同步申请
+   - new LearnerHandler()
+     fh.start() 启动线程
+     1. LearnerHandler() 的 run 方法
+     2. ia.readRecord(qp, "packet") <—— follower 向 leader 注册
+        从网络中接收消息
+     3. long newEpoch = leader.getEpochToPropose(this.getSid(), lastAcceptedEpoch)
+        **Leader 根据从 Follower 获取 sid 和旧的 epoch，构建新的 epoch**
+     4. oa.writeRecord(newEpochPacket, "packet") ——> Leader 向 Follower 发送信息（包含：zxid 和 newEpoch）
+     5. QuorumPacket ackEpochPacket =  new QuorumPacket()
+        ia.readRecord(ackEpochPacket, ...)
+        接受到 Follow 应答的 ackepoch <—— follower 发送 ackepoch 给 leader（包含了自己的：epoch 和 zxid）
+     6. needSnap = syncFollower()
+        判断 Leader 和 Follower 是否要同步
+        - queueCommittedProposal()
+          queueOpPacket(Leader.COMMIT, packetZxid)
+          1. ——> processPacket()
+          2. case Leader.COMMIT:
+             fzk.commit(qp.getZxid());
+          3. Request request = pendingTxns.remove();
+             commitProcessor.commit(request) ——> ack （前三个是在 Follower 执行的）
+          4. qp = new QuorumPacket();
+             ia.readRecord(qp, "packet")
+          5. queuedPackets.add(new QuorumPacket(Leader.UPTODATE, -1, null, null))
+          6. update  ——> processPacket() （在 Follower 执行的）
+        - newQuorumPacket(Leader.NEWLEADER, newLeaderZxid, ...);
+          oa.writeRecord(newLeaderQP, "packet")
+
+
+
+1. Follower.java followLeader()
+2. findLeader()
+   查找 leader
+3. connectToLeader()
+   连接 leader
+   - sockConnect()
+   - registerWithLeader(Leader.FOLLOWERINFO)
+     - writePacket(qp, true)
+       发送 FollowerInfo 给 Leader
+     - 向 leader 注册 ——> ia.readRecord(qp, "packet") 从网络中接收消息
+     - readPacket(qp) <—— Leader 向 Follower 发送信息（包含：zxid 和 newEpoch）
+       读取 Leader 返回的结果：LeaderInfo
+     - writePacket(ackNewEpoch, true) ——> 发送 ackepoch 给 leader（包含了自己的：epoch 和 zxid）
+
+# P43 源码_Leader和Follower状态同步源码 - 细节分析
+
+# P44 源码_服务端 Leader 启动源码
+
+## 2.6 服务端 Leader 启动
+
+1. Leader.java
+2. lead()
+3. // 1 启动zookeeper服务
+   startZkServer();
+4. zk.startup();
+5. LeaderZooKeeperServer.java
+   super.startup();
+6. ZookeeperServer.java
+   startup();
+7. setupRequestProcessors();
+8. new PrepRequestProcessor().start
+9. // 2 接收各种请求
+   Request request = submittedRequests.take();
+10. pRequest(request);
+11. // 3 等待处理各种请求
+    case OpCode.createContainer:
+    case OpCode.create:
+    case OpCode.create2:
+    case OpCode.createTTL:
+    case OpCode.deleteContainer:
+    case OpCode.delete:
+    case OpCode.setData:
+    case OpCode.reconfig:
+    case OpCode.setACL:
+    case OpCode.check:
+
+ZooKeeperServer
+
+Ctrl + n 全局查找 Leader，然后 Ctrl + f 查找 lead(
+
+Leader.java
+
+# P45 源码_服务端 Follower 启动源码
+
+## 2.7 服务端 Follower 启动
+
+1. FollowerZooKeeperServer.java
+2. followLeader()
+3. readPacket(qp);
+   - // 1 读取信息
+     leaderls.readRecord(pp, "packet");
+   - processPacket(qp);
+     - // 2 处理信息
+       case Leader.PING:
+     - case Leader.PROPOSAL:
+     - case Leader.COMMIT:
+     - case Leader.COMMITANDACTIVATE:
+     - case Leader.UPTODATE:
+     - case Leader.REVALIDATE:
+     - case Leader.SYNC:
+
+# P46 源码_客户端启动源码
+
+## 2.8 客户端启动
+
+1. ZkCli.sh
+2. org.apache.zookeeper.ZooKeeperMain
+3. ZooKeeperMain.main()
+4. new ZooKeeperMain(args)
+   - connectToZk()
+     1. 1）创建 ZooKeeperAdmin
+        new ZooKeeperAdmin()
+     2. ZooKeeper
+        - 2）初始化监听器
+          watchManager.defaultWatcher = watcher
+        - 3）解析连接地址
+          new ConnectStringParser()
+          - split(connectString, ",");
+          - serverAddresses.add()
+        - 4）创建客户端与服务器端通信的终端
+          createConnection()
+          - new ClientCnxn()
+            - new EventThread()
+            - new SendThread()
+              - ZooKeeperThread.run()
+                - // 启动连接服务端
+                  StartConnect()
+                  1. clientCnxnSocket.connect()
+                  2. registerAndConnect()
+                - // 接收服务端响应并处理
+                  clientCnxnSocket.doTransport()
+                  1. doIO()
+                  2. sendThread.readResponse()
+   - 5）执行 run
+     new ZooKeeperMain(args).run()
+     1. // 一行一行读取命令
+        executeLine()
+     2. // 处理客户端命令
+        processCmd()
+     3. // 解析客户端命令
+        processZkCmd()
