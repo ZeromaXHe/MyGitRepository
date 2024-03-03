@@ -1008,3 +1008,1489 @@ Redis 流（Stream）
 - 基本命令代码实操
 
 - 使用建议
+
+# P25 redis 10 大类型之 Stream - 中集
+
+基本命令代码实操
+
+- Redis 流实例演示
+
+  - 队列相关指令
+
+    - XADD
+
+      - 添加消息到队列末尾
+
+        - 消息 ID 必须要比上个 ID 大
+
+        - 默认用星号表示自动生成规矩
+
+        - *
+
+          - 用于 XADD 命令中，让系统自动生成 id
+
+        - XADD 用于向 Stream 队列中添加消息，如果指定的 Stream 队列不存在，则该命令执行时会新建一个 Stream 队列
+
+          // * 号表示服务器自动生成 MessageID（类似 mysql 里面主键 auto_increment），后面顺序跟着一堆业务 key/value
+
+          生成的消息 ID，由两部分组成：毫秒级时间戳-该毫秒内产生的第n条消息
+
+          信息条目指的是序列号，在相同的毫秒下序列化从 0 开始递增，序列号是 64 位长度，理论上在同一毫秒内生成的数据量无法达到这个级别，因此不用担心序列号会不够用。millisecondsTime 指的是 Redis 节点服务器的本地时间，如果存在当前的毫秒时间戳比以前已经存在的数据的时间戳小的话（本地时间钟后跳），那么系统将会采用以前相同的毫秒创建新的 ID，也即 redis 在增加信息条目时会检查当前 id 与上一条目的 id，自动纠正错误的情况，一定要保证后面的 id 比前面大，一个流中信息条目的 ID 必须是单调增的，这是流的基础。
+
+          客户端显示传入规则：
+
+          Redis 对于 ID 有强制要求，格式必须是**时间戳-自增Id** 这样的方式，且后续 ID 不能小于前一个 ID
+
+          Stream 的消息内容，也就是图中的 Message Content 它的结构类似 Hash 结构。以 key-value 的形式存在
+
+    - XRANGE
+
+      - 用于获取消息列表（可以指定范围），忽略删除的消息
+      - start 表示开始值，- 代表最小值
+      - end 表示结束值，+ 代表最大值
+      - count 表示最多获取多少个值
+
+    - XREVRANGE
+
+    - XDEL
+
+    - XLEN
+
+      - 用于获取 Stream 队列的消息的长度
+
+    - XTRIM
+
+      - 用于对 Stream 的长度进行截取，如超长会进行截取
+      - MAXLEN
+        - 允许的最大长度，对流进行修剪限制长度
+      - MINID
+        - 允许的最小 id，从某个 id 值开始比该 id 值小的将会被抛弃
+
+    - XREAD
+
+      - 用于获取消息（阻塞/非阻塞），只会返回大于指定 ID 的消息
+
+        - ```shell
+          XREAD [COUNT count] [BLOCK milliseconds] STREAMS key [key ...] ID [ID ...]
+          ```
+
+          COUNT 最多读取多少条消息
+
+          BLOCK 是否以阻塞的方式读取消息，默认不阻塞，如果 milliseconds 设置为 0，表示永远阻塞
+
+      - 非阻塞
+
+        - $ 代表特殊 ID，表示以当前 Stream 已经存储的最大的 ID 作为最后一个 ID，当前 Stream 中不存在大于当前最大 ID 的消息，因此此时返回 nil
+        - 0-0 代表从最小的 ID 开始读取 Stream 中的消息，当不指定 count，将会返回 Stream 中的所有消息，注意也可以使用 0（00/000 也都是可以的……）
+
+      - 阻塞
+
+        - 请 redis-cli 启动第二个客户端连接上来
+
+      - 小总结（类似 Java 里面的阻塞队列）
+
+        - Stream 的基础方法，使用 XADD 存入消息和 XREAD 循环阻塞读取消息的方式可以实现简易版的消息队列，交互流程如下
+
+  - 消费组相关指令
+
+  - XINFO 用于打印 Stream\Consumer\Group 的详细信息
+
+# P26 redis 10 大类型之 Stream - 下集
+
+消费组相关指令
+
+- XGROUP CREATE
+  - 用于创建消费者组
+    - $ 表示从 Stream 尾部开始消费
+    - O 表示从 Stream 头部开始消费
+    - 创建消费者组的时候必须指定 ID，ID 为 O 表示从头开始消费，为 $ 表示只消费新的消息，**队尾新来**
+- XREADGROUP GROUP
+  - “>”，表示从第一条尚未被消费的消息开始读取
+  - 消费组 groupA 内的消费者 consumer1 从 mystream 消息队列中读取所有消息
+    - stream 中的消息一旦被消费者组里的一个消费者读取了，就不能再被该消费组内的其他消费者读取了，即同一个消费组里的消费者不能消费同一条消息。刚才的 XREADGROUP 命令再执行一次，此时读到的就是空值
+  - 但是，**不同消费组**的消费者可以消费同一条消息
+  - **消费组的目的？？**
+    - 让组内的多个消费者共同分担读取消息，所以，我们通常会让每个消费者读取部分消息，从而实现消息读取负载在多个消费者间是均衡分布的
+- 重点问题
+  1. 问题：基于 Stream 实现的消息队列，如何保证消费者在发生故障或宕机再次重启后，仍然可以读取未处理完的消息？
+  2. Streams 会自动使用内部队列（也称为 PENDING List）留存消费组里每个消费者读取的消息保底措施，直到消费者使用 XACK 命令通知 Streams “消息已经处理完成”。
+  3. 消费确认增加了消息的可靠性，一般在业务处理完成之后，需要执行 XACK 命令确认消息已经被消费完成
+- XPENDING
+  - 查询每个消费组内所以消费者 **已读取、但尚未确认** 的消息
+  - 查看某个消费者具体读取了哪些数据
+- XACK
+  - 向消息队列确认消息处理已完成
+
+XINFO 用于打印 Stream\Consumer\Group 的详细信息
+
+
+
+使用建议
+
+- Stream 还是不能 100% 等价于 Kafka、RabbitMQ 来使用的，生产案例少，慎用
+- 仅仅代表本人愚见，不权威
+
+# P27 redis 10 大类型之 bitfield
+
+Redis 位域（bitfield）
+
+- 了解即可
+- 是什么
+  - 官网
+    - BITFIELD 命令可以将一个 Redis 字符串看作是一个由二进制位组成的数组，并对这个数组中任意偏移进行访问。可以使用该命令对一个有符号的 5 位整型数的第 1234 位设置指定值，也可以对一个 31 位无符号整型数的第 4567 位进行取值。类似地，本命令可以对指定的整数进行自增和自减操作，可配置的上溢和下溢处理操作。
+    - `BITFIELD` 命令可以在一次调用中同时对多个位范围进行操作：它接受一系列待执行的操作作为参数，并返回一个数组，数组中的每个元素就是对应操作的执行结果。
+- 能干嘛
+  - 位域修改
+  - 溢出控制
+  - 用途：BITFIELD 命令的作用在于它能够将很多小的整数储存到 一个长度较大的位图中，又或者将一个非常庞大的键分割为多个较小的键来进行储存，从而非常高效地使用内存，使得 Redis 能够得到更多不同的应用——特别是在实时分析领域：BITFIELD 能够以指定的方式对计算溢出进行控制的能力，使得它可以被应用于这一领域。
+- 一句话
+  - 将一个 Redis 字符串看作是**一个由二进制位组成的数组**，并能对变长位宽和任意没有字节对齐的指定整型位域进行寻址和修改
+- 命令基础语法
+- 案例
+  - Ascii 码表
+  - 基本命令代码实操
+    - BITFIELD key [GET type offset]
+      - 返回指定的位域
+    - BITFIELD key [SET type offset value]
+      - 设定指定位域的值并返回它的原值
+    - BITFIELD key [INCRBY type offset increment]
+    - 溢出控制 OVERFLOW [WRAP|SAT|FAIL]
+      - WRAP：使用回绕（wrap around）方法处理有符号整数和无符号整数的溢出情况
+      - SAT：使用饱和计算（saturation arithmetic）方法处理溢出，下溢计算的结果为最小的整数值，而上溢计算的结果为最大的整数值
+      - FAIL：命令将拒绝执行那些会导致上溢或者下溢情况出现的计算，并向用户返回空值表示计算未被执行
+
+# P28 redis 持久化之理论介绍
+
+5、Redis 持久化
+
+- 总体介绍
+  - 官网地址
+  - 为什么需要持久化
+- 持久化双雄
+  - 一图
+  - RDB（Redis DataBase）
+  - AOF（Append Only File）
+- RDB-AOF 混合持久化
+- 纯缓存模式
+
+# P29 redis 持久化之 RDB 简介
+
+RDB（Redis DataBase）
+
+- 官网介绍
+
+  - RDB（Redis 数据库）：RDB 持久化以指定的时间间隔执行数据集的时间点快照。
+
+- 是什么
+
+  - 在指定的时间间隔，执行数据集的时间点快照
+
+    - 实现类似照片记录效果的方式，就是把某一时刻的数据和状态以文件的形式写到磁盘上，也就是快照。这样一来即使故障宕机，快照文件也不会丢失，数据的可靠性也就得到了保证。
+
+      这个快照文件就称为 RDB 文件（dump.rdb），其中 RDB 就是 Redis DataBase 的缩写。
+
+- 能干嘛
+
+  - 在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的 Snapshot 内存快照，它恢复时再将硬盘快照文件直接读回到内存里
+  - 一锅端
+    - Redis 的数据都在内存中，保存备份时它执行的是**全量快照**，也就是说，把内存中的所有数据都记录到磁盘中，一锅端
+  - Rdb 保存的是 dump.rdb 文件
+
+- 案例演示
+
+  - 需求说明
+
+  - **配置文件（6 vs 7）**
+
+    - Redis 6.0.16 以下
+
+      - 自动触发：
+
+        在 Redis.conf 配置文件中的 SNAPSHOTTING 下配置 save 参数，来触发 Redis 的 RDB 持久化条件，比如 “save m n”：表示 m 秒内数据集存在 n 次修改时，自动触发 bgsave
+
+        save 900 1：每隔 900s（15min），如果有超过 1 个 key 发生了变化，就写一份新的 RDB 文件
+
+        save 300 10：每隔 300s（5min），如果有超过 10 个 key 发生了变化，就写一份新的 RDB 文件
+
+        save 60 10000：每隔 60s（1min），如果有超过 10000 个 key 发生了变化，就写一份新的 RDB 文件
+
+    - Redis 6.2 以及 Redis-7.0.0
+
+      - save 3600 1 300 100 60 10000
+
+  - 操作步骤
+
+- 优势
+
+- 劣势
+
+- 如何检查修复 dump.rdb 文件
+
+- 哪些情况会触发 RDB 快照
+
+- 如何禁用快照
+
+- RDB 优化配置项详解
+
+- 小总结
+
+# P30 redis 持久化之 RDB 配置说明
+
+操作步骤
+
+- 自动触发
+  - Redis 7 版本，按照 redis.conf 里配置的 `save <seconds> <changes>`
+  - 本次案例 5 秒 2 次修改
+    - `save 5 2`
+  - 修改 dump 文件保存路径
+    - 默认：`dir ./`
+    - 自定义修改的路径且可以进入 redis 里用 **CONFIG GET dir** 获取目录
+  - 修改 dump 文件名称
+  - 触发备份
+  - 如何恢复
+- 手动触发
+
+# P31 redis 持久化之 RDB 自动触发
+
+触发备份
+
+- 第1种情况
+- 第2种情况
+  - 时间间隔大于等于5秒，修改次数大于等于2次，自动触发
+
+如何恢复
+
+- 将备份文件（dump.rdb）移动到 redis 安装目录并启动服务即可
+- 备份成功后故意用 flushdb 清空 redis，看看是否可以恢复数据
+  - 结论
+    - 执行 flushall/flushdb 命令也会产生 dump.rdb 文件，但里面是空的，无意义
+- 物理恢复，一定服务和备份**分机隔离**
+  - 备注：不可以把备份文件 dump.rdb 和生产 redis 服务器放在同一台机器，必须**分开各自存储**，以防生产机物理损坏后备份文件也挂了。
+
+# P32 redis 持久化之 RDB 手动触发
+
+手动触发
+
+- save 和 bgsave
+  - **Redis 提供了两个命令来生成 RDB 文件，分别是 save 和 bgsave**
+  - Save
+    - 在主程序中执行**会阻塞**当前 redis 服务器，直到持久化工作完成执行 save 命令期间，Redis 不能处理其他命令，**线上禁止使用**
+    - 案例
+  - BGSAVE（默认）
+    - Redis 会在后台异步进行快照操作，**不阻塞**快照同时还可以响应客户端请求，该触发方式会 fork 一个子进程由子进程复制持久化过程
+    - 官网说明
+    - Redis 会使用 bgsave 对当前内存中的所有数据做快照，这个操作是子进程在后台完成的，这就允许主进程同时可以修改数据。
+    - fork 是什么？
+      - 各位熟悉的
+        - Git fork
+      - 操作系统角度
+        - 在 Linux 程序中，fork() 会产生一个和父进程完全相同的子进程，但子进程在此后多会 exec 系统调用，处于效率考虑，尽量避免膨胀
+    - 案例
+    - LASTSAVE
+      - 可以通过 lastsave 命令获取最后一次成功快照的时间
+      - 案例
+
+# P33 redis 持久化之 RDB 优缺点及数据丢失案例
+
+优势
+
+- 官网说明
+  - RDB 是 Redis 数据的一个非常紧凑的单文件时间点表示。RDB 文件非常适合备份。例如，您可能希望在最近的 24 小时内每小时归档一次 RDB 文件，并在 30 天内每天保存一个 RDB 快照。这使您可以在发生灾难时轻松恢复不同版本的数据集。
+  - RDB 非常适合灾难恢复，它是一个可以传输到远程数据中心或 Amazon S3（可能已加密）的压缩文件
+  - RDB  最大限度地提高了 Redis 的性能，因为 Redis 父进程为了持久化而需要做的唯一工作就是派生一个将完成所有其余工作的子进程。父进程永远不会执行磁盘 I/O 或类似操作。
+  - 与 AOF 相比，RDB 允许使用大数据集更快地重启。
+  - 在副本上，RDB 支持**重启和故障转移后的部分重新同步**。
+- 小总结
+  - 适合大规模的数据恢复
+  - 按照业务定时备份
+  - 对数据完整性和一致性要求不高
+  - RDB 文件在内存中的加载速度要比 AOF 快得多
+
+劣势
+
+- 官网说明
+  - 如果您需要在 Redis 停止工作时（例如断电后）将数据丢失的可能性降到最低，那么 RDB 并不好。您可以配置生成 RDB 的不同保存点（例如，在对数据集至少 5 分钟和 100 次写入之后，您可以有多个保存点）。但是，您通常会每五分钟或更长时间创建一次 RDB 快照，因此，如果 Redis 由于任何原因在没有正确关闭的情况下停止工作，您应该准备好丢失最新分钟的数据。
+  - RDB 需要经常 fork() 以便使用子进程在磁盘上持久化。如果数据集很大，fork() 可能会很耗时，并且如果数据集很大并且 CPU 性能不是很好，可能会导致 Redis 停止为客户端服务几毫秒甚至一秒钟。AOF 也需要 fork() 但频率较低，您可以调整要重写日志的频率，而不需要对持久性进行任何权衡。
+- 小总结
+  - 在一定间隔时间做一次备份，所以如果 redis 意外 down 掉的话，就会丢失从当前至最近一次快照期间的数据，**快照之间的数据会丢失**
+  - 内存数据的全量同步，如果数据量太大会导致 I/O 严重影响服务器性能
+  - RDB 依赖于主进程的 fork，在更大的数据集中，这可能会导致服务请求的瞬间延迟。fork 的时候内存中的数据被克隆了一份，大致 2 倍的膨胀性，需要考虑
+- 数据丢失案例
+  - 正常录入数据
+  - kill -9 故意模拟意外 down 机
+  - redis 重启恢复，查看数据是否丢失
+
+# P34 redis 持久化之 RDB 修复命令
+
+如何检查修复 dump.rdb 文件
+
+- `redis-check-rdb /myredis/dumpfiles/dump6379.rdb`
+
+# P35 redis 持久化之 RDB 触发小结和快照禁用
+
+哪些情况会触发 RDB 快照
+
+- 配置文件中默认的快照配置
+- 手动 save/bgsave 命令
+- 执行 flushall/flushdb 命令也会产生 dump.rdb 文件，但里面是空的，无意义
+- 执行 shutdown 且没有设置开启 AOF 持久化
+- 主从复制时，主节点自动触发
+
+如何禁用快照
+
+- 动态所有停止 RDB 保存规则的方法：redis-cli config set save ""
+- 快照禁用
+  - `save ""`
+
+# P36 redis 持久化之 RDB 优化参数
+
+RDB 优化配置项详解
+
+- 配置文件 SNAPSHOTTING 模块
+  - `save <seconds> <changes>`
+  - dbfilename
+  - dir
+  - stop-writes-on-bgsave-error
+    - 默认 yes
+    - 如果配置成 no，表示你不在乎数据不一致或者有其他的手段发现和控制这种不一致，那么在快照写入失败时，也能确保 redis 继续接受新的写请求
+  - rdbcompression
+    - 默认 yes
+    - 对于存储到磁盘中的快照，可以设置是否进行压缩存储。如果是的话，redis 会采用 LZF 算法进行压缩。如果你不想消耗 CPU 来进行压缩的话，可以设置为关闭此功能
+  - rdbchecksum
+    - 默认 yes
+    - 在存储快照后，还可以让 redis 使用 CRC 64 算法来进行数据校验，但是这样做会增加大约 10% 的性能消耗，如果希望获取到最大的性能提升，可以关闭此功能
+  - rdb-del-sync-files
+    - rdb-del-sync-files：在没有持久性的情况下删除复制中使用的 RDB 文件启用。默认情况下 no，此选项是禁用的。
+
+小总结
+
+- RDB 是一个非常紧凑的文件
+- RDB 在保存 RDB 文件时父进程唯一需要做的就是 fork 出一个子进程，接下来的工作全部由子进程来做，父进程不需要再做其他 IO 操作，所以 RDB 持久化方式可以最大化 redis 的性能。
+- 与 AOF 相比，在恢复大的数据集的时候，RDB 方式会更快一些。
+- 数据丢失风险大
+- RDB 需要经常 fork 子进程来保存数据集到硬盘上，当数据集比较大的时候，fork 的过程是非常耗时的，可能会导致 Redis 在一些毫秒级不能相应客户端请求
+
+# P37 redis 持久化之 AOF 简介
+
+AOF（Append Only File）
+
+- 官网介绍
+
+- 是什么
+
+  - **以日志的形式来记录每个写操作，**将 Redis 执行过的所有写指令记录下来（读操作不记录），只许追加文件但不可以改写文件，redis 启动之初会读取该文件重新构建数据，换言之，redis 重启的话就根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作
+
+  - 默认情况下，redis 是没有开启 AOF（append only file）的。
+
+    开启 AOF 功能需要设置配置：appendonly yes
+
+- 能干嘛
+
+- AOF 保存的是 appendonly.aof 文件
+
+- AOF 持久化工作流程
+
+- AOF 缓存区三种写回策略
+
+- 案例演示和说明
+
+  AOF 配置/启动/修复/恢复
+
+- 优势
+
+- 劣势
+
+- AOF 重写机制
+
+- AOF 优化配置项详解
+
+- 小总结
+
+# P38 redis 持久化之 AOF 工作流程和写回策略
+
+AOF 持久化工作流程
+
+1. Client 作为命令的来源，会有多个源头以及源源不断的请求命名。
+2. 在这些命令到达 Redis Server 以后并不是直接写入 AOF 文件，会将其这些命令先放入 AOF 缓存中进行保存。这里的 AOF 缓冲区实际上是内存中的一片区域，存在的目的是当这些命令达到一定量以后再写入磁盘，避免频繁的磁盘 IO 操作。
+3. AOF 缓冲会根据 AOF 缓冲区**同步文件的三种写回策略**将命令写入磁盘上的 AOF 文件。
+4. 随着写入 AOF 内容的增加为避免文件膨胀，会根据规则进行命令的合并（又称**AOF 重写**），从而起到 AOF 文件压缩的目的。
+5. 当 Redis Server 服务器重启的时候会从 AOF 文件载入数据。
+
+AOF 缓存区三种写回策略
+
+- 三种写回策略
+
+  - 默认是 everysec
+  - Always
+    - 同步写回，每个写命令执行完立刻同步地将日志写回磁盘
+  - everysec
+    - 每秒写回，每个写命令执行完，只是先把日志写到 AOF 文件的内存缓冲区，每隔 1 秒把缓冲区中的内容写入磁盘
+  - no
+    - 操作系统控制的写回，每个写命令执行完，只是先把日志写到 AOF 文件的内存缓存区，由操作系统决定何时将缓冲区内容写回磁盘
+
+- 三种写回策略小总结 update
+
+  - | 配置项   | 写回时机           | 优点                     | 缺点                             |
+    | -------- | ------------------ | ------------------------ | -------------------------------- |
+    | Always   | 同步写回           | 可靠性高，数据基本不丢失 | 每个写命令都要落盘，性能影响较大 |
+    | Everysec | 每秒写回           | 性能适中                 | 宕机时丢失 1 秒内的数据          |
+    | No       | 操作系统控制的写回 | 性能好                   | 宕机时丢失数据较多               |
+
+    
+
+# P39 redis 持久化之 AOF 功能配置开启
+
+案例演示和说明
+
+AOF 配置/启动/修复/恢复
+
+- 配置文件说明（6 vs 7）
+
+  - 如何开启 aof
+
+    - appendonly yes
+
+  - 使用默认写回策略，每秒钟
+
+    - appendsync everysec
+
+  - aof 文件-保存路径
+
+    - redis 6
+      - AOF 保存文件的位置和 RDB 保存文件的位置一样，都是通过 redis.conf  配置文件的 dir 配置
+      - 官网文档
+    - redis 7 之后最新
+      - appenddirname "appendonlydir"
+      - 最终路径
+        - dir + appenddirname
+
+  - aof 文件-保存名称
+
+    - redis6
+
+      - appendfilename "appendonly.aof"
+      - 有且仅有一个
+
+    - Redis 7.0 Multi Part AOF 的设计
+
+      - 官网说明
+
+      - 从 1 到 3
+
+        - base 基本文件
+
+        - incr 增量文件
+
+        - manifest 清单文件
+
+        - MP-AOF 实现
+
+          方案概述
+
+          顾名思义，MP-AOF 就是将原来的单个 AOF 文件拆分成多个 AOF 文件。在 MP-AOF 中，我们将 AOF 分为三种类型，分别为：
+
+          - BASE：表示基础 AOF，它一般由子进程通过重写产生，该文件最多只有一个
+          - INCR：表示增量 AOF，它一般会在 AOFRW 开始执行时被创建，该文件可能存在多个
+          - HISTORY：表示历史 AOF，它由 BASE 和 INCR AOF 变化而来，每次 AOFRW 成功完成时，本次 AOFRW 之前对应的 BASE 和 INCR AOF 都将变为 HISTORY，HISTORY 类型的 AOF 会被 Redis 自动删除。
+
+          为了管理这些 AOF 文件，我们引入了一个 manifest（清单）文件来跟踪、管理这些 AOF。同时，为了便于 AOF 备份和拷贝，我们将所有的 AOF 文件和 manifest 文件放入一个单独的文件目录中，目录名由 appenddirname 配置（Redis 7.0 新增配置项）决定。
+
+      - Redis 7.0 config 中对应的配置项
+
+        - ```
+          // 几种类型文件的前缀，后缀有关序列和类型的附加信息
+          appendfilename "appendonly.aof"
+          // 新版本增加的目录配置项目
+          appenddirname "appendonlydir"
+          
+          // 如有下的 aof 文件存在
+          1. 基本文件
+          	appendonly.aof.1.base.rdb
+          2. 增量文件
+          	appendonly.aof.1.incr.aof
+          	appendonly.aof.2.incr.aof
+          3. 清单文件
+          	appendonly.aof.manifest
+          ```
+
+- 正常恢复
+
+- 异常恢复
+
+# P40 redis 持久化之 AOF 正常恢复演示
+
+正常恢复
+
+- 启动：设置 Yes
+  - 修改默认的 appendonly no, 改为 yes
+  - 写操作继续，生成 aof 文件到指定的目录
+  - 恢复 1：重启 redis 然后重新加载，结果 OK
+  - 恢复 2
+    - 写入数据进 redis，然后 flushdb + shutdown 服务器
+    - 新生成了 dump 和 aof
+    - 备份新生成的 aof.bak，然后删除 dump/aof 再看恢复
+    - 重启 redis 然后重新加载试试？？？
+    - 停止服务器，拿出我们的备份修改后再重新启动服务器看看
+
+# P41 redis 持久化之 AOF 异常恢复演示
+
+异常恢复
+
+- 故意乱写正常的 AOF 文件，模拟网络闪断文件写 error
+- 重启 Redis 之后就会进行 AOF 文件的载入，发现启动都不行
+- 异常修复命令：redis-check-aof --fix 进行修复
+- 重新OK
+
+# P42 redis 持久化之 AOF 优缺点案例总结
+
+优势
+
+- 更好的保护数据不丢失、性能高、可做紧急恢复
+- AOF 优势
+  - 使用 AOF Redis 更加持久：您可以有不同的 fsync 策略：根本不 fsync、每秒 fsync、每次查询时 fsync。使用每秒 fsync 的默认策略，写入性能仍然很棒。fsync 是使用后台线程执行的，当没有 fsync 正在进行时，主线程将努力执行写入，因此您只能丢失一秒钟的写入。
+  - AOF 日志是一个仅附加日志，因此不会出现寻道问题，也不会在断电时出现损坏问题。即使由于某种原因（磁盘已满或其他原因）日志以写一半的命令结尾，redis-check-aof 工具也能够轻松修复它。
+  - 当 AOF 变得太大时，Redis 能够在后台自动重写 AOF。重写是完全安全的，因为当 Redis 继续附加到旧文件时，会使用创建当前数据集所需的最少操作集生成一个全新的文件，一旦第二个文件准备就绪，Redis 就会切换两者并开始附加到新的那一个。
+  - AOF 以易于理解和解析的格式依次包含所有操作的日志。您甚至可以轻松导出 AOF 文件。例如，即使您不小心使用该 FLUSHALL 命令刷新了所有内容，只要在此期间没有执行日志重写，您仍然可以通过停止服务器、删除最新命令并重复启动 Redis 来保存您的数据集。
+
+劣势
+
+- 相同数据集的数据而言 aof 文件要远大于 rdb 文件，恢复速度慢于 rdb
+- aof 运行效率要慢于 rdb，每秒同步策略效率较好，不同步效率和 rdb 相同
+- AOF 缺点
+  - AOF 文件通常比相同数据集的等效 RDB 文件大。
+  - 根据确切的 fsync 策略，AOF 可能比 RDB 慢。一般来说，将 fsync 设置为每秒性能仍然非常高，并且在禁用 fsync 的情况下，即使在高负载下它也应该与 RDB 一样快。即使在巨大的写入负载的情况下，RDB 仍然能够提供关于最大延迟的更多保证。
+
+# P43 redis 持久化之 AOF 重写机制案例
+
+AOF 重写机制
+
+- 是什么
+
+  - 由于 AOF 持久化是 Redis 不断将写命令记录到 AOF 文件中，随着 Redis 不断的进行，AOF 的文件会越来越大，文件越大，占用服务器内存越大以及 AOF 恢复要求时间越长。
+
+    为了解决这个问题，**Redis 新增了重写机制**，当 AOF 文件的大小超过所设定的峰值时，Redis 就会**自动**启动 AOF 文件的内容压缩，只保留可以恢复数据的最小指令集
+
+    或者
+
+    可以**手动使用命令 bgrewriteaof 来重写**。
+
+  - 官网
+
+  - 一句话
+
+    - 启动 AOF 文件的内容压缩，只保留可以恢复数据的最小指令集
+
+- 触发机制
+
+  - 官网默认配置
+
+    - auto-aof-rewrite-percentage 100
+
+      auto-aof-rewrite-min-size 64mb
+
+      注意，**同时满足，且的关系**才会触发
+
+      1. 根据上次重写后的 aof 大小，判断当前 aof 大小是不是增长了 1 倍
+      2. 重写时满足的文件大小
+
+  - 自动触发
+
+    - 满足配置文件中的选项后，Redis 会记录上次重写时的 AOF 大小，默认配置是当 AOF 文件大小是上次 rewrite 后大小的一倍且文件大于 64M 时
+
+  - 手动触发
+
+    - 客户端向服务器发送 bgrewriteaof 命令
+
+- 案例说明
+
+  - 需求说明
+
+    - **启动 AOF 文件的内容压缩，只保留可以恢复数据的最小指令集。**
+
+      **举个例子：**比如有个 key
+
+      一开始你 set k1 v1
+
+      然后改成 set k1 v2
+
+      最后改成 set k1 v3
+
+      如果不重写，那么这 3 条语句都在 aof 文件中，内容占空间不说启动的时候都要执行一遍，共计 3 条命令；
+
+      但是，我们实际效果只需要 set k1 v3 这一条，所以，
+
+      开启重写后，只需要保存 set k1 v3 就可以了只需要保留最后一次修改值，相当于给 aof 文件瘦身减肥，性能更好
+
+      AOF 重写不仅降低了文件的占用空间，同时更小的 AOF 也可以更快地被 Redis 加载。
+
+  - 需求验证
+
+    - 启动 AOF 文件的内容压缩，只保留可以恢复数据的最小指令集
+
+  - 步骤
+
+    - 前期配置准备
+      - 开启 aof
+      - 重写峰值修改为 1k
+        - auto-aof-rewrite-min-size 1k
+      - 关闭混合，设置为 no
+        - aof-use-rdb-preamble no
+      - 删除之前的全部 aof 和 rdb，清除干扰项
+    - 自动触发案例 01
+      - 完成上述正确配置，重启 redis 服务器，执行 set k1 v1 查看 aof 文件是否正常
+      - 查看三大配置文件
+        - 复习配置项
+        - 本次操作
+      - k1 不停 1111111 暴涨
+        - 对同一个 k1，不停重复值 11111111111
+        - 文件慢慢变大，到峰值后启动重写机制
+      - 重写触发
+    - 手动触发案例 02
+      - 客户端向服务器发送 bgrewriteaof 命令
+    - 结论
+      - **也就是说 AOF 文件重写并不是对原文件进行重新整理，而是直接读取服务器现有的键值对，然后用一条命令去代替之前记录这个键值对的多条命令，生成一个新的文件后去替换原来的 AOF 文件**。
+      - AOF 文件重写触发机制：通过 redis.conf 配置文件中的 auto-aof-rewrite-percentage：默认值 100，以及 auto-aof-rewrite-min-size：64mb 配置，也就是说默认 Redis 会记录上次重写时 AOF 大小，**默认配置是当 AOF 文件大小是上次 rewrite 后大小的一倍且文件大于 64M 时触发**。
+
+- 重写原理
+
+  1. 在重写开始前，Redis 会创建一个”重写子进程“，这个子进程会读取现有的 AOF 文件，并将其包含的指令进行分析压缩并写入到一个临时文件中。
+  2. 与此同时，主进程会将新接收到的写指令一边累积到内存缓冲区中，一边继续写入到原有的 AOF 文件中，这样做是保证原有的 AOF 文件的可用性，避免在重写过程中出现意外。
+  3. 当”重写子进程“完成重写工作后，它会给父进程发一个信号，父进程收到信号后就会将内存中缓存的写指令追加到新 AOF 文件中
+  4. 当追加结束后，redis 就会用新 AOF 文件来代替旧 AOF 文件，之后再有新的写指令，就都会追加到新的 AOF 文件中
+  5. 重写 aof 文件的操作，并没有读取旧的 aof 文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的 aof 文件，这点和快照有点类似
+
+# P44 redis 持久化之 AOF 小总结
+
+AOF 优化配置项详解
+
+- 配置文件 APPEND ONLY MODE 模块
+
+  - | 配置指令                                                   | 配置含义                   | 配置示例                                                     |
+    | ---------------------------------------------------------- | -------------------------- | ------------------------------------------------------------ |
+    | appendonly                                                 | 是否开启 aof               | appendonly yes                                               |
+    | appendfilename                                             | 文件名称                   | appendfilename "appendonly.aof"                              |
+    | appendfsync                                                | 同步方式                   | everysec/always/no                                           |
+    | no-appendfsync-on-rewrite                                  | aof 重写期间是否同步       | no-appendfsync-on-rewrite no                                 |
+    | auto-aof-rewrite-percentage<br />auto-aof-rewrite-min-size | 重写触发配置、文件重写策略 | auto-aof-rewrite-percentage 100<br />auto-aof-rewrite-min-size 64mb |
+
+小总结
+
+- AOF 文件时一个只进行追加的日志文件
+- Redis 可以在 AOF 文件体积变得过大时，自动地在后台对 AOF 进行重写
+- AOF 文件有序地保存了对数据库执行的所有写入操作，这些写入操作以 Redis 协议的格式保存，因此 AOF 文件的内容非常容易被人读懂，对文件进行分析也很轻松
+- 对于相同的数据集来说，AOF 文件的体积通常要大于 RDB 文件的体积
+- 根据所使用的 fsync 策略，AOF 的速度可能会慢于 RDB
+
+# P45 redis 持久化之 RDB+AOF 混合持久化
+
+RDB-AOF 混合持久化
+
+- 官网建议
+
+- rdb vs aof
+
+  - 问题
+    - 可否共存？
+    - 如果共存听谁的？
+  - 官网文档
+  - 数据恢复顺序和**加载流程**
+    - 在同时开启 rdb 和 aof 持久化时，重启时只会加载 aof 文件，不会加载 rdb 文件
+
+- 你怎么选？用哪个？
+
+  - RDB 持久化方式能够在指定的时间间隔能对你的数据进行快照存储
+  - AOF 持久化方式记录每次对服务器写的操作，当服务器重启的时候会重写执行这些命令来恢复原始的数据，AOF 命令以 redis 协议追加保存每次写的操作到文件末尾
+
+- 同时开启两种持久化方式
+
+  - 在这种情况下，**当 redis 重启的时候会优先载入 AOF 文件来恢复原始的数据**，因为在通常情况下 AOF 文件保存的数据集要比 RDB 文件保存的数据集要完整
+  - RDB 的数据不实时，同时使用两者时服务器重启也只会找 AOF 文件。**那要不要只使用 AOF 呢？作者建议不要**，因为 RDB 更适合用于备份数据库（AOF 在不断变化不好备份），留着 rdb 作为一个万一的手段
+
+- 推荐方式
+
+  - RDB + AOF 混合方式
+
+    - 结合了 RDB 和 AOF 的优点，既能快速加载又能避免丢失过多的数据。
+
+      1. 开启混合方式设置
+
+         设置 aof-use-rdb-preamble 的值为 yes，yes 表示开启，设置为 no 表示禁用
+
+      2. RDB + AOF 的混合方式 --> 结论：RDB 镜像做全量持久化，AOF 做增量持久化
+
+         先使用 RDB 进行快照存储，然后使用 AOF 持久化记录所有的写操作，当重写策略满足或手动触发重写的时候，**将最新的数据存储为新的 RDB 记录**。这样的话，重启服务的时候会从 RDB 和 AOF 两部分恢复数据，既保证了数据完整性，又提高了恢复数据的性能。简单来说：混合持久化方式产生的文件一部分是 RDB 格式，一部分是 AOF 格式。--> AOF 包括了 RDB 头部 + AOF 混写
+
+# P46 redis 持久化之纯缓存模式 Only
+
+纯缓存模式
+
+- 同时关闭 RDB + AOF
+  - save ""
+    - 禁用 rdb
+    - 禁用 rdb 持久化模式下，我们仍然可以使用命令 save、bgsave 生成 rdb 文件
+  - appendonly no
+    - 禁用 aof
+    - 禁用 aof 持久化模式下，我们仍然可以使用命令 bgrewriteaof 生成 aof 文件
+
+# P47 redis 事务之理论简介
+
+6、Redis 事务
+
+- 是什么
+  - 官网
+  - 可以一次执行多个命令，本质是一组命令的集合。一个事务中的所有命令都会序列化，**按顺序地串行化执行而不会被其他命令插入，不许加塞**
+- 能干嘛
+  - 一个队列中，一次性、顺序性、排他性的执行一系列命令
+- Redis 事务 VS 数据库事务
+  1. 单独的隔离操作
+     - Redis 的事务仅仅是保证事务里的操作会被连续独占的执行，redis 命令执行是单线程架构，在执行完事务内所有指令前是不可能再去同时执行其他客户端的请求的
+  2. 没有隔离级别的概念
+     - 因为事务提交前任何指令都不会被实际执行，也就不存在”事务内的查询要看到事务里的更新，在事务外查询不能看到“这种问题了
+  3. 不保证原子性
+     - Redis 的事务**不保证原子性**，也就是不保证所有指令同时成功或同时失败，只有决定是否开始执行全部指令的能力，没有执行到一半进行回滚的能力
+  4. 排他性
+     - Redis 会保证一个事务内的命令依次执行，而不会被其他命令插入
+- 怎么玩
+- 小总结
+
+# P48 redis 事务之案例实操
+
+怎么玩
+
+- 常用命令
+
+  - | 序号 | 命令                | 描述                                                         |
+    | ---- | ------------------- | ------------------------------------------------------------ |
+    | 1    | DISCARD             | 取消事务，放弃执行事务块内的所有命令                         |
+    | 2    | EXEC                | 执行所有事务块内的命令                                       |
+    | 3    | MULTI               | 标记一个事务块的开始                                         |
+    | 4    | UNWATCH             | 取消 WATCH 命令对所有 key 的监视                             |
+    | 5    | WATCH key [key ...] | 监视一个（或多个）key，如果在事务执行之前这个（或这些）key 被其他命令所改动，那么事务将被打断 |
+
+- case1: 正常执行
+
+  - MULTI
+  - EXEC
+
+- case2: 放弃事务
+
+  - MULTI
+  - DISCARD
+
+- case3: 全体连坐
+
+  - 官网说明
+
+    - A command may fail to be queued, so there may be an error before `EXEC`. For instance the command may be syntactically wrong (wrong number of arguments, wrong command name, ...), or there may be some critical condition like an out of memory condition (if the server is configured to have a memory limit using the `maxmemory` directive)
+
+  - 故意写错，语法编译不通过
+
+    一个语法出错，全体连坐。如果任何一个命令语法有错，Redis 会直接返回错误，所有的命令都不会执行
+
+    值没有变化，无作用
+
+- case4: 冤头债主
+
+  - 前期语法都没错，编译通过；
+
+    执行 exec 后报错：
+
+    冤有头，债有主
+
+    对的执行错的停
+
+  - 官网说明
+
+  - 补充
+
+    - Redis 不提供事务回滚的功能，开发者必须在事务执行出错后，自行恢复数据库状态
+
+  - 注意和传统数据库事务区别，不一定要么一起成功要么一起失败
+
+- case5: watch 监控
+
+  - Redis 使用 Watch 来提供乐观锁锁定，类似于 CAS（Check-and-Set）
+    - 悲观锁
+      - 悲观锁（Pessimistic Lock），顾名思义，就是很悲观，每次去拿数据的时候都认为别人会修改，所以每次在拿数据的时候都会上锁，这样别人想拿这个数据就会 block 直到它拿到锁。
+    - 乐观锁
+      - 乐观锁（Optimistic Lock），顾名思义，就是很乐观，每次去拿数据的时候都认为别人不会修改，**所以不会上锁**，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据。
+      - **乐观锁策略：提交版本必须大于记录当前版本才能执行更新**
+    - CAS
+  - watch
+    - 初始化 k1 和 balance 两个 key，先监控再开启 multi，保证两 key 变动在同一个事务内
+    - 有加塞篡改
+      - watch 命令是一种乐观锁的实现，Redis 在修改的时候会检测数据是否被更改，如果更改了，则执行失败
+  - unwatch
+  - 小结
+    - 一旦执行了 exec 之前加的监控锁都会被取消掉了
+    - 当客户端连接丢失的时候（比如退出链接），所有东西都会被取消监视
+
+小总结
+
+- **开启**：以 MULTI 开始一个事务
+- **入队**：将多个命令入队到事务中，接到这些命令并不会立即执行，而是放到等待执行的事务队列里面
+- **执行**：由 EXEC 命令触发事务
+
+# P49 redis 管道之理论简介
+
+7、Redis 管道
+
+- 面试题
+
+  - 如何优化频繁命令往返造成的性能瓶颈？
+
+  - 问题由来
+
+    - Redis 是一种基于**客户端-服务端模型**以及请求/响应协议的 TCP 服务。一个请求会遵循以下步骤：
+
+      1. 客户端向服务端发送命令分四步（发送命令 -> 命令排队 -> 命令执行 -> 返回结果），并监听 Socket 返回，通常以阻塞模式等待服务端响应。
+      2. 服务端处理命令，并将结果返回给客户端。
+
+      **上述两部称为：Round Trip Time（简称 RTT，数据包往返于两端的时间），问题笔记最下方**
+
+      如果同时需要执行大量的命令，那么就要等待上一条命令应答后再执行，这中间不仅仅多了 RTT（Round Time Trip）,而且还频繁调用系统 IO，发送网络请求，同时需要 redis 调用多次 read() 和 write() 系统方法。系统方法会将数据从用户态转移到内核态，这样就会对进程上下文有比较大的影响了，性能不太好
+
+- 是什么
+
+  - 解决思路
+    - 引出管道这个概念
+    - 管道（pipeline）可以一次性发送多条命令给服务端，服务端依次处理完毕后，**通过一条响应一次性将结果返回，通过减少客户端与 redis 的通信次数来实现降低往返延时时间**。pipeline 实现的原理是队列，先进先出特性就保证数据的顺序性。
+  - 官网
+  - 定义
+    - Pipeline 是为了解决 RTT 往返回时，仅仅是将命令打包一次性发送，对整个 Redis 的执行不造成其他任何影响
+  - 一句话
+    - **批处理命令变种优化措施**，类似 Redis 的原生批命令（mget 和 mset）
+
+- 案例演示
+
+- 小总结
+
+# P50 redis 管道之案例实操
+
+案例演示
+
+- 当堂演示
+
+  - ```shell
+    cat cmd.txt
+    
+    # set k100 v100
+    # set k200 v200
+    # hset k300 name haha
+    # hset k300 age 20
+    # hset k300 gender male
+    
+    cat cmd.txt | redis-cli -a 111111 --pipe
+    ```
+
+# P51 redis 管道之小总结
+
+小总结
+
+- Pipeline 与原生批量命令对比
+  - 原生批量命令是原子性（例如：mset，mget），**pipeline 是非原子性**
+  - 原生批量命令一次只能执行一种命令，pipeline 支持批量执行不同命令
+  - 原生批命令是服务端实现，而 pipeline 需要服务端与客户端共同完成
+- Pipeline 与事务对比
+  - 事务具有原子性，管道不具有原子性
+  - 管道一次性将多条命令发送到服务器，事务是一条一条的发，事务只有在接收到 exec 命令后才会执行，管道不会
+  - 执行事务时会阻塞其他命令的执行，而执行管道中的命令时不会
+- 使用 Pipeline 注意事项
+  - pipeline 缓冲的指令只是会依次执行，不保证原子性，如果执行中指令发生异常，将会继续执行后续的指令
+  - 使用 pipeline 组装的命令个数不能太多，不然数据量过大客户端阻塞的时间可能过久，同时服务端此时也被迫回复一个队列答复，占用很多内存
+
+# P52 redis 发布订阅之理论简介
+
+8、Redis 发布订阅
+
+- 学习定位
+  - 了解即可
+- 是什么
+  - 定义
+    - 是一种消息通信模式：发送者（PUBLISH）发送消息，订阅者（SUBSCRIBE）接收消息，可以实现进程间的消息传递
+  - 官网
+  - 一句话
+    - Redis 可以实现消息中间件 MQ 的功能，通过发布订阅实现消息的引导和分流。
+    - **仅代表我个人**：不推荐使用该功能，专业的事情交给专业的中间件处理，redis 就做好分布式缓存功能
+- 能干嘛
+  - Redis 客户端可以订阅任意数量的频道，类似我们微信关注多个公众号
+    - 当有新消息通过 PUBLISH 命令发送给频道 channel1 时
+  - 小总结
+    - 发送/订阅其实是一个轻量的队列，只不过数据不会被持久化，一般用来处理**实时性较高的异步消息**
+- 常用命令
+- 案例演示
+
+# P53 redis 发布订阅之命令简介
+
+常用命令
+
+- | 序号 | 命令                                        | 描述                             |
+  | ---- | ------------------------------------------- | -------------------------------- |
+  | 1    | PSUBSCRIBE pattern [pattern ...]            | 订阅一个或多个符合给定模式的频道 |
+  | 2    | PUBSUB subcommand [argument [argument ...]] | 查看订阅与发送系统状态           |
+  | 3    | PUBLISH channel message                     | 将信息发送到指定的频道           |
+  | 4    | PUNSUBSCRIBE [pattern [pattern ...]]        | 退订所有给定模式的频道           |
+  | 5    | SUBSCRIBE channel [channel ...]             | 订阅给定的一个或多个频道的信息   |
+  | 6    | UNSUBSCRIBE [channel [channel ...]]         | 指退订给定的频道                 |
+
+- SUBSCRIBE channel [channel ...]
+
+  - 订阅给定的一个或多个频道的信息
+  - **推荐先执行订阅后再发布，订阅成功之前发布的消息是收不到的**
+  - 订阅的客户端每次可以收到一个 3 个参数的消息
+    - 消息的种类
+    - 始发频道的名称
+    - 实际的消息内容
+
+- PUBLISH channel message
+
+  - 发送消息到指定的频道
+
+- PSUBSCRIBE pattern [pattern ...]
+
+  - 按照模式批量订阅，订阅一个或多个符合给定模式（支持 * 号 ？号之类的）的频道
+
+- PUBSUB subcommand [argument [argument ...]]
+
+  - 查看订阅与发布系统状态
+  - PUBSUB CHANNELS
+    - 由活跃频道组成的列表
+  - PUBSUB NUMSUB [channel [channel ...]]
+    - 某个频道有几个订阅者
+  - PUBSUB NUMPAT
+    - 只统计使用 PSUBSCRIBE 命令执行的，返回客户端订阅的唯一**模式的数量**
+
+- UNSUBSCRIBE [channel [channel ...]]
+
+- PUNSUBSCRIBE [pattern [pattern ...]]
+
+# P54 redis 发布订阅之案例实操
+
+案例演示
+
+- 当堂演示
+
+  - 打开 3 个客户端，演示客户端 A、B 订阅消息，客户端 C 发布消息
+  - 演示批量订阅和发布
+  - 取消订阅
+
+- 小总结
+
+  - Redis 可以实现消息中间件 MQ 的功能，通过发布订阅实现消息的引导和分流。
+
+    仅代表我个人：不推荐使用该功能，专业的事情交给专业的中间件处理，redis 就做好分布式缓存功能
+
+  - Pub/Sub 缺点
+
+    - 发布的消息在 Redis 系统中不能持久化，因此，必须先执行订阅，再等待消息发布。如果先发布了消息，那么该消息由于没有订阅者，
+    - 消息只管发送对于发布者而言消息是即发即失的，不管接收，也没有 ACK 机制，无法保证消息的消费成功。
+    - 以上缺点导致 Redis 的 Pub/Sub 模式就像个小玩具，在生产环境中几乎无用武之地，为此 Redis 5.0 版本新增了 Stream 数据结构，不但支持多播，还支持数据持久化，相比 Pub/Sub 更加的强大
+
+# P55 redis 主从复制之理论简介
+
+9、Redis 复制（replica）
+
+- 是什么
+  - 官网地址
+  - 一句话
+    - 就是主从复制，master 以写为主，Slave 以读为主
+    - 当 master 数据变化的时候，自动将新的数据异步同步到其它 slave 数据库
+- 能干嘛
+  - 读写分离
+  - 容灾恢复
+  - 数据备份
+  - 水平扩容支撑高并发
+- 怎么玩
+  - 配从（库）不配主（库）
+  - 权限细节，重要
+    - master 如果配置了 requirepass 参数，需要密码登陆
+    - 那么 slave 就要配置 masterauth 来设置校验密码，否则的话 master 会拒绝 slave 的访问请求
+  - 基本操作命令
+    - info replication
+      - 可以用查看复制节点的主从关系和配置信息
+    - replicaof 主库IP 主库端口
+      - 一般写入进 redis.conf 配置文件内
+    - slaveof 主库IP 主库端口
+      - 每次与 master 断开之后，都需要重新连接，除非你配置进 redis.conf 文件
+      - 在运行期间修改 slave 节点的信息，如果该数据库已经是某个主数据库的从数据库，那么会停止和原主数据库的同步关系**转而和新的主数据库同步，重新拜码头**
+    - slaveof no one
+      - 使当前数据库停止与其它数据库的同步，**转成主数据库，自立为王**
+- 案例演示
+- 复制原理和工作流程
+- 复制的缺点
+
+# P56 redis 主从复制之演示架构
+
+案例演示
+
+- 架构说明
+  - 一个 Master 两个 Slave
+    - 3 台虚机，每台都安装 redis
+  - 拷贝多个 redis.conf 文件
+    - redis6379.conf
+    - redis6380.conf
+    - redis6381.conf
+- 小口诀
+  - 三边网络相互 ping 通且注意防火墙配置
+  - 三大命令
+    - 主从复制
+      - replicaof 主库IP 主库端口
+      - 配从（库）不配主（库）
+    - 改换门庭
+      - slaveof 新主库IP 新主库端口
+    - 自立为王
+      - slaveof no one
+- 修改配置文件细节操作
+- 常用 3 招
+
+# P57 redis 主从复制之配置细则
+
+修改配置文件细节操作
+
+- redis6379.conf 为例，步骤
+  1. 开启 daemonize yes
+  2. 注释掉 bind 127.0.0.1
+  3. protected-mode no
+  4. 指定端口
+  5. 指定当前工作目录, dir
+  6. pid 文件名字，pidfile
+  7. log 文件名字，logfile
+  8. requirepass
+  9. dump.rdb 名字
+  10. aof 文件，appendfilename
+  11. **从机访问主机的通行密码 masterauth，必须**
+      - 从机需要配置，主机不用
+
+常用 3 招
+
+- 一主二仆
+- 薪火相传
+- 反客为主
+
+# P58 redis 主从复制之一主二仆
+
+一主二仆
+
+- 方案1：配置文件固定写死
+
+  - 配置文件执行
+    - replicaof 主库IP 主库端口
+    - 配从（库）不配主（库）
+      - 配置从机 6380
+      - 配置从机 6381
+    - 先 master 后两台 slave 依次启动
+    - 主从关系查看
+      - 日志
+        - 主机日志
+        - 备机日志
+      - 命令
+        - info replication 命令查看
+
+- 主从问题演示
+
+  1. 从机可以执行写命令吗？
+
+     - 不行，报错：`(error) READONLY You can't write against a read only replica.`
+
+  2. 从机切入点问题
+
+     - **slave 是从头开始复制还是从切入点开始复制？**
+
+       master 启动，写到 k3
+
+       slave1 跟着 master 同时启动，跟着写到 k3
+
+       slave2 写到 k3 后才启动，那之前的是否也可以复制？
+
+       Y，首次一锅端，后续跟随，master 写，slave 跟。
+
+  3. 主机 shutdown 后，从机会上位吗？
+
+     - **主机 shutdown 后情况如何？从机是上位还是原地待命？**
+
+       从机不动，原地待命，从机数据可以正常使用；等待主机重启动归来
+
+  4. 主机 shutdown 后，重启后主从关系还在吗？从机还能否顺利复制？
+
+     - 可以
+
+  5. 某台从机 down 后，master 继续，从机重启后它能跟上大部队吗？
+
+     - 可以
+
+- 方案2：命令操作手动指定
+
+  - 从机停机去掉配置文件中的配置项，3 台目前都是主机状态，各不从属
+  - 3 台 master
+  - 预设的从机上执行命令
+    - slaveof 主库IP 主库端口
+    - 效果
+  - 用命令使用的话，2 台从机重启后，关系还在吗？
+    - 不在了
+
+- 配置 VS 命令的区别，当堂试验讲解
+
+  - 配置，持久稳定
+  - 命令，当次生效
+
+# P59 redis 主从复制之薪火相传
+
+薪火相传
+
+- 上一个 slave 可以是下一个 slave 的 master，slave 同样可以接收其他 slaves 的连接和同步请求，那么该 slave 作为了链条中下一个的 master，可以有效减轻主 master 的写压力
+- 中途变更转向：会清除之前的数据，重新建立拷贝最新的
+- slaveof 新主库IP 新主库端口
+
+# P60 redis 主从复制之反客为主
+
+反客为主
+
+- SLAVEOF no one
+  - 使当前数据库停止与其他数据库……
+
+# P61 redis 主从复制之工作流程总结
+
+复制原理和工作流程
+
+- slave 启动，同步初请
+  - slave 启动成功连接到 master 后会发送一个 sync 命令
+  - slave 首次全新连接 master，一次完全同步（全量复制）将被自动执行，slave 自身原有数据会被 master 数据覆盖清除
+- 首次连接，全量复制
+  - master 节点收到 sync 命令后会开始在后台保存快照（即 RDB 持久化，主从复制时会触发 RDB），同时收集所有接收到的用于修改数据集命令缓存起来，master 节点执行 RDB 持久化完后，master 将 rdb 快照文件和所有缓存的命令发送到所有 slave，以完成一次完全同步
+  - 而 slave 服务在接收到数据库文件数据后，将其存盘并加载到内存中，从而完成复制初始化
+- 心跳持续，保持通信
+  - repl-ping-replica-period 10
+    - master 发出 PING 包的周期，默认是 10 秒
+- 进入平稳，增量复制
+  - Master 继续将新的所有收集到的修改命令自动依次传给 slave，完成同步
+- 从机下线，重连续传
+  - master 会检查 backlog 里面的 offset，master 和 slave 都会保存一个复制的 offset 还有一个 masterId，offset 是保存在 backlog 中的。**Master 只会把已经复制的 offset 后面的数据复制给 Slave**，类似断点续传
+
+# P62 redis 主从复制之痛点和改进需求
+
+复制的缺点
+
+- 复制延时，信号衰减
+  - 由于所有的写操作都是先在 Master 上操作，然后同步更新到 Slave 上，所以从 Master 同步到 Slave 机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave 机器数量的增加也会使这个问题更加严重。
+- Master 挂了怎么办？
+  - 默认情况下，不会在 slave 节点中自动重选一个 master
+  - 那每次都要人工干预？
+    - 无人值守安装变成刚需
+
+# P63 redis 哨兵监控之理论简介
+
+10、Redis 哨兵（sentinel）
+
+- 是什么
+  - 吹哨人巡查监控后台 master 主机是否故障，如果故障了根据**投票数**自动将某个从库转换为新主库，继续对外服务
+  - 作用
+    - 俗称，无人值守运维
+    - **哨兵的作用：**
+      1. 监控 redis 运行状态，包括 master 和 slave
+      2. 当 master down 机，能自动将 slave 切换成新 master
+  - 官网理论
+- 能干嘛
+  - 主从监控
+    - 监控主从 redis 库运行是否正常
+  - 消息通知
+    - 哨兵可以将故障转移的结果发送给客户端
+  - 故障转移
+    - 如果 Master 异常，则会进行主从切换，将其中一个 Slave 作为新 Master
+  - 配置中心
+    - 客户端通过连接哨兵来获得 Redis 服务的主节点地址
+- 怎么玩（案例演示实战步骤）
+- 哨兵运行流程和选举原理
+- 哨兵使用建议
+
+# P64 redis 哨兵监控之案例实操01
+
+怎么玩（案例演示实战步骤）
+
+- Redis Sentinel 架构，前提说明
+  - 3 个哨兵
+    - 自动监控和维护集群，不存放数据，只是吹哨人
+  - 1 主 2 从
+    - 用于数据读取和存放
+- 案例步骤，不服就干
+  - /myredis 目录下新建或者拷贝 sentinel.conf 文件，名字绝不能错
+  - 先看看 /opt 目录下默认的 sentinel.conf 文件的内容
+  - 重点参数项说明
+    - bind
+      - 服务监听地址，用于客户端连接，默认本机地址
+    - daemonize
+      - 是否以后台 daemon 方式运行
+    - protected-mode
+      - 安全保护模式
+    - port
+      - 端口
+    - logfile
+      - 日志文件路径
+    - pidfile
+      - pid 文件路径
+    - dir
+      - 工作目录
+    - `sentinel monitor <master-name> <ip> <redis-port> <quorum>`
+      - 设置要监控的 master 服务器
+      - quorum 表示最少有几个哨兵认可客观下线，同意故障迁移的法定票数
+    - `sentinel auth-pass <master-name> <password>`
+    - 其它
+  - 本次案例哨兵 sentinel 文件通用配置
+  - 先启动一主二从 3 个 redis 实例，测试正常的主从复制
+  - =====以下是哨兵内容部分=====
+  - 再启动 3 个哨兵，完成监控
+  - 启动 3 个哨兵监控后再测试一次主从复制
+    - 岁月静好一切 OK
+  - 原有的 master 挂了
+  - 对比配置文件
+- 其他备注
+
+# P65 redis 哨兵监控之案例实操02
+
+`sentinel monitor <master-name> <ip> <redis-port> <quorum>`
+
+- 设置要监控的 master 服务器
+
+- quorum 表示最少有几个哨兵认可客观下线，同意故障迁移的法定票数
+
+  - 行尾最后的 quorum 代表什么意思呢？**quorum：确认客观下线的最少的哨兵数量**
+
+    我们知道，网络是不可靠的，有时候一个 sentinel 会因为网络堵塞而**误以为**一个 master redis 已经死掉了，在 sentinel 集群环境下需要多个 sentinel 互相沟通来确认某个 master **是否真的死了**，quorum 这个参数是进行客观下线的一个依据，意思是至少有 quorum 个 sentinel 认为这个 master 有故障，才会对这个 master 进行下线以及故障转移。因为有的时候，某个 sentinel 节点可能因为自身网络原因，导致无法连接 master，而此时 master 并没有出现故障，所以，这就需要多个 sentinel 都一致认为该 master 有问题，才可以进行下一步操作，这就保证了公平性和高可用。
+
+`sentinel auth-pass <master-name> <password>`
+
+- master 设置了密码，连接 master 服务的密码
+
+其它
+
+- `sentinel down-after-milliseconds <master-name> <milliseconds>`
+
+  指定多少毫秒之后，主节点没有应答哨兵，此时哨兵主观上认为主节点下线
+
+- `sentinel parallel-syncs <master-name> <nums>`
+
+  表示允许并行同步的 slave 个数，当 Master 挂了后，哨兵会选出新的 Master，此时，剩余的 slave 会向新的 master 发起同步数据
+
+- `sentinel failover-timeout <master-name> <milliseconds>`
+
+  故障转移的超时时间，进行故障转移时，如果超过设置的毫秒，表示故障转移失败
+
+- `sentinel  notification-script <master-name> <script-path>`
+
+  配置当某一事件发生时所需要执行的脚本
+
+- `sentinel client-reconfig-script <master-name> <script-path>`
+
+  客户端重新配置主节点参数脚本
+
+# P66 redis 哨兵监控之案例实操03
+
+本次案例哨兵 sentinel 文件通用配置
+
+- 由于机器硬件关系，我们的 3 个哨兵都同时配置进 192.168.111.169 同一台机器
+
+- sentinel26379.conf
+
+  - ```
+    bind 0.0.0.0
+    daemonize yes
+    protected-mode no
+    port 26379
+    logfile "/myredis/sentinel26379.log"
+    pidfile /var/run/redis-sentinel26379.pid
+    dir /myredis
+    sentinel monitor mymaster 192.168.111.169 6379 2
+    sentinel auth-pass mymaster 111111
+    ```
+
+- sentinel26380.conf
+
+  - ```
+    bind 0.0.0.0
+    daemonize yes
+    protected-mode no
+    port 26380
+    logfile "/myredis/sentinel26380.log"
+    pidfile /var/run/redis-sentinel26380.pid
+    dir /myredis
+    sentinel monitor mymaster 192.168.111.169 6379 2
+    sentinel auth-pass mymaster 111111
+    ```
+
+- sentinel26381.conf
+
+  - ```
+    bind 0.0.0.0
+    daemonize yes
+    protected-mode no
+    port 26381
+    logfile "/myredis/sentinel26381.log"
+    pidfile /var/run/redis-sentinel26381.pid
+    dir /myredis
+    sentinel monitor mymaster 192.168.111.169 6379 2
+    sentinel auth-pass mymaster 111111
+    ```
+
+- 请看一眼 sentinel26379.conf、sentinel26380.conf、sentinel26381.conf 我们自己填写的内容
+
+- master 主机配置文件说明
+
+先启动一主二从 3 个 redis 实例，测试正常的主从复制
+
+- 架构说明
+  1. 169 机器上新建 redis6379.conf 配置文件，由于要配合本次案例，请设置 masterauth 项访问密码为 111111，不然后续可能报错 master_link_status:down
+  2. 172 机器上新建 redis6380.conf 配置文件，设置好 `replicaof <masterip> <masterport>`
+  3. 173 机器上新建 redis6381.conf 配置文件，设置好 `replicaof <masterip> <masterport>`
+- 请看一眼 sentinel6379.conf、sentinel6380.conf、sentinel6381.conf 我们自己填写主从复制相关内容
+  - 主机 6379
+    - 6379 后续可能会变成从机，需要设置访问新主机的密码，请设置 masterauth 项访问密码为 111111，**不然后续可能报错 master_link_status:down**
+  - 6380
+  - 6381
+- 3 台不同的虚拟机实例，启动三部真实机器实例并连接
+- 具体查看当堂动手案例配置并观察文件内容
+
+# P67 redis 哨兵监控之案例实操04
+
+先启动一主二从 3 个 redis 实例，测试正常的主从复制
+
+- 3 台不同的虚拟机实例，启动三部真实机器实例并连接
+  - redis-cli -a 111111 -p 6379
+  - redis-cli -a 111111 -p 6380
+  - redis-cli -a 111111 -p 6381
+
+再启动 3 个哨兵，完成监控
+
+- redis-sentinel sentinel26379.conf --sentinel
+- redis-sentinel sentinel26380.conf --sentinel
+- redis-sentinel sentinel26381.conf --sentinel
+
+启动 3 个哨兵监控后再测试一次主从复制
+
+- 岁月静好一切 OK
+
+# P68 redis 哨兵监控之案例实操05
+
+原有的 master 挂了
+
+- 我们自己手动关闭 6379 服务器，模拟 master 挂了
+- 问题思考
+  - 两台**从机**数据是否 OK
+  - 是否会从剩下的 2 台机器上选出新的 master
+    - 会
+  - 之前 down 机的 master 机器重启回来，谁将会是新老大？会不会双 master 冲突？
+    - 新 master，不会
+- 揭晓答案
+
+# P69 redis 哨兵监控之案例实操06
+
+揭晓答案
+
+- 数据 OK
+  - 两个小问题
+    - info replication -> Error: Server closed the connection
+    - get k2 -> Error: Broken pipe
+  - 6380
+  - 6381
+  - 了解 Broken Pipe
+    - 认识 broken pipe
+      - pipe 是管道的意思，管道里面是数据流，通常是从文件或网络套接字读取的数据。当该管道从另一端突然关闭时，会发生数据突然中断，即是 broken，对于 socket 来说，可能是网络被拔出或另一端的进程崩溃
+    - 解决问题
+      - 其实当该异常发生的时候，对于服务器来说，并没有多少影响。因为可能是某个客户端突然中止了进程导致了该错误
+    - 总结 Broken pipe
+      - 这个异常是客户端读取超时关闭了连接，这时候服务器端再向客户端已经断开的连接写数据时就发生了 broken pipe 异常！
+- 投票新选
+  - sentinel26379.log
+  - sentinel26380.log
+  - sentinel26381.log
+- 谁是 master，限本次案例
+  - 6381 被选为新 master，上位成功
+  - 以前的 6379 从 master 降级变成了 slave
+  - 6380 还是 slave，只不过换了个新老大 6381（6379 变 6381），6380 还是 slave
+
+对比配置文件
+
+- vim sentinel26379.conf
+- 老master，vim redis6379.conf
+- 新master，vim redis6381.conf
+- 结论
+  - 文件的内容，在运行期间会被 sentinel 动态进行更改
+  - Master-Slave 切换后，master_redis.conf、slave_redis.conf 和 sentinel.conf 的内容都会发生改变，即 master_redis.conf 中会多一行 slaveof 的配置，sentinel.conf 的监控目标会随之调换
+
+# P70 redis 哨兵监控之案例实操07
+
+其它备注
+
+- 生产都是不同机房不同服务器，很少出现 3 个哨兵全挂掉的情况
+- 可以同时监控多个 master，一行一个
+
+# P71 redis 哨兵监控之哨兵运行流程
+
+哨兵运行流程和选举原理
+
+- 当一个主从配置中的 master 失效之后，sentinel 可以选举出一个新的 master 用于自动接替原 master 的工作，主从配置中的其他 redis 服务器自动指向新的 master 同步数据。一般建议 sentinel 采取奇数台，防止某一台 sentinel 无法连接到 master 导致误切换
+
+- 运行流程，故障切换
+
+  - 三个哨兵监控一主二从，正常运行中……
+
+  - SDown 主观下线（Subjectively Down）
+
+    - SDOWN（主观不可用）是**单个 Sentinel 自己主观上**检测到的关于 master 的状态，从 sentinel 的角度来看，如果发送了 PING 心跳后，在一定时间内没有收到合法的回复，就达到了 SDOWN 的条件。
+
+    - sentinel 配置文件中的 down-after-milliseconds 设置了判断主观下线的时间长度
+
+    - 说明
+
+      - 所谓主观下线（Subjectively Down，简称 SDOWN）指的是**单个 Sentinel 实例**对服务器做出的下线判断，即单个 sentinel 认为某个服务下线（有可能是接收不到订阅，之间的网络不通等等原因）。主观下线就是说如果服务器在 [sentinel down-after-milliseconds] 给定的毫秒数之内没有回应 PING 命令或者返回一个错误消息，那么这个 Sentinel 会主观的（**单方面的**）认为这个 master 不可以用了
+
+        `sentinel down-after-milliseconds <masterName> <timeout>`
+
+        表示 master 被当前 sentinel 实例认定为失效的间隔时间，这个配置其实就是进行主观下线的一个依据
+
+        master 在多长时间内一直没有给 Sentinel 返回有效信息，则认定该 master 主观下线。也就是说如果多久没联系上 redis-server，认为这个 redis-server 进入到失效（SDOWN）状态。
+
+  - ODown 客观下线（Objectively Down）
+
+    - ODWON 需要一定数量的 sentinel，**多个哨兵达成一致意见**才能认为一个 master 客观上已经宕掉
+
+    - 说明
+
+      - **quorum 这个参数是进行客观下线的一个依据，**法定人数/法定票数
+
+        意思是至少有 quorum 个 sentinel 认为这个 master 有故障才会对这个 master 进行下线以及故障转移。因为有的时候，某个 sentinel 节点可能因为自身网络原因导致无法连接 master，而此时 master 并没有出现故障，所以这就需要多个 sentinel 都一致认为该 master 有问题，才可以进行下一步操作，这就保证了公平性和高可用。
+
+  - 选举出领导者哨兵（哨兵中选出兵王）
+
+    - 当主节点被判断客观下线以后，各个哨兵节点会进行协商，先选举出一个**领导者哨兵节点（兵王）**并由该领导者节点，也即被选举出的兵王进行 failover（故障迁移）
+
+      - 三哨兵日志文件 2 次解读分析
+
+        - sentinel26379.log
+
+        - sentinel26380.log
+
+          - ```
+            +sdown ...
+            +odown ...
+            +new-epoch 1
+            +try-failover ...
+            Sentinel new configuration saved on disk
+            +vote-for-leader ...
+            
+            ...
+            
+            +switch-master ...
+            +slave ...
+            +slave ...
+            ```
+
+        - sentinel26381.log
+
+    - 哨兵领导者，兵王如何选出来的？
+
+      - Raft 算法
+
+        - 监视该主节点的所有哨兵都有可能被选为领导者，选举使用的算法是 Raft 算法；Raft 算法的基本思路**是先到先得**
+
+          即在一轮选举中，哨兵 A 向 B 发送成为领导者的申请，如果 B 没有同意过其他哨兵，则会同意 A 成为领导者
+
+  - 由兵王开始推动故障切换流程并选出一个新 master
