@@ -2494,3 +2494,1517 @@ RDB-AOF 混合持久化
           即在一轮选举中，哨兵 A 向 B 发送成为领导者的申请，如果 B 没有同意过其他哨兵，则会同意 A 成为领导者
 
   - 由兵王开始推动故障切换流程并选出一个新 master
+
+# P72 redis 哨兵监控之新 master 选举算法
+
+由兵王开始推动故障切换流程并选出一个新 master
+
+- 3 步骤
+
+  - 新主登基
+
+    - 某个 Slave 被选中成为新 Master
+
+    - 选出新 Master 的规则，剩余 Slave 节点健康前提下
+
+      - priority 高 -> replication offset 大 -> Run ID 小
+
+      - redis.conf 文件中，优先级 slave-priority 或者 replica-priority 最高的从节点（数字越小优先级越高）
+
+        - ```
+          replica-priority 100
+          ```
+
+      - 复制偏移位置 offset 最大的从节点
+
+      - 最小 Run ID 的从节点
+
+        - 字典顺序，ASCII 码
+
+  - 群臣俯首
+
+    - 一朝天子一朝臣，换个码头重新拜
+    - 执行 slaveof no one 命令让选出来的从节点成为新的主节点，并通过 slaveof 命令让其他节点成为其从节点
+    - Sentinel leader 会对选举出的新 master 执行 slaveof no one 操作，将其提升为 master 节点
+    - Sentinel leader 向其它 slave 发送命令，让剩余的 slave 成为新的 master 节点的 slave
+
+  - 旧主拜服
+
+    - 老 master 回来也认怂
+    - 将之前已下线的老 master 设置为新选出的新 master 的从节点，当老 master 重新上线后，它会成为新 master 的从节点
+    - Sentinel leader 会让原来的 master 降级为 slave 并恢复正常工作
+
+- 小总结
+
+  - 上述的 failover 操作均由 sentinel 自己独自完成，完全无需人工干预
+
+# P73 redis 哨兵监控之哨兵使用建议
+
+哨兵使用建议
+
+- 哨兵节点的数量应为多个，哨兵本身应该集群，保证高可用
+- 哨兵节点的数量应该是奇数
+- 各个哨兵节点的配置应一致
+- 如果哨兵节点部署在 Docker 等容器里面，尤其要注意端口的正确映射
+- 哨兵集群 + 主从复制，并不能保证数据零丢失
+  - 承上启下引出集群
+
+# P74 redis 集群分片之集群是什么
+
+11、Redis 集群（cluster）
+
+- 是什么
+  - 定义
+    - **由于数据量过大，单个 Master 复制集**难以承担，因此需要对多个复制集进行集群，形成水平扩展每个复制集只负责存储整个数据集的一部分，这就是 Redis 的集群，其作用是提供在多个 Redis 节点间共享数据的程序集
+  - 官网
+  - 一图
+  - 一句话
+    - Redis 集群是一个提供在多个 Redis 节点间共享数据的程序集
+    - **Redis 集群可以支持多个 Master**
+- 能干嘛
+- 集群算法-分片-槽位 slot
+- 集群环境案例步骤
+- 集群常见操作命令和 CRC 16 算法分析
+
+# P75 redis 集群分片之集群能干嘛
+
+能干嘛
+
+- Redis 集群支持多个 Master，每个 Master 又可以挂载多个 Slave
+  - 读写分离
+  - 支持数据的高可用
+  - 支持海量数据的读写存储操作
+- 由于 Cluster 自带 Sentinel 的故障转移机制，内置了高可用的支持，**无需再去使用哨兵功能**
+- 客户端与 Redis 的节点连接，不再需要连接集群中所有的节点，只需要任意连接集群中的一个可用节点即可
+- **槽位 slot** 负责分配到各个物理服务节点，由对应的集群来负责维护节点、插槽和数据之间的关系
+
+# P76 redis 集群分片之槽位 slot
+
+集群算法-分配-槽位 slot
+
+- 官网出处
+
+  - 翻译说明
+
+- redis 集群的槽位 slot
+
+  - **Redis 集群的数据分片**
+
+    Redis 集群没有使用一致性 Hash，而是引入了**哈希槽**的概念
+
+    Redis 集群有 16384 个哈希槽，每个 key 通过 CRC16 校验后对 16384 取模来决定放置哪个槽。集群的每个节点负责一部分 hash 槽。
+
+- redis 集群的分片
+
+- 他俩的优势
+
+- slot 槽位映射，一般业界有 3 种解决方案
+
+- 经典面试题
+
+  **为什么 redis 集群的最大槽数是 16384 个？**
+
+- Redis 集群不保证强一致性，这意味着在特定的条件下，Redis 集群可能会丢掉一些被系统收到的写入请求命令
+
+# P77 redis 集群分片之分片
+
+redis 集群的分片
+
+- 分片是什么
+  - 使用 Redis 集群时我们会将存储的数据分散到多台 redis 机器上，这称为分片。简言之，集群中的每个 Redis 实例都被认为是整个数据的一个分片。
+- 如何找到给定 key 的分片
+  - 为了找到给定 key 的分片，我们对 key 进行 CRC16(key) 算法处理并通过对总分片数量取模。然后，**使用确定性哈希函数**，这意味着给定的 key **将多次始终映射到同一个分片**，我们可以推断将来读取特定 key 的位置。
+- HASH_SLOT = CRC16(key) mod 16384
+
+# P78 redis 集群分片之分片优势
+
+他俩的优势
+
+- **最大优势，方便扩缩容和数据分派查找**
+
+  这种结构很容易添加或删除节点。比如如果我想新添加个节点 D，我需要从节点 A、B、C 中得部分槽到 D 上，如果我想移除节点 A，需要将 A 中的槽移到 B 和 C 节点上，然后将没有任何槽的 A 节点从集群中移除即可。由于从一个节点将哈希槽移动到另一个节点并不会停止服务，所以无论添加删除或者改变某个节点的哈希槽的数量都不会造成集群不可用的状态。
+
+# P79 redis 集群分片之哈希取余分区算法
+
+slot 槽位映射，一般业界有 3 种解决方案
+
+- 哈希取余分区
+
+  - 2 亿条记录就是 2 亿个 k，v，我们单机不行必须要分布式多机，假设有 3 台机器构成一个集群，用户每次读写操作都是根据公式：
+
+    hash（key）% N 个机器台数，计算出哈希值，用来决定数据映射到哪一个节点上。
+
+  - **优点：**
+
+    简单粗暴，直接有效，只需要预估好数据规划好节点，例如 3 台、8 台、10 台，就能保证一段时间的数据支撑。使用 Hash 算法让固定的一部分请求落到同一台服务器上，这样每台服务器固定处理一部分请求（并维护这些请求的信息），起到负载均衡+分而治之的作用。
+
+  - 缺点哪？？？
+
+    - **缺点：**
+
+      原来规划好的节点，进行扩容或者缩容就比较麻烦了，不管扩缩，每次数据变动导致节点有变动，映射关系需要重新进行计算，在服务器个数固定不变时没有问题，如果需要弹性扩容或故障停机的情况下，原来的取模公式就会发生变化：Hash(key) / 3 会变成 Hash(key) / ?。此时地址经过取余运算的结果将发生很大变化，根据公式获取的服务器也会变得不可控。
+
+      某个 redis 机器宕机了，由于台数数量变化，会导致 hash 取余全部数据时重新洗牌。
+
+- 一致性哈希算法分区
+
+- **哈希槽分区**
+
+# P80 redis 集群分片之一致性哈希算法 - 上集
+
+一致性哈希算法分区
+
+- 是什么
+
+  - 一致性 Hash 算法背景
+
+    一致性哈希算法在 1997 年由麻省理工学院中提出的，设计目标是为了解决**分布式缓存数据变动和映射问题，某个机器宕机了，分母数量改变了，自然取余数不 OK 了**。
+
+- 能干嘛
+
+  - 提出一致性 Hash 解决方案。目的是当服务器个数发生变动时，尽量减少影响客户端到服务器的映射关系
+
+- 3 大步骤
+
+  - 算法构建一致性哈希环
+
+    - **一致性哈希环**
+
+      一致性哈希算法必然有个 hash 函数并按照算法产生 hash 值，这个算法的所有可能哈希值会构成一个全量集，这个集合可以成为一个 hash 空间 [0, 2^32 - 1]，这个是一个线性空间，但是在算法中，我们通过适当的逻辑控制将它首尾相连（0 = 2^32），这样让它逻辑上形成了一个环形空间
+
+      它也是按照使用取模的方法，**前面笔记介绍的节点取模法是对节点（服务器）的数量进行取模。而一致性 Hash 算法是对 2 ^ 32 取模**。简单来说，**一致性 Hash 算法将整个哈希值空间组织成一个虚拟的圆环**，如假设某哈希函数 H 的值空间为 0 ~ 2 ^ 32 - 1（即哈希值是一个 32 位无符号整数），整个哈希环如下图：整个空间**按顺时针方向组织**，圆环的正上方的点代表 0，0 点右侧的第一个点代表 1，以此类推，2、3、4、…… 直到 2 ^ 32 - 1，也就是说 0 点左侧的第一个点代表 2 ^ 32 - 1，0 和 2 ^ 32 - 1 在零点中方向重合，我们把这个由 2 ^ 32 个点组成的圆环称为 Hash 环。
+
+  - 服务器 IP 节点映射
+
+  - key 落到服务器的落键规则
+
+- 优点
+
+- 缺点
+
+- 小总结
+
+# P81 redis 集群分片之一致性哈希算法 - 下集
+
+服务器 IP 节点映射
+
+- **节点映射**
+
+  将集群中各个 IP 节点映射到环上的某一个位置。
+
+  将各个服务器使用 Hash 进行一个哈希，具体可以选择服务器的 IP 或主机名作为关键字进行哈希，这样每台机器就能确定其在哈希环上的位置。假如 4 个节点 Node A、B、C、D，经过 IP 地址的**哈希函数**计算（hash(ip)），使用 IP 地址哈希后在环空间的位置如下
+
+key 落到服务器的落键规则
+
+- 当我们需要存储一个 kv 键值对时，首先计算 key 的 hash 值，hash(key)，将这个 key 使用相同的函数 Hash 计算出哈希值并确定此数据在环上的位置，**从此位置沿环顺时针“行走”**，第一台遇到的服务器就是其应该定位到的服务器，并将该键值对存储在该节点上。
+
+  如我们有 Object A、Object B、Object C、Object D 四个数据对象，经过哈希计算后，在环空间上的位置如下；根据一致性 Hash 算法，数据 A 会被定位到 Node A 上，B 被定位到 Node B 上，C 被定位到 Node C 上，D 被定位到 Node D 上。
+
+# P82 redis 集群分片之一致性哈希算法优缺点
+
+优点
+
+- 一致性哈希算法的容错性
+
+  - **容错性**
+
+    假设 Node C 宕机，可以看到此时对象 A、B、D 不会受到影响。一般的，在一致性 Hash 算法中，如果一台服务器不可用，则**受影响的数据仅仅是此服务器到其环空间中前一台服务器（即沿着逆时针方向行走遇到的第一台服务器）之间数据**，其它不会受到影响。简单说，就是 C 挂了，受到影响的只是 B、C 之间的数据**且这些数据会转移到 D 进行存储。**
+
+- 一致性哈希算法的扩展性
+
+  - **扩展性**
+
+    数据量增加了，需要增加一台节点 NodeX，X 的位置在 A 和 B 之间，那收到影响的也就是 A 到 X 之间的数据，重新把 A 到 X 的数据录入到 X 上即可，不会导致 hash 取余全部数据重新洗牌。
+
+缺点
+
+- 一致性哈希算法的**数据倾斜**问题
+
+  - Hash 环的数据倾斜问题
+
+    一致性 Hash 算法在服务**节点太少时**，容易因为节点分布不均匀而造成**数据倾斜**（被缓存的对象大部分几种缓存在某一台服务器上）问题，例如系统中只有两台服务器
+
+小总结
+
+- 为了在节点数目发生变化时尽可能少的迁移数据
+
+  将所有的存储节点排列在首尾相接的 Hash 环上，每个 key 在计算 Hash 后会**顺时针**找到临近的存储节点存放。而当有节点加入或退出时仅影响该节点在 Hash 环上**顺时针相邻的后续节点**。
+
+  **优点**
+
+  加入和删除节点只影响哈希环中顺时针方向的相邻的节点，对其它节点无影响。
+
+  **缺点**
+
+  数据的分布和节点的位置有关，因为这些节点不是均匀的分布在哈希环上的，所以数据在进行存储时达不到均匀分布的效果。
+
+# P83 redis 集群分片之哈希槽分区算法
+
+哈希槽分区
+
+- 是什么
+
+  - **1 为什么出现**
+
+    一致性哈希算法的**数据倾斜**问题
+
+    哈希槽实质就是一个数组，数组 [0, 2 ^ 14 - 1] 形成 hash slot 空间。
+
+    **2 能干什么**
+
+    解决均匀分配的问题，**在数据和节点之间又加入了一层，把这层称为哈希槽（slot），用于管理数据和节点之间的关系**，现在就相当于节点上放的是槽，槽里放的是数据。
+
+    槽解决的是粒度问题，相当于把粒度变大了，这样便于数据移动。哈希解决的是映射问题，使用 key 的哈希值来计算所在的槽，便于数据分配
+
+    **3 多少个 hash 槽**
+
+    一个集群只能有 16384 个槽，编号 0 - 16384（0 ~ 2 ^ 14 - 1）。这些槽会分配给集群中的所有主节点，分配策略没有要求。
+
+    集群会记录节点和槽的对应关系，解决了节点和槽的关系后，接下来就需要对 key 求哈希值，然后对 16384 取模，余数是几 key 就落入对应的槽里。 HASH_SLOT = CRC16(key) mod 16384。以槽为单位移动数据，因为槽的数目是固定的，处理起来比较容易，这样数据移动问题就解决了。
+
+  - HASH_SLOT = CRC16(key) mod 16384
+
+- 哈希槽计算
+
+  - Redis 集群中内置了 16384 个哈希槽，redis 会根据节点数量大致均等的将哈希槽映射到不同的节点。当需要在 Redis 集群中放置一个 key-value 时，redis 先对 key 使用 crc16 算法算出一个结果然后用结果对 16384 求余数 [CRC16(key) % 16384]，这样每个 key 都会对应一个编号在 0 - 16384 之间的哈希槽，也就是映射到某个节点上。如下代码，key 之 A、B 在 Node2，key 之 C 落在 Node3 上
+
+# P84 redis 集群分片之为什么最大槽数是 16384 个
+
+经典面试题
+
+**为什么 redis 集群的最大槽数是 16384 个？**
+
+- Redis 集群并没有使用一致性 hash 而是引入了哈希槽的概念。**Redis 集群有 16384 个哈希槽，**每个 key 通过 CRC16 校验后对 16384 取模来决定放置哪个槽，集群的每个节点负责一部分 hash 槽。但为什么哈希槽的数量是 16384 (2^14) 个呢？
+
+  > CRC16 算法产生的 hash 值有 16bit，该算法可以产生 2^16=65535 个值
+  >
+  > 换句话说值是分布在 0 ~ 65535 之间，有更大的 65535 不用为什么只用 16384 就够？
+  >
+  > 作者在做 mod 运算的时候，为什么不 mod 65536，而选择 mod 16384？ HASH_SLOT = CRC16(key) mod 65536 为什么没启用
+
+- 说明1
+
+  - **正常的心跳数据包**带有节点的完整配置，可以用幂等方式用旧的节点替换旧节点，以便更新旧的配置
+
+    这意味着它们包含原始节点的插槽配置，该节点使用 2k 的空间和 16k 的插槽，但是会使用 8k 的空间（使用 65k 的插槽）。
+
+    同时，由于其它设计折衷，Redis 集群不太可能扩展到 1000 个以上的主节点。
+
+    因此 16k 处于正确的范围内，以确保每个主机具有足够的插槽，最多可容纳 1000 个矩阵，但数量足够少，可以轻松地将插槽配置作为原始位图传播。请注意，在小型群集中，位图将难以压缩，因为当 N 较小时，位图将设置的 slot / N 位占设置位的很大百分比。
+
+- 说明2
+
+  - **（1）如果槽位为 65536，发送心跳信息的消息头达 8k，发送的心跳包过于庞大**
+
+    在消息头中最占空间的是 myslots[CLUSTER_SLOTS / 8]。当槽位为 65536 时，这块的大小是：65536 / 8  / 1024 = 8kb
+
+    在消息头中最占空间的是 myslots[CLUSTER_SLOTS / 8]。当槽位为 16384 时，这块的大小是：16384 / 8  / 1024 = 2kb
+
+    因为每秒钟，redis 节点需要发送一定数量的 ping 消息作为心跳包，如果槽位为 65536，这个 ping 消息的消息头太大了，浪费带宽。
+
+    **（2）redis 的集群主节点数量基本不可能超过 1000 个**。
+
+    集群节点越多，心跳包的消息体内携带的数据越多。如果节点过 1000 个，也会导致网络拥堵。因此 redis 作者不建议 redis cluster 节点数量超过 1000 个。那么，对于节点数在 1000 以内的 redis cluster 集群，16384 个槽位够用了。没有必要扩展到 65536 个
+
+    **（3）槽位越小，节点少的情况下，压缩比高，容易传输**
+
+    Redis 主节点的配置信息中它所负责的哈希槽是通过一张 bitmap 的形式来保存的，在传输过程中会对 bitmap 进行压缩，但是如果 bitmap 的填充率 slots / N 很高的话（N 表示节点数），bitmap 的压缩率就很低。如果节点数很少，而哈希槽数量很多的话，bitmap 的压缩率就很低。
+
+- 计算结论
+
+  - Redis 集群中内置了 16384 个哈希槽，redis 会根据节点数量大致均等的将哈希槽映射到不同的节点。当需要在 Redis 集群中放置一个 key-value 时，redis 先对 key 使用 crc16 算法算出一个结果然后用结果对 16384 求余数 [CRC16(key) % 16384]，这样每个 key 都会对应一个编号在 0 - 16383 之间的哈希槽，也就是映射到某个节点上。
+
+# P85 redis 集群分片之不保证强一致性
+
+Redis 集群不保证强一致性，这意味着在特定的条件下，Redis 集群可能会丢掉一些被系统收到的写入请求命令
+
+- **Write safety**
+
+  Redis Cluster uses asynchronous replication between nodes, and **last failover wins** implicit merge function. This means that the last elected master dataset eventually replaces all the other replicas. There is always a window of time when it is possible to **lose writes** during partitions. However these windows are very different in the case of a client that is connected to the majority of masters, and a client that is connected to the minority of masters
+
+# P86 redis 集群分片之3主3从集群搭建 - 上集
+
+集群环境案例步骤
+
+1. 3主3从 redis 集群配置
+
+   - 找 3 台真实虚拟机，各自新建
+
+     - mkdir -p /myredis/cluster
+
+   - 新建 6 个独立的 redis 实例服务
+
+     - 本次案例设计说明（ip 会有变化）
+
+     - IP：192.168.111.175 + 端口6381/端口6382
+
+       - vim /myredis/cluster/redisCluster6381.conf
+
+         - ```
+           bind 0.0.0.0
+           daemonize yes
+           protected-mode no
+           port 6381
+           logfile "/myredis/cluster/cluster6381.log"
+           pidfile /myredis/cluster6381.pid
+           dir /myredis/cluster
+           dbfilename dump6381.rdb
+           appendonly yes
+           appendfilename "appendonly6381.aof"
+           requirepass 111111
+           masterauth 111111
+           
+           cluster-enabled yes
+           cluster-config-file nodes-6381.conf
+           cluster-node-timeout 5000
+           ```
+
+       - vim /myredis/cluster/redisCluster6382.conf
+
+         - ```
+           bind 0.0.0.0
+           daemonize yes
+           protected-mode no
+           port 6382
+           logfile "/myredis/cluster/cluster6382.log"
+           pidfile /myredis/cluster6382.pid
+           dir /myredis/cluster
+           dbfilename dump6382.rdb
+           appendonly yes
+           appendfilename "appendonly6382.aof"
+           requirepass 111111
+           masterauth 111111
+           
+           cluster-enabled yes
+           cluster-config-file nodes-6382.conf
+           cluster-node-timeout 5000
+           ```
+
+     - IP：192.168.111.172 + 端口6383/端口6384
+
+       - vim /myredis/cluster/redisCluster6383.conf
+       - vim /myredis/cluster/redisCluster6384.conf
+
+     - IP：192.168.111.174 + 端口6385/端口6386
+
+       - vim /myredis/cluster/redisCluster6385.conf
+       - vim /myredis/cluster/redisCluster6386.conf
+
+     - 启动6台redis主机实例
+
+   - 通过 redis-cli 命令为 6 台机器构建集群关系
+
+   - 链接进入 6381 作为切入点，**查看并检验集群状态**
+
+2. 3主3从 redis 集群读写
+
+3. 主从容错切换迁移案例
+
+4. 主从扩容案例
+
+5. 主从缩容案例
+
+# P87 redis 集群分片之3主3从集群搭建 - 下集
+
+通过 redis-cli 命令为 6 台机器构建集群关系
+
+- **构建主从关系命令**
+
+  - // 注意，注意，注意自己的真实 IP 地址
+
+    ```shell
+    redis-cli -a 111111 --cluster create --cluster-replicas 1 192.168.111.175:6381 192.168.111.175:6382 192.168.111.172:6383 192.168.111.172:6384 192.168.111.174:6385 192.168.111.174:6386
+    ```
+
+    --cluster-replicas 1 表示为每个 master 创建一个 slave 节点
+
+- 一切 OK 的话，3 主 3 从搞定
+
+链接进入 6381 作为切入点，**查看并检验集群状态**
+
+- 链接进入 6381 作为切入点，**查看节点状态**
+
+  - ```shell
+    redis-cli -a 111111 -p 6381
+    info replication
+    cluster info
+    cluster nodes
+    ```
+
+- info replication
+
+- cluster info
+
+- cluster nodes
+
+# P88 redis 集群分片之3主3从集群读写
+
+3主3从 redis 集群读写
+
+- 对 6381 新增两个 key，看看效果如何
+
+  - ```
+    127.0.0.1:6381> set k1 v1
+    (error) MOVED 12706 192.168.111.174:6385
+    127.0.0.1:6381> set k2 v2
+    OK
+    ```
+
+- 为什么报错
+
+  - 一定注意槽位的范围区间，需要路由到位
+
+- 如何解决
+
+  - 放置路由失效加参数 -c 并新增两个 key
+
+- 查看集群信息
+
+  - cluster nodes
+
+- 查看某个 key 该属于对应得到槽位值
+
+  CLUSTER KEYSLOT 键名称
+
+# P89 redis 集群分片之主从容错切换
+
+主从容错切换迁移案例
+
+- 容错切换迁移
+  - 主 6381 和从机切换，先停止主机 6381
+    - 6381 主机停了，对应的真实从机上位
+    - 6381 作为 1 号主机分配的从机以实际情况为准，具体是几号机器就是几号
+  - 再次查看集群信息，本次 6381 主 6384 从
+    - 6381 master 加入宕机了，6384 是否会上位成为新的 master？
+  - 停止主机 6381，再次查看集群信息
+    - 6384 成功上位并正常使用
+  - 随后，6381 原来的主机回来了，是否会上位？
+    - 恢复前
+    - 恢复后
+      - 6381 不会上位并以从节点形式回归
+- 集群不保证数据一致性 100% OK，一定会有数据丢失情况
+  - Redis 集群不保证强一致性，这意味着在特定的条件下，Redis 集群可能会丢掉一些被系统收到的写入请求命令
+- 手动故障转移 or 节点从属调整该如何处理
+  - 上面一换后 6381、6384 主从对调了，和原型设计图不一样了，该如何
+  - 重新登陆 6381 机器
+  - 常用命令
+    - CLUSTER FAILOVER
+
+# P90 redis 集群分片之集群扩容
+
+主从扩容案例
+
+- 新建 6387、6388 两个服务实例配置文件 + 新建后启动
+
+  - IP：192.168.111.174 + 端口 6387 / 端口 6388
+
+    - vim /myredis/cluster/redisCluster6387.conf
+
+      - ```
+        bind 0.0.0.0
+        daemonize yes
+        protected-mode no
+        port 6387
+        logfile "/myredis/cluster/cluster6387.log"
+        pidfile /myredis/cluster6387.pid
+        dir /myredis/cluster
+        dbfilename dump6387.rdb
+        appendonly yes
+        appendfilename "appendonly6387.aof"
+        requirepass 111111
+        masterauth 111111
+        
+        cluster-enabled yes
+        cluster-config-file nodes-6387.conf
+        cluster-node-timeout 5000
+        ```
+
+    - vim /myredis/cluster/redisCluster6388.conf
+
+      - ```
+        bind 0.0.0.0
+        daemonize yes
+        protected-mode no
+        port 6388
+        logfile "/myredis/cluster/cluster6388.log"
+        pidfile /myredis/cluster6388.pid
+        dir /myredis/cluster
+        dbfilename dump6388.rdb
+        appendonly yes
+        appendfilename "appendonly6388.aof"
+        requirepass 111111
+        masterauth 111111
+        
+        cluster-enabled yes
+        ```
+
+- 启动 87/88 两个新的节点实例，此时它们自己都是 master
+
+  - redis-server /myredis/cluster/redisCluster6387.conf
+  - redis-server /myredis/cluster/redisCluster6388.conf
+
+- 将新增的 6387 节点（空槽号）作为 master 节点加入原集群
+
+  - 将新增的 6387 作为 master 节点加入原有集群
+
+    redis-cli -a 密码 --cluster add-node 自己实际IP地址:6387 自己实际IP地址:6381
+
+    6387 就是将要作为 master 新增节点
+
+    6381 就是原来集群节点里面的领路人，相当于 6387 拜拜 6381 的码头从而找到组织加入集群
+
+    redis-cli -a 111111 --cluster add-node 192.168.111.174:6387 192.168.111.175:6381
+
+- 检查集群情况第 1 次
+
+  - redis-cli -a 密码 --cluster check 真实ip地址:6381
+
+    redis-cli -a 111111 --cluster check 192.168.111.175:6381
+
+- 重新分派槽号（reshard）
+
+  - 重新分派槽号命令：redis-cli -a 密码 --cluster reshard IP地址：端口号
+
+    redis-cli -a 111111 --cluster reshard 192.168.111.175:6381
+
+- 检查集群情况第 2 次
+
+  - 槽号分派说明
+
+    - 为什么 6387 是 3 个新的区间，以前的还是连续？
+
+      重新分配成本太高，所以前 3 家各自匀出来一部分，从 6381/6382/6283 三个旧节点分别匀出 1364 个坑位给新节点 6387
+
+- 为主节点 6387 分片从节点 6388
+
+  - 命令：redis-cli -a 密码 --cluster add-node ip:新slave端口 ip:新master端口 --cluster-slave --cluster-master-id 新主机节点ID
+
+    redis-cli -a 111111 --cluster add-node 192.168.111.174:6388 192.168.111.174:6387 --cluster-slave --cluster-master-id  4feb6a7ee0ed2b39ff86474cf4189ab2a554a40f （这个是 6387 的编号，按照自己实际情况）
+
+- 检查集群情况第 3 次
+
+  - redis-cli -a 密码 --cluster check 真实ip地址:6381
+
+    redis-cli -a 111111 --cluster check 192.168.111.175:6381
+
+# P91 redis 集群分片之集群缩容
+
+主从缩容案例
+
+- 目的：6387 和 6388 下线
+
+- 检查集群情况第一次，先获得从节点 6388 的节点 ID
+
+  - redis-cli -a 密码 --cluster check 192.168.111.174:6388
+
+- 从集群中将 4 号从节点 6388 删除
+
+  - 命令：redis-cli -a 密码 --cluster del-node ip:从机端口 从机6388节点ID
+
+    redis-cli -a 111111 --cluster del-node 192.168.111.174:6388 218e7b8b4f81be54ff173e4776b4f4aaf7c13da
+
+    redis-cli -a 111111 --cluster check 192.168.111.174:6385
+
+    检查一下发现，6388 被删除了，只剩下 7 台机器了。
+
+- 将 6387 的槽号清空，重新分配，本例将清出来的槽号都给 6381
+
+  - redis-cli -a 111111 --cluster reshard 192.168.111.175:6381
+
+- 检查集群情况第二次
+
+  - redis-cli -a 111111 --cluster check 192.168.111.175:6381
+  - 4096 个槽位都指给 6381，它变成了 8192 个槽位，相当于全部都给 6381 了，不然要输入 3 次，一锅端
+
+- 将 6487 删除
+
+  - 命令：redis-cli -a 密码 --cluster del-node ip:端口 6387节点ID
+
+    redis-cli -a 111111 --cluster del-node 192.168.111.174:6387 4feb6a7ee0ed2b39ff86474cf4189ab2a554a40f
+
+- 检查集群情况第三次，6387/6388 被彻底祛除
+
+  - redis-cli -a 111111 --cluster check 192.168.111.175:6381
+
+# P92 redis 集群分片之小总结
+
+集群常见操作命令和 CRC 16 算法分析
+
+- 不在同一个 slot 槽位下的多键操作支持不好，通识占位符登场
+
+  - （error）CROSSSLOT keys in request don't hash to the same slot
+
+    不在同一个 slot 槽位下的键值无法使用 mset、mget 等多键操作
+
+    可以通过 {} 来定义同一组的概念，使 key 中 {} 内相同内容的键值对放到一个 slot 槽位去，对照下图类似 k1、k2、k3 都映射为 x，自然槽位一样
+
+    mset k1{x} l1 k2{x} l2 k3{x} l3
+
+    mget k1{x} k2{x} k3{x}
+
+- Redis 集群有 16384 个哈希槽，每个 key 通过 CRC 16 校验后对 16384 取模来决定放置哪个槽。集群的每个节点负责一部分 hash 槽
+
+  - CRC16 源码浅谈
+    - cluster.c  源码分析一下看看
+
+- 常用命令
+
+  - 集群是否完整才能对外提供服务
+
+    - cluster-require-full-coverage
+
+    - 默认 YES，现在集群架构是 3 主 3 从的 redis cluster 由 3 个 master 平分 16384 个 slot，每个 master 的小集群负责 1/3 的 slot，对应一部分数据。
+
+      cluster-require-full-coverage：默认值 yes，即需要集群完整性，方可对外提供服务。通常情况，如果这 3 个小集群中，任何一个（1 主 1 从）挂了，你这个集群对外可提供的数据只有 2/3 了，整个集群是不完整的。redis 默认在这种情况下，是不会对外提供服务的。
+
+      如果你的诉求是，集群不完整的话也需要对外提供服务，需要将该参数设置为 no，这样的话你挂了的那个小集群是不行了，但是其他的小集群仍然可以对外提供服务。
+
+  - CLUSTER COUNTKEYSINSLOT 槽位数字编号
+
+    - 1，该槽位被占用
+    - 0，该槽位没占用
+
+  - CLUSTER KEYSLOT 键名称
+
+    - 该键应该存在哪个槽位上
+
+# P93 springboot 整合 redis 之总体概述
+
+12、SpringBoot 集成 Redis
+
+- 总体概述
+
+  - jedis-lettuce-RedisTemplate 三者的联系
+
+  - 本地 Java 连接 Redis 常见问题，小白注意
+
+    - bind 配置请注释掉
+    - 保护模式设置为 no
+    - Linux 系统的防火墙设置
+    - redis 服务器的 IP 地址和密码是否正确
+    - 忘记写访问 redis 的服务端口号和 auth 密码
+    - 无脑粘贴脑图笔记
+
+  - 集成 Jedis
+
+  - 集成 lettuce
+
+    - 是什么
+      - Lettuce 是一个 Redis 的 Java 驱动包，Lettuce 翻译为生菜，没错，就是吃的那种生菜，所以它的 Logo 长这样
+    - Lettuce vs Jedis
+    - 案例
+
+  - 集成 RedisTemplate-推荐使用
+
+    - 连接单机
+
+      - boot 整合 redis 基础演示
+
+        - 建 Module
+
+          - redis7_study
+
+        - 改 POM
+
+          - ```xml
+            <!-- SpringBoot 通用依赖模块 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+            </dependency>
+            <!-- jedis -->
+            <dependency>
+            	<groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>4.3.1</version>
+            </dependency>
+            <!-- lettuce -->
+            <dependency>
+            	<groupId>io.lettuce</groupId>
+                <artifactId>lettuce-core</artifactId>
+                <version>6.2.1.RELEASE</version>
+            </dependency>
+            <!-- SpringBoot 与 Redis 整合依赖 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
+            </dependency>
+            <dependency>
+            	<groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+            </dependency>
+            <!-- swagger2 -->
+            <dependency>
+            	<groupId>io.springfox</groupId>
+                <artifactId>springfox-swagger2</artifactId>
+                <version>2.9.2</version>
+            </dependency>
+            ```
+
+        - 写 YML
+
+        - 主启动
+
+        - 业务类
+
+        - 测试
+
+      - 其它 api 调用，一定自己多动手练习（家庭作业）
+
+    - 连接集群
+
+# P94 springboot 整合 redis 之 jedis 简介
+
+集成 Jedis
+
+- 是什么
+
+  - Jedis Client 是 Redis 官网推荐的一个面向 Java 客户端，库文件实现了对各类 API 进行封装调用
+
+- 步骤
+
+  - 建 Module
+
+    - redis7_study
+
+  - 改 POM
+
+    - ```xml
+      <!-- jedis -->
+      <dependency>
+      	<groupId>redis.clients</groupId>
+          <artifactId>jedis</artifactId>
+          <version>4.3.1</version>
+      </dependency>
+      ```
+
+  - 写 YML
+
+  - 主启动
+
+  - 业务类
+
+    - 入门案例
+
+      - ```java
+        public class JedisDemo {
+            public static void main(String[] args) {
+                // 1 connection 获得，通过指定 ip 和端口号
+                Jedis jedis = new Jedis("192.168.111.185", 6379);
+                // 2 指定访问服务器的密码
+                jedis.auth("111111");
+                // 3 获得了 jedis 客户端，可以像 jdbc 一样，访问我们的 redis
+                System.out.println(jedis.ping());
+                
+                // keys
+                Set<String> keys = jedis.keys("*");
+                System.out.println(keys);
+                // string
+                jedis.set("k3", "hello-jedis");
+                System.out.println(jedis.get("k3"));
+                System.out.println(jedis.ttl("k3"));
+                jedis.expire("k3", 20L);
+                // list
+                jedis.lpush("list", "l1", "l2", "l3");
+                List<String> list = jedis.lrange("list", 0, -1);
+                for (String element: list) {
+                    System.out.println(element);
+                }
+                // set
+                // hash
+                // zset
+                
+            }
+        }
+        ```
+
+    - 家庭作业 5+1
+
+      - 一个 key
+      - 常用五大数据类型
+
+# P95 springboot 整合 redis 之 lettuce 简介
+
+集成 lettuce
+
+- 是什么
+
+  - Lettuce 是一个 Redis 的 Java 驱动包，Lettuce 翻译为生菜，没错，就是吃的那种生菜，所以它的 Logo 长这样
+
+- Lettuce vs Jedis
+
+  - **Jedis 和 Lettuce 的区别**
+
+    Jedis 和 Lettuce 都是 Redis 的客户端，它们都可以连接 Redis 服务器，但是在 SpringBoot 2.0 之后默认都是使用的 Lettuce 这个客户端连接 Redis 服务器。因为当使用 Jedis 客户端连接 Redis 服务器的时候，每个线程都要拿自己创建的 Jedis 实例去连接 Redis 客户端，当有很多个线程的时候，不仅开销大需要反复的创建关闭一个 Jedis 连接，而且也是线程不安全的，一个线程通过 Jedis 实例更改 Redis 服务器中的数据之后会影响另一个线程；
+
+    但是如果使用 Lettuce 这个客户端连接 Redis 服务器的时候，就不会出现上面的情况，Lettuce 底层使用的是 Netty，当有多个线程都需要连接 Redis 服务器的时候，可以保证只创建一个 Lettuce 连接，使所有的线程共享这一个 Lettuce 连接，这样可以减少创建关闭一个 Lettuce 连接时候的开销；而且这种方式也是线程安全的，不会出现一个线程通过 Lettuce 更改 Redis 服务器中的数据之后而影响另一个线程的情况。
+
+- 案例
+
+  - 改 POM
+
+    - ```xml
+      <!-- lettuce -->
+      <dependency>
+      	<groupId>io.lettuce</groupId>
+          <artifactId>lettuce-core</artifactId>
+          <version>6.2.1.RELEASE</version>
+      </dependency>
+      ```
+
+  - 业务类
+
+    - ```java
+      @Slf4j
+      public class LettuceDemo {
+          public static void main(String[] args) {
+              // 1 使用构建器链式编程来 build 我们 RedisURI
+              RedisURI uri = RedisURI.builder()
+                  .redis("192.168.111.185")
+                  .withPort(6379)
+                  .withAuthentication("default", "111111")
+                  .build();
+              
+              // 2 创建连接客户端
+              RedisClient redisClient = RedisClient.create(uri);
+              StatefulRedisConnection<String, String> conn = redisClient.connect();
+              
+              // 3 通过 conn 创建操作的 command
+              RedisCommands commands = conn.sync();
+              
+              // keys
+              List<String> list = commands.keys("*");
+              for (String s: list) {
+                  log.info("key:{}", s);
+              }
+              // String
+              commands.set("k1", "1111");
+              String s1 = commands.get("k1");
+              log.info("String s ===" + s1);
+              // list
+              commands.lpush("myList2", "v1", "v2", "v3");
+              List<String> list2 = commands.lrange("myList2", 0, -1);
+              for (String s: list2) {
+                  log.info("list ssss === {}", s);
+              }
+              // set
+              commands.sadd("mySet2", "v1", "v2", "v3");
+              Set<String> set = commands.smembers("mySet2");
+              for (String s: set) {
+                  log.info("set ssss === {}", s);
+              }
+              // hash
+              Map<String, String> map = new HashMap<>();
+              map.put("k1", "138xxxxxxxx");
+              map.put("k2", "atguigu");
+              map.put("k3", "zzyybs@126.com");
+              commands.hmset("myHash2", map);
+              Map<String, String> retMap = commands.hgetall("myHash2");
+              for (String k: retMap.keySet()) {
+                  log.info("hash k={}, v=={}", k, retMap.get(k));
+              }
+              // zset
+              commands.zadd("myZset2", 100.0, "s1", 110.0, "s2", 90.0, "s3");
+              List<String> list3 = commands.zrange("myZset2", 0, 10);
+              for (String s: list3) {
+                  log.info("zset ssss === {}", s);
+              }
+              // sort
+              SortArgs sortArgs = new SortArgs();
+              sortArgs.alpha();
+              sortArgs.desc();
+              List<String> list4 = commands.sort("myList2", sortArgs);
+              for (String s: list4) {
+                  log.info("sort ssss === {}", s);
+              }
+              // 4 各种关闭释放资源
+              conn.close();
+              redisClient.shutdown();
+          }
+      }
+      ```
+
+# P96 springboot 整合 redis 之 RedisTemplate - 上集
+
+集成 RedisTemplate-推荐使用
+
+- 连接单机
+
+  - boot 整合 redis 基础演示
+
+    - 建 Module
+
+      - redis7_study
+
+    - 改 POM
+
+      - ```xml
+        </dependency>
+        <!-- SpringBoot 与 Redis 整合依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+        </dependency>
+        <!-- swagger2 -->
+        <dependency>
+        	<groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+        	<groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        ```
+
+    - 写 YML
+
+      - ```properties
+        # ===== redis 单机 =====
+        spring.redis.database=0
+        # 修改为自己真实 IP
+        spring.redis.host=192.168.111.185
+        spring.redis.port=6379
+        spring.redis.password=111111
+        spring.redis.lettuce.pool.max-active=8
+        spring.redis.lettuce.pool.max-wait=-1ms
+        spring.redis.lettuce.pool.max-idle=8
+        spring.redis.lettuce.pool.min-idle=0
+        ```
+
+    - 主启动
+
+    - 业务类
+
+      - 配置类
+
+        - RedisConfig
+
+          - ```java
+            @Configuration
+            public class RedisConfig {
+                @Bean
+                public RedisTemplate<String, Object> redisTemplate(LettuceConnectionFactory lettuceConnectionFactory) {
+                    RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+                    redisTemplate.setConnectionFactory(lettuceConnectionFactory);
+                    // 设置 key 序列化方式 string
+                    redisTemplate.setKeySerializer(new StringRedisSerializer());
+                    // 设置 value 的序列化方式 json，使用 GenericJackson2JsonRedisSerializer 替换默认序列化
+                    redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+                    
+                    redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+                    redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+                    
+                    redisTemplate.afterPropertiesSet();
+                    
+                    return redisTemplate;
+                }
+            }
+            ```
+
+        - SwaggerConfig
+
+          - ```java
+            @Configuration
+            @EnableSwagger2
+            public class SwaggerConfig {
+                @Value("${spring.swagger2.enabled}")
+                private Boolean enabled;
+                
+                @Bean
+                public Docket createRestApi() {
+                    return new Docket(DocumentationType.SWAGGER_2)
+                        .apiInfo(apiInfo())
+                        .enable(enabled)
+                        .select()
+                        .apis(RequestHandlerSelectors.basePackage("com.atguigu.redis7")) // 你自己的 package
+                        .paths(PathSelectors.any())
+                        .build();
+                }
+                
+                public ApiInfo apiInfo() {
+                    return new ApiInfoBuilder()
+                        .title("springboot 利用 swagger2 构建 api 接口文档 " + "\t" + DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDateTime.now()))
+                        .description("springboot + redis 整合，有问题给管理员阳哥邮件：zzyybs@126.com")
+                        .version("1.0")
+                        .termsOfServiceUrl("https://www.atguigu.com/")
+                        .build();
+                }
+            }
+            ```
+
+      - service
+
+      - controller
+
+    - 测试
+
+      - swagger
+        - http://localhost:7777/swagger-ui.html#/
+      - 序列化问题
+
+  - 其它 api 调用命令，课堂时间有限，恳请各位一定自己多动手练习（家庭作业）
+
+- 连接集群
+
+# P97 springboot 整合 redis 之 RedisTemplate - 下集
+
+序列化问题
+
+- 键（Key）和值（Value）都是通过 Spring 提供的 Serializer 序列化到数据库的。
+
+  RedisTemplate 默认使用的是 JdkSerializationRedisSerializer，StringRedisTemplate 默认使用的是 StringRedisSerializer, KEY 被序列化成这样，线上通过 KEY 去查询对应的 VALUE 非常不方便
+
+- why
+
+  - RedisTemplate.java -> defaultSerializer、stringSerializer
+  - JDK 序列化方式（默认）惹的祸
+    - JDK 序列化方式（默认）org.springframework.data.redis.serializer.JdkSerializationRedisSerializer，默认情况下，RedisTemplate 使用该数据列化方式，我们来看下源码 RedisTemplate#afterPropertiesSet()
+
+# P98 springboot 整合 redis 之连接集群 - 上集
+
+连接集群
+
+- 启动 redis 集群 6 台实例
+
+- 第一次改写 YML
+
+  - ```properties
+    # ===== redis 集群 =====
+    spring.redis.password=111111
+    # 获取失败最大重定向次数
+    spring.redis.cluster.max-redirects=3
+    spring.redis.lettuce.pool.max-active=8
+    spring.redis.lettuce.pool.max-wait=-1ms
+    spring.redis.lettuce.pool.max-idle=8
+    spring.redis.lettuce.pool.min-idle=0
+    
+    spring.redis.cluster.nodes=192.168.111.175:6381,192.168.111.175:6382,192.168.111.172:6383,192.168.111.172:6384,192.168.111.174:6385,192.168.111.174:6386
+    ```
+
+- 直接通过微服务访问 redis 集群
+
+  - 一切 OK
+
+- 问题来了
+
+  - 人为模拟，master-6381 机器意外宕机，手动 shutdown
+  - 先对 redis 集群命令方式，手动验证各种读写命令，看看 6384 是否上位
+  - Redis Cluster 集群能自动感知并自动完成主备切换，对应的 slave6384 会被选举为新的 master 节点
+  - 微服务客户端再次读写访问试试
+
+# P99 springboot 整合 redis 之连接集群 - 下集
+
+微服务客户端再次读写访问试试
+
+- 故障现象
+
+  - **SpringBoot 客户端没有动态感知到 RedisCluster 的最新集群信息**
+  - 经典故障
+    - 【故障演练】Redis Cluster 集群部署采用了 3 主 3 从拓扑结构，数据读写访问 master 节点，slave 节点负责备份。当 master 宕机主从切换成功，redis 手动 OK，but 2 个经典故障
+
+- 导致原因
+
+  - SpringBoot 2.X 版本，Redis 默认的连接池采用 Lettuce
+
+    当 Redis 集群节点发生变化后，Lettuce 默认是不会刷新节点拓扑
+
+- 解决方案
+
+  1. 排除 lettuce 采用 jedis（不推荐）
+
+     - 将 `Lettuce` 二方包仲裁掉
+
+       ```xml
+       <dependency>
+           <groupId>org.springframework.boot</groupId>
+           <artifactId>spring-boot-starter-data-redis</artifactId>
+           <version>2.3.12.RELEASE</version>
+           <exclusions>
+               <exclusion>
+                   <groupId>io.lettuce</groupId>
+                   <artifactId>lettuce-core</artifactId>
+               </exclusion>
+           </exclusions>
+       </dependency>
+       ```
+
+       然后，引入 `Jedis` 相关二方包
+
+       ```xml
+       <dependency>
+           <groupId>redis.clients</groupId>
+           <artifactId>jedis</artifactId>
+           <version>3.7.0</version>
+       </dependency>
+       ```
+
+  2. 重写连接工厂实例（极度不推荐）
+
+  3. 刷新节点集群拓扑动态响应
+
+     - 官网
+
+       - > Lettuce 处理 Moved 和 Ask 永久重定向，由于命令重定向，必须刷新节点拓扑视图。而自适应拓扑刷新（Adaptive updates）与定时拓扑刷新（Periodic updates）默认关闭
+
+         解决方案：
+
+         - 调用 RedisClusterClient.reloadPartitions
+         - 后台基于时间间隔的周期刷新
+         - 后台基于持续的`断开`和`移动、重定向`的自适应更新
+
+- 第二次改写 YML
+
+  - ```properties
+    # ===== redis 集群 =====
+    spring.redis.password=111111
+    # 获取失败最大重定向次数
+    spring.redis.cluster.max-redirects=3
+    spring.redis.lettuce.pool.max-active=8
+    spring.redis.lettuce.pool.max-wait=-1ms
+    spring.redis.lettuce.pool.max-idle=8
+    spring.redis.lettuce.pool.min-idle=0
+    # 支持集群拓扑动态感应刷新，自适应拓扑刷新是否使用所有可用的更新，默认 false 关闭
+    spring.redis.lettuce.cluster.refresh.adaptive=true
+    # 定时刷新
+    spring.redis.lettuce.cluster.refresh.period=2000
+    spring.redis.cluster.nodes=192.168.111.175:6381,192.168.111.175:6382,192.168.111.172:6383,192.168.111.172:6384,192.168.111.174:6385,192.168.111.174:6386
+    ```
+
+# P100 redis 高级篇之开篇闲聊扯淡
+
+大厂高阶篇
+
+1. Redis 单线程 VS 多线程（入门篇）
+2. BigKey
+3. 缓存双写一致性之更新策略探讨
+4. Redis 与 M'ySQL 数据双写一致性工程落地案例
+5. 案例落地实战 bitmap/hyperloglog/GEO
+6. 布隆过滤器 BloomFilter
+7. 缓存预热 + 缓存雪崩 + 缓存击穿 + 缓存穿透
+8. 手写 Redis 分布式锁
+9. Redlock 算法和底层源码分析
+10. Redis 的缓存过期淘汰策略
+11. Redis 经典五大类型源码及底层实现
+12. Redis 为什么快？高性能设计之 epoll 和 IO 多路复用深度解析
+13. 终章总结
+
+# P101 redis 高级篇之为什么用单线程
+
+1、Redis 单线程 VS 多线程（入门篇）
+
+- 首课很重要，后续深度讲解，避免晕菜，先预习混个耳熟
+
+- 面试题
+
+  - redis 到底是单线程还是多线程？
+  - IO 多路复用听说过吗？
+  - redis 为什么快？
+
+- Redis 为什么选择单线程？
+
+  - 是什么
+
+    - **这种问法其实并不严谨，为啥这么说呢？**
+
+      Redis 的版本很多 3.x、4.x、6.x，版本不同架构也是不同的，不限定版本问是否单线程也不太严谨。
+
+      1. 版本 3.x，最早版本，也就是大家口口相传的 redis 是单线程，阳哥 2016 年讲解的 redis 就是 3.x 的版本
+      2. 版本 4.x，严格意义来说也不是单线程，而是负责处理客户端请求的线程是单线程，但是**开始加了点多线程的东西（异步删除）**。---貌似
+      3. 2020年5月版本的 6.0.x 后及 2022 年出的 7.0 版本后，**告别了大家印象中的单线程，用一种全新的多线程来解决问题。--- 实锤**
+
+  - why
+
+    - 厘清一个事实我们通常说，Redis 是单线程究竟何意？
+
+      - Redis 是单线程
+
+        主要是指 Redis 的网络 IO 和键值对读写是由一个线程来完成的，Redis 在处理客户端的请求时包括获取（socket 读）、解析、执行、内容返回（socket 写）等都由一个顺序串行的主线程处理，这就是所谓的“单线程”。这也是 Redis 对外提供键值存储服务的主要流程。
+
+        但 Redis 的其他功能，比如持久化 RDB、AOF、异步删除、集群数据同步等等，其实是由额外的线程执行的。
+
+        Redis 命令工作线程是单线程的，但是，整个 Redis 来说，是多线程的；
+
+    - 请说说演进变化情况？
+
+      - Redis 3.x 单线程时代但性能依旧很快的主要原因
+
+        - 基于内存操作：Redis 的所有数据都存在内存中，因此所有的运算都是内存级别的，所以他的性能比较高；
+        - 数据结构简单：Redis 的数据结构是专门设计的，而这些简单的数据结构的查找和操作的时间大部分复杂度都是 O(1)，因此性能比较高；
+        - 多路复用和非阻塞 I/O：Redis 使用 I/O 多路复用功能来监听多个 socket 连接客户端，这样就可以使用一个线程连接来处理多个请求，减少线程切换带来的开销，同时也避免了 I/O 阻塞操作
+        - 避免上下文切换：因为是单线程模型，因此就避免了不必要的上下文切换和多线程竞争，这就省去了多线程切换带来的时间和性能上的消耗，而且单线程不会导致死锁问题的发生
+
+      - 作者原话，官网证据
+
+        - https://redis.io/docs/getting-started/faq/
+
+          - > **Redis 是单线程的。如何利用多个 CPU/内核？**
+            >
+            > CPU 并不是您使用 Redis 的瓶颈，因为通常 Redis 要么受内存限制，要么受网络限制。例如，使用在平均 Linux 系统上运行的流水线 Redis 每秒可以发送一百万个请求，因此，如果您的应用程序主要使用 O(N) 或 O(log(N)) 命令，则几乎不会使用过多的 CPU。
+            >
+            > 但是，为了最大程度地利用 CPU，您可以在同一框中启动多个 Redis 实例，并将它们视为不同的服务器。在某个时候，单个盒子可能还不够，因此，如果您要使用多个 CPU，则可以开始考虑更早地进行分片的某种方法。
+            >
+            > 您可以在“分区 ”页面中找到有关使用多个 Redis 实例的更多信息。
+            >
+            > 但是，在 Redis 4.0 中，我们开始使 Redis 具有更多线程。目前，这仅限于在后台删除对象，以及阻止通过 Redis 模块实现的命令。对于将来的版本，计划是使 Redis 越来越线程化。
+
+            他的大体意思是说 Redis 是基于内存操作的，**因此他的瓶颈可能是机器的内存或者网络带宽而并非 CPU**，既然 CPU 不是瓶颈，那么自然就采用单线程的解决方案了，况且使用多线程比较麻烦。**但是在 Redis 4.0 中开始支持多线程了，例如后台删除、备份等功能**。
+
+        - **Redis 4.0 之前**一直采用单线程的主要原因有以下三个
+
+          1. 使用单线程模型是 Redis 的开发和维护更简单，因为单线程模型方便开发和调试
+          2. 即使使用单线程模型也并发的处理多客户端的请求，主要使用的是 IO 多路复用和非阻塞 IO
+          3. 对于 Redis 系统来说，**主要的性能瓶颈是内存或者网络带宽而并非 CPU**.
+
+- 既然单线程这么好，为什么逐渐又加入了多线程特性？
+
+- redis6/7 的多线程特性和 IO 多路复用入门篇
+
+- Redis 7 默认是否开启了多线程？
+
+- 我还是曾经哪个少年
+
+# P102 redis 高级篇之开始支持多线程和 IO 多路复用首次浅谈
+
+既然单线程这么好，为什么逐渐又加入了多线程特性？
+
+- 单线程也有单线程的苦恼
+
+  - 举个例子
+
+    - 正常情况下使用 del 指令可以很快的删除数据，而当被删除的 key 是一个非常大的对象时，例如包含了成千上万个元素的 hash 集合时，那么 del 指令就会造成 Redis 主线程卡顿。
+
+      **这就是 redis 3.x 单线程时代最经典的故障，大 key 删除的头疼问题，**由于 redis 是单线程的，del bigKey ... 等待很久这个线程才会释放，类似加了一个 synchronized 锁，你可以想象高并发下，程序堵成什么样子？
+
+- 如何解决
+
+  - 使用惰性删除可以有效的避免 Redis 卡顿的问题
+
+  - 案例
+
+    - 比如当我（Redis）需要删除一个很大的数据时，因为是单线程原子命令操作，这就会导致 Redis 服务卡顿。于是在 Redis 4.0 中就新增了多线程的模块，当然此版本中的多线程主要是为了解决删除数据效率比较低的问题的。
+
+      ```
+      unlink key
+      flushdb async
+      flushall async
+      ```
+
+      把删除工作交给了后台的小弟（子线程）异步来删除数据了。
+
+      因为 Redis 是单个主线程处理，redis 之父 antirez 一直强调“Lazy Redis is better Redis”。
+
+      而 lazy free 的本质就是把某些 cost（主要时间复制度，占用主线程 cpu 时间片）较高删除操作，从 redis 主线程剥离让 bio 子线程来处理，极大地减小主线阻塞时间。从而减少删除导致性能和稳定性问题。
+
+  - 在 Redis 4.0 就引入了多个线程来实现数据的异步惰性删除等功能，但是其处理读写请求的仍然只有一个线程，所以仍然算是狭义上的单线程。
+
+redis6/7 的多线程特性和 IO 多路复用入门篇
+
+- 对于 Redis **主要的性能瓶颈是内存或者网络带宽而并非 CPU。**
+
+- 第一次听
+
+  - 听不懂没关系，阳哥故意的，先混个耳熟，后续大招先给我预热
+
+- 最后 Redis 的瓶颈可以初步定为：网络 IO
+
+  - redis 6/7，真正多线程登场
+
+    - **在 Redis 6/7 中，非常受关注的第一个新特性就是多线程**。
+
+      这是因为，Redis 一直被大家熟知的就是它的单线程架构，虽然有些命令操作可以用后台线程或子进程执行（比如数据删除、快照生成、AOF 重写）。但是，从网络 IO 处理到实际的读写命令处理，都是由单个线程完成的。
+
+      随着网络硬件的性能提升，Redis 的性能瓶颈有时会出现在网络 IO 的处理上，也就是说，单个主线程处理网络请求的速度跟不上底层网络硬件的速度
+
+      为了应对这个问题：
+
+      **采用多个 IO 线程来处理网络请求，提高网络请求处理的并行度，Redis 6/7 就是采用的这种方法**。
+
+      但是，Redis 的多 IO 线程只是用来处理网络请求的，**对于读写操作命令 Redis 仍然使用单线程来处理**。这是因为，Redis 处理请求时，网络处理经常是瓶颈，通过多个 IO 线程并行处理网络操作，可以提升实例的整体处理性能。而继续使用单线程执行命令操作，就不用为了保证 Lua 脚本、事务的原子性，额外开发多线程**互斥加锁机制了（不管加锁操作处理）**，这样一来，Redis 线程模型实现就简单了。
+
+  - 主线程和 IO 线程是怎么协作完成请求处理的-精讲版
+
+    - 四个阶段
+
+      - ```mermaid
+        graph TB
+        subgraph 主线程
+        	m1(接收建立连接请求, 获取 Socket) --> m2(将 Socket 放入全局等待队列)
+            m2 --> m3(以轮询方式将 Socket 连接分配给 IO 线程)
+            m3 --> m4(主线程阻塞, 等待 IO 线程完成请求读取和解析)
+            m5(执行请求的命令操作) --> m6(请求的命令操作执行完成)
+            m6 --> m7(将结果数据写入缓冲区)
+            m7 --> m8(主线程阻塞, 等待 IO 线程完成数据回写 Socket)
+            m9(清空等待队列, 等待后续请求)
+        end
+        
+        subgraph IO线程
+        	io1(将 Socket 和线程绑定) --> io2(读取 Socket 中的请求并解析)
+        	io2 --> io3(请求解析完成)
+        	io4(将结果数据回写 Socket) --> io5(Socket 回写完成)
+        end
+        
+        m3 --IO 线程开始执行--> io1
+        io3 --主线程开始执行--> m5
+        m8 --IO 线程开始执行--> io4
+        io5 --主线程开始执行--> m9
+        ```
+
+      - **阶段一：服务端和客户端建立 Socket 连接，并分配处理线程**
+
+        首先，主线程负责接收建立连接请求。当有客户端请求和实例建立 Socket 连接时，主线程会创建和客户端的连接，并把 Socket 放入全局等待队列中。紧接着，主线程通过轮询方法把 Socket 连接分配给 IO 线程。
+
+        **阶段二：IO 线程读取并解析请求**
+
+        主线程一旦把 Socket 分配给 IO 线程，就会进入阻塞状态，等待 IO 线程完成客户端请求读取和解析。因为有多个 IO 线程在并行处理。所以，这个过程很快就可以完成。
+
+        **阶段三：主线程执行请求操作**
+
+        等到 IO 线程解析完请求，主线程还是会以单线程的方式执行这些命令操作。
+
+        **阶段四：IO 线程回写 Socket 和主线程清空全局队列**
+
+        当主线程执行完请求操作后，会把需要返回的结果写入缓冲区，然后，主线程会阻塞等待 IO 线程，把这些结果回写到 Socket 中，并返回给客户端。和 IO 线程读取和解析请求一样，IO 线程回写 Socket 时，也是有多个线程在并发执行，所以回写 Socket 的速度也很快。等到 IO 线程回写 Socket 完毕，主线程会清空全局队列，等待客户端和后续请求。
+
+- Unix 网络编程中的五种 IO 模型
+
+  - Blocking IO - 阻塞 IO
+
+  - NoneBlocking IO - 非阻塞 IO
+
+  - IO multiplexing - IO 多路复用
+
+    - Linux 世界一切皆文件
+
+      - 文件描述符、简称 FD，句柄
+      - FileDescriptor
+        - 文件描述符（File descriptor）是计算机科学中的一个术语，是一个用于表述指向文件的引用的抽象化概念。文件描述符在形式上是一个非负整数。实际上，它是一个索引值，指向内核为每一个进程所维护的该进程打开文件的记录表。当程序打开一个现有文件或者创建一个新文件时，内核向进程返回一个文件描述符。在程序设计中，文件描述符这一概念往往只适用于 UNIX、Linux 这样的操作系统。
+
+    - 首次浅谈 IO 多路复用，IO 多路复用是什么
+
+      - 一种同步的 IO 模型，实现**一个线程**监视**多个文件句柄**，**一旦某个文件句柄就绪**就能通知到对应应用程序进行相应的读写操作，**没有文件句柄就绪时**就会阻塞应用程序，从而释放 CPU 资源
+      - 概念
+        - I/O：网络 I/O，尤其在操作系统层面指数据在内核态和用户态之间的读写操作
+        - 多路：多个客户端连接（连接就是套接字描述符，即 socket 或者 channel）
+        - 复用：复用一个或几个线程
+        - IO 多路复用
+          - 也就是说一个或一组线程处理多个 TCP 连接，使用单进程就能够实现同时处理多个客户端的连接，**无需创建或者维护过多的进程/线程**
+        - 一句话
+          - 一个服务端进程可以同时处理多个套接字描述符。
+          - 实现 IO 多路复用的模型有 3 种：可以分 select -> poll -> epoll 三个阶段来描述。
+
+    - 场景体验，说人话引出 epoll
+
+      - 场景解析
+
+        - 模拟一个 tcp 服务器处理 30 个客户 socket
+
+          假设你是一个监考老师，让 30 个学生解答一道竞赛考题，然后负责验收学生答卷，你有下面几个选择：
+
+          **第一种选择（轮询）**：按顺序逐个验收，先验收 A，然后是 B，之后是 C、D……这中间如果有一个学生卡住，全班都会被耽误，你用循环挨个处理 socket，根本不具有并发能力。
+
+          **第二种选择（来一个 new 一个，1 对 1 服务）**：你创建 30 个分身线程，每个分身线程检查一个学生的答案是否正确。这种类似于为每一个用户创建一个进程或者线程处理连接。
+
+          **第三种选择（响应式处理，1 对多服务）**。你站在讲台上等，谁解答完谁举手。这时 C、D 举手，表示他们解答问题完毕。你下去依次检查 C、D 的答案，然后继续回到讲台上等。此时 E、A 又举手，然后去处理 E 和 A……这种就是 IO 复用模型。Linux 下的 select、poll 和 epoll 就是干这个的。
+
+      - IO 多路复用模型，简单明了版理解
+
+        - 将用户 socket 对应的文件描述符（FileDescriptor）注册进 epoll，然后 epoll 帮你监听哪些 socket 上有消息到达，这样就避免了大量的无用操作。此时的 socket 应该采用**非阻塞模式**。这样，整个过程只在调用 select、poll、epoll 这些调用的时候才会阻塞，收发客户消息是不会阻塞的，整个进程或者线程就被充分利用起来，这就是事件驱动，所谓的 reactor 反应模式。
+
+          **在单个线程通过记录跟踪每一个 Socket（I/O 流）的状态来同时管理多个 I/O 流**，一个服务端进程可以同时处理多个套接字描述符。目的是尽量多的提高服务器的吞吐能力。
+
+          大家都用过 nginx，nginx 使用 epoll 接收请求，nginx 会有很多链接进来，epoll 会把他们都监视起来，然后像拨开关一样，谁有数据就拨向谁，然后调用相应的代码处理。redis 类似同理，这就是 IO 多路复用原理，有请求就响应，没请求不打扰。
+
+    - 小总结
+
+      - 只使用一个服务端进程可以同时处理多个套接字描述符连接
+
+        - 客户端请求服务端时，实际就是在服务端的 Socket 文件中写入客户端对应的文件描述符（FileDescriptor），如果有多个客户端同时请求服务端，为每次请求分配一个线程，类似每次来都 new 一个，如此就会比较耗费服务器资源……
+
+          因此，我们只使用一个线程来监听多个文件描述符，这就是 IO 多路复用
+
+          **采用多路 I/O 复用技术可以让单个线程高效的处理多个连接请求一个服务器进程可以同时处理多个套接字描述符。**
+
+    - 面试题：redis 为什么这么快
+
+      - 备注：IO 多路复用 + epoll 函数使用，才是 redis 为什么这么快的直接原因，而不是仅仅单线程命令 + redis 安装在内存中。
+
+  - signal driven IO - 信号驱动 IO
+
+  - asynchronous IO - 异步 IO
+
+- 简单说明
+
+  - **Redis 工作线程是单线程的，但是，整个 Redis 来说，是多线程的**
+
+  - 主线程和 IO 线程是怎么协作完成请求处理的-精简版
+
+    - I/O 的读和写本身是堵塞的，比如当 socket 中有数据时，Redis 会通过调用先将数据从内核态空间拷贝到用户态空间，再交给 Redis 调用，而这个拷贝的过程就是阻塞的，当数据量越大时拷贝所需要的时间就越多，而这些操作都是基于单线程完成的。
+
+    - Redis 采用 Reactor 模式的网络模型，对于一个客户端请求，主线程负责一个完整的处理过程：
+
+      读取 socket -> 解析请求 -> 执行操作 -> 写入 socket
+
+    - 从 Redis 6 开始，就新增了多线程的功能来提高 I/O 的读写性能，他的主要实现思路是将**主线程的 IO 读写任务拆分给一组独立的线程去执行**，这样就可以使多个 socket 的读写可以并行化了，**采用多路 I/O 复用技术可以让单个线程高效的处理多个连接请求**（尽量减少网络 I/O 的时间消耗），**将最耗时的 Socket 的读取、请求解析、写入单独外包出去**，剩下的命令执行仍然由主线程串行执行并和内存的数据交互。
+
+    - （其它都是多个 IO 线程）读取 socket -> 解析请求 -> 执行操作（主线程） -> 写入 socket
+
+    - 结合上图可知，网络 IO 操作就变成多线程化了，其它核心部分仍然是线程安全的，是个不错的折中办法。
+
+  - 结论
+
+    - Redis 6-7 将网络数据读写、请求协议解析通过多个 IO 线程的来处理
+
+      对于真正的命令执行来说，仍然使用主线程操作，一举两得，便宜占尽！！！
+
+      Redis 6.0 多线程（鱼和熊掌兼得）-> 多个 IO 线程解决网络 IO 问题（多线程红利）、单个工作线程保证线程安全 高性能（单线程红利）
+
+# P103 redis 高级篇之开启多线程 IO 特性支持
+
+Redis 7 默认是否开启了多线程？
+
+- 如果你在实际应用中，发现 Redis 实例的 **CPU 开销不大但吞吐量却没有提升**，可以考虑使用 Redis 7 的多线程机制，加速网络处理，进而提升实例的吞吐量
+
+  - Redis 7 将所有数据放在内存中，内存的响应时长大约为 100 纳秒，对于小数据包，Redis 服务器可以处理 8W 到 10W 的 QPS，这也是 Redis 处理的极限了，**对于 80% 的公司来说，单线程的 Redis 已经足够使用了。**
+
+  - 在 Redis 6.0 及 7 后，**多线程机制默认是关闭的**，如果需要使用多线程功能，需要在 redis.conf 中完成两个设置
+
+    ```
+    # io-threads 4
+    # io-threads-do-reads no
+    ```
+
+    1. 设置 io-threads-do-reads 配置项为 yes，表示启动多线程。
+    2. 设置线程个数。关于线程数的设置，官方的建议是如果为 4 核的 CPU，建议线程数设置为 2 或 3，**如果为 8 核 CPU 建议线程数设置为 6，**线程数一定要小于机器核数，线程数并不是越大越好。
+
+我还是曾经那个少年
+
+- Redis 自身出道就是优秀，基于内存操作、数据结构简单、多路复用和非阻塞 I/O、避免了不必要的线程上下文切换等特性，在单线程的环境下依然很快；
+
+  但对于大数据的 key 删除还是卡顿厉害，因此在 Redis 4.0 引入了多线程 unlink key/flushall async 等命令，主要用于 Redis 数据的异步删除；
+
+  而在 Redis 6/7 中引入了 I/O 多线程的读写，这样就可以更加高效的处理更多的任务了，**Redis 只是将 I/O 读写变成了多线程**，而**命令的执行依旧是由主线程串行执行的**，因此在多线程下操作 Redis 不会出现线程安全的问题。
+
+  **Redis 无论是当初的单线程设计，还是如今与当初设计相背的多线程，目的只有一个：让 Redis 变得越来越快**。
+
+  所以 Redis 依旧没变，他还是那个曾经的少年，哈哈~
+
+# P104 redis 高级篇之 BigKey 大厂面试题概览
+
+2、BigKey
+
+- 面试题
+  - 阿里广告平台，海量数据里查询某一固定前缀的 key
+  - 小红书，你如何生产上限制 keys * /flushdb/flushall 等危险命令以防止误删误用？
+  - 美团，MEMORY USAGE 命令你用过吗？
+  - BigKey 问题，多大算 big？你如何发现？如何删除？如何处理？
+  - BigKey 你做过调优吗？惰性释放 lazyfree 了解过吗？
+  - Morekey 问题，生产上 redis 数据库有 1000W 记录，你如何遍历？key * 可以吗？
+- MoreKey 案例
+- BigKey 案例
+- BigKey 生产调优
