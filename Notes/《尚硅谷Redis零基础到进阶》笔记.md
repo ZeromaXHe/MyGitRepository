@@ -4008,3 +4008,727 @@ Redis 7 默认是否开启了多线程？
 - MoreKey 案例
 - BigKey 案例
 - BigKey 生产调优
+
+# P105 redis 高级篇之 BigKey 100W 记录案例和生产故障
+
+MoreKey 案例
+
+- 大批量往 redis 里面插入 2000W 测试数据 key
+
+  - Linux Bash 下面执行，插入 100W
+
+    - ```bash
+      # 生成 100W 条 redis 批量设置 kv 的语句（key=kn, value=vn）写入到 /tmp 目录下的 redisTest.txt 文件中
+      for((i=1;i<=100*10000;i++)); do echo "set k$i v$i" >> /tmp/redisTest.txt ;done;
+      ```
+
+  - 通过 redis 提高的管道 --pipe 命令插入 100W 大批量数据
+
+    - 结合自己机器的地址
+
+      ```shell
+      cat /tmp/redisTest.txt | /opt/redis-7.0.0/src/redis-cli -h 127.0.0.1 -p 6379 -a 111111 --pipe
+      redis-cli -a 111111 dbsize
+      ```
+
+      100w 数据插入 redis 花费 5.8 秒左右
+
+- 某快递巨头真实生产案例新闻
+
+  - 新闻
+
+    - 对 Redis 稍微有点使用经验的人都知道线上是不能执行 keys * 相关命令的，虽然其模糊匹配功能使用非常方便也很强大，在小数据量情况下使用没什么问题，数据量大会导致 Redis 锁住及 CPU 飙升，在生产环境建议禁用或者重命名！
+
+  - keys * 你试试 100W 花费多少秒遍历查询
+
+    - keys * （34.74s） flushdb (2.16s)
+
+    - keys * 这个指令有致命的弊端，在实际环境中最好不要使用
+
+      > 这个指令没有 offset、limit 参数，是要一次性吐出所有满足条件的 key，由于 redis 是单线程的，其所有操作都是原子的，而 keys 算法是遍历算法，复杂度是 O(n)，如果实例中有千万级以上的 key，这个指令就会导致 Redis 服务卡顿，所有读写 Redis 的其它的指令都会被延后甚至会超时报错，可能会引起缓存雪崩甚至数据库宕机
+
+  - 生产上限制 keys */flushdb/flushall 等危险命令以防止误删误用？
+
+    - 通过配置设置禁用这些命令，redis.conf 在 SECURITY 这一项中
+
+      - ```
+        rename-command keys ""
+        rename-command flushdb ""
+        rename-command flushall ""
+        ```
+
+- 不用 keys * 避免卡顿，那该用什么
+
+  - scan 命令登场
+
+    - 一句话，类似 mysql limit 的**但不完全相同**
+
+  - Scan 命令用于迭代数据库中的数据库键
+
+    - 语法
+
+      - SCAN cursor [MATCH pattern] [COUNT count]
+
+        基于游标的迭代器，需要基于上一次的游标延续之前的迭代过程
+
+        以 0 作为游标开始一次新的迭代，直到命令返回游标 0 完成一次遍历
+
+        不保证每次执行都返回某个给定数量的元素，支持模糊查询
+
+        一次返回的数量不可控，只能是大概率符合 count 参数
+
+    - 特点
+
+      - redis Scan 命令基本语法如下：
+
+        SCAN cursor [MATCH pattern] [COUNT count]
+
+        - cursor - 游标
+        - pattern - 匹配的模式
+        - count - 指定从数据集里返回多少元素，默认值为 10
+
+        SCAN 命令是一个基于游标的迭代器，每次被调用之后，都会向用户返回一个新的游标，**用户在下次迭代时需要使用这个新游标作为 SCAN 命令的游标参数**，以此来延续之前的迭代过程。
+
+        SCAN 返回一个包含**两个元素的数组**，第一个元素是用于进行下一次迭代的新游标，第二个元素则是一个数组，这个数组中包含了所有被迭代的元素。**如果新游标返回零表示迭代已结束。**
+
+        SCAN 的遍历顺序**非常特别，它不是从第一维数组的第零位一直遍历到末尾，而是采用了高位进位加法来遍历。之所以使用这样特殊的方式进行遍历，是考虑到字典的扩容和缩容时避免槽位的遍历重复和遗漏**
+
+    - 使用
+
+      - ```
+        127.0.0.1:6379> keys *
+        1) "db_number"
+        2) "key1"
+        3) "myKey"
+        127.0.0.1:6379> scan 0 MATCH * COUNT 1
+        1) "2"
+        2) 1) "db_number"
+        127.0.0.1:6379> scan 2 MATCH * COUNT 1
+        1) "1"
+        2) 1) "myKey"
+        127.0.0.1:6379> scan 1 MATCH * COUNT 1
+        1) "3"
+        2) 1) "key1"
+        127.0.0.1:6379> scan 3 MATCH * COUNT 1
+        1) "0"
+        2) (empty list or set)
+        ```
+
+# P106 redis 高级篇之 BigKey 发现删除优化策略_1
+
+BigKey 案例
+
+- 多大算 Big
+
+  - 参考《阿里云 Redis 开发规范》
+
+    - 【强制】：拒绝 bigkey（防止网卡流量、慢查询）
+
+      string 类型控制在 10KB 以内，hash、list、set、zset 元素个数不要超过 5000.
+
+      反例：一个包含 200 万个元素的 list
+
+      非字符串的 bigkey，不要使用 del 删除，使用 hscan、sscan、zscan 方式渐进式删除，同时要注意防止 bigkey 过期时间自动删除问题（例如一个 200 万的 zset 设置 1 小时过期，会触发 del 操作，造成阻塞，而且该操作不会出现在慢查询中（lantency 可查））
+
+  - string 和二级结构
+
+    - string 是 value，最大 512MB 但是 >= 10KB 就是 bigkey
+    - list、hash、set 和 zset，个数超过 5000 就是 bigkey
+      - 疑问？？？
+        - list
+          - 一个列表最多可以包含 2^32-1 个元素（4294967295，每个列表超过 40 亿个元素）。
+        - hash
+          - Redis 中每个 hash 可以存储 2^32 - 1 键值对（40 多亿）
+        - set
+          - 集合中最大的成员数为 2^32 - 1（4294967295，每个集合可存储 40 多亿个成员）。
+        - ...
+
+- 哪些危害
+
+  - 内存不均，集群迁移困难
+  - 超时删除，大 key 删除作梗
+  - 网络流量阻塞
+
+- 如何产生
+
+  - 社交类
+    - 王心凌粉丝列表，典型案例粉丝逐步递增
+  - 汇总统计
+    - 某个报表，月日年经年累月的积累
+
+- 如何发现
+
+  - redis-cli --bigkeys
+
+    - **好处，见最下面总结**
+
+      给出每种数据结构 Top 1 bigkey，同时给出每种数据类型的键值个数 + 平均大小
+
+      **不足**
+
+      想查询大于 10kb 的所有 key，--bigkeys 参数就无能为力了，需要用到 memory usage 来计算每个键值的字节数
+
+      redis-cli --bigkeys -a 111111
+
+      redis-cli -h 127.0.0.1 -p 6379 -a 111111 -bigkeys
+
+      每隔 100 条 scan 指令就会休眠 0.1s，ops 就不会剧烈抬升，但是扫描的时间会变长
+
+      redis-cli -h 127.0.0.1 -p 7001 --bigkeys -i 0.1
+
+  - MEMORY USAGE 键
+
+    - 计算每个键值的字节数
+    - 官网
+
+- 如何删除
+
+  - 参考《阿里云 Redis 开发规范》
+
+    - 【强制】：拒绝 bigkey（防止网卡流量、慢查询）
+
+      string 类型控制在 10KB 以内，hash、list、set、zset 元素个数不要超过 5000.
+
+      反例：一个包含 200 万个元素的 list
+
+      非字符串的 bigkey，不要使用 del 删除，使用 hscan、sscan、zscan 方式渐进式删除，同时要注意防止 bigkey 过期时间自动删除问题（例如一个 200 万的 zset 设置 1 小时过期，会触发 del 操作，造成阻塞，而且该操作不会出现在慢查询中（lantency 可查））
+
+  - 官网
+
+  - 普通命令
+
+    - String
+
+      - 一般用 del，如果过于庞大 unlink
+
+    - hash
+
+      - 使用 hscan 每次获取少量 field-value，再使用 hdel 删除每个 field
+
+      - 命令
+
+        - Redis HSCAN 命令会用于迭代哈希表中的键值对
+
+          **语法**
+
+          redis HSCAN 命令基本语法如下：
+
+          HSCAN key cursor [MATCH pattern] [COUNT count]
+
+          - cursor - 游标
+          - pattern - 匹配的模式
+          - count - 指定从数据集里返回多少元素，默认值为 10
+
+          **可用版本**
+
+          大于等于 2.8.0
+
+          **返回值**
+
+          返回的每个元素都是一个元组，每一个元组元素由一个字段（field）和值（value）组成
+
+      - 阿里手册
+
+        - 1、Hash 删除：hsan + hdel
+
+          ```java
+          public void delBigHash(String host, int port, String password, String bigHashKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              ScanParams scanParams = new ScanParams().count(100);
+              String cursor = "0";
+              do {
+                  ScanResult<Entry<String, String>> scanResult = jedis.hscan(bigHashKey, cursor, scanParams);
+                  List<Entry<String, String>> entryList = scanResult.getResult();
+                  if (entryList != null && !entryList.isEmpty()) {
+                      for (Entry<String, String> entry : entryList) {
+                          jedis.hdel(bigHashKey, entry.getKey());
+                      }
+                  }
+                  cursor = scanResult.getStringCursor();
+              } while (!"0".equals(cursor));
+              
+              // 删除 bigkey
+              jedis.del(bigHashKey);
+          }
+          ```
+
+    - list
+
+      - 使用 ltrim 渐进式逐步删除，直到全部删除完成
+
+      - 命令
+
+        - Redis Ltrim 对一个列表进行修剪（trim），就是说，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除。
+
+          下标 0 表示列表的第一个元素，以 1 表示列表的第二个元素，以此类推。你也可以使用负数下标，以 -1 表示列表的最后一个元素，-2 表示列表的倒数第二个元素，以此类推。
+
+          **语法**
+
+          redis Ltrim 命令基本语法如下：
+
+          LTRIM KEY_NAME START STOP
+
+          **可用版本**
+
+          大于等于 1.0.0
+
+          **返回值**
+
+          命令执行成功时，返回 ok
+
+      - 阿里手册
+
+        - 2、List 删除：ltrim
+
+          ```java
+          public void delBigList(String host, int port, String password, String bigListKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              long llen =  jedis.llen(bigListKey);
+              int counter = 0;
+              int left = 100;
+              while (counter < llen) {
+                  // 每次从左侧截掉 100 个
+                  jedis.ltrim(bigListKey, left, llen);
+                  counter += left;
+              }
+              // 最终删除 key
+              jedis.del(bigListKey);
+          }
+          ```
+
+    - set
+
+      - 使用 sscan 每次获取部分元素，再使用 srem 命令删除每个元素
+
+      - 命令
+
+      - 阿里手册
+
+        - 3、Set 删除：sscan + srem
+
+          ```java
+          public void delBigSet(String host, int port, String password, String bigSetKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              ScanParams scanParams = new ScanParams().count(100);
+              String cursor = "0";
+              do {
+                  ScanResult<String> scanResult = jedis.sscan(bigSetKey, cursor, scanParams);
+                  List<String> memberList = scanResult.getResult();
+                  if (memberList != null && !memberList.isEmpty()) {
+                      for (String member : memberList) {
+                          jedis.srem(bigSetKey, member);
+                      }
+                  }
+                  cursor = scanResult.getStringCursor();
+              } while (!"0".equals(cursor));
+              
+              // 删除 bigkey
+              jedis.del(bigHashKey);
+          }
+          ```
+
+    - zset
+
+      - 使用 zscan 每次获取部分元素，再使用 ZREMRANGEBYRANK 命令删除每个元素
+
+      - 命令
+
+      - 阿里手册
+
+        - ```java
+          public void delBigZset(String host, int port, String password, String bigZsetKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              ScanParams scanParams = new ScanParams().count(100);
+              String cursor = "0";
+              do {
+                  ScanResult<Tuple> scanResult = jedis.zscan(bigZsetKey, cursor, scanParams);
+                  List<Tuple> tupleList = scanResult.getResult();
+                  if (tupleList != null && !tupleList.isEmpty()) {
+                      for (Tuple tuple : tupleList) {
+                          jedis.srem(bigZsetKey, tuple.getElement());
+                      }
+                  }
+                  cursor = scanResult.getStringCursor();
+              } while (!"0".equals(cursor));
+              
+              // 删除 bigkey
+              jedis.del(bigHashKey);
+          }
+          ```
+
+BigKey 生产调优
+
+- redis.conf 配置文件 LAZY FREEING 相关说明
+
+  - 阻塞和非阻塞删除命令
+
+    - Redis 有两个原语来删除键。一种称为 DEL，是对象的阻塞删除。这意味着服务器停止处理新命令，以便以同步方式回收与对象关联的所有内存。如果删除的键与一个小对象相关联的所有内存。如果删除的键与一个小对象相关联，则执行 DEL 命令所需的时间非常短，可与大多数其它命令相媲美
+
+      Redis 中的 O(1) 或 O(log_N) 命令。但是，如果键与包含数百万个元素的聚合值相关联，则服务器可能会阻塞很长时间（甚至几秒钟）才能完成操作。
+
+      基于上述原因，Redis 还提供了非阻塞删除原语，例如 UNLINK（非阻塞 DEL）以及 FLUSHALL 和 FLUSHDB 命令的 ASYNC 选项，以便在后台回收内存。这些命令在恒定时间内执行。另一个线程将尽可能快地逐步释放后台中的对象。
+
+      FLUSHALL 和 FLUSHDB 的 DEL、UNLINK 和 ASYNC 选项是用户控制的。这取决于应用程序的设计，以了解何时使用其中一个是个好主意。然而，作为其它操作的副作用，Redis 服务器有时不得不删除键或刷新整个数据库。具体而言，Redis 在以下场景中独立于用户调用删除对象
+
+  - 优化配置
+
+    - ```
+      lazyfree-lazy-server-del no 改为 Yes
+      replica-lazy-flush no 改为 Yes
+      
+      lazyfree-lazy-user-del no 改为 Yes
+      ```
+
+# P107 redis 高级篇之缓存双写一致性面试题概览
+
+2、缓存双写一致性之更新策略探讨
+
+- 反馈回来的面试题
+
+  - 一图
+
+    - 通用查询方法三部曲
+
+      1 OK，直接从 redis 获得并返回
+
+      2 next，redis 无，从 mysql 获得并返回
+
+      3 完成第 2 步同时，讲 mysql 数据回写 redis，两边数据一致
+
+      问题，上面业务逻辑你用 Java 代码如何写
+
+  - 你只要用缓存，就可能会涉及到 redis 缓存与数据库双存储双写，你只要是双写，就一定会有数据一致性的问题，那么你如何解决一致性问题？
+
+  - 双写一致性，你先动缓存 redis 还是数据库 mysql 哪一个？why？
+
+  - **延时双删**你做过吗？会有哪些问题？
+
+  - 有这么一种情况 ，微服务查询 redis 无 mysql 有，为保证数据双写一致性回写 redis 你需要注意什么？**双检加锁**策略你了解过吗？如何尽量避免缓存击穿？
+
+  - redis 和 mysql 双写 100% 会出纰漏，做不到强一致性，你如何保证**最终一致性**？
+
+  - ……
+
+- 缓存双写一致性，谈谈你的理解
+
+- 数据库和缓存一致性的几种更新策略
+
+# P108 redis 高级篇之缓存双写一致性细则要求
+
+缓存双写一致性，谈谈你的理解
+
+- 如果 redis 中**有数据**
+
+  - 需要和数据库中的值相同
+
+- 如果 redis 中**无数据**
+
+  - 数据库中的值要是最新值，且准备回写 redis
+
+- 缓存按照操作来分，细分 2 种
+
+  - 只读缓存
+  - 读写缓存
+    - 同步直写策略
+      - 写数据库后也同步写 redis 缓存，缓存和数据库中的数据一致；
+      - 对于读写缓存来说，要想保证缓存和数据库中的数据一致，就要采用同步直写策略
+    - 异步缓写策略
+      - 正常业务运行中，mysql 数据变动了，但是可以在业务上容许出现一定时间后才作用于 redis，比如仓库、物流系统
+      - 异常情况出现了，不得不将失败的动作重新修补，有可能需要借助 kafka 或者 RabbitMQ 等消息中间件，实现重试重写
+
+- 一图代码你如何写
+
+  - 问题》》》？
+
+  - 采用双检加锁策略
+
+    - ```java
+      public String get(String key) {
+          String value = redis.get(key); // 查询缓存
+          if (value != null) {
+              // 缓存存在直接返回
+              return value;
+          } else {
+              // 缓存不存在则对方法加锁
+              // 假设请求量很大，缓存过期
+              synchronized (TestFuture.class) {
+                  value = redis.get(key); // 再查一遍 redis
+                  if (value != null) {
+                      // 查到数据直接返回
+                      return value;
+                  } else {
+                      // 二次查询缓存也不存在，直接查 DB
+                      value = dao.get(key);
+                      // 数据缓存
+                      redis.setnx(key, value, time);
+                      // 返回
+                      return value;
+                  }
+              }
+          }
+      }
+      ```
+
+  - Code
+
+数据库和缓存一致性的几种更新策略
+
+- 目的
+
+  - 总之，我们要达到最终一致性！
+
+    - **给缓存设置过期时间，定期清理缓存并回写，是保证最终一致性的解决方案。**
+
+      我们可以对存入缓存的数据设置过期时间，所有的**写操作以数据库为准**，对缓存操作只是尽最大努力即可。也就是说如果数据库写成功，缓存更新失败，那么只要到达过期时间，则后面的读请求自然会从数据库中读取新值然后回填缓存，达到一致性，**切记，要以 mysql 的数据库写入库为准**。
+
+      上述方案和后续落地案例是调研后的主流 + 成熟的做法，但是考虑到各个公司业务系统的差距，**不是 100% 绝对正确，不保证绝对适配全部情况，**请同学们自行酌情选择打法，合适自己的最好。
+
+- 可以停机的情况
+
+  - 挂牌报错，凌晨升级，温馨提示，服务降级
+  - 单线程，这样重量级的数据操作最好不要多线程
+
+- 我们讨论 4 种更新策略
+
+  - X 先更新数据库，再更新缓存
+  - X 先更新缓存，再更新数据库
+  - X 先删除缓存，再更新数据库
+  - 先更新数据库，再删除缓存
+
+- 小总结
+
+# P109 redis 高级篇之缓存双写一致性四大策略探讨
+
+我们讨论 4 种更新策略
+
+- X 先更新数据库，再更新缓存
+
+  - 异常问题 1
+
+    1. 先更新 mysql 的某商品的库存，当前商品的库存是 100，更新为 99 个
+    2. 先更新 mysql 修改为 99 成功，然后更新 redis
+    3. **此时假设异常出现**，更新 redis 失败了，这导致 mysql 里面的库存是 99 而 redis 里面的还是 100.
+    4. 上述发生，会让数据库里面和缓存 redis 里面数据不一致，**读到 redis 脏数据**
+
+  - 异常问题 2
+
+    - 【先更新数据库，再更新缓存】，A、B 两个线程发起调用
+
+      【正常逻辑】
+
+      1. A update mysql 100
+      2. A update redis 100
+      3. B update mysql 80
+      4. B update redis 80
+
+      ============
+
+      【异常逻辑】多线程环境下，A、B 两个线程有快有慢，有前有后有并行
+
+      1. A update mysql 100
+      2. B update mysql 80
+      3. B update redis 80
+      4. A update redis 100
+
+      ============
+
+      最终结果，mysql 和 redis 数据不一致，mysql 80，redis 100
+
+- X 先更新缓存，再更新数据库
+
+  - X 不太推荐
+
+    - 业务上一般把 mysql 作为**底单数据库**，保证最后解释
+
+  - 异常问题 2
+
+    - 【先更新数据库，再更新缓存】，A、B 两个线程发起调用
+
+      【正常逻辑】
+
+      1. A update redis 100
+      2. A update mysql 100
+      3. B update redis 80
+      4. B update mysql 80
+
+      ============
+
+      【异常逻辑】多线程环境下，A、B 两个线程有快有慢，有前有后有并行
+
+      1. A update redis 100
+      2. B update redis 80
+      3. B update mysql 80
+      4. A update mysql 100
+
+      ============
+
+      --- mysql 100，redis 80
+
+- X 先删除缓存，再更新数据库
+
+  - 异常问题
+
+    - 步骤分析 1，先删除缓存，再更新数据库
+
+      - （10:40）
+
+        阳哥自己这里写 20 秒，是自己乱写的，表示更新数据库可能失败，实际中不可能，哈哈~
+
+        1 A 线程先成功删除了 redis 里面的数据，然后去更新 mysql，此时 mysql 正在更新中，还没有结束。（比如网络延时）**B 突然出现要来读取缓存数据**。
+
+    - 步骤分析 2，先删除缓存，再更新数据库（13:25）
+
+    - 步骤分析 3，先删除缓存，再更新数据库（14:03）
+
+    - 上面 3 步骤串讲梳理（16:30）
+
+  - 解决方案
+
+    - 采用延时双删策略（20:39）
+
+    - 双删方案面试题
+
+      - 这个删除该休眠多久呢？
+
+        - （22:14）
+
+          **第一种方法：**加百毫秒即可
+
+          **第二种方法：**新启动一个后台监控程序
+
+      - 这种同步淘汰策略，吞吐量降低怎么办？
+
+        - （23:38）
+
+          ```java
+          CompletableFuture.supplyAsync(() -> {
+              
+          }).whenComplete((t, u) -> {
+              
+          }).exceptionally(e -> {
+              
+          }).get();
+          ```
+
+      - 后续看门狗 WatchDog 源码分析
+
+- 先更新数据库，再删除缓存
+
+  - 异常问题（27:59）
+
+  - 业务指导思想
+
+    - 微软云
+    - 我们后面的阿里巴巴 Canal 也是类似的思想
+      - 上述的订阅 binlog 程序在 mysql 中有现成的中间件叫 canal，可以完成订阅 binlog 日志的功能。
+
+  - 解决方案
+
+    - （33:43）
+
+      暂存到消息队列中
+
+      没成功删除，从消息队列中重新读取
+
+      成功删除，从消息队列中去除
+
+      重试超过一定次数，向业务层发送报错信息
+
+  - 类似经典的分布式事务问题，只有一个权威答案
+
+    - 最终一致性
+      - 流量充值，先下发短信实际充值可能滞后 5 分钟，可以接受
+      - 电商发货，短信下发但是物流明天见
+
+小总结
+
+- 如何选择方案？利弊如何（36:56）
+- 一图总结（39:11）
+
+# P110 redis 高级篇之缓存双写一致性工程落地需求和 Canal 简介
+
+4、Redis 与 M'ySQL 数据双写一致性工程落地案例
+
+- 复习 + 面试题（1:43）
+  - 采用双检加锁策略（3:11）
+- Canal
+  - 是什么（8:02）
+    - 官网地址
+    - 一句话
+      - canal，意为水道/管道/沟渠，主要用途是基于数据库增量日志解析，提供增量数据订阅和消费
+  - 能干嘛
+    - 数据库镜像
+    - 数据库实时备份
+    - 索引构建和实时维护（拆分异构索引、倒排索引等）
+    - 业务 cache 刷新
+    - 带业务逻辑的增量数据处理
+  - 去哪下
+- 工作原理，面试问答
+  - 传统 MySQL 主从复制工作原理（13:38）
+  - Canal 工作原理（16:09）
+- mysql-canal-redis 双写一致性 Coding
+
+# P111 redis 高级篇之缓存双写一致性工程 Canal 落地案例代码
+
+mysql-canal-redis 双写一致性 Coding
+
+- java 案例，来源出处
+- mysql
+  - 查看 mysql 版本
+    - SELECT VERSION()
+    - mysql 5.7.28
+  - 当前的主机二进制日志
+    - show master status;
+  - 查看 SHOW VARIABLES LIKE 'log_bin';（4:11）
+  - 开启 MySQL 的 binlog 写入功能
+    - D:\devSoft\mysql\mysql5.7.28 目录下打开
+      - 最好提前备份
+      - my.ini（5:07）
+  - 重启 mysql
+  - 再次查看 SHOW VARIABLES LIKE 'log_bin';（6:51）
+  - 授权 canal 连接 MySQL 账号
+    - mysql 默认的用户在 mysql 库的 user 表里（7:25）
+    - 默认没有 canal 账户，此处新建+授权（8:09）
+- canal 服务端
+  1. 下载
+     - 下载 Linux 版本：canal.deployer-1.1.6.tar.gz
+  2. 解压
+     - 解压后整体放入 /mycanal 路径下（11:09）
+  3. 配置
+     - 修改 /mycanal/conf/example 路径下 instance.properties 文件（12:16）
+     - instance.properties
+       - 换成自己的 mysql 主机 master 的 IP 地址（13:23）
+       - 换成自己的在 mysql 新建的 canal 账户（13:32）
+  4. 启动
+     - /opt/mycanal/bin 路径下执行
+       - ./startup.sh
+  5. 查看
+     - 判断 canal 是否启动成功
+       - 查看 server 日志（15:05）
+       - 查看样例 example 的日志（16:11）
+- canal 客户端（Java 编写业务程序）
+  - SQL 脚本（17:13）
+  - 建 module
+    - canal_demo02
+  - 改 POM（18:57）
+  - 写 YML（19:42）
+  - 主启动（20:34）
+  - 业务类
+    - RedisUtils（21:43）
+    - RedisCanalClientExample（23:28）
+    - 题外话
+      - java 程序下 connector.subscribe 配置的过滤正则（45:21）
+      - 关闭资源代码简写
+        - try-with-resources 释放资源（48:09）
