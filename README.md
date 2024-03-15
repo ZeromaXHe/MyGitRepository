@@ -61,8 +61,24 @@ git commit
   - **Winline**: Win Line 小游戏项目
 - **MySpringTuling**：图灵《手写Spring底层原理源码》笔记和代码
 - **Notes**: 一些笔记文件
+  - **书籍翻译**：一些英文书的翻译。目前主要是：
+    - 《System Design Interview》[卷1](Notes/书籍翻译/SystemDesignInterview翻译.md)、[卷2](Notes/书籍翻译/SystemDesignInterview翻译.md)
+  - **文档翻译**：一些官方文档或教程的翻译。目前主要是：
+    - [Godot 4.1 文档](Notes/文档翻译/Godot4.1官方文档翻译.md)
+    - [Jackson 教程](Notes/文档翻译/Jackson框架Baeldung教程翻译.md)
+    - [Kafka 3.4 文档](Notes/文档翻译/Kafka3.4官方文档翻译.md)
+    - [MapStruct 教程](Notes/文档翻译/MapStruct框架Baeldung教程翻译.md)
+    - [OpenAI 文档](Notes/文档翻译/OpenAI官方文档翻译.md)
+    - [Redis 文档](Notes/文档翻译/Redis官方文档翻译.md)
+    - [SpringBoot 3.0.0 文档](Notes/文档翻译/SpringBoot3.0.0官方文档翻译.md)
+    - [Spring Data JPA 3.1.0 文档](Notes/文档翻译/SpringDataJPA3.1.0官方文档翻译.md)
+    - [Spring Framework 6.0.4 文档](Notes/文档翻译/SpringFramework6.0.4官方文档翻译.md)
+  - **视频笔记**：一些视频笔记。目前主要是：
+    - 看完的：[Docker](Notes/视频笔记/《尚硅谷Docker实战教程》笔记.md)、[MySQL（高级篇）](Notes/视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md)、[Kafka](Notes/视频笔记/《尚硅谷Kafka3.x教程》笔记.md)、[Thrift](Notes/视频笔记/图灵《一个半小时学会轻量级、跨语言的RPC框架Thrift》笔记.md)、[ZooKeeper](Notes/视频笔记/《尚硅谷大数据技术之Zookeeper3.5.7版本教程》笔记.md)
+    - 看完较多、进行中的：[SpringCloud](Notes/视频笔记/《尚硅谷2024最新SpringCloud教程》笔记.md)、[Netty](Notes/视频笔记/《尚硅谷Netty视频教程》笔记.md)、[Redis](Notes/视频笔记/《尚硅谷Redis零基础到进阶》笔记.md)、[SpringBoot](Notes/视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md)、[Java 新特性](Notes/视频笔记/尚硅谷 Java 新特性相关笔记.md)
+    - 没看完、进度很少的：[Dubbo](Notes/视频笔记/《Dubbo源码解读与实战》笔记.md)、[JVM](Notes/视频笔记/《尚硅谷JVM精讲与GC调优教程》笔记.md)、[ElasticSearch](Notes/视频笔记/《尚硅谷ElasticSearch教程入门到精通》笔记.md)、[MySQL 面试题](Notes/视频笔记/《尚硅谷MySQL数据库面试题宝典》笔记.md)、[Nginx](Notes/视频笔记/《尚硅谷Nginx教程（亿级流量nginx架构设计）》笔记.md)、[SpringSecurity](Notes/视频笔记/《尚硅谷SpringSecurity+OAuth2权限管理实战教程》笔记.md)、[Spring](Notes/视频笔记/《尚硅谷Spring零基础入门到进阶，一套搞定spring6》笔记.md)、[Kubernetes](Notes/视频笔记/尚硅谷《云原生Java架构师的第一课K8s+Docker+KubeSphere+DevOps》笔记.md)
+  - **面试**：自己面试相关的准备。目前内容主要是：[《个人 Java 面试复习原材料.md》](Notes/面试/个人Java面试复习原材料.md)
 - **RandomFileChooser**：一个简单的随机选取文件的 Java 程序
 - **SpringBoot3Demo**: 自己简单的一个 SpringBoot3 测试项目
-  - **doc**：翻译的一些官方文档，不只是 SpringBoot
 - **SpringBoot3ReactorShangGuiGu**: 《尚硅谷 SpringBoot3 响应式编程教程》代码和笔记
 - **SpringCloudAlibabaDemo**：自己简单的 Spring Cloud Alibaba 测试项目
