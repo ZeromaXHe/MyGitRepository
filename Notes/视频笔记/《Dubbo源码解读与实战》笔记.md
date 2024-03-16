@@ -1655,3 +1655,1198 @@ Elections
 介绍了 **curator-x-discovery 扩展库的基本概念和使用**
 
 介绍了 **curator-recipes** 提供的强大功能
+
+# P7 08 代理模式与常见实现
+
+- Spring AOP、MyBatis、Hibernate 等常用的开源框架，使用到了**动态代理机制**
+
+- Dubbo 中也使用到了动态代理，简易版 RPC 框架的时候
+
+  Dubbo 使用动态代理机制来屏蔽底层的网络传输以及服务发现的相关实现
+
+## 代理模式
+
+在程序中不会直接调用 RealSubject 对象的方法
+
+**使用 Proxy 对象实现相关功能**
+
+
+
+**代理模式**
+
+Proxy.operation() 方法会在 RealSubject.operation() 方法
+
+调用前后进行一些预处理以及一些后置处理
+
+
+
+使用代理模式可以**控制程序对 RealSubject 对象的访问**
+
+代理模式还可以用于**实现延迟加载**的功能
+
+## JDK 动态代理
+
+**JDK 动态代理的核心是** InvocationHandler 接口
+
+
+
+JDK 动态代理创建代理类的底层实现原理
+
+
+
+反编译后得到的代码如下：
+
+```java
+public final class $Proxy37 extends Proxy implements Subject { // 实现了 Subject 接口
+    // 这里省略了从 Object 类继承下来的相关方法和属性
+    private static Method m3;
+    
+    static {
+        // 省略了 try/catch 代码块
+        // 记录了 operation() 方法对应的 Method 对象
+        m3 = Class.forName("com.xxx.Subject")
+            .getMethod("operation", new Class[0]);
+    }
+    
+    // 构造方法的参数就是我们在示例中使用的 DemoInvokerHandler 对象
+    public $Proxy11(InvocationHandler var1) throws {
+        super(var1);
+    }
+    
+    public final void operation() throws {
+        // 省略了 try/catch 代码块
+        // 调用 DemoInvokerHandler 对象的 invoke() 方法
+        // 最终调用 RealSubject 对象的对应方法
+        super.h.invoke(this, m3, (Object[]) null);
+    }
+}
+```
+
+
+
+- **JDK 动态代理的实现原理**是动态创建代理类并通过指定类加载器进行加载
+
+  在创建代理对象时将 InvocationHandler 对象作为构造参数传入
+
+- 当调用代理对象时，调用 InvocationHandler.invoke() 方法，执行代理逻辑并最终调用真正业务对象的相应方法
+
+## CGLib
+
+CGLib 是一个基于 ASM 的字节码生成库
+
+
+
+**CGLib 与 JDK 动态代理之间可以相互补充**
+
+在目标类实现接口时，使用 JDK 动态代理创建代理对象
+
+在目标类没有实现接口时，使用 CGLib 实现动态代理的功能
+
+
+
+CGLib 的两个重要成员
+
+Enhancer
+
+MethodInterceptor
+
+
+
+```java
+public class CglibProxy implements MethodInterceptor {
+    private Enhancer enhancer = new Enhancer();
+    
+    public Object getProxy(Class clazz) {
+        enhancer.setSuperclass(clazz); // 指定生成的代理类的父类
+        enhancer.setCallback(this); // 设置 Callback 对象
+        return enhancer.create(); // 通过 ASM 字节码技术动态创建子类实例
+    }
+    
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        System.out.println("前置处理");
+        Object result = proxy.invokeSuper(obj, args);
+        System.out.println("前置处理");
+        return result;
+    }
+}
+```
+
+```java
+public class CGLibTest {
+    public String method(String str) {
+        System.out.println("str");
+        return "CGLibTest.method():" + str;
+    }
+    
+    public static void main(String[] args) {
+        CglibProxy proxy = new CglibProxy();
+        CGLibTest proxyImp = (CGLibTest) proxy.getProxy(CGLibTest.class);
+        String result = proxyImp.method("test");
+        System.out.println(result);
+    }
+}
+```
+
+
+
+## Javassist
+
+**Javassist** 是一个开源的生成 Java 字节码的类库
+
+
+
+（13:04）
+
+```java
+public class JavassistMain {
+    // ...
+}
+```
+
+（14：01）
+
+```java
+public class JavassistDemo {
+    // ...
+}
+```
+
+（14：19）
+
+```java
+public class JavassistMain2 {
+    // ... ProxyFactory
+}
+```
+
+
+
+**Javassist 的性能**，是 Dubbo 默认的代理生成方式
+
+## 总结
+
+本课时
+
+介绍了**代理模式的核心概念和用途**
+
+介绍了 **JDK 动态代理的使用**，分析了 JDK 动态代理的实现原理，JDK 动态代理的局限性
+
+介绍了 **CGLib 和 Javassist** 的基本使用，简述了两者生成原理的原理
+
+
+
+# P8 09 Netty 入门，用它做网络编程都说好（上）
+
+- **Java NIO 的 API 非常复杂**
+- 直接**使用 Java NIO 进行开发**，难度和开发量非常大
+- **JDK 本身的 Bug**（epoll bug）
+
+
+
+**Netty 的优点**：
+
+- 入门简单，使用方便，文档齐全，无其他依赖
+- 高性能，高吞吐，低延迟，资源消耗少
+- 灵活的线程模型，支持阻塞和非阻塞的 I/O 模型
+- 代码质量高，目前主流版本基本没有 Bug
+
+## Netty I/O 模型设计
+
+**Netty 就采用了 NIO 的 I/O 模型**
+
+这也是其高性能的重要原因之一
+
+## 传统阻塞 I/O 模型
+
+（2:22）
+
+## I/O 多路复用模型
+
+（3:04）
+
+
+
+在 NIO 中则抛弃了传统的 I/O 流概念
+
+引入了 **Channel** 和 **Buffer** 的概念
+
+## Netty 线程模型设计
+
+**Netty 采用了 Reactor 线程模型的设计**
+
+核心原理是 Selector 负责监听 I/O 事件
+
+在监听到 I/O 事件之后，分发（Dispatch）给相关线程进行处理
+
+## 单 Reactor 单线程
+
+（6：16）
+
+
+
+**优点**：线程模型简单，没有引入多线程
+
+**缺点**：性能瓶颈问题
+
+## 单 Reactor 多线程
+
+**唯一的区别**就是执行 Handler 逻辑的线程隶属于一个线程池
+
+
+
+利用**多核 CPU** 的处理能力
+
+提高整个系统的吞吐量
+
+
+
+线程并发
+
+数据共享
+
+线程调度
+
+## 主从 Reactor 多线程
+
+- **Reactor 主线程**负责通过 Acceptor 对象处理 MainReactor 监听到的连接建立事件
+
+- 当 Acceptor 完成网络连接的建立之后
+
+  MainReactor 将建立好的连接分配给 SubReactor 进行后续监听
+
+
+
+**主 Reactor** 只负责监听连接建立事件
+
+**SubReactor** 只负责监听读写事件
+
+## Netty 线程模型
+
+```mermaid
+graph TB
+c1[Client]
+c2[Client]
+c3[Client]
+subgraph Boss Group
+neg[NioEventGroup]
+end
+c1 --> neg
+c2 --> neg
+c3 --> neg
+neg --> circle1(select\processSelectedKeys\runAllTasks)
+subgraph Work Group
+neg1[NioEventGroup]
+neg2[NioEventGroup]
+end
+circle1 --> neg1
+circle1 --> neg2
+neg2 --> circle2(select\processSelectedKeys\runAllTasks)
+subgraph Pipeline
+ch1[ChannelHandler]
+ch2[ChannelHandler]
+ch3[ChannelHandler]
+end
+circle2 --> ch2
+```
+
+NioEventLoop 表示一个不断循环的、执行处理任务的线程
+
+## 总结
+
+本课时
+
+**Java NIO 的一些缺陷和不足**，这也是 Netty 等网络库出现的重要原因之一
+
+**Netty 在 I/O 模型上的设计**，阐述了 I/O 多路复用的优势
+
+从基础的单 Reactor 单线程模型开始，介绍了**网络 I/O 线程模型**，Netty 目前使用的线程模型
+
+# P30 10 Netty 入门，用它做网络编程都说好（下）
+
+从 I/O 模型以及线程模型两个角度，宏观介绍了 **Netty** 的设计
+
+Netty 框架核心组件的功能，并概述它们的实现原理
+
+- **Netty** 对 I/O 模型设计中的概念的抽象，如 Selector 等组件
+- **线程模型**和相关组件介绍，主要是 NioEventLoop、NioEventLoopGroup 等
+- Netty 处理数据的相关组件，例如 ByteBuf、内存管理的相关知识
+
+## Channel
+
+**常见的 NIO Channel 类型：**
+
+- NioSocketChannel：对应异步的 TCP Socket 连接
+- NioServerSocketChannel：对应异步的服务器端 TCP Socket 连接
+- NioDatagramChannel：对应异步的 UDP 连接
+
+
+
+Channel 主要提供了**异步**的网络 I/O 操作
+
+I/O 操作返回的是一个 **ChannelFuture** 对象
+
+
+
+Netty **支持**同步 I/O 操作
+
+Netty **中**异步 I/O 操作
+
+## Selector
+
+Selector 是对多路复用器的抽象
+
+**Java NIO** 的核心基础组件之一
+
+
+
+可读事件（OP_READ）
+
+可写事件（OP_WRITE）
+
+网络连接事件（OP_ACCEPT）
+
+## ChannelPipeline & ChannelHandler
+
+**ChannelPipeline** 将一个 ChannelHandler 处理后的
+
+数据作为下一个 ChannelHandler 的输入
+
+
+
+入站事件
+
+出站事件
+
+责任链模式
+
+
+
+```java
+ChannelPipeline p = socketChannel.pipeline();
+p.addLast("1", new InboundHandlerA());
+p.addLast("2", new InboundHandlerB());
+p.addLast("3", new OutboundHandlerA());
+p.addLast("4", new OutboundHandlerB());
+p.addLast("5", new InboundOutboundHandlerX());
+```
+
+对于入站（Inbound）事件，处理序列为：1 -> 2 -> 5
+
+对于出站（Outbound）事件，处理序列为：5 -> 4 -> 3
+
+
+
+入站（Inbound）事件一般由 **I/O 线程**触发
+
+
+
+消息
+
+消息头：消息类型、控制位、数据长度
+
+消息体：包含了真正传输的数据
+
+
+
+出站（Outbound）事件与入站（Inbound）事件相反
+
+一般是由**用户**触发的
+
+
+
+ChannelHandler 接口
+
+
+
+实现类：ChannelInboundHandlerAdapter、ChannelOutboundHandlerAdapter
+
+主要是帮助完成**事件流转**功能
+
+即自动调用传递事件的相应方法
+
+
+
+ChannelPipeline 中的事件传播主要依赖于 **ChannelHandlerContext** 实现
+
+## NioEventLoop
+
+- 一个 **EventLoop 对象**由一个永远都不会改变的线程驱动
+
+- 一个 **NioEventLoop** 包含了一个 Selector 对象
+
+  支持多个 Channel 注册，可以同时服务多个 Channel
+
+  每个 Channel 只能与一个 NioEventLoop 绑定
+
+
+
+ChannelHandler 的逻辑都是由相应 **NioEventLoop** 关联的那个线程执行
+
+
+
+**普通任务队列**
+
+1. 在把任务提交给 execute() 方法之后进行判断：当前线程是否在 EventLoop 中
+2. 在：如果是 EventLoop 线程，则直接执行
+3. 不在：如果是非 EventLoop 线程，则入队，由 EventLoop 中的线程执行
+
+**定时任务队列**
+
+当用户在非 I/O 线程产生定时操作，Netty 将用户的定时操作封装成定时任务
+
+并将其放入该定时任务队列中等待相应 NioEventLoop 串行执行
+
+
+
+**NioEventLoop 主要做三件事：**
+
+监听 I/O 事件、执行普通任务以及执行定时任务
+
+## NioEventLoopGroup
+
+**NioEventLoopGroup** 表示的是一组 NioEventLoop
+
+具体计算公式是：CPU 的核心数 * 2
+
+
+
+1. 所有 EventLoop 都是由 EventLoopGroup 分配和管理的
+
+2. 每个 EventLoop 将处理分配给自己的 Channel，
+
+   即处理这些 Channel 上的网络 I/O 事件。
+
+   每个 EventLoop 会关联一个 Thread
+
+3. 在每个 Channel 的生命周期中，
+
+   只会分配给一个 EventLoop 进行处理
+
+## ByteBuf
+
+ByteBuf 扮演一个**数据容器**的角色
+
+
+
+两者符合下面的不等式
+
+`0 <= readerIndex <= writerIndex <= capacity`
+
+
+
+可丢弃 | readerIndex | 可读 | writerIndex | 可写
+
+
+
+Direct Buffer（直接缓冲区）
+
+使用堆外内存存储数据，使用的最大内存容量以及如何及时释放
+
+使用 Socket 传递数据时性能很好，Netty 主要使用内存池来解决释放的问题
+
+
+
+Composite Buffer（复合缓冲区）
+
+创建多个不同的 ByteBuf，提供 CompositeByteBuf
+
+一个列表，动态添加和删除其中的 ByteBuf
+
+## 内存管理
+
+ByteBuf
+
+- Unpooled
+
+  指非池化的内存管理方式
+
+  每次分配时直接调用系统 API 向操作系统申请 ByteBuf
+
+- Pooled
+
+  指池化的内存管理方式
+
+  预先申请一块大内存形成内存池
+
+
+
+- Netty 向系统申请一整块连续内存，称为 **Chunk**（默认大小为 16MB）
+
+  连续的内存通过 PoolChunk 对象进行封装
+
+- Netty 将 Chunk 空间进一步拆分为 Page
+
+  每个 Chunk 默认包含 2048 个 Page，每个 Page 的大小为 8 KB
+
+## 大对象 & 小对象的处理
+
+- 当申请分配的对象是**超过 Chunk 容量**的大型对象，Netty 就不再使用池化管理方式
+
+  在每次请求分配内存时单独创建特殊的非池化 PoolChunk 对象进行管理
+
+- 当对象内存释放时整个 PoolChunk 内存释放
+
+- 如果需要一定数量空间远小于 PageSize 的 ByteBuf 对象
+
+  Netty 通过 **Page 细分**的方式，解决这个问题
+
+- Netty 将请求的空间大小向上取最近的 16 的倍数（或 2 的幂）
+
+  规整后小于 PageSize 的小 Buffer 可分为两类
+
+
+
+**微型对象：**规整后的大小为 16 的整倍数，如 16、32、48、……、496，一共 31 种大小
+
+**小型对象：**规整后的大小为 2 的幂，如 512、1024、2048、4096，一共 4 种大小
+
+
+
+Netty  通过 PoolArena 管理 **PoolChunkList** 以及 **PoolSubpage**
+
+## 并发处理
+
+- PoolChunk 的**完全平衡树**标记以及 PoolSubpage 的 bitmap 标记
+
+  都是多线程不安全，都是需要加锁同步的
+
+- 为了减少线程间的竞争，Netty 会提前创建多个 **PoolArena**
+
+  当线程首次请求池化内存分配，找被最少线程持有的 PoolArena
+
+- Netty 提供了**延迟释放**的功能，提升并发性能
+
+- 当有新的分配请求时，PoolArena 会优先访问线程本地的缓存队列
+
+  查询是否有缓存可用，如果有，则直接分配，提高分配效率
+
+## 总结
+
+本课时
+
+Channel、ChannelFuture、Selector 等组件，它们是**构成 I/O 多路复用的核心**
+
+**EventLoop、EventLoopGroup** 等组件，它们与 Netty 使用的主从 Reactor 线程模型息息相关
+
+**Netty 的内存管理**，主要从内存分配管理、内存碎片优化以及并发分配内存等角度进行了介绍
+
+# P9 11 简易版 RPC 框架实现（上）
+
+**RPC** 是“远程过程调用（Remote Procedure Call）”的缩写形式
+
+像本地方法调用一样调用远程的服务
+
+
+
+简易 RPC 框架的架构图
+
+```mermaid
+graph TB
+b1[业务] --> n1
+n1 --> b1
+subgraph 客户端
+	服务发现
+	subgraph 集群代理模块
+		负载均衡
+		容错
+		透明
+	end
+	subgraph RPC协议
+		序列化
+		编码
+		n1[网络传输]
+	end
+end
+服务发现 --> 注册中心
+subgraph 服务端
+	服务暴露
+	subgraph 代理模块
+		线程池
+		...
+	end
+	subgraph RPC协议.
+		s2[序列化]
+		encode2[编码]
+        n2[网络传输]
+	end
+end
+n1 --> n2
+n2 --> n1
+注册中心 --> 服务暴露
+n2 --> b2[业务]
+b2 --> n2
+```
+
+**简易版 RPC 框架一次远程调用的核心流程：**
+
+1. Client 首先会调用本地的代理，也就是图中的 Proxy
+2. Client 端 Proxy 会按照协议（Protocol），将调用中传入的数据序列化成字节流
+3. 之后 Client 会通过网络，将字节数据发送到 Server 端
+4. Server 端接收到字节数据后，会按照协议进行反序列化，得到相应的请求信息
+5. Server 端 Proxy 会根据序列化后的请求信息，调用相应的业务逻辑
+6. Server 端业务逻辑的返回值，也会按照上述逻辑返回给 Client 端
+
+
+
+## 自定义协议
+
+http://1.x
+
+只支持半双工传输模式、不支持服务端主动推送数据
+
+有效负载少，效率低
+
+天然穿透防火墙，大量的框架和开源软件支持 HTTP 接口
+
+配合 REST 规范使用也是很便捷
+
+
+
+**简易版的 Demo RPC 协议**
+
+| short | byte     | byte(0)                  | byte(1~2)  | byte(3~4) | byte(5~6)                      | long      | int        | n byte       |
+| ----- | -------- | ------------------------ | ---------- | --------- | ------------------------------ | --------- | ---------- | ------------ |
+| magic | version  | extraInfo                | extraInfo  | extraInfo | extraInfo                      | messageId | size       | message body |
+| 魔数  | 协议版本 | 消息类型（请求还是响应） | 序列化方式 | 压缩方式  | 请求类型（正常请求、心跳请求） | 消息 ID   | 消息体长度 | 消息体       |
+
+
+
+## 编解码实现
+
+（6:20）
+
+**Netty 提供的 Decoder 和 Encoder 实现**
+
+ByteToMessageDecoder
+
+MessageToMessageDecoder
+
+MessageToMessageEncoder
+
+MessageToByteEncoder
+
+
+
+（7:09）
+
+**Netty 中 HTTP 协议的 Decoder 和 Encoder 实现**
+
+HttpServerResponseEncoder
+
+HttpServerRequestDecoder
+
+
+
+简单继承
+
+ByteToMessageDecoder
+
+MessageToMessageEncoder
+
+## 总结
+
+本课时
+
+介绍了简易 RPC 框架的**基本架构**以及其处理一次远程调用的基本流程
+
+讲解了简易 RPC 框架使用的**自定义协议格式、序列化/反序列化方式以及压缩方式**
+
+介绍了 Netty 中的**编解码体系**，以及 HTTP 协议相关的编解码器实现
+
+分析了简易 RPC 协议对应的**编解码器**，即 DemoRpcEncoder 和 DemoRpcDecoder
+
+# P31 12 简易版 RPC 框架实现（下）
+
+**简易 RPC 框架项目的结构和工作原理**
+
+简易 RPC 框架底层的协议结构、序列化/反序列化实现、压缩实现以及编解码器的具体实现
+
+## transport 相关实现
+
+Server 端
+
+DemoRpcDecoder
+
+ChannelHandler
+
+Client 端
+
+
+
+DemoRpcClient Client
+
+DemoRpcServer Server
+
+
+
+ChannelHandler 的执行顺序如下：
+
+网络 --DemoRpcEncoder--DemoRpcClientHandler--> 客户端业务逻辑 --DemoRpcDecoder--> 网络
+
+网络 --DemoRpcClientHandler--DemoRpcEncoder--> 服务端业务逻辑 --DemoRpcDecoder--> 网络
+
+## registry 相关实现
+
+**registry 包**
+
+主要是依赖 Apache Curator 实现了一个简易版本的 ZooKeeper 客户端
+
+基于 ZooKeeper 实现了注册中心最基本的两个功能：Provider 注册以及 Consumer 订阅
+
+
+
+基于 Curator 中的 ServiceDiscovery 组件与 ZooKeeper 进行交互
+
+对 Registry 接口的实现通过直接调用 **ServiceDiscovery** 的相关方法实现
+
+
+
+ServiceCache 底层在本地维护了一个 **ConcurrentHashMap** 缓存
+
+通过 PathChildrenCache 监听 ZooKeeper 中各个子节点的变化
+
+## proxy 相关实现
+
+**Proxy** 主要是为 Client 端创建一个代理
+
+帮助客户端程序屏蔽底层的网络操作以及与注册中心之间的交互
+
+
+
+DemoRpcProxy
+
+newInstance() 方法
+
+invoke() 方法
+
+
+
+**简易版 DemoRpcProxy 的实现优化：**
+
+- 缓存 DemoRpcClient 客户端对象以及相应的 Connection 对象，不必每次进行创建
+
+- 添加失败重试机制，在请求出现超时的时候，进行重试
+
+- 添加更加复杂和灵活的负载均衡机制，例如，根据 Hash 值散列进行负载均衡
+
+  根据节点 load 情况进行负载均衡等
+
+## 总结
+
+本课时
+
+介绍了**简易 RPC 框架中的 transport 包**，实现了服务端和客户端的通信能力
+
+讲解了 **registry 包如何实现与 ZooKeeper 的交互**，完善了简易 RPC 框架的服务注册与服务发现的能力
+
+**分析了 proxy 包的实现**，其中通过 JDK 动态代理的方式，帮接入方屏蔽了底层网络通信的复杂性
+
+编写了一个简单的 DemoService 业务接口，以及相应的 Provider 和 Consumer 接入简易 RPC 框架
+
+## 思考题
+
+在 transport 中创建 EventLoopGroup 的时候
+
+**为什么**针对 Linux 系统使用的 EventLoopGroup 会有所不同呢？
+
+# P10 13 本地缓存：降低 ZooKeeper 压力的一个常用手段
+
+**注册中心（Registry）**
+
+服务提供者（Provider）和消费者（Consumer）
+
+
+
+**真正的“注册中心”服务**是其他独立部署的进程
+
+或进程组成的集群，比如 ZooKeeper 集群
+
+
+
+Dubbo Framework
+
+- Service
+- Config
+- Proxy
+- Registry
+- Cluster
+- Monitor
+- Protocol
+- Exchange
+- Transport
+- Serialize
+
+## 核心接口
+
+Node
+
+- **getUrl() 方法**返回表示当前节点的 URL
+- **isAvailable()** 检测当前节点是否可用
+- **destroy()** 方法负责销毁当前节点并释放底层资源
+
+**RegistryService 接口**
+
+- register() 方法和 unregister() 方法分别表示**注册和取消注册**一个 URL
+- subscribe() 方法和 unsubscribe() 方法分别表示**订阅和取消**订阅一个 URL
+- lookup() 方法能够**查询**符合条件的注册数据
+
+**Registry 接口**
+
+继承 Node、RegistryService 接口
+
+**RegistryFactory 接口**
+
+```java
+@SPI("dubbo")
+public interface RegistryFactory {
+    @Adaptive({"protocol"})
+    Registry getRegistry(URL url);
+}
+```
+
+## AbstractRegistry
+
+**Registry 接口**的所有实现类都继承了 **AbstractRegistry**
+
+
+
+registryUrl
+
+Properties、file
+
+syncSaveFile
+
+registryCacheExecutor
+
+notified
+
+lastCacheChanged
+
+registered
+
+subscribed
+
+## 本地缓存
+
+**作为一个 RPC 框架**，Dubbo 在微服务架构中解决了各个服务间协作的难题
+
+**作为 Provider 和 Consumer 的底层依赖**，它会与服务一起打包部署
+
+
+
+（9:00）
+
+**notify() 方法的核心实现**：
+
+```java
+protected void notify(URL url, NotifyListener listener, List<URL> urls) {
+    
+}
+```
+
+
+
+(10:22)
+
+**本地缓存文件的具体路径是：**
+
+```
+/.dubbo/dubbo-registry-[当前应用名]-[当前Registry所在的IP地址].cache
+```
+
+
+
+**第一个细节：UrlUtils.isMatch() 方法**
+
+- 匹配 Consumer 和 Provider 的接口
+- 匹配 Consumer 和 Provider 的 category
+- 检测 Consumer URL 和 Provider URL 中的 enable
+- 检测 Consumer 和 Provider 端的 group、version 以及 classifier
+
+**第二个细节是：URL.getServiceKey() 方法**
+
+```
+[group]/{interface(或 path)}[:version]
+```
+
+
+
+**AbstractRegistry 的核心**是本地文件缓存的功能
+
+
+
+**AbstractRegistry** 通过本地缓存提供了一种容错机制
+
+保证了服务的可靠性
+
+## 注册/订阅
+
+- AbstractRegistry 实现了 Registry 接口
+
+  它实现的 **registry() 方法**会将当前节点要注册的 URL 缓存到 registered 集合
+
+- **unregistry() 方法**会从 registered 集合删除指定的 URL
+
+- **subscribe() 方法**会将当前节点作为 Consumer 的 URL
+
+  以及相关的 NotifyListener 记录到  subscribed **集合**
+
+- **unsubscribe() 方法**会将当前节点的 URL
+
+  以及关联的 NotifyListener 从 subscribed **集合删除**
+
+## 恢复/销毁
+
+recover() 方法
+
+将 registered 集合中的全部 URL 重新走一遍 register() 方法
+
+将 subscribed 集合中的 URL 重新走一遍 subscribe() 方法
+
+
+
+destroy() 方法
+
+调用 unregister() 方法和 unsubscribe() 方法
+
+将当前节点注册的 URL 以及订阅的监听全部清理掉
+
+## 总结
+
+本课时
+
+**介绍了注册中心在整个 Dubbo 架构中的位置**
+
+Registry、RegistryService、RegistryFactory 等核心功能
+
+**详细讲解了 AbstractRegistry 这个抽象类提供的公共能力**
+
+主要是从本地缓存、注册/订阅、恢复/销毁这三方面进行了分析
+
+# P11 14 重试机制是网络操作的基本保证
+
+ZooKeeper、etcd 等服务发现组件一般会独立部署成一个集群
+
+业务服务通过网络连接这些服务发现节点，完成**注册和订阅**操作
+
+
+
+**为了保证服务的可靠性，重试机制就变得必不可少了**
+
+
+
+**重试机制**
+
+在请求失败时，客户端重新发起一个一模一样的请求
+
+尝试调用相同或不同的服务端，完成相应的业务操作
+
+
+
+register()/unregister()
+
+subscribe()/unsubscribe()
+
+notify()
+
+通过本地缓存实现的容错功能
+
+**重试机制的关注点**
+
+
+
+dubbo-registry 将重试机制的相关实现
+
+放到了 AbstractRegistry 的子类 ——**FailbackRegistry**
+
+## 核心字段介绍
+
+- **retryTimer（HashedWheelTimer 类型）**：用于定时执行失败重试操作的时间轮
+- **retryPeriod（int 类型）**：重试操作的时间间隔
+- **failedRegistered（ConcurrentMap<URL, FailedRegisteredTask> 类型）**：注册失败的 URL 集合，其中 Key 是注册失败的 URL，Value 是对应的重试任务
+- **failedUnregistered（ConcurrentMap<URL, FailedUnregisteredTask> 类型）**：取消注册失败的 URL 集合，其中 Key 是取消注册失败的 URL，Value 是对应的重试任务
+- **failedSubscribed（ConcurrentMap<Holder, FailedSubscribedTask> 类型）**：订阅失败 URL 集合，其中 Key 是订阅失败的 URL + Listener 集合，Value 是相应的重试任务
+- **failedUnsubscribed（`ConcurrentMap<URL, Set<NotifyListener>>` 类型）**：取消订阅失败的 URL 集合，其中 Key  是取消订阅失败的 URL + Listener 集合，Value 是相应的重试任务
+- **failedNotify（ConcurrentMap<Holder, FailedNotifiedTask> 类型）**：通知失败的 URL 集合，其中 Key 是通知失败的 URL + Listener 集合，Value 是相应的重试任务
+
+
+
+register() 方法的具体实现流程
+
+## 重试任务
+
+（6：01）
+
+**继承了 AbstractRetryTask 抽象类，如图所示：**
+
+## 其他核心方法
+
+**FailbackRegistry.subscribe() 方法处理异常**
+
+先获取缓存的订阅数据并调用 notify() 方法
+
+如果没有缓存相应的订阅数据，才会检查 check 参数决定是否抛出异常
+
+
+
+**recover() 方法**
+
+通过 FailedRegisteredTask 任务处理 registered 集合中的全部 URL
+
+通过 FailedSubscribedTask 任务处理 subscribed 集合中的 URL 以及关联的 NotifyListener
+
+
+
+FailbackRegistry
+
+destroy()
+
+retryTimer 字段
+
+stop() 方法
+
+## 总结
+
+本课时
+
+重点介绍了 AbstractRegistry 的实现类——**FailbackRegistry 的核心实现**
+
+主要是在 AbstractRegistry 的基础上，提供了重试机制
+
+**在 register() / unregister()、subscribe() / unsubcribe() 等核心方法失败时**
+
+添加重试定时任务，实现重试机制，同时也添加了相应的定时任务清理逻辑
+
+# P12 15 ZooKeeper 注册中心实现，官方推荐注册中心实践
+
+Dubbo 支持 **ZooKeeper** 作为注册中心服务
+
+Dubbo 推荐使用的注册中心
+
+
+
+Dubbo 本身是一个分布式的 RPC 开源框架
+
+依赖于一个**一致性的服务发现组件**实现注册和订阅
+
+
+
+**ZooKeeper 为分布式应用所设计的高可用且一致性的开源协调服务**
+
+
+
+**Dubbo 在 ZooKeeper 中的节点层级结构：**
+
+- Root
+- Service（Monitor subscribe）
+- Type（Consumer subscribe 'providers'）
+- URL（Provider register、Consumer register）
+
+## ZooKeeperRegistryFactory
+
+**在 dubbo-registry-zookeeper 模块中的 SPI 配置文件**
+
+
+
+AbstractRegistryFactory
+
+setZookeeperTransporter()
+
+## ZookeeperTransporter
+
+dubbo-remoting-zookeeper 模块是 dubbo-remoting 模块的子模块
+
+相对独立
+
+在 Apache Curator 的基础上封装了一套 Zookeeper 客户端
+
+
+
+dubbo-remoting-zookeeper 模块
+
+ZookeeperTransporter 接口
+
+ZookeeperClient 接口
+
+
+
+提供了如下的 URL 配置
+
+```
+zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?backup=127.0.0.1:8989,127.0.0.1:9999
+```
+
+## ZookeeperClient
+
+- **create() 方法**：创建 ZNode 方法，还提供了创建临时 ZNode 节点的重载方法
+- **getChildren() 方法**：获取指定节点的子节点集合
+- **getContent() 方法**：获取某个节点存储的内容
+- **delete() 方法**：删除节点
+- **addXxxListener() / removeXxxListener() 方法**：添加/删除监听器
+- **close() 方法**：关闭当前 ZooKeeperClient 实例
+
+
+
+**AbstractZookeeperClient 作为 ZookeeperClient 接口的抽象实现**
+
+- 缓存当前 ZookeeperClient 实例创建的持久 ZNode 节点
+- 管理当前 ZookeeperClient 实例添加的各类监听器
+- 管理当前 ZookeeperClient 的运行状态
+
+
+
+StateListener
+
+DataListener
+
+ChildListener
+
+
+
+为什么 AbstractZookeeperClient 要使用泛型定义？
+
+不同的 ZookeeperClient 的实现可能依赖不同的 Zookeeper 客户端组件
+
+不同 Zookeeper 客户端组件的监听器实现也有所不同
+
+
+
+**dubbo-remoting-zookeeper 模块的核心实现**
+
+重点关心基于 Zookeeper 的注册中心实现
+
+## ZookeeperRegistry
+
+RECONNECTED 状态
+
+NEW_SESSION_CREATED 状态
+
+
+
+**注意：**doRegister() 方法注册 Provider URL 的时候
+
+根据 dynamic 参数决定创建临时 ZNode 节点还是持久 ZNode 节点
+
+
+
+toRootDir() 方法：获取 ZookeeperRegistry 的 root
+
+toServicePath() 方法：获取 Provider URL 的 interface 参数，默认值使用 Provider URL path
+
+toCategoryPath() 方法：获取 Provider URL 的 category 参数，默认值是 provider
+
+toUrlPath() 方法：添加整个 Provider URL
+
+## 总结
+
+本课时
+
+回顾了 **Zookeeper 的基础内容**，以及作为 Dubbo 注册中心时 Zookeeper 存储的具体内容
+
+介绍了针对 Zookeeper 的 RegistryFactory 实现——**ZookeeperRegistryFactory**
+
+讲解了 Dubbo 接入 Zookeeper 时使用的组件实现
+
+重点分析了 **ZookeeperTransporter 和 ZookeeperClient 实现**
+
+说明了 ZookeeperRegistry 是如何通过 ZookeeperClient 接入 Zookeeper
