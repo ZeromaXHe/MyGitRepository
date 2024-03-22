@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://biheh2n7wciin"]
+
+[ext_resource type="Shader" uid="uid://wl1c4eoso2jq" path="res://visual_shader_xiaomao/lesson3_roll/Lesson3Roll.tres" id="1_t6cvj"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="2_jex4s"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tmx7h"]
+shader = ExtResource("1_t6cvj")
+
+[node name="Lesson3Roll" type="Node2D"]
+
+[node name="Icon" type="Sprite2D" parent="."]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_tmx7h")
+position = Vector2(259, 174)
+texture = ExtResource("2_jex4s")

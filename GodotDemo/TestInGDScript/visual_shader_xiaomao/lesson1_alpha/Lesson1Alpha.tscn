@@ -1,0 +1,26 @@
+[gd_scene load_steps=5 format=3 uid="uid://dwk0fecs1sj2s"]
+
+[ext_resource type="Script" path="res://visual_shader_xiaomao/lesson1_alpha/Lesson1Alpha.cs" id="1_lc4cb"]
+[ext_resource type="Shader" uid="uid://bmnvrsdmlbfkn" path="res://visual_shader_xiaomao/lesson1_alpha/Lesson1Alpha.tres" id="2_qciai"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="3_r26hu"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_njv7s"]
+shader = ExtResource("2_qciai")
+shader_parameter/AlphaParameter = 1.0
+
+[node name="Lesson1Alpha" type="Node2D"]
+script = ExtResource("1_lc4cb")
+
+[node name="Icon" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_njv7s")
+position = Vector2(320, 298)
+texture = ExtResource("3_r26hu")
+
+[node name="HSlider" type="HSlider" parent="."]
+offset_left = 95.0
+offset_top = 142.0
+offset_right = 616.0
+offset_bottom = 193.0
+max_value = 1.0
+step = 0.01
+value = 1.0

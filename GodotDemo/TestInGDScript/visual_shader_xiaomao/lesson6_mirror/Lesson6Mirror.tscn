@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3 uid="uid://8g1j2yge1qv4"]
+
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_ta1cq"]
+[ext_resource type="Shader" uid="uid://bwxf7sp6t66k7" path="res://visual_shader_xiaomao/lesson6_mirror/Lesson6Mirror.tres" id="2_6jfxk"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_dnawb"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_11hcs"]
+seamless = true
+noise = SubResource("FastNoiseLite_dnawb")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yjyuy"]
+shader = ExtResource("2_6jfxk")
+shader_parameter/Texture2DNoise = SubResource("NoiseTexture2D_11hcs")
+
+[node name="Lesson6Mirror" type="Node2D"]
+
+[node name="Bg" type="Sprite2D" parent="."]
+position = Vector2(602.5, 239.5)
+scale = Vector2(1.91406, 1.91406)
+texture = ExtResource("1_ta1cq")
+
+[node name="Icon" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_yjyuy")
+position = Vector2(578, 505)
+scale = Vector2(-9.016, -2.219)
+texture = ExtResource("1_ta1cq")

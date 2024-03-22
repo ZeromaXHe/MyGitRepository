@@ -1,4 +1,4 @@
-# 官方文档常用记录
+# Godot 官方文档常用记录
 
 ## 代码顺序
 
@@ -111,3 +111,74 @@ var highlight_color: Color = Color.LIGHT_CORAL
 tween.tween_property(bar_fill_style, "bg_color", highlight_color, 0.15)
 tween.tween_property(bar_fill_style, "bg_color", original_color, 0.15)
 ```
+
+# C# 知识点
+
+## 括号强转、as、is区别
+
+1. 括号强转。在转换中不进行转换检查，直接进行转换，如果失败会抛出异常，会执行 catch 语句。如下图
+
+   ```c#
+   try
+   {
+       object obj = new object();
+       string str = (string)obj;
+       if (str == null)
+       {
+           Console.WriteLine("转换失败");
+       }
+       else
+       {
+           Console.WriteLine("转换成功!");
+       }
+   }
+   catch (System.Exception ex)
+   {
+       Console.Write(ex.Message);
+   }
+   ```
+
+2. is。可以用来判断是否可进行转换，表达式返回值为 bool。如下图，结果会打印转换失败
+
+   ```c#
+   try
+   {
+       object obj = new object();
+       if (obj is string)
+       {
+           Console.WriteLine("转换成功！");
+       }
+       else
+       {
+           Console.WriteLine("转换失败！");
+       }
+   }
+   catch (System.Exception ex)
+   {
+       Console.Write(ex.Message);
+   }
+   ```
+
+3. as 转换。在转换中先进行转换检查（相当于在强势转换前，做了一次is运算），如果失败会返回 null（所以 as 不能用于值类型，值类型不能为 null），如下图，结果会打印转换失败
+
+   ```c#
+   try
+   {
+       object obj = new object();
+       string str = obj as string;
+       if (str == null)
+       {
+           Console.WriteLine("转换失败");
+       }
+       else
+       {
+           Console.WriteLine("转换成功!");
+       }
+   }
+   catch (System.Exception ex)
+   {
+       Console.Write(ex.Message);
+   }
+   ```
+
+   

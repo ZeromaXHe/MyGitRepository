@@ -5,4 +5,12 @@
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'ios' ">net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="visual_shader_xiaomao\lesson2\**" />
+    <Compile Remove="visual_shader_xiaomao\lesson1\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="visual_shader_xiaomao\lesson2\**" />
+    <EmbeddedResource Remove="visual_shader_xiaomao\lesson1\**" />
+  </ItemGroup>
 </Project>

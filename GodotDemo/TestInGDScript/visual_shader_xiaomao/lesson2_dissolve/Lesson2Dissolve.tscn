@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://cyf27mvrd07ba"]
+
+[ext_resource type="Script" path="res://visual_shader_xiaomao/lesson2_dissolve/Lesson2Dissolve.cs" id="1_0ihkh"]
+[ext_resource type="Shader" uid="uid://dqvqrm4cwjq82" path="res://visual_shader_xiaomao/lesson2_dissolve/Lesson2Dissolve.tres" id="2_bi7bk"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="3_ye25n"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6qx5w"]
+shader = ExtResource("2_bi7bk")
+shader_parameter/FloatParameter = 0.0
+
+[node name="Lesson2Dissolve" type="Node2D"]
+script = ExtResource("1_0ihkh")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_right = 1165.0
+offset_bottom = 657.0
+color = Color(0.490196, 0.596078, 0.231373, 1)
+
+[node name="Icon" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_6qx5w")
+position = Vector2(578, 403)
+scale = Vector2(3.58594, 3.58594)
+texture = ExtResource("3_ye25n")
+
+[node name="HSlider" type="HSlider" parent="."]
+offset_left = 259.0
+offset_top = 43.0
+offset_right = 894.0
+offset_bottom = 165.0
+max_value = 1.0
+step = 0.01

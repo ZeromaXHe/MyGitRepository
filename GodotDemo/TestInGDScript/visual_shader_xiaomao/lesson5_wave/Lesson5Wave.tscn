@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://dpf4fk18fr5av"]
+
+[ext_resource type="Shader" uid="uid://vx0ad3ecky2q" path="res://visual_shader_xiaomao/lesson5_wave/Lesson5Wave.tres" id="1_cp8ea"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="2_t5ttu"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xsqhj"]
+shader = ExtResource("1_cp8ea")
+
+[node name="Lesson5Wave" type="Node2D"]
+
+[node name="Icon" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_xsqhj")
+position = Vector2(313, 230)
+texture = ExtResource("2_t5ttu")

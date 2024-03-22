@@ -1,0 +1,30 @@
+[gd_scene load_steps=7 format=3 uid="uid://bhyi8xi8gobhe"]
+
+[ext_resource type="Script" path="res://visual_shader_xiaomao/lesson4_fire/Lesson4Fire.cs" id="1_l5cep"]
+[ext_resource type="Shader" uid="uid://bi6dbl5sfblvo" path="res://visual_shader_xiaomao/lesson4_fire/Lesson4Fire.tres" id="2_ndgk2"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="3_bjihd"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_tu0uj"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_undjy"]
+seamless = true
+noise = SubResource("FastNoiseLite_tu0uj")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2ok3k"]
+shader = ExtResource("2_ndgk2")
+shader_parameter/ColorParameter = Color(1, 1, 1, 1)
+shader_parameter/Texture2DParameter = SubResource("NoiseTexture2D_undjy")
+
+[node name="Lesson4Fire" type="Node2D"]
+script = ExtResource("1_l5cep")
+
+[node name="Fire" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_2ok3k")
+position = Vector2(533, 283)
+texture = ExtResource("3_bjihd")
+
+[node name="ColorPicker" type="ColorPicker" parent="."]
+offset_left = 73.0
+offset_top = 33.0
+offset_right = 371.0
+offset_bottom = 609.0
