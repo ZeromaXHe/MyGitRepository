@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3 uid="uid://cmip5hi8cq8fo"]
+
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_2wkut"]
+[ext_resource type="Script" path="res://equipment_item/Slot.cs" id="2_bso4t"]
+[ext_resource type="Script" path="res://equipment_item/DragObject.cs" id="3_75cao"]
+
+[node name="DragTutorialTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Slot1" type="TextureRect" parent="."]
+self_modulate = Color(0, 1, 0, 1)
+layout_mode = 0
+offset_left = 388.0
+offset_top = 124.0
+offset_right = 516.0
+offset_bottom = 252.0
+pivot_offset = Vector2(64, 64)
+texture = ExtResource("1_2wkut")
+script = ExtResource("2_bso4t")
+type = 1
+
+[node name="Slot2" type="TextureRect" parent="."]
+self_modulate = Color(1, 0, 0, 1)
+layout_mode = 0
+offset_left = 144.0
+offset_top = 127.0
+offset_right = 272.0
+offset_bottom = 255.0
+pivot_offset = Vector2(64, 64)
+texture = ExtResource("1_2wkut")
+script = ExtResource("2_bso4t")
+
+[node name="DragObject" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 318.0
+offset_top = 292.0
+offset_right = 382.0
+offset_bottom = 356.0
+pivot_offset = Vector2(32, 32)
+texture = ExtResource("1_2wkut")
+expand_mode = 1
+script = ExtResource("3_75cao")

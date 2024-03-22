@@ -14,3 +14,7 @@ config/name="TestInGDScript"
 run/main_scene="res://resource_loader/resource_loader_test.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
+
+[dotnet]
+
+project/assembly_name="TestInGDScript"

@@ -18,3 +18,19 @@ config/icon="res://icon.svg"
 [autoload]
 
 GlobalScript="*res://scripts/global_script.gd"
+
+[file_customization]
+
+folder_colors={
+"res://assets/civ6_origin/": "red",
+"res://assets/icon_park/": "red",
+"res://assets/made_in_godot/": "orange",
+"res://assets/self_made_svg/": "orange",
+"res://scenes/game/": "teal",
+"res://scenes/gui/": "green",
+"res://scenes/map_editor/": "teal",
+"res://scenes/menu/": "green",
+"res://scripts/": "blue",
+"res://shaders/": "purple",
+"res://styles/": "pink"
+}
