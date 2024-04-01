@@ -2705,3 +2705,684 @@ Gateway 工作流程
   - 路由转发 + 断言判断 + 执行过滤器链
 
 # P66 GateWay 之网关搭建入门配置步骤
+
+入门配置
+
+- 建立 Module
+  - cloud-gateway9527
+- 改 POM（2:31）
+- 写 YML（3:09）
+- 主启动（3:27）
+- 业务类
+  - 无，不写任何业务代码，网关和业务无关
+- 测试
+  - 先启动 8500 服务中心 Consul
+  - 再启动 9527 网关入驻
+
+# P67 GateWay 之网关 9527 路由映射 8001-上
+
+9527 网关如何做路由映射
+
+- 9527 网关如何做路由映射那？？？
+  - 诉求
+    - 我们目前不想暴露 8001 端口，希望在 8001 真正的支付微服务外面套一层 9527 网关
+  - 8001 新建 PayGateWayController（2:59）
+  - 启动 8001 支付
+  - 8001 自测通过
+- 9527 网关 YML 新增配置（6:15）
+- 测试1
+  - 启动 Consul 8500 服务
+  - 启动 8001 支付
+  - 启动 9527 网关
+  - 访问说明
+    - 添加网关前
+      - http://localhost:8001/pay/gateway/get/1
+      - http://localhost:8001/pay/gateway/info
+    - 隐真示假，映射说明（9:42）
+    - 添加网关后
+      - http://localhost:9527/pay/gateway/get/1
+      - http://localhost:9527/pay/gateway/info
+  - 目前 8001 支付微服务前面添加 GateWay 成功（10:38）
+- 测试2
+- 还有问题
+
+# P68 GateWay 之网关 9527 路由映射 8001-下
+
+测试2
+
+- 启动订单微服务测试，看看是否通过网关？（0:23）
+  1. 修改 cloud-api-commons
+     - PayFeignApi 接口（0:59）
+  2. 修改 cloud-consumer-feign-order80
+     - 新建 OrderGateWayController（2:01）
+  3. 网关开启
+     - 测试通过
+  4. 网关关闭
+     - 测试通过
+  5. 结论
+     - **9527 网关是否启动，毫无影响**
+     - 目前的配置来看，网关被绕开了……
+- 正确做法
+  - 同一家公司自己人，系统内环境，直接找微服务（5:30）
+  - 不同家公司有外人，系统外访问，先找网关再服务（6:27）
+    - 刷新 feign 接口 jar 包
+    - 重启 80 订单微服务
+    - 有网关正常 success（9:02）
+    - 无网关异常（9:35）
+
+还有问题
+
+-  请看看网关 9527 的 yml 配置，映射写死问题（10：21）
+
+# P69 GateWay 之按微服务名动态路由服务 URI
+
+GateWay 高级特性
+
+- Route 以微服务名-动态获取服务 URI
+  - 痛点（1:14）
+  - 是什么(1:47)
+  - 解决 uri 地址写死问题
+    - 9527 修改前 YML（2：51）
+    - 9527 修改后 YML（2：56）
+  - 测试1
+    - 重启网关 9527，80/8001 保持不变
+  - 测试2
+    - 如果将 8001 微服务 yml 文件端口修改为 8007，照样访问我实际启动的程序是 main8001 但是端口名改为 8007
+    - 我们依据微服务名字，匹配查找即可 `uri: lb://cloud-payment-service`
+- Predicate 断言（谓词）
+- Filter 过滤
+
+# P70 GateWay 之 Predicate 源码架构分析
+
+Predicate 断言（谓词）
+
+- 是什么
+  - Route Predicate Factories 这个是什么东东？（2：09）
+- 启动微服务 gateway9527，看看 IDEA 后台的输出
+- 整体架构概述（4：50）
+- 常用的内置 Route Predicate
+- 自定义断言，XXXRoutePredicateFactory 规则
+
+# P71 GateWay 之 Predicate 两种配置 shortcuts 和 fully
+
+常用的内置 Route Predicate
+
+- 配置语法总体概述
+  - 两种配置，二选一（1：18）
+    - Most examples below use the shortcut way
+  - 1 Shortcut Configuration（2：08）
+  - 2 Fully Expanded Arguments（3:11）
+- 测试地址
+- 常用断言 api（4：16）
+  1. After Route Predicate
+  2. Before Route Predicate（家庭作业）
+     - YML
+  3. Between Route Predicate（家庭作业）
+     - YML
+  4. Cookie Route Predicate
+  5. Header Route Predicate
+  6. Host Route Predicate
+  7. Path Route Predicate
+  8. Query Route Predicate
+  9. RemoteAddr Route Predicate
+     - YML
+  10. Method Route Predicate（家庭作业）
+- 上述配置小总结
+
+# P72 GateWay 之 Predicate 配置 01
+
+1. After Route Predicate（3：37）
+   - 如何获得 ZonedDateTime（3：56）
+   - YML（6：25）
+2. Before Route Predicate（家庭作业）
+   - YML（6：55）
+3. Between Route Predicate（家庭作业）
+   - YML（7：01）
+
+# P73 GateWay 之 Predicate 配置 02
+
+4、Cookie Route Predicate（0：35）
+
+- YML（1:09）
+- 方法1，原生命令
+  - 不带 cookies 访问（2：41）
+  - 自带 cookies 访问（3：18）
+- 方法2，postman（4：12）
+- 方法3，chrome 浏览器（6：15）
+
+# P74 GateWay 之 Predicate 配置 03
+
+5、Header Route Predicate（00：43）
+
+- YML（0：55）
+- 方法1，原生命令（1:38）
+- 方法2，postman（2:46）
+
+6、Host Route Predicate（3：42）
+
+- YML（4：13）
+- 方法1，原生命令（5：14）
+- 方法2，postman（7：00）
+
+7、Path Route Predicate（7：39）
+
+- YML（7：48）
+
+# P75 GateWay 之 Predicate 配置 04
+
+8、Query Route Predicate（0：10）
+
+- YML（1：01）
+- 测试（1：24）
+
+9、RemoteAddr Route Predicate（2：09）
+
+- YML（4：42）
+- CIDR网路IP划分（无类别域间路由 Classless Inter-Domain Routing 缩写）（3：24）
+
+10、Method Route Predicate（家庭作业）（6：59）
+
+- 配置某个请求地址，只能用 Get/Post 方法访问，方法限制
+
+上述配置小总结
+
+- All
+
+  - （8：17）
+
+  - ```yaml
+    server:
+      port: 9527
+    spring:
+      application:
+        name: cloud-gateway # 以微服务注册进 consul 或 nacos 服务列表内
+      cloud:
+        consul: # 配置consul地址
+          host: localhost
+          port: 8500
+          discovery:
+            prefer-ip-address: true
+            service-name: ${spring.application.name}
+        gateway:
+          routes:
+            - id: pay_route1 # 路由的 ID（类似 mysql 主键 ID），没有固定规则但要求唯一，建议配合服务名
+              uri: lb://cloud-payment-service # 匹配后提供服务的路由地址
+              predicates:
+                - Path=/pay/gateway/get/** # 断言，路径相匹配的进行路由
+                - After=2023-12-30T23:02:39.079979400+8:00[Asia/Shanghai]
+                # - Cookie=username,zzyy
+                # - Header=X-Request-Id, \d+ # 请求头要有 X-Request-Id 属性并且值为整数的正则表达式
+                # - Query=username, \d+ # 要有参数名 username 并且值还要是整数才能路由
+                - RemoteAddr=192.168.124.1/24 # 外部访问我的 IP 限制，最大跨度不超过 32，目前是 1~24 它们是 CIDR 表示法。
+            - id: pay_route2 # 路由的 ID（类似 mysql 主键 ID），没有固定规则但要求唯一，建议配合服务名
+              uri: lb://cloud-payment-service # 匹配后提供服务的路由地址
+              predicates:
+                - Path=/pay/gateway/info/** # 断言，路径相匹配的进行路由
+    ```
+
+- Predicate 就是为了实现一组匹配规则，让请求过来找到对应的 Route 进行处理
+
+# P76 GateWay 之自定义 Predicate 需求说明
+
+自定义断言，XXXRoutePredicateFactory 规则
+
+- 痛点
+  - 原有的断言配置不满足业务怎么办？
+  - 看看 AfterRoutePredicateFactory（1：56）
+  - 架构概述（2：32）
+  - 模板套路
+    - 要么继承 AbstractRoutePredicateFactory 抽象类
+    - 要么实现 RoutePredicateFactory 接口
+    - 开头任意取名，但是必须以 RoutePredicateFactory 后缀结尾
+- 自定义路由断言规则步骤套路
+  - 编写步骤
+    1. 新建类名 XXX 需要以 RoutePredicateFactory 结尾，并继承 AbstractRoutePredicateFactory 类(4:30)
+    2. 重写 apply 方法
+    3. 新建 apply 方法所需要的静态内部类 MyRoutePredicateFactory.Config，这个 Config 类就是我们的路由断言规则，重要
+    4. 空参构造方法，内部调用 super
+    5. 重写 apply 方法第二版
+  - 完整代码 V1
+- 测试 1
+- bug 分析
+- 测试 2
+
+# P77 GateWay 之自定义 Predicate 编码实战
+
+1. 新建类名 XXX 需要以 RoutePredicateFactory 结尾，并继承 AbstractRoutePredicateFactory 类（1：55）
+2. 重写 apply 方法（6：03）
+3. 新建 apply 方法所需要的静态内部类 MyRoutePredicateFactory.Config，这个 Config 类就是我们的路由断言规则，重要（4：43）
+4. 空参构造方法，内部调用 super（5：50）
+5. 重写 apply 方法第二版（8：57）
+
+完整代码 V1（9：18）
+
+```java
+@Component
+public class MyRoutePredicateFactory extends AbstractRoutePredicateFactory<MyRoutePredicateFactory.Config> {
+    public MyRoutePredicateFactory() {
+        super(MyRoutePredicateFactory.Config.class);
+    }
+    
+    @Validated
+    public static class Config {
+        @Setter
+        @Getter
+        @NotEmpty
+        private String userType; // 钻、金、银等用户等级
+    }
+    
+    @Override
+    public Predicate<ServerWebExchange> apply(MyRoutePredicateFactory.Config config) {
+        return new Predicate<ServerWebExchange>() {
+            @Override
+            public boolean test(ServerWebExchange serverWebExchange) {
+                // 检查 request 的参数里面，userType 是否为指定的值，符合配置就通过
+                String userType = serverWebExchange.getRequest().getQueryParams().getFirst("userType");
+                if (userType == null) return false;
+                // 如果参数存在，就和 config 的数据进行比较
+                if (userType.equals(config.getUserType())) {
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
+}
+```
+
+# P78 GateWay 之自定义 Predicate 功能测试和支持 shortcut
+
+- 测试 1
+  - YML（0：52）
+  - 启动后？？？
+    - 故障现象（2：58）
+    - 导致原因
+      - 为什么 Shortcut Configuration 不生效？（3：21）
+    - 解决方案
+      - 先解决问题，让我们自定义的能用
+      - Fully Expanded Arguments
+        - YML(4:07)
+      - success（5：28）
+- bug 分析
+  - 缺少 shortcutFieldOrder 方法的实现，所以不支持短格式（6：34）
+- 测试 2
+  - 完整代码 02（6：45）
+  - YML（6：48）
+  - 重启 9527 并测试
+
+# P79 GateWay 之 Filter 理论知识
+
+Filter 过滤
+
+- 概述
+  - 官网
+  - 一句话
+    - **Spring MVC 里面的拦截器 Interceptor，Servlet 的过滤器**
+    - “pre” 和 “post” 分别会在请求被执行前调用和被执行后调用，用来修改请求和响应信息（1：41）
+  - 能干嘛
+    - 请求鉴权
+    - 异常处理
+    - 记录接口调用时长统计，重点，大厂面试设计题
+    - ……
+  - 类型
+    1. 全局默认过滤器 Global Filters
+       - gateway 出厂默认已有的，直接用即可，主要作用于所有的路由
+       - 不需要在配置文件中配置，作用在所有的路由上，实现 GlobalFilter 接口即可
+    2. 单一内置过滤器 GatewayFilter
+       - 也可以称为网关过滤器，这种过滤器主要是作用于单一路由或者某个路由分组
+    3. 自定义过滤器
+- GateWay 内置的过滤器
+- GateWay 自定义过滤器
+
+# P80 GateWay 之 Filter 配置 01
+
+GateWay 内置的过滤器
+
+- 是什么
+  - 官网
+  - 单一内置过滤器 GatewayFilter
+- 只讲解常见和通用的，Not All
+- 常用的内置过滤器
+  1. 请求头（RequestHeader）相关组
+     - 6.1 The AddRequestHeader GatewayFilter Factory
+       - 指定请求头内容 ByName
+       - 8001 微服务 PayGateWayController 新增方法（4：40）
+       - 9527 网关 YML 添加过滤内容（7：11）
+       - 重启 9527 和 8001 并再次调用地址
+     - 6.18 The RemoveRequestHeader GatewayFilter Factory
+     - 6.29 The SetRequestHeader GatewayFilter Factory
+  2. 请求参数（RequestParameter）相关组
+  3. 回应头（ResponseHeader）相关组
+  4. 前缀和路径相关组
+  5. 其它
+
+# P81 GateWay 之 Filter 配置 02
+
+6.18 The RemoveRequestHeader GatewayFilter Factory
+
+- 删除请求头 ByName
+- 修改前（0:43）
+- YML（1:37）
+- 重启 9527 和 8001 并再次调用地址
+- 修改后
+
+6.29 The SetRequestHeader GatewayFilter Factory
+
+- 修改请求头 ByName
+- 修改前（sec-fetch-mode）（3：18）
+- YML（3：30）
+- 重启 9527 和 8001 并再次调用地址
+- 修改后
+
+# P82 GateWay 之 Filter 配置 03
+
+2、请求参数（RequestParameter）相关组
+
+- 6.3 The AddRequestParameter GatewayFilter Factory
+- 6.19 The RemoveRequestParameter GatewayFilter Factory
+- 上述两个合一块
+  - YML（0:45）
+  - 修改 PayGateWayController（1：22）
+  - 测试
+
+# P83 GateWay 之 Filter 配置 04
+
+3、回应头（ResponseHeader）相关组
+
+- 开启配置前，按照地址 chrome 查看一下（0：30）
+- 6.4 The AddResponseHeader GatewayFilter Factory
+  - YML（1：15）
+- 6.30 The SetResponseHeader GatewayFilter Factory
+  - YML（1：49）
+- 6.20 The RemoveResponseHeader GatewayFilter Factory
+  - YML（2:20）
+- 开启配置后，上面三个配置打包一块上（4：00）
+
+# P84 GateWay 之 Filter 配置 05
+
+4、前缀和路径相关组
+
+- 6.14 The PrefixPath GatewayFilter Factory
+  - 自动添加路径前缀
+  - 之前的正确地址
+  - YML（0：53）
+    - 分拆说明（2：33）
+  - Chrome 测试（3：11）
+- 6.29 The SetPath GatewayFilter Factory
+  - 访问路径修改
+  - 测试
+    - YML（4：33）
+      - 说明（5：41）
+      - 带占位符的地址替换
+    - 结果（7：32）
+- 6.16 The RedirectTo GatewayFilter Factory
+  - 重定向到某个页面
+  - YML(8:17)
+
+# P85 GateWay 之 Filter 配置 06
+
+5、其它
+
+- 6.37 Default Filters
+- 配置在此处相当于全局通用，自定义秒变 Global（1：36）
+- 本次案例全部 YML 配置全集（1：41）
+
+# P86 GateWay 之自研统计接口性能网关需求说明
+
+Gateway 自定义过滤器
+
+- 自定义全局 Filter
+  - 面试题
+    - 统计接口调用耗时情况，如何落地，谈谈设计思路
+    - 通过自定义全局过滤器搞定上述需求
+  - 案例
+    - 自定义接口调用耗时统计的全局过滤器
+    - 知识出处
+    - 步骤
+    - 测试
+- 自定义条件 Filter
+
+# P87 GateWay 之自研统计接口性能网关编码实战
+
+- 步骤
+  - 新建类 MyGlobalFilter 并实现 GlobalFilter，Ordered 两个接口
+  - YML（8：55）
+  - code
+- 测试
+
+# P88 GateWay 之自研单一内置过滤器 GatewayFilter 实战
+
+自定义条件 Filter
+
+- 自定义，单一内置过滤器 GatewayFilter
+
+- 先参考 GateWay 内置出厂默认的
+
+  - for example
+    - SetStatusGatewayFilterFactory
+    - SetPathGatewayFilterFactory
+    - AddResponseHeaderGatewayFilterFactory
+    - ……
+
+- 自定义网关过滤器规则步骤套路
+
+  - 新建类名 XXX 需要以 GatewayFilterFactory 结尾，并继承 AbstractGatewayFilterFactory 类（5：04）
+
+  - 新建 XXXGatewayFilterFactory.Config 内部类（5：53）
+
+  - 重写 apply 方法
+
+  - 重写 shortcutFieldOrder
+
+  - 空参构造方法，内部调用 super
+
+  - 完整代码 01
+
+    - （13:38）
+
+      ```java
+      @Component
+      public class MyGatewayFilterFactory extends AbstractGatewayFilterFactory<MyGatewayFilterFactory.Config> {
+          public MyGatewayFilterFactory() {
+              super(MyGatewayFilterFactory.Config.class);
+          }
+          
+          @Override
+          public List<String> shortcutFieldOrder() {
+              List<String> list = new ArrayList<String>();
+              list.add("status");
+              return list;
+          }
+          
+          @Override
+          public GatewayFilter apply(MyGatewayFilterFactory.Config config) {
+              return new GatewayFilter() {
+                  @Override
+                  public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+                      ServerHttpRequest request = exchange.getRequest();
+                      System.out.println("进入自定义网关过滤器 MyGatewayFilterFactory, status ===" + config.getStatus);
+                      if (request.getQueryParams().containsKey("atguigu")) {
+                          return chain.filter(exchange);
+                      } else {
+                          exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
+                          return exchange.getResponse().setComplete();
+                      }
+                  }
+              };
+          }
+          
+          public static class Config {
+              @Setter @Getter
+              private String status;
+          }
+      }
+      ```
+
+- YML（15：23）
+
+  - My 补充说明
+    - 出厂默认（14：31）
+    - 自己定制 My（15：12）
+
+- 测试
+
+# P89 SpringCloudAlibaba 是什么
+
+10、SpringCloud Alibaba 入门简介
+
+- 零基础小白必看，懂的同学请跳过
+- SpringCloud alibaba 入门简介
+  - 是什么
+    - 诞生（3：08）
+    - 介绍（7：42）
+    - 何为必须组件（8：44）
+  - 能干嘛
+  - 去哪下
+  - 怎么玩
+  - 毕业版本依赖关系（推荐使用）
+
+# P90 SpringCloudAlibaba 主要功能和版本定型
+
+- 能干嘛
+
+  - https://github.com/alibaba/spring-cloud-alibaba/blob/2022.x/README-zh.md
+
+    - （0：17）
+
+      主要功能：
+
+      - 服务限流降级
+      - 服务注册与发现
+      - 分布式配置管理
+      - 消息驱动能力
+      - 分布式事务
+      - 阿里云对象存储
+      - 分布式任务调度
+      - 阿里云短信服务
+
+- 去哪下
+
+  - 官网定义
+
+- 怎么玩（3：29）
+
+- 毕业版本依赖关系（推荐使用）
+
+- SpringCloud Alibaba 开发参考文档
+
+  - 英文
+  - 中文
+
+# P91 Nacos 之是什么
+
+11、SpringCloud Alibaba Nacos 服务注册和配置中心
+
+- 总体介绍（0：49）
+
+- Nacos 简介
+
+  - 为什么叫 Nacos 这个名字（2：31）
+
+    - Nacos：Dynamic Naming and Configuration Service
+    - 前四个字母分别为 Naming 和 Configuration 的前两个字母，最后的 s 为 Service
+
+  - 是什么
+
+    - 一个更易于构建云原生应用的动态服务发现、配置管理和服务管理平台
+    - 一句话
+      - Nacos 就是注册中心 + 配置中心的组合
+      - 等价于
+        - Nacos = Eureka + Config + Bus
+        - Nacos = Spring Cloud Consul
+
+  - 能干嘛
+
+    - 替代 Eureka/Consul 微服务注册中心
+    - 替代（Config+Bus）/Consul 做服务配置中心和满足动态刷新广播通知
+
+  - 去哪下
+
+  - 各种注册中心比较
+
+    - （6：31）
+
+      | 服务注册与发现框架 | CAP模型 | 控制台管理 | 社区活跃度         |
+      | ------------------ | ------- | ---------- | ------------------ |
+      | Eureka             | AP      | 支持       | 低（2.x 版本闭源） |
+      | Zookeeper          | CP      | 不支持     | 中                 |
+      | Consul             | CP      | 支持       | 高                 |
+      | Nacos              | AP      | 支持       | 高                 |
+
+      据说 Nacos 在阿里巴巴内部有超过 10 万的实例运行，已经过了类似双十一等各种大型流量的考验，Nacos 默认是 AP 模式，但也可以调整切换为 CP，我们一般用默认 AP 即可
+
+- Nacos 下载安装
+
+- Nacos Discovery 服务注册中心
+
+- Nacos Config 服务配置中心
+
+- Nacos 数据模型之 Namespace-Group-DataId
+
+# P92 Nacos 之下载安装本地运行
+
+Nacos 下载安装
+
+- 本地 Java17 + maven 环境已经 OK
+  - 注意 Nacos 版本
+- 先从官网下载 Nacos
+- 解压安装包，直接运行 bin 目录下的 startup.cmd
+  - startup.cmd -m standalone
+- 命令运行成功后直接访问
+  - http://localhost:8848/nacos
+  - 默认账号密码都是 nacos
+- 结果页面（4：21）
+- 关闭服务器
+  - shutdown.cmd
+
+# P93 Nacos 之服务提供者 9001 入驻 Nacos 中心
+
+Nacos Discovery 服务注册中心
+
+- 概述
+- SpringCloud Alibaba 参考中文文档
+- 基于 Nacos 的服务提供者
+  - 新建 Module
+    - cloudalibaba-provider-payment9001
+  - POM（2：50）
+  - YML（3：46）
+  - 主启动（4：48）
+  - 业务类（6：13）
+  - 测试
+    - nacos 控制台
+    - nacos 8848 注册中心 + 服务提供者 pay9001 都 OK 了
+- 基于 Nacos 的服务消费者
+- 负载均衡
+
+# P94 Nacos 之服务消费者 83 入驻 Nacos 中心
+
+基于 Nacos 的服务消费者
+
+- 新建 Module
+  - cloudalibaba-consumer-nacos-order83
+- POM（2：15）
+- YML（3：10）
+- 主启动（4：07）
+- 业务类
+  - 配置 config（5：05）
+  - OrderNacosController（5：54）
+- 测试
+  - nacos 控制台
+
+# P95 Nacos 之负载均衡 Nacos 支持演示
+
+负载均衡
+
+- 参照 9001 新建 9002
+  - 要么老实创建，cloudalibaba-provider-payment9002，要么取巧不想新建重复体力劳动，直接拷贝虚拟端口映射
+  - 步骤
+    - 1（1：31）
+    - 2（2：18）
+      - -DServer.port=9002
+    - 3（2：38）
+- 测试
+  - 看到端口号 9001/9002 交替出现，负载均衡达到
