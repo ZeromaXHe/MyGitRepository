@@ -3386,3 +3386,544 @@ Nacos Discovery 服务注册中心
     - 3（2：38）
 - 测试
   - 看到端口号 9001/9002 交替出现，负载均衡达到
+
+# P96 Nacos 之配置中心业务规则和动态刷新-上
+
+Nacos Config 服务配置中心
+
+- 概述
+
+  - 之前案例 Consul 8500 服务配置动态变更功能可以被 Nacos 取代
+  - 通过 Nacos 和 spring-cloud-starter-alibaba-nacos-config 实现中心化全局配置的动态变更
+
+- 官网文档
+
+  - SpringCloud Alibaba 参考中文文档
+
+- Nacos 作为配置中心配置步骤
+
+  - 建 Module
+
+    - cloudalibaba-config-nacos-client3377
+
+  - POM（1：28）
+
+  - YML
+
+    - why 配置两个
+
+      - （2：44）
+
+        Nacos 同 Consul 一样，在项目初始化时，要保证先从配置中心进行配置拉取，拉取配置之后，才能保证项目的正常启动，为了满足动态刷新和全局广播通知
+
+        springboot 中配置文件的加载是存在优先级顺序的，**bootstrap 优先级高于 application**
+
+    - YML 2024
+
+      - bootstrap.yml（3：29）
+      - application（4：49）
+
+  - 主启动（5：24）
+
+  - 业务类
+
+    - NacosConfigClientController(6:13)
+    - @RefreshScope
+      - 通过 Spring Cloud 原生注解 `@RefreshScope` 实现配置自动更新
+
+  - 在 Nacos 中添加配置信息（重点）
+
+  - 测试
+
+  - 自带动态刷新
+
+  - 历史配置
+
+# P97 Nacos 之配置中心业务规则和动态刷新-下
+
+在 Nacos 中添加配置信息（重点）
+
+- Nacos 中的匹配规则
+  - 设置 DataId 理论
+    - Nacos 中的 dataid 的组成格式及与 SpringBoot 配置文件中的匹配规则
+    - 官网（1：43）
+  - 配置 DataId 实操
+    - 公式
+      - `${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}`
+    - prefix 默认为 spring.application.name 的值
+    - spring.profile.active 即为当前环境对应的 profile，可以通过配置项 spring.profile.active 来配置
+    - file-extension 为配置内容的数据格式，可以通过配置项 spring.cloud.nacos.config.file-extension 来配置
+    - 小总结说明（5：46）
+- 案例步骤
+  - 查看 YML（6：10）
+  - 创建配置
+  - 配置 DataId 和对应文件
+    - Data ID：
+      - nacos-config-client-dev.yaml
+    - 三码合一（7：02）
+
+测试
+
+- 启动 Nacos 且在 nacos 后台管理-配置列表下**已经存在对应的 yaml 配置文件**（8：32）
+- 运行 cloud-config-nacos-client3377 的主启动类
+- 调用接口查看配置信息
+
+自带动态刷新
+
+- 修改下 Nacos 中的 yaml 配置文件，再次调用查看配置的接口，就会发现配置已经刷新
+
+历史配置
+
+- Nacos 会记录配置文件的历史版本默认保留 30 天，此外还有一键回滚功能，回滚操作将会触发配置更新
+- 回滚（11：48）
+
+# P98 Nacos 之 Namespace-Group-DataId 三元组-上
+
+Nacos 数据模型之 Namespace-Group-DataId
+
+- 问题
+  - 多环境多项目管理（1：08）
+- 官网
+- Namespace + Group + DataId 三者关系？为什么这么设计？（4：45）
+  - 三者说明（4：51）
+- Nacos 的图形化管理界面
+  - 命名空间 Namespace（7：45）
+  - 配置管理（7：50）
+- 三种方案加载配置
+
+# P99 Nacos 之 Namespace-Group-DataId 三元组-下
+
+三种方案加载配置
+
+1. DataID 方案
+   - 指定 spring.profile.active 和配置文件的 DataID 来使不同环境下读取不同的配置
+   - 默认空间 public + 默认分组 DEFAULT_GROUP + 新建 DataID
+     - 新建 test 配置 DataID（0：47）
+       - nacos-config-client-test.yaml
+     - nacos 后台（2：09）
+   - 修改 YML
+     - 通过 spring.profile.active 属性就能进行多环境下配置文件的读取（2：23）
+     - bootstrap.yml（2：48）
+     - application.yml（2：56）
+       - test
+   - 测试
+     - 配置是什么就加载什么
+       - test
+2. Group 方案
+   - 通过 Group 实现环境区分
+   - 默认空间 public + 新建 PROD_GROUP + 新建 DataID
+     - 新建 prod 配置 DataID
+       - nacos-config-client-prod.yaml
+     - 新建 Group（4：50）
+       - PROD_GROUP
+     - nacos 后台（5：46）
+   - 修改 YML
+     - 在 config 下增加一条 group 的配置即可。可配置为 PROD_GROUP
+     - bootstrap.yml（6：03）
+     - application.yml
+       - prod
+   - 测试
+     - 配置是什么就加载什么
+3. Namespace 方案
+   - 通过 Namespace 实现命名空间环境区分
+     - 新建 Namespace：Prod_Namespace（7：50）
+     - 新建 Namespace 但命名空间 ID 不填（系统自动生成）：Prod2_Namespace
+     - 后台（9：32）
+   - Prod_Namespace + PROD_GROUP + DataID(nacos-config-client-prod.yaml)
+     - 选定 Prod_Namespace 后新建
+       - 1（9：58）
+       - 2（10：19）
+         - 命名空间
+           - Prod_Namespace
+         - Data ID
+           - nacos-config-client-prod.yaml
+         - GROUP
+           - PROD_GROUP
+       - 效果（10：40）
+     - 后台（11：38）
+   - 修改 YML
+     - 在 config 下增加一条 `namespace: ProdNamespace`
+     - bootstrap.yml（11：57）
+     - application.yml（12：40）
+       - prod
+   - 测试
+     - 配置是什么就加载什么
+
+# P100 Sentinel 之是什么
+
+12、SpringCloud Alibaba Sentinel 实现熔断与限流
+
+- Sentinel
+  - 官网
+    - 等价对标
+      - Spring Cloud Circuit Breaker
+  - 是什么(1:49)
+  - 去哪下
+  - 能干嘛（7：18）
+    - 从流量路由、流量控制、流量整形、熔断降级、系统自适应过载保护、热点流量防护等多个维度来帮助开发者保障微服务的稳定性
+  - 怎么玩（面试题）
+- 安装 Sentinel
+- 微服务 8401 整合 Sentinel 入门案例
+- 流控规则
+- 熔断规则
+- @SentinelResource 注解
+- 热点规则
+- 授权规则
+- 规则持久化
+- OpenFeign 和 Sentinel 集成实现 fallback 服务降级
+
+# P101 Sentinel 之分布式常见面试题
+
+怎么玩（面试题）
+
+- 讲讲什么是缓存穿透？击穿？雪崩？如何解决？
+- 服务雪崩（3：16）
+- 服务降级（3：48）
+- 服务熔断（4：20）
+- 服务限流（5：04）
+- 服务隔离（6：02）
+- 服务超时（6：17）
+
+# P102 Sentinel 之下载安装运行
+
+安装 Sentinel
+
+- Sentinel 组件由 2 部分构成（0：21）
+  - 后台 8719 默认
+  - 前台 8080 开启
+- 安装步骤
+  - 下载
+    - 下载到本地 sentinel-dashboard-1.8.6.jar
+  - 运行命令
+    - 前提
+      - Java 环境 OK
+      - 8080 端口不能被占用
+    - 命令
+      - java -jar sentinel-dashboard-1.8.6.jar
+  - 访问 sentinel 管理界面
+    - 登陆账号密码均为 sentinel
+
+# P103 Sentinel 之微服务 8401 纳入 Sentinel 监控
+
+微服务 8401 整合 Sentinel 入门案例
+
+- 启动 Nacos 8848 成功
+  - startup.cmd -m standalone
+- 启动 Sentinel 8080 成功
+  - java -jar sentinel-dashboard-1.8.6.jar
+- 新建微服务 8401
+  - cloudalibaba-sentinel-service8401
+    - 将被哨兵纳入管控的 8401 微服务提供者
+  - POM（2：08）
+  - YML（2：57）
+  - 主启动（4：05）
+  - 业务类 FlowLimitController（5：26）
+  - 启动微服务 8401 并访问
+- 启动 8401 微服务后查看 sentinel 控制台
+  - 空空如也，啥都没有（6：57）
+  - Sentinel 采用的懒加载说明
+    - 注意
+      - 想使用 Sentinel 对某个接口进行限流 和降级等操作，一定要先访问下接口，使 Sentinel 检测出相应的接口
+    - 执行一次访问即可
+    - 效果
+
+# P104 Sentinel 之流控模式-直接
+
+流控规则
+
+- 基本介绍（0：57）
+  - 概述（1：29）
+- 流控模式（2：44）
+  - 直接
+    - **默认的流控模式，当接口达到限流条件时，直接开启限流功能。**
+    - 配置及说明（3：02）
+    - 测试
+      - 快速点击访问
+      - 结果
+        - Blocked by Sentinel (flow limiting)
+      - 思考？？？
+        - 直接调用默认报错信息，技术方面 OK，but，是否应该有我们自己的后续处理？
+          - 类似有个 fallback 的兜底方法？
+  - 关联
+  - 链路
+- 流控效果
+- 流控效果 V2（并发线程数）
+
+# P105 Sentinel 之流控模式-关联
+
+关联
+
+- 是什么
+  - 当关联的资源达到阈值时，就限流自己
+  - 当与 A 关联的资源 B 达到阈值后，就限流 A 自己
+  - **B 惹事，A 挂了**
+    - 张三感冒，李四吃药
+- 配置 A（0：42）
+- Jmeter 模拟并发密集访问 testB
+  - Apache JMeter 5.6.2（Requires Java 8+）
+  - 访问 testB 成功
+  - Run
+  - **大批量线程高并发访问 B，导致 A 失效了**
+- 运行后发现 testA 挂了
+  - 结果
+    - Blocked by Sentinel (flow limiting)
+
+# P106 Sentinel 之流控模式-链路
+
+链路
+
+- 来自不同链路的请求对同一个目标访问时，实施针对性的不同限流措施，比如 C 请求来访问就限流，D 请求来访问就是 OK
+- 修改微服务 cloudalibaba-sentinel-service8401
+  - YML（4：08）
+  - 业务类
+    - 新建 FlowLimitService
+      - @SentinelResource 后面介绍
+    - 修改 FlowLimitController
+- sentinel 配置
+- 测试
+  - C 链路
+  - D 链路 OK
+
+# P107 Sentinel 之流控效果-预热 WarmUp
+
+流控效果
+
+1. 直接 -> 快速失败（默认的流控处理）
+   - 直接失败，抛出异常
+     - Blocked by Sentinel（flow limiting）
+2. 预热 WarmUp
+   - 限流 冷启动
+     - 说明（2：02）
+   - 说明
+     - 公式：阈值除以冷却因子 coldFactor（默认值为 3），经过预热时长后才会达到阈值
+   - 官网（3：08）
+     - 默认 `coldFactor` 为 3，即请求 QPS 从 `threshold / 3` 开始，经预热时长逐渐升至设定的 QPS 阈值
+     - 源码
+       - com.alibaba.csp.sentinel.slots.block.flow.controller.WarmUpController
+   - WarmUp 配置（4：20）
+   - 多次点击
+     - 刚开始不行，后续慢慢 OK
+   - 应用场景（7：44）
+3. 排队等待
+
+# P108 Sentinel 之流控效果-排队等待
+
+3、排队等待
+
+- 是什么（0：44）
+- 修改 FlowLimitController（2：04）
+- sentinel 配置（3：10）
+
+# P109 Sentinel 之流控效果-并发线程数
+
+流控效果 V2（并发线程数）
+
+- sentinel 配置
+- Jmeter 模拟多个线程并发 + 循环请求（2：14）
+
+# P110 Sentinel 之熔断规则理论简介
+
+熔断规则
+
+- 官网
+- 基本介绍（3：11）
+  - 官网说明（4：32）
+- 新增熔断规则实战
+  1. 慢调用比例
+  2. 异常比例
+  3. 异常数
+
+# P111 Sentinel 之熔断规则-慢调用比例
+
+1、慢调用比例
+
+- 是什么（0：18）
+
+- 名词解释（3：40）
+
+- 触发条件 + 熔断状态
+
+  - （5：38）
+
+    进入熔断状态判断依据：在统计时长内，实际请求数目 > 设定的最小请求数 且 实际慢调用比例 > 比例阈值，进入熔断状态。
+
+    1 熔断状态（保险丝跳闸断电，不可访问）：在接下来的熔断时长内请求会自动被熔断
+
+    2 探测恢复状态（探路先锋）：熔断时长结束后进入探测恢复状态
+
+    3 结束熔断（保险丝闭合恢复，可以访问）：在探测恢复状态，如果接下来的一个请求响应时间小于设置的慢调用 RT，则结束熔断，否则继续熔断
+
+- 测试
+
+  - 代码（6：47）
+  - 配置（7：44）
+  - jmeter 压测（9：23）
+  - 结论（9：37）
+
+# P112 Sentinel 之熔断规则-异常比例
+
+2、异常比例
+
+- 是什么(0:49)
+  - Blocked by Sentinel (flow limiting)
+- 测试
+  - 代码（2：27）
+  - 配置（3：47）
+  - jmeter（8：18）
+  - 结论（8：31）
+
+# P113 Sentinel 之熔断规则-异常数
+
+3、异常数
+
+- 是什么（0：31）
+- 测试
+  - 代码（1：35）
+  - 配置（1：59）
+  - jmeter（4：02）
+  - 结论（4：48）
+
+# P114 Sentinel 之 @SentinelResource 注解理论简介
+
+@SentinelResource 注解
+
+- 是什么
+  - SentinelResource 是一个流量防卫防护组件注解，用于指定防护资源，对配置的资源进行流量控制、熔断降级等功能
+  - @SentinelResource 注解说明（1：42）
+- 启动 Nacos 成功
+  - startup.cmd -m standalone
+- 启动 Sentinel 成功
+  - java -jar sentinel-dashboard-1.8.6.jar
+- 1 按照 rest 地址限流 + 默认限流返回
+- 2 按 SentinelResource 资源名称限流 + 自定义限流返回
+- 3 按 SentinelResource 资源名称限流 + 自定义限流返回 + 服务降级处理
+
+# P115 Sentinel 之 @SentinelResource 注解-默认不使用
+
+1 按照 rest 地址限流 + 默认限流返回
+
+- 通过访问的 rest 地址来限流，会返回 Sentinel 自带默认的限流处理信息
+- 业务类 RateLimitController（3：07）
+- 访问一次
+- Sentinel 控制台配置（4：03）
+- 测试
+  - 疯狂点击
+  - 结果（4：51）
+
+# P116 Sentinel 之 @SentinelResource 注解开启并使用 blockHandler
+
+2 按 SentinelResource 资源名称限流 + 自定义限流返回
+
+- 不想用默认的限流提示（Blocked by Sentinel（flow limiting）），想返回自定义限流的提示
+- 微服务 cloudalibaba-sentinel-service8401
+  - 业务类 RateLimitController
+- 测试地址
+- 配置流控规则
+  - 配置步骤
+  - 图形配置和代码关系（4：46）
+- 测试
+  - 1 秒钟点击 1 下，OK
+  - 超过上述，疯狂点击，返回了自定义的限流处理信息，限流发生
+    - sentinel 默认（5：19）
+    - 自定义限流提示（5：21）
+
+# P117 Sentinel 之 @SentinelResource 注解开启并使用 blockHandler 和 fallback
+
+3 按 SentinelResource 资源名称限流 + 自定义限流返回 + 服务降级处理
+
+- 按 SentinelResource 配置，点击超过限流配置返回自定义限流提示+程序异常返回 fallback 服务降级
+- 微服务 cloudalibaba-sentinel-service8401
+  - 业务类 RateLimitController(2:36)
+- 配置流控规则
+  - 图形配置和代码关系（4：38）
+  - 表示 1 秒钟内查询次数大于 1，就跑到我们自定义的处流，限流
+- 测试
+  - 1 秒钟点击 1 下，OK
+  - 超过上述，疯狂点击，返回了自己定义的限流处理信息，限流发生，配合了 sentinel 设定的规则
+  - p1 参数为零，异常发生，返回了自己定义的服务降级处理
+  - 小结
+    - blockHandler，主要针对 sentinel 配置后出现的违规情况处理
+    - fallback，程序异常了 JVM 抛出的异常服务降级
+    - 两者可以同时共存
+
+# P118 Sentinel 之热点规则案例配置
+
+热点规则
+
+- 基本介绍
+  - 是什么（1：21）
+- 官网
+- 代码（3：58）
+- 配置（5：18）
+  - 方法 testHotKey 里面第一个参数 P1 只要 QPS 超过每秒 1 次，马上降级处理
+- 测试
+  - error
+    - 仅含有参数P1，当每秒访问的频率超过 1 次时，会触发 Sentinel 的限流操作
+  - error
+    - 含有参数 P1、P2，当每秒访问的频率超过 1 次时，会触发 Sentinel 的限流操作
+  - right
+    - 没有热点参数 P1，不断访问则不会触发限流操作
+- 参数例外项
+
+# P119 Sentinel 之热点规则-参数例外项
+
+参数例外项
+
+- 上述案例演示了第一个参数 p1，当 QPS 超过 1 秒 1 次点击后马上被限流
+- 特例情况
+  - 普通正常限流
+    - 含有 P1 参数，超过 1 秒钟一个后，达到阈值 1 后马上被限流
+  - 例外特殊限流
+    - 我们期望 p1 参数当它是某个特殊值时，到达某个约定值后【普通正常限流】规则突然例外、失效了，它的限流值和平时不一样
+    - 假如当 p1 的值等于 5 时，它的阈值可以达到 200 或其它值
+- 配置
+  - 添加按钮不能忘
+- 测试
+- 前提条件
+  - 热点参数的注意点，参数必须是基本类型或者 String
+
+# P120 Sentinel 之授权规则
+
+授权规则
+
+- 授权规则概述（0：35）
+- 官网
+- 演示授权规则，黑名单禁止
+  - 代码
+    - EmpowerController（3：27）
+    - MyRequestOriginParser
+  - 启动 8401 后先访问成功
+- 配置（7：39）
+- 测试
+  - 说明
+    - 不断在浏览器中刷新
+    - 上述 2 个 rest 地址，serverName=test 或 serverName=test2 是处于黑名单的状态，无法访问，会发现无法访问，被 Sentinel 限流了。
+
+# P121 Sentinel 之持久化规则
+
+规则持久化
+
+- 是什么
+  - 一旦我们重启微服务应用，sentinel 规则将消失，生产环境需要将配置规则进行持久化
+- 怎么玩
+  - 将限流配置规则持久化进 Nacos 保存，只要刷新 8401 某个 rest 地址，sentinel 控制台的流控规则就能看到，只要 Nacos 里面的配置不删除，针对 8401 上 sentinel 上的流控规则持续有效
+- 步骤
+  - 修改 cloudalibaba-sentinel-service8401
+  - POM（3：40）
+  - YML（4：18）
+    - 添加 Nacos 数据源配置（6：26）
+    - 源代码（6：32）
+    - 进一步说明（7：00）
+  - 添加 Nacos 业务规则配置（7：38）
+    - 内容解析（8：45）
+  - 快速访问测试接口
+    - 上面地址访问后等待 3 秒钟
+    - 启动 8401 后刷新 sentinel 发现业务规则有了
+    - 默认
+      - Blocked by Sentinel (flow limiting)
+  - 停止 8401 再看 sentinel（11：45）
+  - 重新启动 8401 再看 sentinel
+    - 乍一看还是没有，稍等一会儿
+    - 多次调用
+    - 重新配置出现了，持久化验证通过
+
