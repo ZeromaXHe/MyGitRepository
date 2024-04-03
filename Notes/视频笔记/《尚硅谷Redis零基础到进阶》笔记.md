@@ -5322,3 +5322,1026 @@ bitmap
 总结（0:21）
 
 # P129 redis 高级篇之 redis 分布式锁大厂面试题简介
+
+8、手写 Redis 分布式锁
+
+- 粉丝反馈回来的题目
+  - Redis 除了拿来做缓存，你还见过基于 Redis 的什么用法？
+    - 数据共享，分布式 Session
+    - 分布式锁
+    - 全局 ID
+    - 计算器、点赞
+    - 位统计
+    - 购物车
+    - 轻量级消息队列
+      - list
+      - stream
+    - 抽奖
+    - 点赞、签到、打卡
+    - 差集交集并集，用户关注、可能认识的人，推荐模型
+    - 热点新闻、热搜排行榜
+  - Redis 做分布式锁的时候有需要注意的问题？
+  - 你们公司自己实现的分布式锁是否用的 setnx 命令实现？这个是最合适的吗？你如何考虑分布式锁的可重入问题？
+  - 如果是 Redis 是单点部署的，会带来什么问题？
+    - 那你准备怎么解决单点问题呢？
+  - Redis 集群模式下，比如主从模式，CAP 方面有没有什么问题呢？
+  - 那你简单的介绍一下 Redlock 吧？你简历上写 redisson，你谈谈
+  - Redis 分布式锁如何续期？看门狗知道吗？
+  - ……
+- 锁的种类
+- 一个靠谱分布式锁需要具备的条件和刚需
+- 分布式锁
+- 重点
+- Base 案例（boot+redis）
+- 手写分布式锁思路分析 2023
+
+# P130 redis 高级篇之 redis 分布式锁是什么及超卖故障
+
+锁的种类
+
+- **单机版同一个 JVM 虚拟机内**，synchronized 或者 Lock 接口
+- **分布式多个不同 JVM 虚拟机**，单机的线程锁机制不再起作用，资源类在不同的服务器之间共享了。
+
+一个靠谱分布式锁需要具备的条件和刚需
+
+- 独占性
+  - OnlyOne，任何时刻只能有且仅有一个线程持有
+- 高可用
+  - 若 redis 集群环境下，不能因为某一个节点挂了而出现获取锁和释放锁失败的情况
+  - 高并发请求下，依旧性能 OK 好使
+- 防死锁
+  - 杜绝死锁，必须有超时控制机制或者撤销操作，有个兜底终止跳出方案
+- 不乱抢
+  - 防止张冠李戴，不能私下 unlock 别人的锁，只能自己加锁自己释放，自己约的锁含着泪也要自己解
+- 重入性
+  - 同一个节点的同一个线程如果获得锁之后，它也可以再次获取这个锁
+
+**分布式锁**（12：53）
+
+- setnx key value
+
+  - （13：31）
+
+    差评，setnx + expire 不安全，两条命令非原子性的
+
+- **set key value [EX seconds] [PX milliseconds] [NX|XX]**
+
+重点
+
+- JUC 中 AQS 锁的规范落地参考 + 可重入锁考虑 + Lua 脚本 + Redis 命令一步步实现分布式锁
+
+Base 案例（boot + redis）
+
+- 使用场景：
+  - 多个服务间保证同一时刻同一时间段内同一用户只能有一个请求（防止关键业务出现并发攻击）
+- 建 Module
+  - redis_distributed_lock2
+  - redis_distributed_lock3
+- 改 POM
+- 写 YML
+- 主启动
+- 业务类
+  - Swagger2Config
+  - RedisConfig
+  - InventoryService
+  - InventoryController
+- swagger
+
+手写分布式锁思路分析 2023
+
+- 大家来找茬
+  - 上面测试通过求吐槽
+    1. 初始化版本简单添加
+       - 业务类
+         - InventoryService
+         - 请将 7777 的业务逻辑代码原样拷贝到 8888
+       - 加了 synchronized 或者 Lock
+    2. nginx 分布式微服务架构
+       - 问题
+         - V2.0 版本代码分布式部署后，单机锁还是出现超卖现象，需要分布式锁
+         - Nginx 配置负载均衡
+           - 命令地址+配置地址
+             - 命令地址
+               - /usr/local/nginx/sbin
+             - 配置地址
+               - /usr/local/nginx/conf
+           - 启动
+             - /usr/local/nginx/sbin
+               - ./nginx
+             - 启动 Nginx 并测试通过，浏览器看到 nginx 欢迎 welcome 页面
+           - /usr/local/nginx/conf 目录下修改配置文件 nginx.conf 新增反向代理和负载均衡配置（36：39）
+           - 关闭
+             - /usr/local/nginx/sbin
+               - ./nginx -s stop
+           - 指定配置启动（35：41）
+             - 在 /usr/local/nginx/sbin 路径下执行下面的命令
+             - ./nginx -c /usr/local/nginx/conf/nginx.conf
+           - 重启
+             - /usr/local/nginx/sbin
+               - ./nginx -s reload
+         - V2.0 版本代码修改 + 启动两个微服务
+           - 7777
+             - InventoryService
+           - 8888
+             - InventoryService
+           - 通过 Nginx 访问，你的 Linux 服务器地址 IP，反向代理 + 负载均衡
+             - 可以点击看到效果，一边一个，默认轮询
+         - 上面纯手点验证 OK，下面高并发模拟
+           - 线程组 redis
+             - 100 个商品足够了
+           - http 请求（44：42）
+           - jmeter 压测
+           - 76 号商品被卖出 2 次，出现超卖故障现象
+         - bug-why
+           - 为什么加了 synchronized 或者 Lock 还是没有控制住？
+           - 解释（45：02）
+         - 分布式锁出现
+           - 能干嘛
+             - 跨进程 + 跨服务
+             - 解决超卖
+             - 防止缓存击穿
+       - 解决
+         - 上 redis 分布式锁 setnx（47：32）
+         - 官网
+    3. redis 分布式锁
+    4. 宕机与过期+防止死锁
+    5. 防止误删 key 的问题
+    6. Lua 保证原子性
+    7. 可重入锁+设计模式
+    8. 自动续期
+  - 总结
+
+# P131 redis 高级篇之 redis 分布式锁迭代编码01
+
+3、Redis 分布式锁
+
+- 修改为 3.1 版
+  - 通过递归重试的方式
+  - 问题
+    - 测试手工 OK，测试 Jmeter 压测 5000 OK
+    - 递归是一种思想没错，但是容易导致 StackOverflowError，不太推荐，进一步完善
+- 修改为 3.2 版
+  - 多线程判断想想 JUC 里面说过的虚假唤醒，用 while 替代 if
+  - 用自选替代递归重试
+
+4、宕机与过期+防止死锁
+
+- 当前代码为 3.2 版接上一步
+- 问题
+  - 部署了微服务的 Java 程序机器挂了，代码层面根本没有走到 finally 这块，没办法保证解锁（无过期时间该 key 一直存在），这个 key 没有被删除，需要加入一个过期时间限定 key
+- 解决
+  - 修改为 4.1 版（29：00）
+  - 4.1 版结论
+    - 设置 key + 过期时间分开了，必须要合并成一行具备原子性（29：32）
+  - 修改为 4.2 版
+    - Jmeter 压测 OK（30：47）
+  - 4.2 版结论
+    - 加锁和过期时间设置必须同一行，保证原子性
+
+5、防止误删 key 的问题
+
+- 当前代码为 4.2 版接上一步
+- 问题
+  - 实际业务处理时间如果超过了默认设置 key 的过期时间？？
+  - 张冠李戴，删除了别人的锁（35：57）
+- 解决
+  - 只能自己删除自己的，不许动别人的
+  - 修改为 5.0 版（40：19）
+
+6、Lua 保证原子性
+
+- 当前代码为 5.0 版接上一步
+- 问题
+  - finally 块的判断 + del 删除操作不是原子性的
+- 启用 lua 脚本编写 redis 分布式锁判断+删除判断代码
+  - lua 脚本（46：48）
+  - 官网
+    - 官方脚本（52：58）
+- Lua 脚本浅谈
+- 解决
+
+# P132 redis 高级篇之 redis 分布式锁迭代编码02
+
+Lua 脚本浅谈
+
+- Lua 脚本初识
+  - Redis 调用 Lua 脚本通过 eval 命令保证代码执行的原子性，直接用 return 返回脚本执行后的结果值
+  - eval luascript numkeys [key [key ...]] [arg [arg ...]]
+  - helloworld 入门
+    1. hello lua
+    2. set k1 v1 get k1
+    3. mset
+- Lua 脚本进一步
+  - Redis 分布式锁 lua 脚本官网练习
+  - 条件判断语法（20：14）
+  - 条件判断案例（24：56）
+
+解决
+
+- 修改为 6.0 版 code（31：39）
+  - bug 说明（31：45）
+
+# P133 redis 高级篇之 redis 分布式锁迭代编码03
+
+7、可重入锁 + 设计模式
+
+- 当前代码为 6.0 版上一步
+  - while 判断并自旋重试获取锁+ setnx 含自然过期时间 + Lua 脚本官网删除锁命令
+  - 问题
+    - 如何兼顾锁的可重入性问题
+  - 复习写好一个锁的条件和规约（2：26）
+- 可重入锁（又名递归锁）
+  - 说明（9：47）
+  - “可重入锁”这四个字分开来解释：
+    - 可：可以
+    - 重：再次
+    - 入：进入
+    - 锁：同步锁
+    - 进入什么
+      - 进入同步域（即同步代码块/方法或显式锁锁定的代码）
+    - 一句话
+      - 一个线程中的多个流程可以获取同一把锁，持有这把同步锁可以再次进入。
+      - 自己可以获取自己的内部锁
+  - JUC 知识复习，可重入锁出 bug 会如何影响程序
+  - 可重入锁种类
+    - 隐式锁（即 synchronized 关键字使用的锁）默认是可重入锁（19：43）
+      - 同步块（20：21）
+      - 同步方法
+    - synchronized 的重入的实现机理（26：44）
+    - 显式锁（即 Lock）也有 ReentrantLock 这样的可重入锁
+- lock/unlock 配合可重入锁进行 AQS 源码分析讲解
+  - 切记，一般而言，你 lock 了几次就要 unlock 几次
+- 思考，上述可重入锁计数问题，redis 中那个数据类型可以代替
+  - K, K, V（36：42）
+  - Map<String, Map<Object, Object>>
+  - 案例命令（37：05）
+  - 小总结
+    - setnx，只能解决有无的问题
+      - 够用但是不完美
+    - hset，不但解决有无，还解决可重入问题
+- 思考+设计重点（一横一纵）
+- lua 脚本
+- 将上述 lua 脚本整合进入微服务 Java 程序
+- 可重入性测试重点
+
+# P134 redis 高级篇之 redis 分布式锁迭代编码04
+
+思考+设计重点（一横一纵）
+
+- 目前有 2 条支线，目的是保证同一个时候只能有一个线程持有锁进去 redis 做扣减库存动作
+- 2 个分支
+  - 保证加锁/解锁，lock/unlock
+  - 扣减库存 redis 命令的原子性（1：17）
+
+lua 脚本
+
+- redis 命令过程分析（6：39）
+- 加锁 lua 脚本 lock
+  - 先判断 redis 分布式锁这个 key 是否存在
+    - EXISTS key（7：33）
+      - 返回零说明不存在，hset 新建当前线程属于自己的锁 BY UUID:ThreadID（7：48）
+      - 返回一说明已经有锁，需进一步判断是不是当前线程自己的
+        - HEXISTS key uuid:ThreadID（8：10）
+          - 返回零说明不是自己的
+          - 返回一说明是自己的锁，自增1次表示重入（8：28）
+  - 上述设计修改为 Lua 脚本
+    - V1（12：34）
+    - V2（16：25）
+    - V3（16：50）
+  - 测试（19：32）
+- 解锁 lua 脚本 unlock
+  - 设计思路：有锁且还是自己的锁
+    - HEXISTS key uuid:ThreadID（22：54）
+      - 返回零，说明根本没有锁，程序块返回 nil
+      - 不是零，说明有锁且是自己的锁，直接调用 HINCRBY 负一表示每次减个一，解锁一次。直到它变为零表示可以删除该锁 key，del  锁key
+      - 全套流程（23：26）
+  - 上述设计修改为 Lua 脚本
+    - V1
+    - V2（27：39）
+  - 测试全套流程（28：53）
+
+# P135 redis 高级篇之 redis 分布式锁迭代编码05
+
+将上述 lua 脚本整合进入微服务 Java 程序
+
+- 复原程序为初始无锁版
+- 新建 RedisDistributedLock 类并实现 JUC 里面的 Lock 接口
+- 满足 JUC 里面 AQS 对 Lock 锁的接口规范定义来进行实现落地代码
+- 结合设计模式开发属于自己的 Redis 分布式锁工具类
+  - lock 方法的全盘通用讲解
+  - lua 脚本
+    - 加锁 lock（10：46）
+    - 解锁 unlock（19：14）
+  - 工厂设计模式引入
+    - 通过实现 JUC 里面的 Lock 接口，实现 Redis 分布式锁 RedisDistributedLock
+    - InventoryService 直接使用上面的代码设计，有什么问题（25：51）
+    - 考虑扩展，本次是 redis 实现分布式锁，以后 zookeeper、mysql 实现那？？？
+    - 引入工厂模式改造 7.1 版 code
+    - 单机+并发测试通过
+
+# P136 redis 高级篇之 redis 分布式锁迭代编码06
+
+- 引入工厂模式改造 7.1 版 code
+  - DistributedLockFactory（4：05）
+  - RedisDistributedLock
+  - InventoryService 使用工厂模式版
+- 单机+并发测试通过
+
+可重入性测试重点
+
+- 可重入测试？？？
+  - InventoryService 类新增可重入测试方法
+  - 结果（20：04）
+    - ThreadID 一致了但是 UUID 不 OK
+- 引入工厂模式改造 7.2 版 code
+  - DistributedLockFactory
+  - RedisDistributedLock
+  - InventoryService 类新增可重入测试方法
+- 单机+并发+可重入性，测试通过
+
+# P137 redis 高级篇之 redis 分布式锁迭代编码07
+
+8、自动续期
+
+- 确保 redisLock 过期时间大于业务执行时间的问题
+  - Redis 分布式锁如何续期？
+- CAP
+  - Redis 集群是 AP
+    - AP
+      - Redis 异步复制造成的锁丢失，比如：主节点没来得及把刚刚 set 进来这条数据给从节点，master 就挂了，从机上位但从机上无该数据
+  - Zookeeper 集群是 CP
+    - CP（7：30）
+    - 故障（8：31）
+  - 顺便复习 Eureka 集群是 AP
+    - AP（10：04）
+  - 顺便复习 Nacos 集群是 AP（10：50）
+- 加个钟，lua 脚本（15：36）
+- 8.0 版新增自动续期功能
+  - 修改为 V8.0 版程序
+  - del 掉之前的 lockName zzyyRedisLock
+  - RedisDistributedLock（27：02）
+  - InventoryService
+    - 记得去掉可重入测试 testReEnter()
+    - InventoryService 业务逻辑里面故意 sleep 一段时间测试自动续期
+
+# P138 redis 高级篇之 redis 分布式锁小总结
+
+总结
+
+- synchronized 单机版 OK，上分布式死翘翘
+- nginx 分布式微服务，单机锁不行
+- 取消单机锁，上 redis 分布式锁 setnx
+  - 只加了锁，没有释放锁，出异常的话，可能无法释放锁，必须要在代码层面 finally 释放锁
+  - 宕机了，部署了微服务代码层面根本没有走到 finally 这块，没办法保证解锁，这个 key 没有被删除，需要有 lockKey 的过期时间设定
+  - 为 redis 的分布式锁 key，增加过期时间。此外，还必须要 setnx + 过期时间必须同一行
+    - 必须规定只能自己删除自己的锁，你不能把别人的锁删除了，防止张冠李戴，1 删 2，2 删 3
+    - unlock 变 Lua 脚本保证
+      - 锁重入，hset 替代 setnx + lock 变为 Lua 脚本保证
+        - 自动续期
+
+# P139 redis RedLock 底层 Redisson 源码深层分析-上
+
+9、Redlock 算法和底层源码分析
+
+- 当前代码为 8.0 版接上一步
+
+  - 自研一把分布式锁，面试中回答的主要考点
+    - 按照 JUC 里面 java.util.concurrent.locks.Lock 接口规范编写
+    - lock() 加锁关键逻辑（4：35）
+      - 加锁
+        - 加锁实际上就是在 redis 中，给 Key 键设置一个值，为避免死锁，并给定一个过期时间
+      - 自旋
+      - 续期
+    - unlock 解锁关键逻辑（5：59）
+      - 将 Key 键删除。但也不能乱删，不能说客户端 1 的请求将客户端 2 的锁给删除掉，只能自己删除自己的锁
+  - 上面自研的 redis 锁对于一般中小公司，不是特别高并发场景足够用了，单机 redis 小业务也撑得住
+
+- Redis 分布式锁-Redlock 红锁算法 Distributed locks with Redis
+
+  - 官网说明
+
+    - 主页说明（8：12）
+
+  - 为什么学习这个？怎么产生的？
+
+    - 之前我们手写的分布式锁有什么缺点？
+
+      - 官网证据（11：48）
+      - 翻译（11：54）
+
+    - 说人话
+
+      - （15：07）
+
+        主从复制是异步的，master 还没同步锁时宕机的情况，导致从机升级为主机，两个用户同时认为自己拥有了锁
+
+  - Redlock 算法设计理念
+
+    - redis 之父提出了 Redlock 算法解决这个问题（18：27）
+    - 设计理念（21：38）
+    - 解决方案（27：00）
+      - 容错公式
+
+  - 天上飞的理念（RedLock）必然有落地的实现（Redisson）
+
+    - redisson 实现
+      - Redisson 是 java 的 redis 客户端之一，提供了一些 api 方便操作 redis
+      - redisson 之官网
+      - redisson 之 GitHub
+      - redisson 之解决分布式锁
+
+- 使用 Redisson 进行编码改造 V9.0
+
+- Redisson 源码解析
+
+- 多机案例
+
+# P140 redis RedLock 底层 Redisson 源码深层分析-中
+
+使用 Redisson 进行编码改造 V9.0
+
+- 你怎么知道该这样使用？
+  - 官网说话（1：11）
+- V9.0 版本修改
+  - POM（2：35）
+  - RedisConfig
+  - InventoryController
+  - 从现在开始不再用我们自己手写的锁了
+  - InventoryService
+  - 测试
+    - 单机
+    - JMeter
+      - Bug（14：08）
+      - 解决
+        - 业务代码修改为 V9.1 版
+
+Redisson 源码解析
+
+- 加锁
+
+- 可重入
+
+- 续命
+
+- 解锁
+
+- 分析步骤
+
+  - Redis 分布式锁过期了，但是业务逻辑还没处理完怎么办
+
+    - 还记得之前说过的缓存续命吗？
+
+  - 守护线程“续命”
+
+    - （19：40）
+
+      每 1/3 的锁时间检查 1 次
+
+  - 在获取锁成功后，给锁加一个 watchdog，watchdog 会起一个定时任务，在锁没有被释放且快要过期的时候会续期（20：30）
+
+  - 上述源码分析1（21：52）
+
+    - 通过 redisson 新建出来的锁 key，默认是 30 秒
+
+  - 上述源码分析2（26：34）
+
+  - 上述源码分析3（27：04）
+
+    - 流程解释
+      - 通过 exists 判断，如果锁不存在，则设置值和过期时间，加锁成功
+      - 通过 hexists 判断，如果锁已存在，并且锁的是当前线程，则证明是重入锁，加锁成功
+      - 如果锁已存在，但锁的不是当前线程，则证明有其它线程持有锁。返回当前锁的过期时间（代表了锁 key 的剩余生存时间），加锁失败
+
+  - 上述源码分析4（31：21）
+
+    - watch dog 自动延期机制（32：55）
+    - 自动续期 lua 脚本分析（34：16）
+
+  - 解锁（35：27）
+
+# P141 redis RedLock 底层 Redisson 源码深层分析-下
+
+多机案例
+
+- 理论参考来源
+
+  - redis 之父提出了 Redlock 算法解决这个问题
+
+  - 官网（3：03）
+
+  - 具体（3：07）
+
+  - 小总结
+
+    - （4：41）
+
+      网上讲的基于故障转移实现的 redis 主从无法真正实现 Redlock
+
+- 代码参考来源
+
+  - X 2022年第8章第4小节（7：48）
+  - X 2023年第8章第4小节
+    - 8.4 RedLock：This object is deprecated. Use RLock or RFencedLock instead.
+  - 2023年第8章第3小节
+    - MultiLock 多重锁（12：40）
+
+- 案例
+
+  - docker 走起 3 台 redis 的 master 机器，本次设置 3 台 master 各自独立无从属关系（16：26）
+  - 进入上一步刚启动的 redis 容器实例（18：39）
+  - 建 Module
+    - redis_redlock
+  - 改 POM
+  - 写 YML
+  - 主启动
+  - 业务类
+    - 配置
+      - CacheConfiguration
+      - RedisPoolProperties
+      - RedisProperties
+      - RedisSingleProperties
+    - Controller
+  - 测试
+    - 命令
+      - ttl ATGUIGU_REDLOCK
+      - HGETALL ATGUIGU_REDLOCK
+      - shutdown
+      - docker start redis-master-1
+      - docker exec -it redis-master-1 redis-cli
+    - 结论（37：17）
+
+# P142 redis 高级篇之缓存淘汰大厂面试题简介
+
+10、Redis 的缓存过期淘汰策略
+
+- 粉丝反馈的面试题
+
+  - 生产上你们的 redis 内存设置多少？
+
+  - 如何配置、修改 redis 的内存大小
+
+  - 如果内存满了你怎么办
+
+  - redis 清理内存的方式？定期删除和惰性删除了解过吗
+
+  - redis 缓存淘汰策略有哪些？分别是什么？你用哪个？
+
+  - redis 的 LRU 了解过吗？请手写 LRU
+
+    - 算法手写 code 见阳哥大厂第 3 季视频（3：05）
+
+  - lru 和 lfu 算法的区别是什么
+
+    - LRU means Least Recently Used
+
+      LFU means Least Frequently Used
+
+  - ……
+
+- Redis 内存满了怎么办
+
+- 往 redis 里写的数据是怎么没了的？它如何删除的？
+
+- redis 缓存淘汰策略
+
+- redis 缓存淘汰策略配置性能建议
+
+# P143 redis 高级篇之缓存淘汰策略内存查看和打满 OOM
+
+Redis 内存满了怎么办
+
+- redis 默认内存多少？在哪里查看？如何设置修改？
+
+  - 查看 Redis 最大占用内存
+
+    - （0：38）
+
+      设置 maxmemory 参数，是 bytes 字节类型，注意转换
+
+  - redis 默认内存多少可以用？
+
+    - 如果不设置最大内存大小或者设置最大内存大小为 0，在 64 位操作系统下不限制内存大小，在 32 位操作系统下最多使用 3 GB 内存
+    - 注意，在 64 bit 系统下，maxmemory 设置为 0 表示不限制 Redis 内存使用
+
+  - 一般生产上你如何配置？
+
+    - 一般推荐 Redis 设置内存为最大物理内存的四分之三
+
+  - 如何修改 redis 内存设置
+
+    - 通过修改文件配置（5：12）
+    - 通过命令修改（5：52）
+
+  - 什么命令查看 redis 内存使用情况？
+
+    - info memory
+    - config get maxmemory
+
+- 真要打满了会怎么样？如果 Redis 内存使用超过了设置的最大值会怎样？
+
+  - 改改配置，故意把最大值设为 1 个 byte 试试（8：39）
+
+- 结论
+
+  - 设置了 maxmemory 的选项，假如 redis 内存使用达到上限
+  - 没有加上过期时间就会导致数据写满 maxmemory，为了避免类似情况，引出下一章内存淘汰策略
+
+往 redis 里写的数据是怎么没了的？它如何删除的？
+
+- redis 过期键的删除策略（10：46）
+- 三种不同的删除策略
+  - 立即删除（11：38）
+    - 总结：对 CPU 不友好，用处理器性能换取存储空间（拿时间换空间）
+  - 惰性删除（14：03）
+    - 总结：对 memory 不友好，用存储空间换取处理器性能（拿空间换时间）
+    - 开启惰性淘汰，lazyfree-lazy-eviction=yes
+  - 上面两种方案都走极端
+    - 定期删除（17：17）
+      - 定期抽样 key，判断是否过期
+      - 漏网之鱼
+- 上述步骤都过堂了，还有漏洞吗？（20：16）
+- redis 缓存淘汰策略登场
+
+# P144 redis 高级篇之缓存淘汰策略八种策略及使用建议
+
+redis 缓存淘汰策略
+
+- redis 配置文件（0：14）
+- lru 和 lfu 算法的区别是什么（1：30）
+- 有哪些（redis 7 版本）
+  1. noeviction：不会驱逐任何 key，表示即使内存达到上限也不进行置换，所有能引起内存增加的命令都会返回 error
+  2. allkeys-lru：对所有 key 使用 LRU 算法进行删除，优先删除掉最近最不经常使用的 key，用以保存新数据
+  3. volatile-lru：对所有设置了过期时间的 key 使用 LRU 算法进行删除
+  4. allkeys-random：对所有 key 随机删除
+  5. volatile-random：对所有设置了过期时间的 key 随机删除
+  6. volatile-ttl：删除马上要过期的 key
+  7. allkeys-lfu：对所有 key 使用 LFU 算法进行删除
+  8. volatile-lfu：对所有设置了过期时间的 key 使用 LFU 算法进行删除
+- 上面总结
+  - 2 * 4 = 8
+  - 2 个维度
+    - 过期键中筛选
+    - 所有键中筛选
+  - 4 个方面
+    - LRU
+    - LFU
+    - random
+    - ttl
+  - 8 个选项
+- 你平时用哪一种（8:33）
+- 如何配置、修改
+  - 直接使用 config 命令
+  - 直接 redis.conf 配置文件
+
+redis 缓存淘汰策略配置性能建议
+
+- 避免存储 bigkey
+- 开启惰性淘汰，lazyfree-lazy-eviction=yes
+
+# P145 redis 高级篇之 redis 源码分析大厂面试题简介
+
+11、Redis 经典五大类型源码及底层实现
+
+- 粉丝反馈回来的题目（2:28）
+  - Redis 数据类型的底层数据结构
+    - SDS 动态字符串
+    - 双向链表
+    - 压缩列表 ziplist
+    - 哈希表 hashtable
+    - 跳表 skiplist
+    - 整数集合 intset
+    - 快速列表 quicklist
+    - 紧凑列表 listpack
+  - 阅读源码意义
+    - 90% 没有太大意义，完全为了面试
+    - 10% 大厂自己内部中间件，比如贵公司自己内部 redis 重构，阿里云 redis，美团 tair，滴滴 kedis 等等
+- redis 源码在哪里
+- 源码分析参考书，阳哥个人推荐
+- Redis 源代码的核心部分
+- 我们平时说 redis 是字典数据库 KV 键值对到底是什么
+- 5 大结构底层 C 语言源码分析
+- skiplist 跳表面试题
+
+# P146 redis 高级篇之 redis 源码分析 src 源码包简介
+
+redis 源码在哪里
+
+- \redis-7.0.5\src（0：36）
+
+源码分析参考书，阳哥个人推荐
+
+- 《Redis 设计与实现》
+- 《Redis 5 设计与源码分析》
+
+Redis 源代码的核心部分
+
+- src 源码包下面该如何看？
+  - 源码分析思路
+    - 这么多你如何看？
+      - 外面考什么就看什么
+      - 分类
+  - Redis 基本的数据结构（骨架）
+    - GitHub 官网说明（6：25）
+      - Redis 对象 object.c
+      - 字符串 t_string.c
+      - 列表 t_list.c
+      - 字典 t_hash.c
+      - 集合及有序集合 t_set.c 和 t_zset.c
+      - 数据流 t_stream.c
+        - Streams 的底层实现结构 listpack.c 和 rax.c
+          - 了解
+    - 简单动态字符串 sds.c
+    - 整数集合 intset.c
+    - 压缩列表 ziplist.c
+    - 快速链表 quicklist.c
+    - listpack
+    - 字典 dict.c
+  - Redis 数据库的实现
+    - 数据库的底层实现 db.c
+    - 持久化 rdb.c 和 aof.c
+  - Redis 服务端和客户端实现
+    - 事件驱动 ae.c 和 ae_epoll.c
+    - 网络连接 anet.c 和 networking.c
+    - 服务端程序 server.c
+    - 客户端程序 redis-cli.c
+  - 其他
+    - 主从复制 replication.c
+    - 哨兵 sentinel.c
+    - 集群 cluster.c
+    - 其它数据结构，如 hyperloglog.c、geo.c 等
+    - 其它功能，如 pub/sub、lua 脚本
+
+我们平时说 redis 是字典数据库 KV 键值对到底是什么
+
+- 怎样实现键值对（key-value）数据库的
+  - redis 是 key-value 存储系统
+    - key 一般都是 String 类型的字符串对象
+    - value 类型则为 redis 对象（redisObject）
+      - value 可以是字符串对象，也可以是集合数据类型的对象，比如 List 对象、Hash 对象、Set 对象和 Zset 对象
+  - 图说（16：47）
+- 10 大类型说明（粗分）
+  - 传统的 5 大类型
+    - String
+    - List
+    - Hash
+    - Set
+    - ZSet
+  - 新介绍的 5 大类型（17：45）
+    - bitmap
+      - 实质 String
+    - hyperLogLog
+      - 实质 String
+    - GEO
+      - 实质 Zset
+    - Stream
+      - 实质 Stream
+    - BITFIELD
+      - 看具体 key
+- 上帝视角（20：06）
+- Redis 定义了 redisObject 结构体来表示 string、hash、list、set、zset 等数据类型
+  - C 语言 struct 结构体语法简介（26：20）
+  - Redis 中每个对象都是一个 redisObject 结构
+  - 字典、KV 是什么（重点）
+  - 这些键值对是如何保存进 Redis 并进行读取操作，O(1) 复杂度
+  - redisObject + Redis 数据类型 + Redis 所有编码方式（底层实现）三者之间的关系
+
+# P147 redis 高级篇之 redis 源码分析从 dictEntry 到 RedisObject
+
+字典、KV 是什么（重点）
+
+- 每个键值对都会有一个 dictEntry
+- （源码位置：dict.h）（1：20）
+- 重点：从 dictEntry 到 RedisObject（3：46）
+
+这些键值对是如何保存进 Redis 并进行读取操作，O(1) 复杂度（7：31）
+
+redisObject + Redis 数据类型 + Redis 所有编码方式（底层实现）三者之间的关系
+
+- （9：00）
+
+  redisObject
+
+  - 字符串 REDIS_STRING
+    - 整数 REDIS_ENCODING_INT
+    - 字符串 REDIS_ENCODING_RAW
+  - 列表 REDIS_LIST
+    - 双端列表 REDIS_ENCODING_LINKEDLIST
+    - 压缩列表 REDIS_ENCODING_ZIPLIST
+  - 有序集合 REDIS_ZSET
+    - 跳跃表 REDIS_ENCODING_SKIPLIST
+    - 压缩列表 REDIS_ENCODING_ZIPLIST
+  - 哈希表 REDIS_HASH
+    - 压缩列表 REDIS_ENCODING_ZIPLIST
+    - 字典 REDIS_ENCODING_HT
+  - 集合 REDIS_SET
+    - 字典 REDIS_ENCODING_HT
+    - 整数集合 REDIS_ENCODING_INTSET
+
+# P148 redis 高级篇之 redis 源码分析 RedisObject 内各字段含义
+
+5 大结构底层 C 语言源码分析
+
+- 重点：redis 数据类型与数据结构总纲图
+
+  - 源码分析总体数据结构大纲
+
+    1. SDS 动态字符串
+    2. 双向链表
+    3. 压缩列表 ziplist
+    4. 哈希表 hashtable
+    5. 跳表 skiplist
+    6. 整数集合 intset
+    7. 快速列表 quicklist
+    8. 紧凑列表 listpack
+
+  - redis 6.0.5
+
+    - （3：56）
+
+      String = SDS
+
+      Set = intset + hashtable
+
+      ZSet = skiplist + ziplist
+
+      List = quicklist + ziplist
+
+      Hash = hashtable + ziplist
+
+  - 2021.11.29 号之后
+
+  - redis 7
+
+    - （7：54）
+
+      String = SDS
+
+      Set = intset + hashtable
+
+      ZSet = skiplist + listpack 紧凑列表
+
+      List = quicklist
+
+      Hash = hashtable + listpack 紧凑列表
+
+  - 复习一下基础篇介绍的 redis 7 新特性，看看数据结构
+
+- 源码分析总体数据结构大纲
+
+  - 程序员写代码时脑子底层思维（13：15）
+    - 上帝视角最右边编码如何来的（13：47）
+    - redisObject 操作底层定义来自哪里？（14：26）
+
+- 从 set hello world 说起
+
+  - 每个键值对都会有一个 dictEntry（17：01）
+  - 看看类型
+    - type 键
+  - 看看编码
+    - object encoding hello
+
+- redisObject 结构的作用（20：29）
+
+  - RedisObject 各字段的含义（22：22）
+  - 案例
+    - set age 17（26：14）
+
+- 经典 5 大数据结构解析
+
+  - 各个类型的数据结构的编码映射和定义（27：23）
+  - Debug Object key
+    - 再看一次 set age 17（28：57）
+    - 上述解读
+      - 命令（30：33）
+      - 案例
+        - 开启前（33：44）
+        - 开启后（35：40）
+  - String 数据结构介绍
+  - Hash 数据结构介绍
+  - List 数据结构介绍
+  - Set 数据结构介绍
+  - ZSet 数据结构介绍
+
+- 小总结
+
+# P149 redis 高级篇之 redis 源码分析 String 类型 3 大编码介绍
+
+String 数据结构介绍
+
+- 3 大物理编码方式
+  - RedisObject 内部对应 3 大物理编码（2：51）
+  - int
+    - 保存 long 型（长整型）的 64 位（8 个字节）有符号整数
+    - 9223372036854775807（2^63 - 1）
+    - 上面数字最多19位
+    - 补充
+      - 只有整数才会使用 int，如果是浮点数，Redis 内部其实先将浮点数转化为字符串值，然后再保存。
+  - embstr
+    - 代表 embstr 格式的 SDS（Simple Dynamic String 简单动态字符串），保存长度小于 44 字节的字符串
+    - EMBSTR 顾名思义即：embedded string，表示嵌入式的 String
+  - raw
+    - 保存长度大于 44 字节的字符串
+- 3 大物理编码案例
+  - 案例测试（7：01）
+  - C 语言中字符串的展现
+  - SDS 简单动态字符串
+  - Redis 为什么重新设计一个 SDS 数据结构？
+  - 源码分析
+  - 转变逻辑图
+  - 案例结论
+- 总结
+
+# P150 redis 高级篇之 redis 源码分析 String 类型 SDS
+
+- C 语言中字符串的展现（0：26）
+
+- SDS 简单动态字符串
+
+  - sds.h 源码分析
+
+    - （3：47）
+
+      len 字符串长度
+
+      alloc 分配的空间长度
+
+      flags sds 类型
+
+      buf[] 字节数组
+
+  - 说明（4：24）
+
+  - 官网
+
+- Redis 为什么重新设计一个 SDS 数据结构？（11：58、15：19）
+
+# P151 redis 高级篇之 redis 源码分析 String 之 int-embstr-raw 源码分析
+
+源码分析
+
+- 用户 API
+
+  - set k1 v1 底层发生了什么？调用关系（0：52）
+
+- 3 大物理编码方式（4：23）
+
+  - INT 编码格式
+
+    - set k1 123
+
+      - （4：50）
+
+        当字符串键值的内容可以用一个 64 位有符号整形来表示时，Redis 会将键值转化为 long 型来进行存储，此时即对应 OBJ_ENCODING_INT 编码类型。
+
+        Redis 启动时会预先建立 10000 个分别存储 0~9999 的 redisObject 变量作为共享对象，这就意味着如果 set 字符串的键值在 0 ~ 10000 之间的话，则可以**直接指向共享对象 而不需要再建立新对象，此时键值不占空间！**
+
+  - EMBSTR 编码格式
+
+    - set k1 abc（15：16）
+      - 进一步 createEmbeddedStringObject 方法（16：50）
+
+  - RAW 编码格式
+
+    - set k1 大于44长度的一个字符串，随便写（18：40）
+
+  - 明明没有超过阈值，为什么变成 raw 了
+
+    - （20：40）
+
+      对于 embstr，由于其实现是只读的，因此在对 embstr 对象进行修改时，都会先转化为 raw 再进行修改。因此，只要是修改 embstr 对象，修改后的对象一定是 raw 的，无论是否达到了 44 个字节
+
+      判断不出来，就取最大 Raw
+
+# P152 redis 高级篇之 redis 源码分析 String 重要总结
+
+- 转变逻辑图（1：17）
+
+- 案例结论
+
+  - （4：10）
+
+    只有整数才会使用 int，如果是浮点数，Redis 内部其实先将浮点数转化为字符串值，然后再保存。
+
+    embstr 与 raw 类型底层的数据结构其实都是 SDS（简单动态字符串，Redis 内部定义 sdshdr 一种结构）。
+
+总结
+
+- Redis 内部会根据用户给的不同键值而使用不同的编码格式，自适应地选择较优化的内部编码格式，而这一切对用户完全透明！
+
+# P153 redis 高级篇之 redis 源码分析 Hash 类型底层结构概述
+
+Hash 数据结构介绍
+
+- 案例
+  - redis 6
+  - redis 7
+- hash 的两种编码格式
+  - redis 6
+    -  ziplist
+    - hashtable
+  - redis 7
+    - listpack
+    - hashtable
+
+# P154 redis 高级篇之 redis 源码分析 Hash 类型 ziplist 和 hashtable 案例
+
