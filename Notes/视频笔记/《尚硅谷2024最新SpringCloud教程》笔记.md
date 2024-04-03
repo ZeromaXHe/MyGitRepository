@@ -3571,6 +3571,7 @@ Nacos 数据模型之 Namespace-Group-DataId
 - 授权规则
 - 规则持久化
 - OpenFeign 和 Sentinel 集成实现 fallback 服务降级
+- GateWay 和 Sentinel 集成实现服务限流
 
 # P101 Sentinel 之分布式常见面试题
 
@@ -3927,3 +3928,484 @@ Nacos 数据模型之 Namespace-Group-DataId
     - 多次调用
     - 重新配置出现了，持久化验证通过
 
+# P122 Sentinel 之整合 OpenFeign 统一 fallback 服务降级需求
+
+OpenFeign 和 Sentinel 集成实现 fallback 服务降级
+
+- 需求说明（1：27）
+- 程序解耦
+  - 前述参考（6：17）
+  - 本例说明（7：21）
+- 编码步骤
+- 测试验证
+
+# P123 Sentinel 之整合 OpenFeign 统一服务降级编码-上
+
+编码步骤
+
+- 启动 nacos 服务器 8848
+  - startup.cmd -m standalone
+- 启动 Sentinel 成功
+  - java -jar sentinel-dashboard-1.8.6.jar
+- 1 修改服务提供方 cloudalibaba-provider-payment9001
+  - 改 POM（1：15）
+  - 写 YML（1：41）
+  - 主启动（2：19）
+  - 业务类
+    - Controller（3：15）
+  - 启动 9001 微服务自测一下
+- 2 修改 cloud-api-commons
+- 3 修改 cloudalibaba-consumer-nacos-order83
+
+# P124 Sentinel 之整合 OpenFeign 统一服务降级编码-中
+
+2 修改 cloud-api-commons
+
+- POM（0：26）
+- 新增 PayFeignSentinelApi 接口
+- 为远程调用新建全局统一服务降级类，fallback = PayFeignSentinelApiFallBack.class（4：28）
+- gav 坐标（5：01）
+
+3 修改 cloudalibaba-consumer-nacos-order83
+
+- POM（5：54）
+- YML（6：22）
+- 主启动（6：59）
+  - 添加 @EnableFeignClients 启动 Feign 的功能
+- 业务类
+  - OrderNacosController（7：46）
+- 启动 83 微服务，第 1 次
+  - 故障现象（11：28）
+  - 导致原因
+    - springboot + springcloud 版本太高导致和阿里巴巴 Sentinel 不兼容
+  - 解决方案
+    - 总体父工程，boot+cloud 降低版本（12：24）
+- 启动 83 微服务，第 2 次
+
+# P125 Sentinel 之整合 OpenFeign 统一服务降级编码-下
+
+测试验证
+
+- 9001 正常启动后，再启动 83 通过 feign 调用
+- 测试地址
+- sentinel 流控为例，进行配置
+  - 频繁访问后触发了 Sentinel 的流控规则，blockHandler 起效（2：37）
+- 9001 宕机了，83 通过 feign 调用
+- 最后一步
+  - 恢复父工程版本号，升（4：05）
+
+# P126 Sentinel 之 GateWay 和 Sentinel 集成实现服务限流-上
+
+GateWay 和 Sentinel 集成实现服务限流
+
+- 需求说明（0：51）
+- 启动 nacos 服务器 8848
+- 启动 sentinel 服务器 8080
+- 步骤
+  - 建 Module
+    - cloudalibaba-sentinel-gateway9528
+  - 改 POM（1：36）
+  - 写 YML（2：39）
+  - 主启动（3：38）
+  - 业务类
+    - 参考官网配置说明案例改写
+    - 配置 coding
+- 测试
+
+# P127 Sentinel 之 GateWay 和 Sentinel 集成实现服务限流-下
+
+测试
+
+- 原生 url
+- 加网关
+- sentinel + gateway：加快点击频率，出现限流容错
+
+# P128 Seata 之分布式事务常见面试题
+
+13、SpringCloud Alibaba Seata 处理分布式事务
+
+- 面试题
+  - 你简历上写用微服务 boot/cloud 做过项目，你不可能只有一个数据库吧？请谈谈多个数据库之间你如何处理分布式事务？（2：32）
+  - 我若拿出如下场景，阁下将如何应对？
+    - 下订单
+    - 冻库存
+    - 做支付
+    - 减库存
+    - 抵扣减
+      - 积分冲抵
+      - XX 豆冲抵
+      - 礼品券冲抵
+      - ……
+    - 送积分
+    - 做推送
+      - 微信
+      - 短信
+      - 邮件
+      - ……
+    - 派物流
+    - ……
+  - 阿里巴巴的 Seata-AT 模式如何做到对业务的无侵入？
+  - 对于分布式事务问题，你知道的解决方案有哪些？请你谈谈？
+    1. 2PC（两阶段提交）
+    2. 3PC（三阶段提交）
+    3. TCC 方案
+       - TCC(Try-Confirm-Cancel)又被称为补偿事务
+       - 类似 2PC 的柔性分布式解决方案，2PC 改良版
+    4. LocalMessage 本地消息表
+    5. 独立消息微服务 + RabbitMQ/Kafka 组件，实现可靠消息最终一致性方案
+    6. 最大努力通知方案
+  - ……
+- 分布式事务问题如何产生？请先看业务
+- Seata 简介
+- Seata 工作流程简介
+- Seata-Server2.0.0 安装
+- Seata案例实战-数据库和表准备
+- Seata案例实战-微服务编码落地实现
+- Seata案例实战-测试
+- Seata原理小总结和面试题
+
+# P129 Seata 之背景和诞生原因
+
+分布式事务问题如何产生？请先看业务
+
+- 上述面试问题都指向一个重要问题（0：15）
+- 分布式事务 before
+  - 单机单库没这个问题
+  - 表结构的关系从 1:1 -> 1:N -> N:N
+- 分布式事务 after（1:34）
+- 结论
+  - 迫切希望提供一种分布式事务框架，解决微服务架构下的分布式事务问题
+
+# P130 Seata 之 Seata 简介
+
+Seata 简介
+
+- 是什么
+  - Simple Extensible Autonomous Transaction Architecture
+    - 简单可扩展自治事务框架
+  - 官网解释
+    - Seata 是一款开源的分布式事务解决方案，致力于在微服务架构下提供高性能和简单易用的分布式事务服务
+  - Seata 的发展历程（1：06）
+- 能干嘛
+  - Seata 是一款开源的分布式事务解决方案，致力于在微服务架构下提供高性能和简单易用的分布式事务服务
+- 去哪下
+  - 官网地址
+  - 源码地址
+- 怎么玩
+  - 本地 @Transactional
+  - 全局 @GlobalTransactional
+  - Seata 的分布式交易解决方案（7：16）
+
+# P131 Seata 之工作流程及 TC TM RM 分别是什么
+
+Seata 工作流程简介
+
+- 纵观整个分布式事务的管理，就是全局事务 ID 的传递和变更，要让开发者无感知（1：11）
+
+- Seata 对分布式事务的协调和控制就是 1+3
+
+  - 1 个 XID
+
+    - XID 是全局事务的唯一标识，它可以在服务的调用链路中传递，绑定到服务的事务上下文中
+
+  - 官网版 3 个概念（TC -> TM -> RM）
+
+    - （4：03）
+
+      TC(Transaction Coordinator) - 事务协调者
+
+      维护全局和分支事务的状态，驱动全局事务提交或回滚
+
+      TM(Transaction Manager) - 事务管理器
+
+      定义全局事务的范围：开始全局事务、提交或回滚全局事务
+
+      RM(Resource Manager) - 资源管理器
+
+      管理分支事务处理的资源，与 TC 交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚
+
+  - 阳哥版 3 个概念（TC -> TM -> RM）（4：59）
+
+    - TC(Transaction Coordinator) 事务协调者
+      - 就是 Seata，负责维护全局事务和分支事务的状态，驱动全局事务提交或回滚
+    - TM(Transaction Manager) 事务管理器
+      - 标注全局 @GlobalTransactional 启动入口动作的微服务模块（比如订单模块），它是事务的发起者，负责定义全局事务的范围，并根据 TC 维护的全局事务和分支事务状态，做出开始事务、提交事务、回滚事务的决议
+    - RM(Resource Manager) 资源管理器
+      - 就是 MySQL 数据库本身，可以是多个 RM，负责管理分支事务上的资源，向 TC 注册分支事务，汇报分支事务状态，驱动分支事务的提交或回滚
+
+- 分布式事务的执行流程-小总结
+
+  - （9：20）
+    1. TM 向 TC 申请开启一个全局事务，全局事务创建成功并生成一个全局唯一的 XID
+    2. XID 在微服务调用链路的上下文中传播
+    3. RM 向 TC 注册分支事务，将其纳入 XID 对应全局事务的管辖
+    4. TM 向 TC 发起针对 XID 的全局提交或回滚决议
+    5. TC 调度 XID 下管辖的全部分支事务完成提交或回滚请求
+
+- 各事务模式
+
+  - AT 模式、TCC 模式、Saga 模式、XA 模式
+  - 日常工作 + 企业调研 + 本次课时安排限制，以 AT 模式作为入手突破
+
+# P132 Seata 之 Seata-Server 安装理论知识
+
+Seata-Server2.0.0 安装
+
+1. 下载地址
+2. 下载版本
+3. 各种 seata 参数官网参考
+4. Seata 新手部署指南（4：25）
+5. mysql 8.0 数据库里面建库 + 建表
+6. 更改配置
+7. 先启动 Nacos 2.2.3 端口号 8848
+8. 再启动 seata-server-2.0.0
+
+# P133 Seata 之 Seata-Server 安装步骤详解
+
+5、mysql 8.0 数据库里面建库 + 建表
+
+- 建库 seata
+- 在上一步 seata 库里建表
+  - 建表 SQL 地址
+  - SQL 脚本内容（2：24）
+  - 结果
+
+6、更改配置
+
+- 修改 seata-server-2.0.0\conf\application.yml 配置文件，记得先备份（3：30）
+- application.yml 定稿版（7：29）
+
+7、先启动 Nacos 2.2.3 端口号 8848
+
+- startup.cmd -m standalone
+- 命令运行成功后直接访问 http://localhost:8848/nacos
+  - 默认账号密码
+
+8、再启动 seata-server-2.0.0
+
+- D:\devSoft\seata-server-2.0.0\bin
+- seata-server.bat 命令执行后
+- http://localhost:7091
+- 看看 Nacos
+
+# P134 Seata 之项目实战-订单库存账户3个业务数据库安装脚本
+
+Seata案例实战-数据库和表准备
+
+- 订单 + 库存 + 账户，3 个业务数据库 MySQL 准备
+  - 以下演示都需要先启动 Nacos 后启动 Seata，保证两个都 OK
+  - 分布式事务本案例业务说明（0：46）
+  - 1 创建 3 个业务数据库 DATABASE
+    - seata_order：存储订单的数据库
+    - seata_storage：存储库存的数据库
+    - seata_account：存储账户信息的数据库
+    - 建库 SQL（2：12）
+  - 2 按照上述 3 库分别建对应的 undo_log 回滚日志表
+    - 订单-库存-账户 3 个库下都需要建各自的 undo_log 回滚日志表
+    - seata 官网
+    - undo_log 建表 SQL（4：17）
+      - AT 模式专用，其它模式不需要
+  - 3 按照上述 3 库分别建对应业务表
+    - t_order 脚本 SQL（5：30）
+    - t_account 脚本 SQL（6：09）
+    - t_storage 脚本 SQL（6：58）
+  - 最终 All-SQL（同学们自用）
+    - 建 seata_order 库 + 建 t_order 表 + undo_log 表（8：07）
+    - 建 seata_storage 库 + 建 t_storage 表 + undo_log 表（8：32）
+    - 建 seata_account 库 + 建 t_account 表 + undo_log 表
+  - 最终效果（9：17）
+
+# P135 Seata 之项目实战-mybatis一键生成和通用接口编写
+
+Seata 案例实战-微服务编码落地实现
+
+- 订单/库存/账户业务微服务 Java 开发准备
+  - 业务需求
+    - 一句话
+    - 下订单 -> 减库存 -> 扣余额 -> 改（订单）状态
+  - 1 Mybatis 一键生成
+    - config.properties（2：39）
+    - generatorConfig.xml（3:24）
+  - 2 修改公共 cloud-api-commons 新增库存和账户两个 Feign 服务接口
+    - StorageFeignApi（5：07）
+    - AccountFeignApi（6：16）
+  - 3 新建订单 Order 微服务
+  - 4 新建库存 Storage 微服务
+  - 5 新建账户 Account 微服务
+
+# P136 Seata 之项目实战-Order 订单微服务-上
+
+3 新建订单 Order 微服务
+
+1. 建 Module
+   - seata-order-service2001
+2. 改 POM（1：46）
+3. 写 YML（3：17）
+   - Namespace + Group + DataId 三者关系？为什么这样设计？（6：56）
+   - 对应说明（7：07）
+   - 详细过度版（了解即可，太详细也不好维护）（12：53）
+4. 主启动（13：17）
+5. 业务类
+   - entities
+     - Order
+   - OrderMapper
+   - Service 接口及实现
+     - OrderService
+     - OrderServiceImpl
+   - Controller
+
+# P137 Seata 之项目实战-Order 订单微服务-下
+
+5、业务类
+
+- entities
+  - Order
+- OrderMapper
+  - OrderMapper 接口（1：30）
+  - resources 文件夹下新建 mapper 文件夹后添加
+    - OrderMapper.xml（1：37）
+- Service 接口及实现
+  - OrderService（2：19）
+  - OrderServiceImpl（2：47）
+- Controller
+
+# P138 Seata 之项目实战-Storage 订单微服务
+
+4 新建库存 Storage 微服务
+
+1. 建 Module
+   - seata-order-service2002
+2. 改 POM（0：40）
+3. 写 YML（1：01）
+4. 主启动（1：29、3：37）
+5. 业务类
+   - entites
+   - StorageMapper
+     - StorageMapper 接口（5：01）
+     - resources 文件夹下新建 mapper 文件夹后添加
+       - StorageMapper.xml（6：08）
+   - Service 接口及实现
+     - StorageService（6：50）
+     - StorageServiceImpl（7：15）
+   - Controller（7：53）
+
+# P139 Seata 之项目实战-Account 订单微服务
+
+5 新建账户 Account 微服务
+
+1. 建 Module
+   - seata-order-service2003
+2. 改 POM
+3. 写 YML
+4. 主启动（1：39）
+5. 业务类
+   - entities
+     - Account
+   - AccountMapper
+     - AccountMapper 接口
+     - resources 文件夹下新建 mapper 文件夹后添加
+       - AccountMapper.xml
+   - Service 接口及实现
+   - Controller
+
+# P140 Seata 之项目实战-测试环境和数据预加载
+
+Seata 案例实战-测试
+
+- 服务启动情况
+  - 启动 Nacos
+  - 启动 Seata
+  - 启动订单微服务 2001
+  - 启动库存微服务 2002
+  - 启动账户微服务 2003
+- 数据库初始情况（2：32）
+- 1 正常下单
+- 2 超时异常出错，没有 @GlobalTransactional
+- 3 超时异常解决，添加 @GlobalTransactional
+
+# P141 Seata 之项目实战-下单测试流程和版本踩坑说明
+
+1 正常下单
+
+- 下订单 -> 减库存 -> 扣余额 -> 改（订单）状态
+- 此时我们没有在订单模块添加 @GlobalTransactional
+- 1 号用户花费 100 块钱买了 10 个 1 号产品
+- 正常下单，第1次
+  - 故障现象（4：08）
+  - 导致原因
+    - springboot + springcloud 版本太高导致和阿里巴巴 Seata 不兼容
+  - 解决方案
+    - 总体父工程，boot+cloud 降低版本
+- 正常下单，第2次
+  - OK
+  - 数据库情况
+
+# P142 Seata 之项目实战-没有 @GlobalTransactional 异常情况
+
+2 超时异常出错，没有 @GlobalTransactional
+
+- 修改 seata-account-service2003 微服务 AccountServiceImpl 添加超时（0：40）
+- 故障情况
+  - 当库存和账户金额扣减后，订单状态并没有设置为已经完成，没有从零改为 1
+  - 数据库情况
+
+# P143 Seata 之项目实战-添加 @GlobalTransactional 异常情况
+
+3 超时异常解决，添加 @GlobalTransactional
+
+- AccountServiceImpl 保留超时方法
+- OrderServiceImpl @GlobalTransactional（1：15）
+- 查看 Seata 后台
+  - 全局事务 ID（7：43）
+  - 全局锁（8：00）
+- 下单后数据库 3 个库数据并没有任何改变，被回滚了
+  - 业务中……（11：27）
+  - 回滚后
+    - order 记录都添加不进来
+    - 全部回退
+
+# P144 Seata 之项目实战-添加 @GlobalTransactional 正常情况
+
+
+
+# P145 Seata 之 Seata 原理小总结
+
+Seata 原理小总结和面试题
+
+- AT 模式如何做到对业务的无侵入
+
+  - 是什么（0：58）
+
+  - 一阶段加载
+
+    - （2：38）
+
+      在一阶段，Seata 会拦截"业务 SQL"
+
+      1. 解析 SQL 语义，找到“业务 SQL”要更新的业务数据，在业务数据被更新前，将其保存成“before image”
+      2. 执行“业务 SQL”更新业务数据，在业务数据更新之后
+      3. 其保存成“after image”，最后生成行锁
+
+      以上操作全部在一个数据库事务内完成，这样保证了一阶段操作的原子性
+
+  - 二阶段分 2 种情况
+
+    - 正常提交
+
+      - （5：58）
+
+        二阶段如是顺利提交的话
+
+        因为“业务 SQL”在一阶段已经提交至数据库，所以 Seata 框架只需将一阶段保存的快照数据和行锁删掉，完成数据清理即可。
+
+    - 异常回滚
+
+      - （6：48）
+
+        二阶段回滚：
+
+        二阶段如果是回滚的话，Seata 就需要回滚一阶段已经执行的“业务 SQL”,还原业务数据
+
+        回滚方式便是用“before image”还原业务数据；但在还原前要首先要校验脏写，对比“数据库当前业务数据”和“after image”，如果两份数据完全一致就说明没有脏写，可以还原业务数据，如果不一致就说明有脏写，出现脏写就需要转人工处理
+
+# P146 终章总结
