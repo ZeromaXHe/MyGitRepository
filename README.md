@@ -81,9 +81,9 @@ git commit
     - [LaTeX 相关](Notes/常用工具笔记/LaTeX相关.md) Typora 里面用 LaTeX 写公式
     - 其他……
   - **视频笔记**：一些视频笔记。目前主要是：
-    - 看完的：[Docker](Notes/视频笔记/《尚硅谷Docker实战教程》笔记.md)、[MySQL（高级篇）](Notes/视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md)、[Kafka](Notes/视频笔记/《尚硅谷Kafka3.x教程》笔记.md)、[Thrift](Notes/视频笔记/图灵《一个半小时学会轻量级、跨语言的RPC框架Thrift》笔记.md)、[ZooKeeper](Notes/视频笔记/《尚硅谷大数据技术之Zookeeper3.5.7版本教程》笔记.md)
-    - 看完较多、进行中的：[SpringCloud](Notes/视频笔记/《尚硅谷2024最新SpringCloud教程》笔记.md)、[Netty](Notes/视频笔记/《尚硅谷Netty视频教程》笔记.md)、[Redis](Notes/视频笔记/《尚硅谷Redis零基础到进阶》笔记.md)、[SpringBoot](Notes/视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md)、[Java 新特性](Notes/视频笔记/尚硅谷 Java 新特性相关笔记.md)
-    - 没看完、进度很少的：[Dubbo](Notes/视频笔记/《Dubbo源码解读与实战》笔记.md)、[JVM](Notes/视频笔记/《尚硅谷JVM精讲与GC调优教程》笔记.md)、[ElasticSearch](Notes/视频笔记/《尚硅谷ElasticSearch教程入门到精通》笔记.md)、[MySQL 面试题](Notes/视频笔记/《尚硅谷MySQL数据库面试题宝典》笔记.md)、[Nginx](Notes/视频笔记/《尚硅谷Nginx教程（亿级流量nginx架构设计）》笔记.md)、[SpringSecurity](Notes/视频笔记/《尚硅谷SpringSecurity+OAuth2权限管理实战教程》笔记.md)、[Spring](Notes/视频笔记/《尚硅谷Spring零基础入门到进阶，一套搞定spring6》笔记.md)、[Kubernetes](Notes/视频笔记/尚硅谷《云原生Java架构师的第一课K8s+Docker+KubeSphere+DevOps》笔记.md)
+    - 看完的：[Docker](Notes/视频笔记/《尚硅谷Docker实战教程》笔记.md)、[MySQL（高级篇）](Notes/视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md)、[SpringCloud](Notes/视频笔记/《尚硅谷2024最新SpringCloud教程》笔记.md)、[Redis](Notes/视频笔记/《尚硅谷Redis零基础到进阶》笔记.md)、[Kafka](Notes/视频笔记/《尚硅谷Kafka3.x教程》笔记.md)、[Thrift](Notes/视频笔记/图灵《一个半小时学会轻量级、跨语言的RPC框架Thrift》笔记.md)、[ZooKeeper](Notes/视频笔记/《尚硅谷大数据技术之Zookeeper3.5.7版本教程》笔记.md)
+    - 看完较多、进行中的：[Netty](Notes/视频笔记/《尚硅谷Netty视频教程》笔记.md)、[Dubbo](Notes/视频笔记/《Dubbo源码解读与实战》笔记.md)、[SpringBoot](Notes/视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md)、[Java 新特性](Notes/视频笔记/尚硅谷 Java 新特性相关笔记.md)
+    - 没看完、进度很少的：[JVM](Notes/视频笔记/《尚硅谷JVM精讲与GC调优教程》笔记.md)、[ElasticSearch](Notes/视频笔记/《尚硅谷ElasticSearch教程入门到精通》笔记.md)、[MySQL 面试题](Notes/视频笔记/《尚硅谷MySQL数据库面试题宝典》笔记.md)、[Nginx](Notes/视频笔记/《尚硅谷Nginx教程（亿级流量nginx架构设计）》笔记.md)、[SpringSecurity](Notes/视频笔记/《尚硅谷SpringSecurity+OAuth2权限管理实战教程》笔记.md)、[Spring](Notes/视频笔记/《尚硅谷Spring零基础入门到进阶，一套搞定spring6》笔记.md)、[Kubernetes](Notes/视频笔记/尚硅谷《云原生Java架构师的第一课K8s+Docker+KubeSphere+DevOps》笔记.md)
   - **读书笔记**：
     - **Java 开发相关**：整个 Java 后端技术栈可能涉及到的书籍的相关阅读笔记，还有类似 JavaFX 这种客户端的
       - **2019-2020 旧笔记**：最一开始学 Java 时候记的一些很零散的笔记，包括 CSDN 一些文章的原稿

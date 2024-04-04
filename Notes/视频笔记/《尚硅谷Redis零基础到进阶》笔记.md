@@ -6345,3 +6345,573 @@ Hash 数据结构介绍
 
 # P154 redis 高级篇之 redis 源码分析 Hash 类型 ziplist 和 hashtable 案例
 
+案例
+
+- redis 6
+
+  - 案例（4：27）
+
+  - 结构
+
+    - hash-max-ziplist-entries：使用压缩列表保存时哈希集合中的最大元素个数
+    - hash-max-ziplist-value：使用压缩列表保存时哈希集合中单个元素的最大长度。
+
+  - 结论
+
+    - 1、哈希对象保存的键值对数量小于 512 个
+
+      2、所有的键值对的键和值的字符串长度都小于等于 64 byte（一个英文字母一个字节）时用 ziplist，反之用 hashtable
+
+    - ziplist 升级到 hashtable 可以，反过来降级不可以（11：40）
+
+  - 流程（12：47）
+
+  - 源码分析
+
+    - t_hash.c
+      - 在 Redis 中，hashtable 被称为字典（dictionary），它是一个数组 + 链表的结构
+      - OBJ_ENCODING_HT 编码分析（15:54）
+        - 每个键值对都会有一个 dictEntry
+      - hset 命令解读（20：13）
+        - 类型（21：48）
+    - ziplist.c
+
+- redis 7
+
+# P155 redis 高级篇之 redis 源码分析 Hash 类型 ziplist 结构和 zlentry 实体解析
+
+ziplist.c（1：10）
+
+- ziplist，什么样（4：27）
+  - zlbytes - zltail - zllen - entry1 - entry2 - …… - entryN - zlend
+  - ziplist 各个组成单元什么意思（6：22）
+- zlentry，压缩列表节点的构成
+  - 官网源码（13：35）
+  - zlentry 实体结构解析（14：00）
+- ziplist 存取情况（16：56）
+  - zlentry 解析（18：49）
+  - 为什么 zlentry 这么设计？数组和链表数据结构对比（24：21）
+- 明明有链表了，为什么出来一个压缩链表？（29：09）
+- ziplist 总结（32：12）
+
+# P156 redis 高级篇之 redis 源码分析 Hash 类型 listpack 取代 ziplist
+
+redis 7
+
+- 案例（0：56）
+
+- 结构
+
+  - hash-max-listpack-entries：使用紧凑列表保存时哈希集合中的最大元素个数
+  - hash-max-listpack-value：使用紧凑列表保存时哈希集合中单个元素的最大长度
+
+- 结论
+
+  - 1、哈希对象保存的键值对数量小于 512 个
+
+    2、所有的键值对的键和值的字符串长度都小于等于 64 byte（一个英文字母一个字节）时用 listpack，反之用 hashtable
+
+  - listpack 升级到 hashtable 可以，反过来降级不可以
+
+- 流程（同前，只不过 ziplist 修改为 listpack）（7：06）
+
+- 源码分析
+
+  - 源码说明
+
+    - 实现：object.c（7：58）
+    - 实现：listpack.c（9：03）
+    - 实现2：object.c（10：55）
+
+  - 明明有 ziplist 了，为什么出来一个 listpack 紧凑列表？
+
+    - 复习（12：12）
+
+    - ziplist 的连锁更新问题
+
+      - （14：10）
+
+        prevlen 节点长度小于 254 字节时需要 1 字节，大于时需要 5 字节
+
+        这样插入 254 字节以上的节点时，如果后续有多个 250 ~ 253 字节长度的节点，就可能连锁更新
+
+    - 结论（18：15）
+
+  - listpack 结构（18：48）
+
+    - 官网
+    - listpack 由 4 部分组成：total Bytes、Num Elem、Entry 以及 End（20：33）
+    - entry 结构（22：34）
+      - 当前元素的编码类型（entry-encoding）
+      - 元素数据（entry-data）
+      - 以及编码类型和元素数据这两部分的长度（entry-len）
+      - listpackEntry 结构定义：listpack.h（22：55）
+
+  - ziplist 内存布局 VS listpack 内存布局
+
+# P157 redis 高级篇之 redis 源码分析 Hash 类型 listpack VS ziplist 小总结
+
+ziplist 内存布局 VS listpack 内存布局（0：18）
+
+# P158 redis 高级篇之 redis 源码分析 List 类型总纲介绍
+
+List 数据结构介绍
+
+- 案例
+  - redis 6
+  - redis 7
+
+# P159 redis 高级篇之 redis 源码分析 List 类型 quicklist 底层演变
+
+redis 6
+
+- 案例（1：23）
+- Redis 6 版本前的 List 的一种编码格式
+  - list 用 quicklist 来存储，quicklist 存储了一个双向链表，每个节点都是一个 ziplist（4：21）
+- quicklist 总纲（7：38）
+  - 是 ziplist 和 linkedlist 的结合体
+- 源码分析
+
+# P160 redis 高级篇之 redis 源码分析 List 类型 quicklist 源码分析
+
+- 源码分析
+  - quicklist.h，head 和 tail 指向双向列表的表头和表尾
+    - quicklist 结构（0：49）
+    - quicklistNode 结构（3：05）
+  - quicklistNode 中的 *zl 指向一个 ziplist，一个 ziplist 可以存放多个元素（3：34）
+
+redis 7
+
+- 案例（4：02）
+- 源码说明
+  - 实现：t_list.c（7：00）
+    - 看看 redis 6 的相同文件 t_list.c
+  - 实现：object.c（8：06）
+- Redis 7 的 List 的一种编码格式
+  - list 用 quicklist 来存储，quicklist 存储了一个双向链表，每个节点都是一个 listpack
+  - quicklist
+    - 是 listpack 和 linkedlist 的结合体
+
+# P161 redis 高级篇之 redis 源码分析 Set 类型源码分析
+
+Set 数据结构分析
+
+- 案例
+
+  - （1：59）
+
+    集合元素都是 long long 类型，并且元素个数 <= set-max-intset-entries 编码就是 intset，反之就是 hashtable
+
+  - set-proc-title 修改进程标题以显示一些运行时信息
+
+- Set 的两种编码格式
+
+  - intset
+  - hashtable
+
+- 源码分析
+
+  - t_set.c
+
+# P162 redis 高级篇之 redis 源码分析 ZSet 类型源码分析
+
+ZSet 数据结构分析
+
+- 案例
+
+  - redis 6
+
+    - （1：48）
+
+      当有序集合中包含的元素数量超过服务器属性 server.zset_max_ziplist_entries 的值（默认值为 128）。或者有序集合中新添加元素的 member 的长度大于服务器属性 server.zset_max_ziplist_value 的值（默认值为 64）时，redis 会使用跳跃表作为有序集合的底层实现。
+
+      否则会使用 ziplist 作为有序集合的底层实现
+
+  - redis 7（3：03）
+
+- ZSet 的两种编码格式
+
+  - redis 6
+    - ziplist
+    - skiplist
+  - redis 7
+    - listpack
+    - skiplist
+
+- redis 6 源码分析
+
+  - t_zset.c（3：59）
+
+- redis 7 源码分析
+
+  - t_zset.c（4：20）
+
+# P163 redis 高级篇之 redis 源码分析小总结
+
+小总结
+
+- redis 6 类型-物理编码-对应表
+
+  - （1：04）
+
+    | 类型         | 编码                      | 对象                                             |
+    | ------------ | ------------------------- | ------------------------------------------------ |
+    | REDIS_STRING | REDIS_ENCODING_INT        | 使用整数值实现的字符串对象                       |
+    | REDIS_STRING | REDIS_ENCODING_EMBSTR     | 使用 embstr 编码的简单动态字符串实现的字符串对象 |
+    | REDIS_STRING | REDIS_ENCODING_RAW        | 使用简单动态字符串实现的字符串对象               |
+    | REDIS_LIST   | REDIS_ENCODING_ZIPLIST    | 使用压缩列表实现的列表对象                       |
+    | REDIS_LIST   | REDIS_ENCODING_LINKEDLIST | 使用双端链表实现的列表对象                       |
+    | REDIS_HASH   | REDIS_ENCODING_ZIPLIST    | 使用压缩列表实现的哈希对象                       |
+    | REDIS_HASH   | REDIS_ENCODING_HT         | 使用字典实现的哈希对象                           |
+    | REDIS_SET    | REDIS_ENCODING_INTSET     | 使用整数集合实现的集合对象                       |
+    | REDIS_SET    | REDIS_ENCODING_HT         | 使用字典实现的集合对象                           |
+    | REDIS_ZSET   | REDIS_ENCODING_ZIPLIST    | 使用压缩列表实现的有序集合对象                   |
+    | REDIS_ZSET   | REDIS_ENCODING_SKIPLIST   | 使用跳跃表和字典实现的有序集合对象               |
+
+- redis 6 数据类型对应的底层数据结构
+
+  - （1：57）
+
+    1. 字符串
+
+       int：8 个字节的长整型
+
+       embstr：小于等于 44 个字节的字符串
+
+       raw：大于 44 个字节的字符串
+
+    2. 哈希
+
+       ziplist（压缩列表）：当哈希类型元素小于 hash-max-ziplist-entries 配置（默认 512 个）、同时所有值都小于 hash-max-ziplist-value 配置（默认 64 字节）时，Redis 会使用 ziplist 作为哈希的内部实现，ziplist 使用更加紧凑的结构实现多个元素的连续存储。所以在节省内存方面比 hashtable 更加优秀
+
+       hashtable（哈希表）：当哈希类型无法满足 ziplist 的条件时，Redis 会使用 hashtable 作为哈希的内部实现，因为此时 ziplist 的读写效率会下降，而 hashtable 的读写时间复杂度为 O(1)
+
+    3. 列表
+
+       ziplist（压缩列表）：当列表的元素个数小于 list-max-ziplist-entries 配置（默认 512 个），同时列表中每个元素的值都小于 list-max-ziplist-value 配置时（默认 64 字节），Redis 会选用 ziplist 来作为列表的内部实现来减少内存的使用。
+
+       linkedlist（链表）：当列表类型无法满足 ziplist 的条件时，Redis 会使用 linkedlist 作为列表的内部实现。quicklist：ziplist 和 linkedlist 的结合以 ziplist 为节点的链表
+
+    4. 集合
+
+       intset（整数集合）：当集合中的元素都是整数且元素个数小于 set-max-intset-entries 配置（默认 512 个）时，Redis 会用 intset 来作为集合的内部实现，从而减少内存的使用。
+
+       hashtable（哈希表）：当集合类型无法满足 intset 的条件时，Redis 会使用 hashtable 作为集合的内部实现
+
+    5. 有序集合
+
+       ziplist（压缩列表）：当有序集合的元素个数小于 zset-max-ziplist-entries 配置（默认 128 个），同时每个元素的值都小于 zset-max-ziplist-value 配置（默认 64 字节）时，Redis 会用 ziplist 来作为有序集合的内部实现，ziplist 可以有效减少内存的使用
+
+       skiplist（跳跃表）：当 ziplist 条件不满足时，有序集合会使用 skiplist 作为内部实现，因为此时 ziplist 的读写效率会下降
+
+- redis 6 数据类型以及数据结构的关系（2：35）
+
+- redis 7 数据类型以及数据结构的关系（2：52）
+
+- redis 数据类型以及数据结构的时间复杂度（3：24）
+
+# P164 redis 高级篇之 skiplist 跳表
+
+skiplist 跳表面试题
+
+- 为什么引出跳表
+  - 先从一个单链表来讲（3：15）
+  - 痛点（3：54）
+    - 优化（7：04）
+    - 优化2
+      - 画了一个包含 64 个结点的链表，按照前面讲的这种思路，建立了五级索引（10：34）
+- 是什么
+  - 跳表是可以实现二分查找的有序链表（11：38）
+  - 总结来讲 跳表 = 链表 + 多级索引
+- 跳表时间+空间复杂度介绍
+  - 跳表的时间复杂度（14：32）
+    - 时间复杂度是 O(logN)
+  - 跳表的空间复杂度（17：19）
+    - 所以空间复杂度是 O(N)
+- 优缺点（20：16）
+
+# P165 redis 高级篇之 IO 多路复用要解决哪些问题及学术概念
+
+12、Redis 为什么快？高性能设计之 epoll 和 IO 多路复用深度解析
+
+- before
+  - 多路复用要解决的问题（8：37）
+  - 结论（10：49）
+- I/O 多路复用模型
+  - 是什么
+    - I/O：网络 I/O
+    - 多路：多个客户端连接（连接就是套接字描述符，即 socket 或者 channel），指的是多条 TCP 连接
+    - 复用：用一个进程来处理多条的连接，使用单线程就能够实现同时处理多个客户端的连接
+    - 一句话：
+      - 实现了用一个进程来处理大量的用户连接
+      - IO 多路复用类似一个规范和接口，落地实现
+        - 可以分为 select -> poll -> epoll 三个阶段来描述
+      - 动画演示
+  - Redis 单线程如何处理那么多并发客户端连接，为什么单线程，为什么快
+  - 参考《Redis 设计与实现》
+  - 从吃米线开始，读读 read……
+  - Unix 网络编程中的五种 IO 模型
+  - Java 验证
+
+# P166 redis 高级篇之 IO 多路复用 redis 为什么这么快
+
+- Redis 单线程如何处理那么多并发客户端连接，为什么单线程，为什么快（4：42）
+- 参考《Redis 设计与实现》（7：37）
+  - 结论（8：52）
+
+# P167 redis 高级篇之 IO 多路复用吃米线聊网络场景
+
+从吃米线开始，读读 read……
+
+- 从吃米线开始，读读 read……（6：06、8：16）
+- 同步
+- 异步
+- 同步与异步的理解
+- 阻塞
+- 非阻塞
+- 阻塞与非阻塞的理解
+- 总结
+
+Unix 网络编程中的五种 IO 模型
+
+- Blocking IO - 阻塞 IO
+- NoneBlocking IO - 非阻塞 IO
+- IO multiplexing - IO 多路复用
+- signal driven IO - 信号驱动 IO
+  - 面试无关，暂不讲解
+- asynchronous IO - 异步 IO
+  - 面试无关，暂不讲解
+
+# P168 redis 高级篇之 IO 多路复用同步异步和阻塞非阻塞
+
+- 同步
+  - 调用者要一直等待调用结果的通知后才能进行后续的执行，现在就要，我可以等，等出结果为止
+- 异步
+  - 指被调用方先返回应答让调用者先回去，然后再计算调用结果，计算完最终结果后再通知并返回给调用方
+  - 异步调用要想获得结果一般通过回调
+- 同步与异步的理解
+  - 同步、异步的讨论对象是被调用者（服务提供者），重点在于获得调用结果的消息通知方式上
+- 阻塞
+  - 调用方一直在等待而且别的事情什么都不做，当前进/线程会被挂起，啥都不干
+- 非阻塞
+  - 调用在发出去后，调用方先去忙别的事情，不会阻塞当前进/线程，而会立即返回
+- 阻塞与非阻塞的理解
+  - 阻塞、非阻塞的讨论对象是调用者（服务请求者），重点在于等消息时候的行为，调用者是否能干其它事
+- 总结
+  - 4 种组合方式
+    - 同步阻塞
+    - 同步非阻塞
+    - 异步阻塞
+    - 异步非阻塞
+
+# P169 redis 高级篇之 IO 多路复用 BIO
+
+Java 验证
+
+- 背景
+  - 一个 redisServer + 2 个 Client
+- BIO（4：42）
+  - 先演示 accept
+    - accept 监听
+    - code 案例
+      - RedisServer
+      - RedisClient01
+      - RedisClient02
+  - 再演示 read
+    - read 读取
+    - code 案例
+      - 1
+        - 先启动 RedisServerBIO，再启动 RedisClient01 验证后再启动 2 号客户端
+        - RedisServerBIO
+        - RedisClient01
+        - RedisClient02
+        - 存在的问题（24：48）
+      - 2
+        - 多线程模式（27：33）
+        - RedisServerBIOMultiThread
+        - RedisClient01
+        - RedisClient02
+        - 存在的问题（35：48）
+          - 解决（36：46）
+    - 总结
+      - tomcat 7 之前就是用 BIO 多线程来解决多连接
+  - 目前我们的两个痛点
+    - 两个痛点
+      - accept
+      - read
+      - 在阻塞式 I/O 模型中，应用程序在从调用 recvfrom 开始到它返回有数据报准备好这段时间是阻塞的，recvfrom 返回成功后，应用进程才能开始处理数据报。
+    - 阻塞式 IO 小总结（39：06）
+    - 思考
+      - 每个线程分配一个连接，必然会产生多个，既然是多个 socket 链接必然需要放入进容器，纳入统一管理
+- NIO
+- IO Multiplexing（IO 多路复用）
+
+# P170 redis 高级篇之 IO 多路复用 NIO
+
+NIO（1：22）
+
+- 先把面试回答拿下（5：31）
+- code 案例
+  - 上述以前的 socket 是阻塞的，另外开发一套 API（9：24）
+    - ServerSocketChannel
+  - RedisServerNIO
+  - RedisClient01
+  - RedisClient02
+- 存在的问题和优缺点（21：40）
+  - 问题升级：
+    - 如何用单线程处理大量的链接？
+  - 非阻塞式 IO 小总结（23：36）
+
+# P171 redis 高级篇之 IO 多路复用 IO Multiplexing 理论简介
+
+IO Multiplexing（IO 多路复用）
+
+- 是什么
+  - 词牌（3：44）
+  - 模型（4：42）
+  - FileDescriptor（7：15）
+  - IO 多路复用
+- 说人话
+- 能干嘛
+- select, poll, epoll 都是 I/O 多路复用的具体的实现
+- 5 种 I/O 模型总结
+- 为什么 3 个都保有
+
+# P172 redis 高级篇之 IO 多路复用 IO Multiplexing 从学术到人话版
+
+- IO 多路复用（0：11）
+
+说人话（3：55）
+
+# P173 redis 高级篇之 IO 多路复用 IO Multiplexing 能干嘛
+
+能干嘛
+
+- Redis 单线程如何处理那么多并发客户端连接，为什么单线程，为什么快（0：30）
+- Reactor 设计模式
+  - 是什么（3：35）
+  - 每一个网络连接其实都对应一个文件描述符（7：57）
+
+# P174 redis 高级篇之 IO 多路复用 select 方法简介
+
+select, poll, epoll 都是 I/O 多路复用的具体的实现
+
+- C 语言 struct 结构体语法简介（0：26）
+- select 方法
+  - Linux 官网或者 man（0：43）
+    - select 是第一个实现（1983 左右在 BSD 里面实现）
+  - 用户态我们自己写的 java 代码思想（4：05）
+  - C 语言代码（4：23）
+  - 优点（9：18）
+  - 缺点（10：27）
+  - select 小结论（11：54）
+- poll 方法
+- epoll 方法
+- 三个方法对比
+
+# P175 redis 高级篇之 IO 多路复用 poll 方法简介
+
+poll 方法
+
+- Linux 官网或者 man（0：44）
+  - 1997 年实现了 poll
+- C 语言代码（1：02）
+- 优点（4：04）
+- 问题（4：31）
+
+# P176 redis 高级篇之 IO 多路复用 epoll 方法简介
+
+epoll 方法
+
+- Linux 官网或者 man（1：00）
+
+  - 在 2002 年被大神 Davide Libenzi（戴维德·利本兹）发明出来了
+
+- 三步调用
+
+  - epoll_create
+    - 创建一个 epoll 句柄
+  - epoll_ctl
+    - 向内核添加、修改或删除要监控的文件描述符
+  - epoll_wait
+    - 类似发起了 select() 调用
+
+- C 语言代码（6：31）
+
+- 结论
+
+  - （9：27）
+
+    epoll 是现在最先进的 IO 多路复用器，Redis、Nginx、Linux 中的 Java NIO 都使用的是 epoll
+
+三个方法对比
+
+- （10：04）
+
+  |                      | select                                                | poll                                                | epoll                                                        |
+  | -------------------- | ----------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------ |
+  | 操作方式             | 遍历                                                  | 遍历                                                | 回调                                                         |
+  | 数据结构             | bitmap                                                | 数组                                                | 红黑树                                                       |
+  | 最大连接数           | 1024(x86) 或 2048（x64）                              | 无上限                                              | 无上限                                                       |
+  | 最大支持文件描述符数 | 一般有最大值限制                                      | 65535                                               | 65535                                                        |
+  | fd 拷贝              | 每次调用 select，都需要把 fd 集合从用户态拷贝到内核态 | 每次调用 poll，都需要把 fd 集合从用户态拷贝到内核态 | fd 首次调用 epoll_ctl 拷贝，每次调用 epoll_wait 不拷贝       |
+  | 工作效率             | 每次调用都进行线性遍历，时间复杂度为 O(n)             | 每次调用都进行线性遍历，时间复杂度 O(n)             | 事件通知方式，每当 fd 就绪，系统注册的回调函数就会被调用，将就绪 fd 放到 readyList 里面，时间复杂度 O(1) |
+
+  
+
+# P177 redis 高级篇之 IO 多路复用兜底函数方案和系统选择
+
+5 种 I/O 模型总结（0：13）
+
+为什么 3 个都保有（2：41）
+
+# P178 终章总结彩蛋
+
+13、终章总结
+
+- 没有总结，骗你的，防止你收藏不学，完结撒花
+
+- 写进简历的亮点，腾讯面试题：如何做一个迷你版的微信抢红包
+
+  - 2023，请认真搞钱
+
+    - 告诉老默，暂不吃鱼；跟着阳哥，你想学习！
+
+  - 案例实战：微信抢红包
+
+    - 业务描述（3：28）
+
+    - 需求分析（6：11）
+
+    - 架构设计（11：39）
+
+      - 关键点
+
+        - 发红包
+        - 抢红包
+          - 抢，不加锁且原子性，还能支持高并发
+          - 每人一次且有抢红包记录
+        - 记红包
+          - 记录每个人抢了多少
+        - 拆红包
+          - 拆红包算法
+            1. 所有人抢到金额之和等于红包金额，不能超过，也不能少于
+            2. 每个人至少抢到一分钱
+            3. 要保证所有人抢到金额的几率相等
+
+      - 结论
+
+        - 抢红包业务通用算法
+
+          - （15：50）
+
+            二倍均值法
+
+    - 编码实现
+
+      - 省略其它不重要的，只写 Controller 表示即可
+      - coding
+
+    - 多学一手
+
+      - 上述案例有许多红包记录了，如何批量删除（1：03：39）
