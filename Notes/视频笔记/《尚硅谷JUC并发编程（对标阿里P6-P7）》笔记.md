@@ -1766,3 +1766,934 @@ ThreadLocal 源码分析
       当我们为 threadLocal 变量赋值，实际上就是以当前 threadLocal 实例为 key，值为 value 的 Entry 往这个 threadLocalMap 中存放
 
 - 小总结（12：59）
+
+# P104 ThreadLocal 之由弱引用引出问题
+
+ThreadLocal 内存泄露问题
+
+- 从阿里面试题开始讲起（0：51）
+- 什么是内存泄漏
+  - 不再会被使用的对象或者变量占用的内存不能被回收，就是内存泄漏
+- 谁惹的祸？
+  - why（1：47）
+    - 再回首 ThreadLocalMap（2：06）
+  - 强引用、软引用、弱引用、虚引用分别是什么？
+    - 整体架构（4：04）
+    - 新建一个带 finalize() 方法的对象 MyObject
+    - 强引用（默认支持模式）
+      - case
+    - 软引用
+    - 弱引用
+    - 虚引用
+    - GCRoots 和四大引用小总结
+  - 关系
+- 为什么要用弱引用？不用如何？
+- 最佳实践
+
+# P105 ThreadLocal 之强引用
+
+强引用（默认支持模式）（0：35）
+
+# P106 ThreadLocal 之软引用
+
+软引用（00：23）
+
+# P107 ThreadLocal 之弱引用
+
+弱引用（0：16）
+
+- case
+- 软引用和弱引用的适用场景（2：53）
+
+# P108 ThreadLocal 之虚引用
+
+- 虚引用
+  - （0：14）
+    1. 虚引用必须和引用队列（ReferenceQueue）联合使用
+    2. PhantomReference 的 get 方法总是返回 null
+    3. 处理监控通知使用
+  - 构造方法（4：09）
+  - 引用队列（4：12）
+  - case
+- GC Roots 和四大引用小总结（10：54）
+
+关系（11：55）
+
+# P109 ThreadLocal 为什么源码用弱引用
+
+为什么要用弱引用？不用如何？（0：31）
+
+- 为什么源代码用弱引用？
+
+  - （2：05）
+
+    当方法执行完毕后，栈帧销毁强引用 tl 也就没有了。但此时线程的 ThreadLocalMap 里某个 entry 的 key 引用还指向这个对象
+
+    若这个 key 引用是强引用，就会导致 key 指向的 ThreadLocal 对象及 v 指向的对象不能被 gc 回收，造成内存泄漏
+
+    若这个 key 引用是弱引用就大概率会减少内存泄漏的问题（还有一个 key 为 null 的雷，第 2 个坑后面讲）。使用弱引用，就可以使 ThreadLocal 对象在方法执行完毕后顺利被回收且 Entry 的 key 引用指向为 null
+
+- 弱引用就万事大吉了吗？
+
+- 结论
+
+# P110 ThreadLocal 之清除脏 Entry
+
+弱引用就万事大吉了吗？
+
+- 埋雷二号坑
+
+  - （1：28）
+
+    线程池
+
+    Thread Ref -> Thread -> ThreadLocalMap -> Entry -> value 导致值对象永远无法回收
+
+- key 为 null 的 entry，原理解析（4：56）
+
+- set、get 方法会去检查所有键为 null 的 Entry 对象
+
+  - expungeStaleEntry
+  - set()（7：59）
+  - get()（9：52）
+  - remove()（10：38）
+    - 寻找脏 Entry，即 key=null 的 Entry，然后进行删除
+  - 结论（10：52）
+
+结论（11：13）
+
+# P111 ThreadLocal 之小总结
+
+- 最佳实践
+  - ThreadLocal.withInitial(() -> 初始化值);
+  - 建议把 ThreadLocal 修饰为 static（1：44）
+  - 用完记得手动 remove
+
+小总结
+
+- ThreadLocal 并不解决线程间共享数据的问题
+- ThreadLocal 适用于变量在线程间隔离且在方法间共享的场景
+- ThreadLocal 通过隐式的在不同线程内创建独立实例副本避免了实例线程安全的问题
+- 每个线程持有一个只属于自己的专属 Map 并维护了 ThreadLocal 对象与具体实例的映射，该 Map 由于只被持有它的线程访问，故不存在线程安全以及锁的问题
+- ThreaLocalMap 的 Entry 对 ThreadLocal 的引用为弱引用，避免了 ThreadLocal 对象无法被回收的问题
+- 都会通过 expungeStaleEntry, cleanSomeSlots, replaceStaleEntry 这三个方法回收键为 null 的 Entry 对象的值（即为具体实例）以及 Entry 对象本身从而防止内存泄漏，属于安全加固的方法
+- 群雄逐鹿起纷争，人各一份天下安
+
+# P112 对象内存布局之布局简介-上
+
+11、Java 对象内存布局和对象头
+
+- 先从阿里及其它大厂面试题说起（1：55）
+- Object object = new Object() 谈谈你对这句话的理解？一般而言 JDK 8 按照默认情况下，new 一个对象占多少内存空间
+  - 位置所在
+    - JVM 里堆 -> 新生区 -> Eden 区
+  - 构成布局
+    - 头体？想想我们的 HTML 报文
+- 对象在堆内存中布局
+  - 权威定义
+    - 周志明老师 JVM 第 3 版（6：41）
+  - 对象在堆内存中的存储布局
+  - 官网理论
+- 再说对象头的 Mark Word
+- 聊聊 Object obj = new Object()
+- 换成其它对象试试
+
+# P113 对象内存布局之布局简介-下
+
+对象在堆内存中的存储布局（2：26）
+
+1. 对象头
+   - 对象标记 Mark Word
+   - 类元信息（又叫类型指针）
+   - 对象头多大
+2. 实例数据
+3. 对齐填充
+
+# P114 对象内存布局之对象标记 MarkWord
+
+对象标记 Mark Word
+
+- 它保存什么（2：53）
+
+- 默认存储对象的 HashCode、分代年龄和锁标志位等信息。
+
+  这些信息都是与对象自身定义无关的数据，所以 MarkWord 被设计成一个非固定的数据结构以便极小的空间内存存储尽量多的数据。
+
+  它会根据对象的状态复用自己的存储空间，也就是说在运行期间 MarkWord 里存储的数据会随着锁标志位的变化而变化。
+
+# P115 对象内存布局之类型指针
+
+类元信息（又叫类型指针）
+
+- 参考尚硅谷宋红康老师原图（1：54）
+- 对象指向它的类元数据的指针，虚拟机通过这个指针来确定这个对象是哪个类的实例
+
+对象头多大
+
+- 在 64 位系统中，Mark Word 占了 8 个字节，类型指针占了 8 个字节，一共是 16 个字节
+
+# P116 对象内存布局之实例数据和对齐填充
+
+- 2、实例数据
+
+  - 存放类的属性（Field）数据信息，包括父类的属性信息
+
+- 3、对齐填充
+
+  - 虚拟机要求对象起始地址必须是 8 字节的整数倍。
+
+    填充数据不是必须存在的，仅仅是为了字节对齐这部分内存按 8 字节补充对齐
+
+官网理论
+
+- Hotspot 术语表官网（5：56）
+
+- 底层源码理论证明
+
+  - oop.hpp
+
+    - （8：06）
+
+      `_mark` 字段是 markword，`_metadata` 是类指针 klass pointer，对象头（object header）即是由这两个字段组成
+
+# P117 对象内存布局之 64 位 MarkWord 源码讲解
+
+再说对象头的 Mark Word
+
+- X 32 位（看一下即可，不用学了，以 64 位为准）（0：31）
+
+- √ 64 位重要
+
+  - （0：45）
+
+    无锁：25bit unused、31bit 对象 hashCode、1bit Cms_free、4bit 对象分代年龄、1bit（是否偏向锁）0、2bit（锁标志位）01
+
+    偏向锁：54bit threadId（偏向锁的线程 ID）、2bit Epoch、1bit Cms_free、4bit 对象分代年龄、1bit（是否偏向锁）1、2bit（锁标志位）01
+
+    轻量级锁：62bit 指向栈中锁的记录的指针、2bit（锁标志位）00
+
+    重量级锁：62bit 指向重量级锁的指针、2bit（锁标志位）10
+
+    GC 标志：62bit 空、2bit（锁标志位）11
+
+  - oop.hpp（2：17）
+
+    - markOop.hpp（2：43）
+
+  - markword（64 位）分布图，对象布局、GC 回收和后面的锁升级就是对象标记 MarkWord 里面标志位的变化（5：42）
+
+# P118 对象内存布局之 JOL 证明
+
+聊聊 Object obj = new Object()
+
+- JOL 证明
+  - JOL 官网
+    - POM（1：33）
+  - 小试一下（4：00）
+- 代码（5：39）
+  - 结果呈现说明（5：42）
+- GC 年龄采用 4 位 bit 存储，最大为 15，例如 MaxTenuringThreshold 参数默认值就是 15
+- 尾巴参数说明
+
+# P119 对象内存布局之对象分代年龄
+
+GC 年龄采用 4 位 bit 存储，最大为 15，例如 MaxTenuringThreshold 参数默认值就是 15
+
+- try try
+
+  - -XX:MaxTenuringThreshold=16
+
+  - Error: Could not create the Java Virtual Machine
+
+    MaxTenuringThreshold of 16 is invalid; must be between 0 and 15
+
+# P120 对象内存布局之压缩指针参数说明
+
+- 尾巴参数说明
+  - 压缩指针相关说明命令
+    - java -XX:+PrintCommandLineFlags -version
+    - 默认开启压缩说明（1：34）
+      - -XX:+UseCompressedClassPointers
+      - 结果（2：29）
+    - 上述表示开启了类型指针的压缩，以节约空间，假如不加压缩？？？
+    - 手动关闭压缩再看看
+      - -XX:-UseCompressedClassPointers
+      - 结果（7：55）
+
+换成其他对象试试
+
+- 结果（8：14）
+
+# P121 synchronized 锁升级之入门知识简介
+
+12、Synchronized 与锁升级
+
+- 先从阿里及其它大厂面试题说起
+  - 谈谈你对 Synchronized 的理解
+  - Synchronized 的锁升级你聊聊
+  - 同学反馈（2：33）
+  - ……
+- 本章路线总纲
+  - 说明（2：57）
+  - synchronized 锁：由对象头的 Mark Word 根据锁标志位的不同而被复用及锁升级策略
+- Synchronized 的性能变化
+- synchronized 锁种类及升级步骤
+- JIT 编译器对锁的优化
+- 小总结
+
+# P122 synchronized 锁升级之性能变化背景知识
+
+Synchronized 的性能变化
+
+- java 5 之前，只有 Synchronized，这个是操作系统级别的重量级操作
+
+  - 重量级锁，假如锁的竞争比较激烈的话，性能下降
+
+  - Java 5 之前，用户态和内核态之间的切换
+
+    - （1：26）
+
+      在 Java 早期版本中，synchronized 属于重量级锁，效率低下，因为监视器锁（monitor）是依赖于底层的操作系统的 Mutex Lock（系统互斥量）来实现的，挂起线程和恢复线程都需要转入内核态去完成，阻塞或唤醒一个 Java 线程需要操作系统切换 CPU 状态来完成，这种状态切换需要耗费处理器时间，如果同步代码块中内容过于简单，这种切换时间可能比用户代码执行的时间还长。
+
+- 为什么每一个对象都可以成为一个锁？？？？
+
+  - markOpp.hpp
+
+    - （5：41）
+
+      Java 对象是天生的 Monitor，每一个 Java 对象都有成为 Monitor 的潜质，因为在 Java 的设计中，每一个 Java 对象自打娘胎里出来就带了一把看不见的锁，它叫做内部锁或者 Monitor 锁。
+
+      Monitor 的本质是依赖于底层操作系统的 Mutex Lock 实现，操作系统实现线程之间的切换需要从用户态到内核态的转换，成本非常高。
+
+  - Monitor(监视器锁)
+
+    - （6：56）
+
+      JVM 中的同步就是基于进入和退出管程（Monitor）对象实现的。每个对象实例都会有一个 Monitor，Monitor 可以和对象一起创建、销毁。Monitor 是由 ObjectMonitor 实现，而 ObjectMonitor 是由 C++ 的 ObjectMonitor.hpp 文件实现
+
+      Monitor 与 Java 对象以及线程是如何关联？
+
+      1. 如果一个 Java 对象被某个线程锁住，则该 Java 对象的 Mark Word 字段中 LockWord 指向 monitor 的起始地址
+      2. Monitor 的 Owner 字段会存放拥有相关联对象锁的线程 id
+
+  - 结合之前的 synchronized 和对象头说明（8：53）
+
+- java 6 开始，优化 Synchronized
+
+  - Java 6 之后，为了减少获得锁和释放锁所带来的性能消耗，引入了轻量级锁和偏向锁
+  - 需要有个逐步升级的过程，别一开始就捅到重量级锁
+
+# P123 synchronized 锁升级之升级流程
+
+synchronized 锁种类及升级步骤
+
+- 多线程访问情况，3 种
+  - 只有一个线程来访问，有且唯一 Only One
+  - 有多个线程（2 个线程 A、B 来交替访问）
+  - 竞争激烈，更多个线程来访问
+- 升级流程
+  - synchronized 用的锁是存在 Java 对象头里的 Mark Word 中锁升级功能主要依赖 MarkWord 中锁标志位和释放偏向锁标志位
+  - 64 位标记图再看（2：03）
+  - 锁指向，请牢记
+    - 偏向锁：MarkWord 存储的是偏向的线程 ID；
+    - 轻量锁：MarkWord 存储的是指向线程栈中 Lock Record 的指针
+    - 重量锁：MarkWord 存储的是指向堆中的 monitor 对象的指针
+- 无锁
+- 偏锁
+- 轻锁
+- 重锁
+- 小总结
+
+# P124 synchronized 锁升级之无锁
+
+无锁
+
+- 复习 C 源码的 MarkWord 标记（0：25）
+- Code 演示
+- 程序不会有锁的竞争（11：34）
+
+# P125 synchronized 锁升级之偏向锁理论-上
+
+偏锁
+
+- 是什么（0：23）
+- 主要作用
+  - 当一段同步代码一直被同一个线程多次访问，由于只有一个线程那么该线程在后续访问时便会自动获得锁
+  - 同一个老顾客来访，直接老规矩行方便
+  - 看看多线程卖票，同一个线程获得体会一下
+  - 小结论（7：38）
+- 64 位标记图再看（9：05）
+- 偏向锁的持有
+- 偏向锁 JVM 命令
+- Code 演示
+- Code 演示 2
+- 好日子终会到头
+- 偏向锁的撤销
+- 总体步骤流程图示
+- 题外话
+
+# P126 synchronized 锁升级之偏向锁理论-下
+
+偏向锁的持有
+
+- 说明
+
+  - （0：10）
+
+    记录下偏向线程 ID，检查锁的 MarkWord 里面是不是放的自己的线程 ID
+
+    如果相等，表示偏向锁是偏向当前线程的，就不需要再尝试获得锁了，直到竞争发生才释放锁。
+
+    如果不等，表示发生了竞争，锁已经不是总是偏向于同一个线程了，这个时候会尝试使用 CAS 来替换 MarkWord 里面的线程 ID 为新线程 ID
+
+    竞争成功，表示之前的线程不存在了，MarkWord 里面的线程 ID 为新线程的 ID，锁不会升级，仍然为偏向锁
+
+    竞争失败，这时候可能需要升级变为轻量级锁，才能保证线程间公平竞争锁。
+
+- 细化案例 Account 对象举例说明（6：05）
+
+# P127 synchronized 锁升级之参数启动偏向锁
+
+偏向锁 JVM 命令
+
+- java -XX:+PrintFlagsInitial | grep BiasedLock*（3：09）
+
+- 重要参数说明
+
+  - （2：33）
+
+    偏向锁在 JDK 1.6 之后是默认开启的，但是启动时间有延迟
+
+    JDK 15 开始默认关闭，且未来有可能移除
+
+Code 演示
+
+- 一切默认
+  - 演示无效果（5：49）
+- 因为参数系统默认开启（6：43）
+- 关闭延时参数，启动该功能（7：54）
+  - -XX:BiasedLockingStartupDelay=0
+
+# P128 synchronized 锁升级之暂停启动偏向锁
+
+Code 演示 2
+
+- 第 2 种方法，先睡眠 5 秒，保证开启偏向锁
+- Code
+- 第一种情况（3：34）
+- 第二种情况（5：42）
+
+好日子终会到头
+
+- 开始有第 2 个线程来抢夺了
+
+# P129 synchronized 锁升级之偏向锁撤销
+
+偏向锁的撤销
+
+- 当有另外线程逐步来竞争锁的时候，就不能再使用偏向锁了，要升级为轻量级锁
+- 竞争线程尝试 CAS 更新对象头失败，会等待到全局安全点（此时不会执行任何代码）撤销偏向锁
+- 撤销（5：36）
+
+# P130 synchronized 锁升级之偏向锁生流程小总结
+
+总体步骤流程图示
+
+# P131 synchronized 锁升级之 java 15 后偏向锁废除
+
+题外话
+
+- Java 15 逐步废弃偏向锁（1：12）
+
+# P132 synchronized 锁升级之轻量级锁说明
+
+轻锁
+
+- 是什么（0：26）
+- 主要作用
+  - 有线程来参与锁的竞争，但是获取锁的冲突时间极短
+  - 本质就是自旋锁 CAS
+- 64 位标记图再看（1:48）
+- 轻量级锁的获取（2：06）
+  - 补充（4：43）
+- Code 演示
+- 步骤流程图示
+- 自旋达到一定次数和程度
+- 轻量锁与偏向锁的区别与不同
+
+# P133 synchronized 锁升级之轻量级锁代码证明和流程总结
+
+Code 演示（0：38）
+
+- 如果关闭偏向锁，就可以直接进入轻量级锁
+- -XX:-UseBiasedLocking
+
+步骤流程图示（2：07）
+
+自旋达到一定次数和程度
+
+- java 6 之前
+  - 默认启用，默认情况下自旋的次数是 10 次
+    - -XX:PreBlockSpin=10 来修改
+  - 或者自旋线程数超过 cpu 核数一半
+  - 上述了解即可，别用了
+- java 6 之后
+  - 自适应自旋锁的大致原理（5：27）
+    - 自适应意味着自旋的次数不是固定不变的
+    - 而是根据：
+      - 同一个锁上一次自旋的时间
+      - 拥有锁线程的状态来决定
+- 轻量锁与偏向锁的区别与不同
+  - 争夺轻量级锁失败时，自旋尝试抢占锁
+  - 轻量级锁每次退出同步块都需要释放锁，而偏向锁是在竞争发生时才释放锁
+
+# P134 synchronized 锁升级之重量级锁代码证明和流程总结
+
+重锁
+
+- 有大量的线程参与锁的竞争，冲突性很高
+- 锁标志位（1：11）
+- Code 演示（2：05）
+
+# P135 synchronized 锁升级之锁升级后和 hashcode 的关系
+
+小总结
+
+- 锁升级发生后，hashcode 去哪啦
+
+  - 说明
+
+    - （1：42）
+
+      如果一个对象的 hashCode() 方法已经被调用过一次后，这个对象不能被设置偏向锁。
+
+      升级为轻量级锁时，JVM 会在当前线程的栈帧中创建一个锁记录（Lock Record）空间，用于存储锁对象的 MarkWord 拷贝，该拷贝中可以包含 identity hash code，哈希码和 GC 年龄自然保存在此，释放锁后会将这些信息写回到对象头
+
+      升级为重量级锁后，Mark Word 保存的重量级锁指针，代表重量级锁的 ObjectMonitor 类里有字段记录非加锁状态下的 Mark Word，锁释放后也会将信息写回对象头
+
+  - code01
+
+  - code02
+
+- 各种锁优缺点、synchronized 锁升级和实现原理
+
+# P136 synchronized 锁升级之锁升级后和 hashcode 代码证明
+
+code01
+
+- 当一个对象已经计算过 identity hash code，他就无法进入偏向锁状态，跳过偏向锁，直接升级轻量级锁（1：10）
+
+code02
+
+- 偏向锁过程中遇到一致性哈希计算请求，立马撤销偏向模式，膨胀为重量级锁（4：07）
+
+# P137 synchronized 锁升级之小总结
+
+各种锁优缺点、synchronized 锁升级和实现原理（0：13）
+
+# P138 synchronized 锁升级之锁消除
+
+JIT 编译器对锁的优化
+
+- JIT
+  - Just In Time Compiler，一般翻译为即时编译器
+- 锁消除
+- 锁粗化
+
+# P139 synchronized 锁升级之锁粗化
+
+- 锁粗化
+
+小总结
+
+- 没有锁：自由自在
+- 偏向锁：唯我独尊
+- 轻量锁：楚汉争霸
+- 重量锁：群雄逐鹿
+
+# P140 AQS 之开篇简介
+
+13、AbstractQueuedSynchronizer 之 AQS
+
+- 前置知识
+  - 公平锁和非公平锁
+  - 可重入锁
+  - 自旋思想
+  - LockSupport
+  - 数据结构之双向链表
+  - 设计模式之模板设计模式
+- AQS 入门级别理论知识
+- AQS 源码分析前置知识储备
+- AQS 源码深度讲解和分析
+
+# P141 AQS 之是什么
+
+AQS 入门级别理论知识
+
+- 是什么
+
+  - 字面意思
+
+    - 抽象的队列同步器
+    - 源代码（1：16）
+
+  - 技术解释
+
+    - 是用来实现锁或者其它同步器组件的公共基础部分的抽象实现，是重量级基础框架及整个 JUC 体系的基石，主要用于解决锁分配给“谁”的问题
+
+    - 官网解释（7：26）
+
+    - 整体就是一个抽象的 FIFO 队列来完成资源获取线程的排队工作，并通过一个 int 类变量表示持有锁的状态
+
+      - （11：15）
+
+        CLH 队列（FIFO）：Craig、Landin and Hagersten 队列，是一个单向链表，AQS 中的队列是 CLH 变体的虚拟双向队列 FIFO
+
+        资源（state）
+
+- AQS 为什么是 JUC 内容中最重要的基石
+
+- 能干嘛
+
+- 小总结
+
+# P142 AQS 为什么是 JUC 框架基础
+
+AQS 为什么是 JUC 内容中最重要的基石
+
+- 和 AQS 相关的（1：22）
+  - ReentrantLock（2：50）
+  - CountDownLatch（3：15）
+  - CyclicBarrier
+  - ReentrantReadWriteLock（3：25）
+  - Semaphore（3：32）
+  - ……
+- 进一步理解锁和同步器的关系
+  - 锁，面向锁的使用者
+    - 定义了程序员和锁交互的使用层 API，隐藏了实现细节，你调用即可
+  - 同步器，面向锁的实现者
+    - Java 并发大神 Doug Lee，提出统一规范并简化了锁的实现，将其抽象出来屏蔽了同步状态管理、同步队列的管理和维护、阻塞线程排队和通知、唤醒机制等，是一切锁的同步组件实现的——公共基础部分
+
+能干嘛
+
+- 加锁会导致阻塞
+  - 有阻塞就需要排队，实现排队必然需要队列
+- 解释说明（7：55）
+  - 源码查看
+  - 源码说明
+
+# P143 AQS 之能干嘛
+
+- 源码查看（1：13）
+
+- 源码说明
+
+  - （4：06）
+
+    AQS 使用一个 volatile 的 int 类型的成员变量来表示同步状态，通过内置的 FIFO 队列来完成资源获取的排队工作将每条要去抢占资源的线程封装成一个 Node 节点来实现锁的分配，通过 CAS 完成对 State 值的修改
+
+小总结
+
+- AQS 同步队列的基本结构（4：48）
+
+# P144 AQS 之 state 和 CLH 队列
+
+AQS 源码分析前置知识储备
+
+- AQS 内部体系架构（1：39）
+  - AQS 自身
+    - AQS 的 int 变量
+      - AQS 的同步状态 State 成员变量
+        - private volatile int state;
+      - 银行办理业务的受理窗口状态
+        - 零就是没人，自由状态可以办理
+        - 大于等于1，有人占用窗口，等着去
+    - AQS 的 CLH 队列
+      - CLH 队列（三个大牛的名字组成），为一个双向队列（5：18）
+      - 银行候客区的等待顾客
+    - 小总结
+      - 有阻塞就需要排队，实现排队必然需要队列
+      - state 变量 + CLH 双端队列
+  - 内部类 Node（Node 类在 AQS 类内部）
+
+# P145 AQS 之自身属性和 Node 节点介绍
+
+内部类 Node（Node 类在 AQS 类内部）
+
+- Node 的 int 变量
+  - Node 的等待状态 waitState 成员变量
+    - volatile int waitState
+  - 说人话
+    - 等待区其它顾客（其它线程）的等待状态
+    - 队列中每个排队的个体就是一个 Node
+- Node 此类的讲解
+  - 内部结构（4：07）
+  - 属性说明（5：07）
+
+# P146 AQS 之源码分析 01
+
+AQS 源码深度讲解和分析
+
+- Lock 接口的实现类，基本都是通过【聚合】了一个【队列同步器】的子类完成线程访问控制的
+
+- ReentrantLock 的原理
+
+  - （2：58）
+
+    ```mermaid
+    classDiagram
+    	Sync <|-- FairSync
+    	Sync <|-- NonfairSync
+    	AbstractQueuedSynchronizer <|.. Sync
+    	ReentrantLock <|-- Sync
+    	Lock <|-- ReentrantLock
+    ```
+
+    
+
+  - 从我们的 ReentrantLock 开始解读 AQS 源码
+
+- 从最简单的 lock 方法开始看看公平和非公平（8：00）
+
+- 以非公平锁 ReentrantLock() 为例作为突破走起，方法 lock()（14：03）
+
+  - 本次讲解我们走非公平锁作为案例突破口
+  - 源码解读比较困难，别着急——阳哥的全系列脑图给大家做好笔记
+  - 源码解读走起
+
+- unlock
+
+# P147 AQS 之源码分析 02
+
+源码解读走起
+
+- lock()（2：50）
+- acquire()
+  - 源码和 3 大流程走向
+    - （3：50）
+      1. 调用 tryAcquire -> 交由子类 FairSync 实现
+      2. 调用 addWaiter -> enq 入队操作
+      3. 调用 acquireQueued -> 调用 cancelAcquire
+- tryAcquire(arg)
+- addWaiter(Node.EXCLUSIVE)
+- acquireQueued(addWaiter(Node.EXCLUSIVE), arg)
+
+# P148 AQS 之源码分析 03
+
+tryAcquire(arg)
+
+- 本次走非公平锁（10：14）
+  - nonfairTryAccquire(acquires)（10：33）
+    - return false;
+      - 继续推进条件，走下一个方法
+    - return true;
+      - 结束
+
+# P149 AQS 之源码分析 04
+
+addWaiter(Node.EXCLUSIVE)
+
+- addWaiter(Node mode)（10：43）
+
+  - enq(node);（11：02）
+
+  - 双向链表中，第一个节点为虚节点（也叫哨兵节点），其实并不存储任何信息，只是占位。
+
+    真正的第一个有数据的节点，是从第二个节点开始的。
+
+- 假如 3 号 ThreadC 线程进来
+
+  - prev
+  - compareAndSetTail
+  - next
+
+# P150 AQS 之源码分析 05
+
+acquireQueued(addWaiter(Node.EXCLUSIVE), arg)
+
+- acquireQueued（13：20）
+
+  - 假如再抢失败就会进入
+
+    - shouldParkAfterFailedAcquire 和 parkAndCheckInterrupt 方法中（14：11）
+
+    - shouldParkAfterFailedAcquire（14：41）
+
+      - 如果前驱节点的 waitStatus 是 SIGNAL 状态，即 shouldParkAfterFailedAcquire 方法会返回 true
+
+        程序会继续向下执行 parkAndCheckInterrupt 方法，用于将当前线程挂起
+
+    - parkAndCheckInterrupt（16：02）
+
+# P151 AQS 之源码分析 06
+
+unlock
+
+- sync.release(1);
+  - tryRelease(arg)
+    - unparkSuccessor
+
+# P152 AQS 之源码分析 07
+
+# P153 AQS 之源码小总结-上
+
+# P154 AQS 之源码小总结-中
+
+# P155 AQS 之源码小总结-下
+
+# P156 读写锁之读写锁简介
+
+14、ReentrantLock、ReentrantReadWriteLock、StampedLock 讲解
+
+- 本章路线总纲
+  - 无锁 -> 独占锁 -> 读写锁 -> 邮戳锁
+- 关于锁的大厂面试题
+  - 你知道 Java 里面有哪些锁？
+  - 你说你用过读写锁，锁饥饿问题是什么？
+  - 有没有比读写锁更快的锁？
+  - StampedLock 知道吗？（邮戳锁/票据锁）
+  - ReentrantReadWriteLock 有锁降级机制，你知道吗？
+  - ……
+- 请你简单聊聊 ReentrantReadWriteLock
+  - 是什么
+    - 读写锁说明（5：10）
+    - 再说说演变
+      - 无锁无序 -> 加锁 -> 读写锁演变复习
+    - “读写锁”意义和特点
+  - 特点
+- 面试题：有没有比读写锁更快的锁？
+- 邮戳锁 StampedLock
+
+# P157 读写锁之锁演化历程
+
+“读写锁”意义和特点（9：20）
+
+# P158 读写锁之锁演化历程编码证明
+
+特点
+
+- 可重入
+- 读写兼顾
+- code 演示 ReentrantReadWriteLockDemo
+- 结论
+  - 一体两面，读写互斥，读读共享，读没有完成时候其它线程写锁无法获得
+- 从写锁 -> 读锁，ReentrantReadWriteLock 可以降级
+- 读写锁之读写规矩，解释为什么要锁降级？
+
+# P159 读写锁之锁降级
+
+从写锁 -> 读锁，ReentrantReadWriteLock 可以降级
+
+- 《Java 并发编程的艺术》中关于锁降级的说明：（1：12）
+- 读写锁降级演示
+  - 可以降级（5：37）
+    - 锁降级是为了让当前线程感知到数据的变化，目的是保证数据可见性
+  - code 演示 LockDownGradingDemo
+    - 结论
+      - 如果有线程在读，那么写线程是无法获取写锁的，是悲观锁的策略
+  - 不可锁升级（14：27）
+- 写锁和读锁是互斥的（16：19）
+  - 后续讲解 StampedLock 时再详细展开（18：29）
+
+# P160 读写锁之锁降级设计思想
+
+读写锁之读写规矩，解释为什么要锁降级？
+
+- Oracle 公司 ReentrantWriteReadLock 源码总结（0：43）
+
+# P161 StampLock 锁之简介
+
+面试题：有没有比读写锁更快的锁？
+
+邮戳锁 StampedLock
+
+- 无锁 -> 独占锁 -> 读写锁 -> 邮戳锁
+- 是什么
+  - StampedLock 是 JDK 1.8 中新增的一个读写锁，也是对 JDK 1.5 中的读写锁 ReentrantReadWriteLock 的优化
+  - 邮戳锁
+    - 也叫票据锁
+  - stamp（戳记，long 类型）
+    - 代表了锁的状态。当 stamp 返回零时，表示线程获取锁失败。并且，当释放锁或者转换锁的时候，都要传入最初获取的 stamp 值。
+- 它是由锁饥饿问题引出
+  - 锁饥饿问题（3：19）
+  - 如何缓解锁饥饿问题？
+    - 使用“公平”策略可以一定程度上缓解这个问题
+      - new ReentrantReadWriteLock(true);
+    - 但是“公平”策略是以牺牲系统吞吐量为代价的
+  - StampedLock 类的乐观读锁闪亮登场
+    - why 闪亮（5：33）
+    - 一句话
+      - 对短的只读代码段，使用乐观模式通常可以减少争用并提高吞吐量
+- StampedLock 的特点
+- 乐观读模式 code 演示
+- StampedLock 的缺点
+
+# P162 StampedLock 锁之特点
+
+StampedLock 的特点
+
+- 所有获取锁的方法，都返回一个邮戳（Stamp），Stamp 为零表示获取失败，其余都表示成功
+- 所有释放锁的方法，都需要一个邮戳（Stamp），这个 Stamp 必须是和成功获取锁时得到的 Stamp 一致；
+- StampedLock 是不可重入的，危险（如果一个线程已经持有了写锁，再去获取写锁的话就会造成死锁）
+- StampedLock 有三种访问模式
+  1. Reading（读模式悲观）：功能和 ReentrantReadWriteLock 的读锁类似
+  2. Writing（写模式）：功能和 ReentrantReadWriteLock 的写锁类似
+  3. Optimistic reading（乐观读模式）：无锁机制，类似于数据库中的乐观锁，支持读写并发，很乐观认为读取时没人修改，假如被修改再实现升级为悲观读模式
+
+乐观读模式 code 演示
+
+- 读的过程中也允许获取写锁介入
+- code
+
+# P163 StampedLock 锁之传统读写功能
+
+# P164 StampedLock 锁之乐观读功能
+
+# P165 StampedLock 锁之缺点
+
+StampedLock 的缺点
+
+- StampedLock 不支持重入，没有 Re 开头
+- StampedLock 的悲观读锁和写锁都不支持条件变量（Condition），这个也需要注意
+- 使用 StampedLock 一定不要调用中断操作，即不要调用 interrupt() 方法
+
+# P166 终章总结
+
+15、课程总结与回顾（0：57）
+
+- 终章回顾
+  1. CompletableFuture
+  2. “锁”事儿
+     1. 悲观锁
+     2. 乐观锁
+     3. 自旋锁
+     4. 可重入锁（递归锁）
+     5. 写锁（独占锁）/读锁（共享锁）
+     6. 公平锁/非公平锁
+     7. 死锁
+     8. 偏向锁
+     9. 轻量锁
+     10. 重量锁
+     11. 邮戳（票据）锁
+  3. JMM
+  4. synchronized 及升级优化
+     - 锁的到底是什么（5：15）
+     - 无锁 -> 偏向锁 -> 轻量锁 -> 重量锁
+     - Java 对象内存布局和对象头
+     - 64 位图（5：35）
+  5. CAS
+     - CAS 的底层原理（5：50）
+     - CAS 问题
+       - ABA 问题（6：19）
+  6. volatile
+     - 2 特性
+       - 可见性
+       - 禁重排
+     - 内存屏障
+  7. LockSupport 和线程中断
+     - LockSupport.park 和 Object.wait 区别（7：24）
+  8. AbstractQueuedSynchronizer
+     - 是什么（7：45）
+     - 出队入队 Node（8：01）
+  9. ThreadLocal（8：23）
+  10. 原子增强类 Atomic
