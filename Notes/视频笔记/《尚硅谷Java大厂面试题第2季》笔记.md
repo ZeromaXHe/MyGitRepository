@@ -590,3 +590,627 @@ Semaphore
   - 复制（5：36）
   - 标记清除（6：54）
   - 标记整理（7：44）
+
+# P58 谈谈你对 GCRoots 的理解
+
+题目1
+
+1. JVM 垃圾回收的时候如何确定垃圾？是否知道什么是 GC Roots
+   - 什么是垃圾
+     - 简单的说就是内存中已经不再被使用到的空间就是垃圾
+   - 要进行垃圾回收，如何判断一个对象是否可以被回收？
+     - 引用计数法（3：18）
+     - 枚举根节点做可达性分析（根搜索路径）（4：23）
+       - case（8：04）
+       - Java 中可以作为 GC Roots 的对象
+         - 虚拟机栈（栈帧中的局部变量区）
+         - 方法区中的类静态属性引用的对象
+         - 方法区中常量引用的对象
+         - 本地方法栈中 JNI（Native 方法）引用的对象。
+2. 你说你做过 JVM 调优和参数设置，请问如何盘点查看 JVM 系统默认值
+3. 你平时工作用过的 JVM 常用基本配置参数有哪些？
+4. 强引用、软引用、弱引用、虚引用分别是什么？
+5. 请谈谈你对 OOM 的认识
+6. GC 垃圾回收算法和垃圾收集器的关系？分别是什么请你谈谈
+7. 怎么查看服务器默认的垃圾收集器是那个？生产上如何配置垃圾收集器的？谈谈你对垃圾收集器的理解？
+8. G1 垃圾收集器
+9. 生产环境服务器变慢，诊断思路和性能评估谈谈？
+10. 假如生产环境出现 CPU 占用过高，请谈谈你的分析思路和定位
+11. 对于 JDK 自带的 JVM 监控和性能分析工具用过哪些？一般你是怎么用的？
+
+# P59 JVM 的标配参数和 X 参数
+
+2、你说你做过 JVM 调优和参数设置，请问如何盘点查看 JVM 系统默认值
+
+- JVM 的参数类型
+  - 标配参数（4：07）
+    - -version
+    - -help
+    - java -showversion
+  - X 参数（了解）（5：26）
+    - -Xint
+      - 解释执行
+    - -Xcomp
+      - 第一次使用就编译成本地代码
+    - -Xmixed
+      - 混合模式
+  - XX 参数
+- 盘点家底查看 JVM 默认值
+
+# P60 JVM 的 XX 参数之布尔类型
+
+XX 参数
+
+- Boolean 类型
+  - 公式
+    - -XX:+ 或者 - 某个属性值
+    - `+` 表示开启
+    - `-` 表示关闭
+  - Case
+    - 是否打印 GC 收集细节
+      - -XX:-PrintGCDetails（10：08）
+      - -XX:+PrintGCDetails（10：16）
+    - 是否使用串行垃圾回收器
+      - -XX:-UseSerialGC
+      - -XX:+UseSerialGC
+- KV 设值类型
+- jinfo 举例，如何查看当前运行程序的配置
+- 题外话（坑题）
+
+# P61 JVM 的 XX 参数之设值类型
+
+KV 设值类型
+
+- 公式
+  - -XX:属性key=属性值value
+- Case
+  - -XX:MetaspaceSize=128m
+  - -XX:MaxTenuringThreshold=15
+
+# P62 JVM 的 XX 参数之 XmsXmx 坑题
+
+jinfo 举例，如何查看当前运行程序的配置
+
+- 公式
+  - jinfo -flag 配置项 进程编号
+- Case1（0：24）
+- Case2（0：37）
+- Case3（3：18）
+
+题外话（坑题）
+
+- 两个经典参数：-Xms 和 -Xmx
+- 这个你如何解释
+  - -Xms
+    - 等价于 -XX:InitialHeapSize
+  - -Xmx
+    - 等价于 -XX:MaxHeapSize
+
+# P63 JVM 盘点家底查看初始默认值
+
+盘点家底查看 JVM 默认值
+
+- -XX:+PrintFlagsInitial
+  - 主要查看初始默认
+  - 公式
+    - java -XX:+PrintFlagsInitial -version
+    - java -XX:+PrintFlagsInitial
+  - Case（2：54）
+- -XX:+PrintFlagsFinal
+  - 主要查看修改更新
+  - 公式
+    - java -XX:+PrintFlagsFinal -version
+    - java -XX:+PrintFlagsFinal -version
+  - Case（6：50）
+- PrintFlagsFinal 举例，运行 java 命令的同时打印出参数
+- -XX:+PrintCommandLineFlags
+
+# P64 JVM 盘点家底查看修改变更值
+
+# P65 堆内存初始大小快速复习
+
+3、你平时工作用过的 JVM 常用基本配置参数有哪些？
+
+- 基础知识复习（1：28）
+  - Case（2：05）
+- 常用参数
+
+# P66 常用基础参数栈内存 Xss 讲解
+
+常用参数
+
+- -Xms
+  - 初始大小内存，默认为物理内存 1/64
+  - 等价于 -XX:InitialHeapSize
+- -Xmx
+  - 最大分配内存，默认为物理内存 1/4
+  - 等价于 -XX:MaxHeapSize
+- -Xss
+  - 设置单个线程栈的大小，一般默认为 512k ~ 1024k
+  - 等价于 -XX:ThreadStackSize
+- -Xmn
+- -XX:MetaspaceSize
+- 典型设置案例
+- -XX:+PrintGCDetails
+- -XX:SurvivorRatio
+- -XX:NewRatio
+- -XX:MaxTenuringThreshold
+
+# P67 常用基础参数元空间 MetaspaceSize 讲解
+
+-Xmn
+
+- 设置年轻代大小
+
+-XX:MetaspaceSize
+
+- 设置元空间大小
+
+  - 元空间的本质和永久代类似，都是对 JVM 规范中方法区的实现。不过元空间与永久代之间最大的区别在于：
+
+    元空间并不在虚拟机中，而是使用本地内存。
+
+    因此，默认情况下，元空间的大小仅受本地内存限制
+
+- -Xms10m -Xmx10m -XX:MetaspaceSize=1024m -XX:+PrintFlagsFinal
+
+典型设置案例
+
+- （5：20）
+
+  -Xms128m -Xmx4096m -Xss1024k -XX:MetaspaceSize=512m -XX:PrintCommandLineFlags -XX:+PrintGCDetails -XX:+UseSerialGC
+
+# P68 常用基础参数 PrintGCDetails 回收前后对比讲解
+
+-XX:+PrintGCDetails
+
+- 输出详细 GC 收集日志信息
+- GC
+- FullGC
+
+# P69 常用基础参数 SurvivorRatio 讲解
+
+-XX:SurvivorRatio（3：14）
+
+- 设置新生代中 eden 的 S0/S1 空间的比例
+
+  默认
+
+  -XX:SurvivorRatio=8, Eden:S0:S1 = 8:1:1
+
+  假如
+
+  -XX:SurvivorRatio=4, Eden:S0:S1 =  4:1:1
+
+  SurvivorRatio 值就是设置 eden 区的比例占多少，S0/S1 相同
+
+# P70 常用基础参数 NewRatio 讲解
+
+-XX:NewRatio（4：31）
+
+- 配置年轻代与老年代在堆结构的占比
+
+  默认
+
+  -XX:NewRatio=2 新生代占 1，老年代 2，年轻代占整个堆的 1/3
+
+  假如
+
+  -XX:NewRatio=4 新生代占 1，老年代 4，年轻代占整个堆的 1/5
+
+  NewRatio 值就是设置老年代的占比，剩下的 1 给新生代
+
+# P71 常用基础参数 MaxTenuringThreshold 讲解
+
+-XX:MaxTenuringThreshold（0：31）
+
+- 设置垃圾最大年龄
+
+# P72 强引用 Reference
+
+4、强引用、软引用、弱引用、虚引用分别是什么？
+
+- 整体架构（2：04）
+- 强引用（默认支持模式）（3：15）
+  - case（5：02）
+- 软引用
+- 弱引用
+- 虚引用
+
+# P73 软引用 SoftReference
+
+软引用（1：13）
+
+# P74 弱引用 WeakReference
+
+弱引用（1：31）
+
+# P75 软引用和弱引用的适用场景
+
+弱引用
+
+- case
+- 软引用和弱引用的适用场景（2：28）
+- 你知道弱引用的话，能谈谈 WeakHashMap 吗？
+
+# P76 WeakHashMap 案例演示和解析
+
+# P77 虚引用简介
+
+虚引用（0：29）
+
+- 引出队列（4：42）
+  - case
+- case
+
+# P78 ReferenceQueue 引用队列介绍
+
+# P79 虚引用 PhantomReference
+
+# P80 GCRoots 和四大引用小总结
+
+GCRoots 和四大引用小总结（0：35）
+
+# P81 SOFE 之 StackOverflowError
+
+5、请谈谈你对 OOM 的认识
+
+- java.lang.StackOverflowError
+- java.lang.OutOfMemory: Java heap space
+- java.lang.OutOfMemory: GC overhead limit exceeded
+- java.lang.OutOfMemory: Direct buffer memory
+- java.lang.OutOfMemory: unable to create new native thread
+- java.lang.OutOfMemory: Metaspace
+
+# P82 OOM 之 Java heap space
+
+# P83 OOM 之 overhead limit exceeded
+
+java.lang.OutOfMemory: GC overhead limit exceeded（1：01）
+
+# P84 OOM 之 Direct buffer memory
+
+java.lang.OutOfMemory: Direct buffer memory（1：42）
+
+# P85 OOM 之 unable to create new native thread 故障演示
+
+java.lang.OutOfMemory: unable to create new native thread（1：43）
+
+# P86 OOM 之 unable to create new native thread 上限调整
+
+java.lang.OutOfMemory: unable to create new native thread
+
+- 非 root 用户登陆 Linux 系统测试
+- 服务器级别调参调优（1：18）
+
+# P87 OOM 之 Metaspace
+
+java.lang.OutOfMemory: Metaspace
+
+- 适用 java -XX:+PrintFlagsInitial 命令查看本机的初始化参数，-XX:Metaspacesize 为 218103768（大约 20.8M）（1：49）
+
+# P88 垃圾收集器回收种类
+
+6、GC 垃圾回收算法和垃圾收集器的关系？分别是什么请你谈谈
+
+- GC 算法（引用计数/复制/标清/标整）是内存回收的方法论，垃圾收集器就是算法落地实现
+- 因为目前为止还没有完美的收集器出现，更加没有万能的收集器，只是针对具体应用最合适的收集器，进行分代收集
+- 4 种主要垃圾收集器（3：32）
+
+# P89 串行并行并发 G1 四大垃圾回收方式
+
+4 种主要垃圾收集器
+
+- 串行垃圾收集器（Serial）
+
+  - 它为单线程环境设计且只适用一个线程进行垃圾回收，会暂停所有的用户线程。所以不适合服务器环境
+
+- 并行垃圾收集器（Parallel）
+
+  - 多个垃圾收集线程并行工作，此时用户线程是暂停的，适用于科学计算/大数据处理首台处理等弱交互场景
+
+- 并发垃圾回收器（CMS）
+
+  - 用户线程和垃圾收集线程同时执行（不一定是并行，可能交替执行），不需要停顿用户线程
+
+    互联网公司多用它，适用对响应时间有要求的场景
+
+- 上述 3 个小总结，G1 特殊后面说（7：52）
+
+- G1 垃圾回收器
+
+  - G1 垃圾回收器适用于堆内存很大的情况，他将堆内存分割成不同的区域然后并发的对其进行垃圾回收
+
+# P90 如何查看默认的垃圾收集器
+
+7、怎么查看服务器默认的垃圾收集器是那个？生产上如何配置垃圾收集器的？谈谈你对垃圾收集器的理解？
+
+- 怎么查看默认的垃圾收集器是哪个？（5：36）
+- 默认的垃圾收集器有哪些？
+- 垃圾收集器
+- 如何选择垃圾收集器
+
+# P91 JVM 默认的垃圾收集器有哪些
+
+默认的垃圾收集器有哪些？
+
+- （0：29）
+
+  java 的 gc 回收的类型主要有几种：
+
+  UseSerialGC, UseParallelGC, UseConcMarkSweepGC, UseParNewGC, UseParallelOldGC, UseG1GC
+
+# P92 GC 之 7 大垃圾收集器概述
+
+垃圾收集器（1：10）
+
+# P93 GC 之约定参数说明
+
+垃圾收集器
+
+- 部分参数预先说明
+
+  - DefNew
+    - Default New Generation
+  - Tenured
+    - Old
+  - ParNew
+    - Parallel New Generation
+  - PSYoungGen
+    - Parallel Scavenge
+  - ParOldGen
+    - Parallel Old Generation
+
+- Server/Client 模式分别是什么意思
+
+  - （3：32）
+
+    1. 适用范围：只需要掌握 Server 模式即可，Client 模式基本不会用
+
+    2. 操作系统：
+
+       2.1 32 位 Windows 操作系统，不论硬件如何都默认使用 Client 的 JVM 模式
+
+       2.2 32 位其它操作系统，2G 内存同时有 2 个 cpu 以上用 Server 模式，低于该配置还是 Client 模式
+
+       2.3 64 位 only server 模式
+
+- 新生代
+
+- 老年代
+
+- 垃圾收集器配置代码总结
+
+# P94 GC 之 Serial 收集器
+
+新生代
+
+- 串行 GC（Serial）/（Serial Copying）
+
+  - （1：30）
+
+    没有线程交互的开销可以获得最高的单线程垃圾收集效率，因此 Serial 垃圾收集器依然是 java 虚拟机运行在 Client 模式下默认的新生代垃圾收集器。
+
+    对应 JVM 参数是：-XX:+UseSerialGC
+
+    开启后会使用：Serial（Young 区用）+ Serial Old（Old 区用）的收集器组合
+
+    表示：新生代、老年代都会使用串行回收收集器，新生代使用复制算法，老年代使用标记-整理算法
+
+- 并行 GC（ParNew）
+
+- 并行回收 GC（Parallel）/（Parallel Scavenge）
+
+# P95 GC 之 ParNew 收集器
+
+并行 GC（ParNew）
+
+- （0：42）
+
+  它是很多 java 虚拟机运行在 Server 模式下新生代的默认垃圾收集器
+
+  常用对应 JVM 参数：-XX:+UseParNewGC 启用 ParNew 收集器，只影响新生代的收集，不影响老年代
+
+  开启上述参数后，会使用：ParNew（Young 区用）+ Serial Old 的收集器组合，新生代使用复制算法，老年代采用标记-整理算法
+
+# P96 GC 之 Parallel 收集器
+
+并行回收 GC（Parallel）/（Parallel Scavenge）
+
+- （2：27）
+
+  可控制的吞吐量
+
+  自适应调节策略
+
+  常用 JVM 参数：-XX:+UseParallelGC 或 -XX:+UseParallelOldGC（可互相激活）使用 Parallel Scavenge 收集器
+
+  开启该参数后：新生代使用复制算法，老年代使用标记-整理算法
+
+# P97 GC 之 ParallelOld 收集器
+
+老年代
+
+- 串行 GC（Serial Old）/（Serial MSC）
+
+- 并行 GC（Parallel Old）/（Parallel MSC）
+
+  - （1：30）
+
+    Parallel Old 收集器是 Parallel Scavenge 的老年代版本，使用多线程的标记-整理算法，Parallel Old 收集器在 JDK 1.6 才开始提供
+
+    JVM 常用参数：
+
+    -XX:+UseParallelOldGC 使用 Parallel Old 收集器，设置该参数后，新生代 Parallel + 老年代 Parallel Old
+
+- 并发标记清除 GC（CMS）
+
+# P98 GC 之 CMS 收集器
+
+并发标记清除 GC（CMS）
+
+- （1：36）
+
+  CMS 收集器（Concurrent Mark Sweep：并发标记清除）是一种以获取最短回收停顿时间为目标的收集器。
+
+  并发收集低停顿，并发指的是与用户线程一起执行
+
+  开启该收集器的 JVM 参数：-XX:+UseConcMarkSweepGC 开启该参数后会自动将 -XX:+UseParNewGC 打开
+
+  开启该参数后，使用 ParNew(Young 区用) + CMS(Old 区用) + Serial Old 的收集器组合，Serial Old 将作为 CMS 出错的后备收集器
+
+- 4 步过程
+
+  - 初始标记（CMS initial mark）
+  - 并发标记（CMS concurrent mark）和用户线程一起（6：07）
+  - 重新标记（CMS remark）（6：58）
+  - 并发清除（CMS concurrent sweep）和用户线程一起（7：50）
+  - 四步概述（8：50）
+
+- 优缺点
+
+  - 优
+    - 并发收集低停顿
+  - 缺
+    - 并发执行，对 CPU 资源压力大（10：23）
+    - 采用的标记清除算法会导致大量碎片（11：48）
+
+# P99 GC 之 SerialOld 收集器
+
+串行 GC（Serial Old）/（Serial MSC）
+
+- （0：26）
+
+  Serial Old 是 Serial 垃圾收集器老年代版本，它同样是个单线程的收集器，使用标记-整理算法，这个收集器也主要是运行在 Client 默认的 java 虚拟机的年老代垃圾收集器
+
+  在 Server 模式下，主要有两个用途（了解，版本已经到 8 及以后）：
+
+  1. 在 JDK 1.5 之前版本中与新生代的 Parallel Scavenge 收集器搭配使用。（Parallel Scavenge + Serial Old）
+  2. 作为老年代版中使用 CMS 收集器的后备垃圾收集方案
+
+垃圾收集器配置代码总结
+
+- 底层代码（2：42）
+- 实际代码（2：58）
+
+# P100 GC 之如何选择垃圾收集器
+
+如何选择垃圾收集器（2：07）
+
+# P101 GC 之 G1 收集器
+
+8、G1 垃圾收集器
+
+- 以前收集器特点
+  - 年轻代和老年代是各自独立且连续的内存块
+  - 年轻代收集使用单 eden + S0 + S1 进行复制算法
+  - 老年代收集必须扫描整个老年代区域
+  - 都是以尽可能少而快速地执行 GC 为设计原则
+- G1 是什么（5：54）
+  - 特点（12：28）
+- 底层原理
+- case 案例
+- 常用配置参数（了解）
+- 和 CMS 相比的优势
+- 小总结
+
+# P102 GC 之 G1 底层原理
+
+底层原理
+
+- Region 区域化垃圾收集器（2：38）
+  - 最大好处是化整为零，避免全内存扫描，只需要按照区域来进行扫描即可
+- 回收步骤（7：11）
+- 4 步过程（9：55）
+
+# P103 GC 之 G1 参数配置及和 CMS 的比较
+
+case 案例（0：09）
+
+常用配置参数（了解）（3：50）
+
+- -XX:+UseG1GC
+- -XX:G1HeapRegionSize=n：设置的 G1 区域的大小。值是 2 的幂，范围是 1 MB 到 32 MB。目标是根据最小的 Java 堆大小划分出约 2048 个区域
+- -XX:MaxGCPauseMillis=n：最大 GC 停顿时间，这是个软目标，JVM 将尽可能（但不保证）停顿小于这个时间
+- -XX:InitiatingHeapOccupancyPercent=n：堆占用了多少的时候就触发 GC，默认为 45
+- -XX:ConcGCThreads=n：并发 GC 使用的线程数
+- -XX:G1ReservePercent=n：设置作为空闲空间的预留内存百分比，以降低目标空间溢出的风险，默认值是 10%
+
+和 CMS 相比的优势（6：31）
+
+# P104 JVMGC 结合 SpringBoot 微服务优化简介
+
+# P105 Linux 命令之 top
+
+9、生产环境服务器变慢，诊断思路和性能评估谈谈？
+
+- 整机：top
+  - uptime，系统性能命令的精简版
+- CPU：vmstat
+- 内存：free
+- 硬盘：df
+- 磁盘 IO：iostat
+- 网络 IO：ifstat
+
+# P106 Linux 之 cpu 查看 vmstat
+
+CPU：vmstat
+
+- 查看 CPU（包含不限于）（1：44）
+- 查看额外
+
+# P107 Linux 之 cpu 查看 pidstat
+
+查看额外
+
+- 查看所有 cpu 核信息
+  - mpstat -P ALL 2
+- 每个进程使用 cpu 的用量分解信息
+  - pidstat -u 1 -p 进程编号
+
+# P108 Linux 之内存查看 free 和 pidstat
+
+内存：free
+
+- 应用程序可用内存数（0：35）
+- 查看额外
+  - pidstat -p 进程号 -r 采样间隔秒数
+
+# P109 Linux 之硬盘查看 df
+
+硬盘：df
+
+- 查看磁盘剩余空间数（0：14）
+
+# P110 Linux 之磁盘 IO 查看 iostat 和 pidstat
+
+磁盘 IO：iostat
+
+- 磁盘 I/O 性能评估（0：41）
+- 查看额外
+  - pidstat -d 采样间隔秒数 -p 进程号
+
+# P111 Linux 之网络 IO 查看 ifstat
+
+网络 IO：ifstat
+
+- 默认本地没有，下载 ifstat（0：36）
+- 查看网络 IO（0：59）
+
+# P112 CPU 占用过高的定位分析思路
+
+10、假如生产环境出现 CPU 占用过高，请谈谈你的分析思路和定位
+
+- 结合 Linux 和 JDK 命令一块分析
+- 案例步骤
+  1. 先用 top 命令找出 CPU 占比最高的（1：46）
+  2. ps -ef 或者 jps 进一步定位，得知是一个怎么样的一个后台程序给我们惹事（2：33）
+  3. 定位到具体线程或者代码
+     - ps -mp 进程 -o THREAD,tid,time（4：41）
+     - 参数解释
+       - -m 显示所有的线程
+       - -p pid 进程使用 cpu 的时间
+       - -o 该参数后是用户自定义格式
+  4. 将需要的线程 ID 转换为 16 进制格式（英文小写格式）
+     - printf "%x\n" 有问题的线程 ID
+  5. jstack 进程 ID | grep tid（16 进制线程 ID 小写英文） -A60
