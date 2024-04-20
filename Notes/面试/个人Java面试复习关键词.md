@@ -111,6 +111,119 @@
 
 # Java 集合
 
+## ArrayList
+
+- 继承关系
+
+  ```mermaid
+  classDiagram
+  	AbstractList <|-- ArrayList
+  	List <|.. ArrayList
+  	RandomAccess <|.. ArrayList
+  	Serializable <|.. ArrayList
+  	Cloneable <|.. ArrayList
+  	AbstractCollection <|-- AbstractList
+  	Collection <|.. AbstractCollection
+  	Collection <|-- List
+  	Iterable <|-- Collection
+  ```
+
+  - 继承 `AbstractList<E>` 抽象类
+    - 继承 `AbstractCollection<E>` 抽象类
+      - 实现 `Collection<E>` 接口
+        - 继承 `Iterable<T>` 接口
+  - 实现 `List<E>` 接口
+    - 继承 `Collection<E>` 接口
+      - 继承 `Iterable<T>` 接口
+  - 实现 `RandomAccess` 接口
+  - 实现 `Serializable` 接口
+  - 实现 `Cloneable` 接口
+
+- 和 LinkedList 对比
+
+  - ArrayList 基于数组，LinkedList 基于双向链表
+    - 随机访问：ArrayList 实现 RandomAccess 标识接口，按索引访问 O(1)；LinkedList O(n)
+    - 插入删除：ArrayList 插入删除 O(n)【除了尾插尾删 O(1)】; LinkedList 插入删除 O(n)【除了头尾插删 O(1)】（因为不能随机访问，得 O(n) 到达指定位置；LinkedList 注意特殊情况：使用 Iterator 删除时就都是 O(1) 了）
+    - 内存占用：ArrayList 开辟的空间大于等于实际使用元素个数；LinkedList 元素节点大小比 ArrayList 大
+  - 线程安全：都是线程不安全的
+  - 一般场景都是直接用 ArrayList，LinkedList 对比之下基本没优势。（15年 LinkedList 作者发推说自己写了但自己也不用）
+    - LinkedList 优势
+      - 作为队列（Queue）使用
+      - 作为栈使用
+      - 头插删、Iterator 删除时 O(1)
+      - 无需扩容
+
+- 初始化长度
+
+  - 以无参数构造方法创建 `ArrayList` 时
+    - 实际上初始化赋值的是一个空数组。
+    - 当真正对数组进行添加元素操作时，才真正分配容量。即向数组中添加第一个元素时，数组容量扩为 10。（即扩容逻辑）
+  - int 有参构造方法直接指定大小（小于0 异常），0 的时候也是空数组
+  - Collection 有参构造方法长度和入参大小一样
+
+- 扩容
+
+  - **空数组直接扩容到 10**
+  - 其他按照 **1.5 倍扩容**（grow() `int newCapacity = oldCapacity + (oldCapacity >> 1)`）
+    - 注意例外的情况：比如 1，1.5 倍后还是 1。这时走特殊判断：检查新容量是否大于最小需要容量（原元素数 + 1），若还是小于最小需要容量，那么就把最小需要容量当作数组的新容量。即 1 扩容到 2。
+  - 如果新容量 - `MAX_ARRAY_SIZE`（`= Integer.MAX_VALUE - 8`）> 0，则执行 `hugeCapacity(minCapacity)` 方法（minCapacity 就是原元素数量 + 1）：
+    - 如果入参 `minCapacity` 大于 `MAX_ARRAY_SIZE`，则新容量则为`Integer.MAX_VALUE`，否则，新容量大小则为 `MAX_ARRAY_SIZE`。
+  - 可以使用 ensureCapacity() 方法在大量添加元素前主动指定大小
+
+- 去重
+
+  - 用 HashSet + for 循环去重
+  - Stream：`lits.stream().distinct().collect(Collections.toList())`
+
+参考文档：
+
+1. [2024年面试准备-2-集合篇.md](./2024年面试准备-2-集合篇.md) ArrayList
+
+## LinkedList
+
+- 和 ArrayList 对比
+
+  - 参考上面 ArrayList 中的具体分析
+
+- 继承关系
+
+  - ```mermaid
+    classDiagram
+        AbstractSequentialList <|-- LinkedList
+        AbstractList <|-- AbstractSequentialList
+        AbstractCollection <|-- AbstractList
+        Collection <|.. AbstractCollection
+        List <|.. LinkedList
+        List <|.. AbstractList
+        Collection <|-- List
+        Cloneable <|.. LinkedList
+        Serializable <|.. LinkedList
+        Deque <|.. LinkedList
+        Queue <|-- Deque
+        Collection <|-- Queue
+        Iterable <|-- Collection
+    ```
+
+- 优势
+
+  - 作为队列（Queue）使用
+    - 可以使用 **ArrayDeque** 替换（推荐，刷过力扣看过大佬代码就知道）
+      - 数据结构：**循环数组**
+      - 初始化和扩容：**初始 16，扩容 2 倍**
+      - 也是线程不安全
+      - 查询 O(1) 插入删除 O(n)
+      - 插入新元素时不像 LinkedList 需要创建新的节点对象，但是可能扩容
+  - 作为栈使用
+    - 同样可以替换为 ArrayDeque 类（推荐）
+    - 不推荐使用 Stack 类
+      - 继承 Vector，方法有锁，效率慢
+  - 头插删、Iterator 删除时 O(1)
+  - 无需扩容
+
+参考文档：
+
+1. [2024年面试准备-2-集合篇.md](./2024年面试准备-2-集合篇.md) LinkedList
+
 ## HashMap
 
 - 继承关系
@@ -136,11 +249,11 @@
 
     - Java 8 引入的红黑树
 
-- key 可以为 null，value 也可以为 null
+- **key 可以为 null，value 也可以为 null**
 
 - 哈希冲突
 
-  - HashMap 使用的是链地址法
+  - HashMap 使用的是**链地址法**
   - 所有的方法
     - 开放定址法
       - 线性探测法
@@ -238,6 +351,77 @@
 
 1. [2024年面试准备-2-集合篇.md](./2024年面试准备-2-集合篇.md) HashMap
 
+## ConcurrentHashMap
+
+- 继承关系
+
+  ```mermaid
+  classDiagram
+  	AbstractMap <|-- ConcurrentHashMap
+  	Map <|.. AbstractMap
+  	ConcurrentMap <|.. ConcurrentHashMap
+  	Map <|-- ConcurrentMap
+  	Serializable <|.. ConcurrentHashMap
+  ```
+
+- 线程安全
+
+- **不支持 key、value 为 null**
+
+  - 反证 value 不能为 null
+    - 如果支持 value 为 null，外界使用时需要保证 containsKey() 和 get() 两次操作之间没有其他多线程在操作，否则 get() 的时候无法判断 null 的含义是真的 value 为 null 还是没有对应的 key。
+    - 这就导致用户使用 ConcurrentHashMap 集合需要自己保证 containsKey() 和 get() 操作的原子性，增加了开发负担，所以在设计上直接禁止了 null
+  - 而 key 不能为 null，主要就是 JUC 作者 Doug 不喜欢 null，所以设计之初就不允许 null 的 key 存在
+  - **线程安全的 ConcurrentSkipListMap、HashTable 也是一样的禁止两者为 null**
+
+- get()
+
+  - 不需要加锁
+    - 因为相关共享变量（不管是 7 的 HashEntry 还是 8 的 Node）都用 volatile 修饰，保证了多线程下的可见性
+  - Java 7 源码逻辑
+    - 首先，根据 key 计算出 hash 值定位到具体的 Segment 
+    - 再根据 hash 值获取定位 HashEntry 对象
+    - 对 HashEntry 对象进行链表遍历，找到对应元素。
+  - Java 8 源码逻辑
+    - 根据计算出来的 hashcode 寻址，如果就在桶上首节点，那么直接返回值。
+    - 如果是红黑树那就按照树的方式获取值。
+    - 都不满足那就按照链表的方式遍历获取值。
+
+- put()
+
+  - Java 7 源码逻辑
+    - 先定位到相应的 Segment s，然后再对 s 进行 s.put() 操作。
+    - 首先会尝试获取锁 `tryLock()`，如果获取失败肯定就有其他线程存在竞争，则利用 `scanAndLockForPut()` 自旋获取锁。
+    - 尝试自旋获取锁。
+    - 如果重试的次数达到了 `MAX_SCAN_RETRIES` 则改为阻塞锁获取，保证能获取成功。
+    - 拿到锁后，得到 table 对应位置上的 HashEntry。如果非空，则遍历该 HashEntry，如果不为空则判断传入的 key 和当前遍历的 key 是否相等，相等则覆盖旧 value
+    - HashEntry 为空则需要新建一个 HashEntry 并加入到 Segment 中，同时会判断是否需要扩容。
+  - Java 8 源码逻辑
+    - 根据 key 计算出 hashcode，然后开始遍历 table；
+    - 判断是否需要初始化；
+    - f 即为当前 key 定位出的 Node，如果为 null，表示当前位置可以写入数据，**利用 CAS 尝试写入，失败则自旋保证成功**。
+      - 而在执行写操作时，会先尝试使用 CAS 操作来无锁地修改数据，如果 CAS 操作失败，则会使用 **synchronized** 来获取对应 Node 的锁，并在获取锁后进行数据的修改操作。
+    - 如果当前位置的 hash 值 == MOVED == -1, 说明其他线程正在扩容，则需要参与一起扩容 `helpTransfer()`。
+    - 如果都不满足，则利用 synchronized 锁住 f 节点，判断是链表还是红黑树，遍历写入数据。
+    - 如果数量大于 TREEIFY_THRESHOLD 则要转换为红黑树。
+
+- Java 7 和 8 的区别
+
+  - 结构：数组+链表 -> 数组+链表/红黑树
+  - 节点：**HashEntry** 类 -> **Node** 类（对 val 和 next 属性使用 volatile 修饰）
+  - 锁：继承 ReentrantLock 的 **Segment 类，并发度 16**（自定义的话，取大于设置值的最小 2 的幂指数） -> **没有分段锁了，采用 CAS + synchronized 实现**，并发度取决于数组大小
+
+- 扩容、哈希冲突树化等部分参数和 HashMap 都一样
+
+  - 链表树化阈值 8
+  - 最小树化容量 64
+  - 初始大小 16
+  - 复杂因子 0.75
+
+参考文档：
+
+1. [2024年面试准备-2-集合篇.md](./2024年面试准备-2-集合篇.md) ConcurrentHashMap
+
 ## Hashtable
 
 - 较为远古的使用Hash算法的容器结构了，现在基本已被淘汰
@@ -302,6 +486,39 @@
 参考文档：
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景一：Java 中的 String 类占用多大的内存空间 - Java 对象的结构
+
+## 对象什么时候进入老年代
+
+- **大对象直接进入老年代**
+  - 大对象就是指需要大量连续内存空间的Java对象，最典型的大对象便是那种很长的字符串，或者元素数量很庞大的数组
+    - 本节例子中的byte[]数组就是典型的大对象
+  - 大对象对虚拟机的内存分配来说就是一个不折不扣的坏消息，比遇到一个大对象更加坏的消息就是遇到一群“朝生夕灭”的“短命大对象”，我们写程序的时候应注意避免。
+  - 在Java虚拟机中要避免大对象的原因
+    - 在分配空间时，它容易导致内存明明还有不少空间时就提前触发垃圾收集，以获取足够的连续空间才能安置好它们
+    - 当复制对象时，大对象就意味着高额的内存复制开销。
+  - HotSpot 虚拟机提供了 **-XX:PretenureSizeThreshold** 参数，指定大于该设置值的对象直接在老年代分配，这样做的目的就是避免在 Eden 区及两个 Survivor 区之间来回复制，产生大量的内存复制操作。
+    - -XX:PretenureSizeThreshold 参数只对 Serial 和 ParNew 两款新生代收集器有效，HotSpot 的其他新生代收集器，如 Parallel Scavenge 并不支持这个参数。
+- **长期存活的对象将进入老年代**
+  - 虚拟机给每个对象定义了一个对象年龄（Age）计数器，存储在对象头中
+  - 对象通常在 Eden 区里诞生，如果经过第一次 Minor GC 后仍然存活，并且能被 Survivor 容纳的话，该对象会被移动到 Survivor 空间中，并且将其对象年龄设为 1 岁。对象在 Survivor 区中每熬过一次 Minor GC，年龄就增加 1 岁，当它的年龄增加到一定程度（**默认为 15**），就会被晋升到老年代中。
+  - 对象晋升老年代的年龄阈值，可以通过参数 **-XX:MaxTenuringThreshold** 设置。
+- **动态对象年龄判定**
+  - 为了能更好地适应不同程序的内存状况，HotSpot 虚拟机并不是永远要求对象的年龄必须达到 -XX:MaxTenuringThreshold 才能晋升老年代，如果在 Survivor 空间中**相同年龄所有对象大小的总和大于 Survivor 空间的一半**，年龄大于或等于该年龄的对象就可以直接进入老年代，无须等到 -XX:MaxTenuringThreshold 中要求的年龄。
+- 题外话 - 其他分配方式：**栈上分配、TLAB、PLAB**
+  - 栈上分配
+    - 对于这些其他线程不会访问的对象，我们能不能让线程自己分配在它自己的栈空间上？这样不就可以节省不少交互时间了
+    - 参考后续**逃逸分析**相关
+  - TLAB
+    - **TLAB（Thread Local Allocation Buffer），即线程本地分配缓存**。这是一块线程专用的内存分配区域，TLAB 占用的是 eden 区的空间。在 TLAB 启用的情况下（默认开启），JVM 会为每一个线程分配一块 TLAB 区域。
+  - PLAB
+    - **PLAB（Promotion Local Allocation Buffers），即晋升本地分配缓存**。PLAB 的作用于 TLAB 类似，都是为了加速对象分配效率，避免多线程竞争而诞生的。 只不过 **PLAB 是应用于对象晋升到 Survivor 区或老年代**。与 TLAB 类似，每个线程都有独立的 PLAB 区。
+  - 对象内存分配流程
+    - **尝试栈上分配 -> 尝试 TLAB 分配 -> 是否可以直接进入老年代 -> Eden 分配**
+
+
+参考文档：
+
+1. [2024年面试准备-3-JVM篇.md](./2024年面试准备-3-JVM篇.md) 3.8.2 大对象直接进入老年代 ~ 3.8.4 动态对象年龄判定
 
 ## 类加载时机和过程
 
@@ -498,6 +715,173 @@
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景十七：Java 中的对象和数组都是在堆上分配的吗？
 
+## 缓存一致性 / 引出内存模型
+
+- 由于计算机的存储设备与处理器的运算速度有着几个数量级的差距，所以现代计算机系统都不得不加入一层或多层读写速度尽可能接近处理器运算速度的高速缓存（Cache）来作为内存与处理器之间的缓冲：将运算需要使用的数据复制到缓存中，让运算能快速进行，当运算结束后再从缓存同步回内存之中，这样处理器就无须等待缓慢的内存读写了。
+- 基于高速缓存的存储交互很好地解决了处理器与内存速度之间的矛盾，但是也为计算机系统带来更高的复杂度，它引入了一个新的问题：**缓存一致性（Cache Coherence）**。
+  - 在多路处理器系统中，每个处理器都有自己的高速缓存，而它们又共享同一主内存（Main Memory），这种系统称为共享内存多核系统（Shared Memory Multiprocessors System）。**当多个处理器的运算任务都涉及同一块主内存区域时，将可能导致各自的缓存数据不一致。**
+  - 如果真的发生这种情况，那同步回到主内存时该以谁的缓存数据为准呢？**为了解决一致性的问题，需要各个处理器访问缓存时都遵循一些协议，在读写时要根据协议来进行操作**，这类协议有 MSI、MESI（Illinois Protocol）、MOSI、Synapse、Firefly及Dragon Protocol等。
+    - **MESI 详解**
+      - MESI 指的是缓存行的四种状态（Modified，Exclusive，Shared， Invalid），用 2 个 bit 表示。
+- 从本章开始，我们将会频繁见到“**内存模型**”一词，它可以理解为在特定的操作协议下，对特定的内存或高速缓存进行读写访问的过程抽象。
+  - 不同架构的物理机器可以拥有不一样的内存模型，而Java虚拟机也有自己的内存模型，并且与这里介绍的内存访问操作及硬件的缓存访问操作具有高度的可类比性。
+- 除了增加高速缓存之外，为了使处理器内部的运算单元能尽量被充分利用，处理器可能会对输入代码进行**乱序执行（Out-Of-Order Execution）优化**，处理器会在计算之后将乱序执行的结果重组，保证该结果与顺序执行的结果是一致的，但并不保证程序中各个语句计算的先后顺序与输入代码中的顺序一致，因此如果存在一个计算任务依赖另外一个计算任务的中间结果，那么其顺序性并不能靠代码的先后顺序来保证。
+  - 与处理器的乱序执行优化类似，Java虚拟机的即时编译器中也有**指令重排序（Instruction Reorder）优化**。
+
+参考文档：
+
+1. [2024年面试准备-3-JVM篇.md](./2024年面试准备-3-JVM篇.md) 12.2 硬件的效率与一致性
+
+## Java 内存模型
+
+- 《Java虚拟机规范》中曾试图定义一种**“Java内存模型” （Java Memory Model，JMM）**来屏蔽各种硬件和操作系统的内存访问差异，以实现让Java程序在各种平台下都能达到一致的内存访问效果。
+
+  - 在此之前，主流程序语言（如C和C++等）直接使用物理硬件和操作系统的内存模型。因此，由于不同平台上内存模型的差异，有可能导致程序在一套平台上并发完全正常，而在另外一套平台上并发访问却经常出错，所以在某些场景下必须针对不同的平台来编写程序
+
+- 定义Java内存模型并非一件容易的事情
+
+  - 这个模型必须定义得足够严谨，才能让Java的并发内存访问操作不会产生歧义；
+  - 但是也必须定义得足够宽松，使得虚拟机的实现能有足够的自由空间去利用硬件的各种特性（寄存器、高速缓存和指令集中某些特有的指令）来获取更好的执行速度。
+
+- 经过长时间的验证和修补，直至 **JDK 5**（实现了JSR-133 ）发布后，Java内存模型才终于成熟、完善起来了。
+
+- 主内存与工作内存
+
+  - **Java 内存模型的主要目的是定义程序中各种变量的访问规则，即关注在虚拟机中把变量值存储到内存和从内存中取出变量值这样的底层细节**。
+    - 此处的变量（Variables）与Java编程中所说的变量有所区别，它包括了实例字段、静态字段和构成数组对象的元素，但是不包括局部变量与方法参数，因为后者是线程私有的，不会被共享，自然就不会存在竞争问题。
+    - 为了获得更好的执行效能，Java内存模型并没有限制执行引擎使用处理器的特定寄存器或缓存来和主内存进行交互，也没有限制即时编译器是否要进行调整代码执行顺序这类优化措施。
+  - Java内存模型规定了所有的变量都存储在**主内存（Main Memory）**中（此处的主内存与介绍物理硬件时提到的主内存名字一样，两者也可以类比，但物理上它仅是虚拟机内存的一部分）。
+  - 每条线程还有自己的**工作内存（Working Memory**，可与前面讲的处理器高速缓存类比）
+    - 线程的工作内存中保存了被该线程使用的变量的主内存副本
+    - 线程对变量的所有操作（读取、赋值等）都必须在工作内存中进行，而不能直接读写主内存中的数据。
+    - 不同的线程之间也无法直接访问对方工作内存中的变量，线程间变量值的传递均需要通过主内存来完成
+  - 这里所讲的主内存、工作内存与第2章所讲的Java内存区域中的Java堆、栈、方法区等并不是同一个层次的对内存的划分，这两者基本上是没有任何关系的。
+    - 如果两者一定要勉强对应起来，那么从变量、主内存、工作内存的定义来看，**主内存主要对应于Java堆中的对象实例数据部分**，而**工作内存则对应于虚拟机栈中的部分区域**。
+    - 从更基础的层次上说，**主内存直接对应于物理硬件的内存**，而为了获取更好的运行速度，虚拟机（或者是硬件、操作系统本身的优化措施）可能会**让工作内存优先存储于寄存器和高速缓存中**，因为程序运行时主要访问的是工作内存。
+
+- 内存间交互操作
+
+  - 关于主内存与工作内存之间具体的交互协议，即一个变量如何从主内存拷贝到工作内存、如何从工作内存同步回主内存这一类的实现细节，Java内存模型中定义了以下8种操作来完成。
+  - Java虚拟机实现时必须保证下面提及的每一种操作都是原子的、不可再分的（对于double和long类型的变量来说，load、store、read和write操作在某些平台上允许有例外，这个问题在12.3.4节会专门讨论）
+    - **lock（锁定）**：作用于主内存的变量，它把一个变量标识为一条线程独占的状态。
+    - **unlock（解锁）**：作用于主内存的变量，它把一个处于锁定状态的变量释放出来，释放后的变量才可以被其他线程锁定。
+    - **read（读取）**：作用于主内存的变量，它把一个变量的值从主内存传输到线程的工作内存中，以便随后的load动作使用。
+    - **load（载入）**：作用于工作内存的变量，它把read操作从主内存中得到的变量值放入工作内存的变量副本中。
+    - **use（使用）**：作用于工作内存的变量，它把工作内存中一个变量的值传递给执行引擎，每当虚拟机遇到一个需要使用变量的值的字节码指令时将会执行这个操作。
+    - **assign（赋值）**：作用于工作内存的变量，它把一个从执行引擎接收的值赋给工作内存的变量，每当虚拟机遇到一个给变量赋值的字节码指令时执行这个操作。
+    - **store（存储）**：作用于工作内存的变量，它把工作内存中一个变量的值传送到主内存中，以便随后的write操作使用。
+    - **write（写入）**：作用于主内存的变量，它把store操作从工作内存中得到的变量的值放入主内存的变量中。
+  - 如果要把一个变量从主内存拷贝到工作内存，那就要按**顺序执行 read 和 load 操作**，如果要把变量从工作内存同步回主内存，就要按**顺序执行 store 和 write 操作**。
+    - 注意，Java内存模型只要求上述两个操作必须按顺序执行，但不要求是连续执行。
+    - 也就是说read与load之间、store与write之间是可插入其他指令的，如对主内存中的变量a、b进行访问时，一种可能出现的顺序是read a、read b、load b、load a。
+  - 除此之外，Java内存模型还规定了在执行上述8种基本操作时必须满足如下规则：
+    - 不允许read和load、store和write操作之一单独出现，即不允许一个变量从主内存读取了但工作内存不接受，或者工作内存发起回写了但主内存不接受的情况出现。
+    - 不允许一个线程丢弃它最近的assign操作，即变量在工作内存中改变了之后必须把该变化同步回主内存。
+    - 不允许一个线程无原因地（没有发生过任何assign操作）把数据从线程的工作内存同步回主内存中。·一个新的变量只能在主内存中“诞生”，不允许在工作内存中直接使用一个未被初始化（load或assign）的变量，换句话说就是对一个变量实施use、store操作之前，必须先执行assign和load操作。
+    - 一个变量在同一个时刻只允许一条线程对其进行lock操作，但lock操作可以被同一条线程重复执行多次，多次执行lock后，只有执行相同次数的unlock操作，变量才会被解锁。
+    - 如果对一个变量执行lock操作，那将会清空工作内存中此变量的值，在执行引擎使用这个变量前，需要重新执行load或assign操作以初始化变量的值。
+    - 如果一个变量事先没有被lock操作锁定，那就不允许对它执行unlock操作，也不允许去unlock一个被其他线程锁定的变量。
+    - 对一个变量执行unlock操作之前，必须先把此变量同步回主内存中（执行store、write操作）。
+  - 这8种内存访问操作以及上述规则限定，再加上稍后会介绍的专门针对volatile的一些特殊规定，就已经能准确地描述出Java程序中哪些内存访问操作在并发下才是安全的。
+    - 这种定义相当严谨，但也是极为烦琐，实践起来更是无比麻烦。
+    - 可能部分读者阅读到这里已经对多线程开发产生恐惧感了，后来Java设计团队大概也意识到了这个问题，将Java内存模型的操作简化为read、write、lock和unlock四种，但这只是语言描述上的等价化简，Java内存模型的基础设计并未改变，即使是这四操作种，对于普通用户来说阅读使用起来仍然并不方便。
+    - 不过读者对此无须过分担忧，除了进行虚拟机开发的团队外，大概没有其他开发人员会以这种方式来思考并发问题，我们只需要理解 Java 内存模型的定义即可。
+    - 12.3.6节将介绍这种定义的一个等效判断原则——**先行发生原则**，用来确定一个操作在并发环境下是否安全的。
+
+- **对于 volatile 型变量的特殊规则**
+
+  - 关键字volatile可以说是Java虚拟机提供的最轻量级的同步机制
+  - 当一个变量被定义成volatile之后，它将具备两项特性：
+    - 第一项是**保证此变量对所有线程的可见性**
+      - 这里的“可见性”是指当一条线程修改了这个变量的值，新值对于其他线程来说是可以立即得知的。
+      - 而普通变量并不能做到这一点，普通变量的值在线程间传递时均需要通过主内存来完成。
+      - 比如，线程A修改一个普通变量的值，然后向主内存进行回写，另外一条线程B在线程A回写完成了之后再对主内存进行读取操作，新变量值才会对线程B可见。
+      - 但是Java里面的运算操作符并非原子操作，这导致volatile变量的运算在并发下一样是不安全的
+        - 问题就出在自增运算“race++”之中，我们用Javap反编译这段代码后会得到代码清单12-2所示，发现只有一行代码的increase()方法在Class文件中是由4条字节码指令构成（return指令不是由race++产生的，这条指令可以不计算）
+        - 实事求是地说，笔者使用字节码来分析并发问题仍然是不严谨的，因为即使编译出来只有一条字节码指令，也并不意味执行这条指令就是一个原子操作。
+          - 一条字节码指令在解释执行时，解释器要运行许多行代码才能实现它的语义。
+          - 如果是编译执行，一条字节码指令也可能转化成若干条本地机器码指令。
+        - 此处使用-XX：+PrintAssembly参数输出反汇编来分析才会更加严谨一些，但是考虑到读者阅读的方便性，并且字节码已经能很好地说明问题，所以此处使用字节码来解释。
+      - 由于volatile变量只能保证可见性，在不符合以下两条规则的运算场景中，我们仍然要通过加锁（使用synchronized、java.util.concurrent中的锁或原子类）来保证原子性：
+        - 运算结果并不依赖变量的当前值，或者能够确保只有单一的线程修改变量的值。
+        - 变量不需要与其他的状态变量共同参与不变约束。
+    - 使用volatile变量的第二个语义是**禁止指令重排序优化**
+      - 普通的变量仅会保证在该方法的执行过程中所有依赖赋值结果的地方都能获取到正确的结果，而不能保证变量赋值操作的顺序与程序代码中的执行顺序一致。
+        - 因为在同一个线程的方法执行过程中无法感知到这点，这就是Java内存模型中描述的所谓“线程内表现为串行的语义”（Within-Thread As-If-Serial Semantics）。
+      - 通过对比发现，关键变化在于有 volatile 修饰的变量，赋值后（前面 `mov %eax，0x150(%esi)` 这句便是赋值操作）多执行了一个“`lock addl $0x0，(%esp)`”操作，这个操作的作用相当于一个**内存屏障（Memory Barrier或Memory Fence**，指重排序时不能把后面的指令重排序到内存屏障之前的位置，**注意不要与第3章中介绍的垃圾收集器用于捕获变量访问的内存屏障互相混淆**），只有一个处理器访问内存时，并不需要内存屏障；但如果有两个或更多处理器访问同一块内存，且其中有一个在观测另一个，就需要内存屏障来保证一致性了。
+        - 这里的关键在于 lock 前缀，查询IA32手册可知，它的作用是将本处理器的缓存写入了内存，该写入动作也会引起别的处理器或者别的内核无效化（Invalidate）其缓存，这种操作相当于对缓存中的变量做了一次前面介绍Java内存模式中所说的“store和write”操作[4]。所以通过这样一个空操作，可让前面volatile变量的修改对其他处理器立即可见。
+  - 我们再回头来看看Java内存模型中对volatile变量定义的特殊规则的定义。假定T表示一个线程，V和W分别表示两个volatile型变量，那么在进行read、load、use、assign、store和write操作时需要满足如下规则：
+    - 只有当线程T对变量V执行的前一个动作是load的时候，线程T才能对变量V执行use动作；并且，只有当线程T对变量V执行的后一个动作是use的时候，线程T才能对变量V执行load动作。线程T对变量V的use动作可以认为是和线程T对变量V的load、read动作相关联的，必须连续且一起出现。
+      - 这条规则要求在工作内存中，每次使用V前都必须先从主内存刷新最新的值，用于保证能看见其他线程对变量V所做的修改。
+    - 只有当线程T对变量V执行的前一个动作是assign的时候，线程T才能对变量V执行store动作；并且，只有当线程T对变量V执行的后一个动作是store的时候，线程T才能对变量V执行assign动作。线程T对变量V的assign动作可以认为是和线程T对变量V的store、write动作相关联的，必须连续且一起出现。
+      - 这条规则要求在工作内存中，每次修改V后都必须立刻同步回主内存中，用于保证其他线程可以看到自己对变量V所做的修改。
+    - 假定动作A是线程T对变量V实施的use或assign动作，假定动作F是和动作A相关联的load或store动作，假定动作P是和动作F相应的对变量V的read或write动作；与此类似，假定动作B是线程T对变量W实施的use或assign动作，假定动作G是和动作B相关联的load或store动作，假定动作Q是和动作G相应的对变量W的read或write动作。如果A先于B，那么P先于Q。
+      - 这条规则要求volatile修饰的变量不会被指令重排序优化，从而保证代码的执行顺序与程序的顺序相同。
+
+- ##### 针对 long 和 double 型变量的特殊规则
+
+  - Java内存模型要求lock、unlock、read、load、assign、use、store、write这八种操作都具有原子性，但是对于64位的数据类型（long和double），在模型中特别定义了一条宽松的规定：**允许虚拟机将没有被volatile修饰的64位数据的读写操作划分为两次32位的操作来进行**，即允许虚拟机实现自行选择是否要保证64位数据类型的load、store、read和write这四个操作的原子性，这就是所谓的“**long和double的非原子性协定”（Non-Atomic Treatment of double and long Variables）**。
+  - **在目前主流平台下商用的64位Java虚拟机中并不会出现非原子性访问行为**，但是对于32位的Java虚拟机，譬如比较常用的32位x86平台下的HotSpot虚拟机，对long类型的数据确实存在非原子性访问的风险。
+  - 笔者的看法是，在实际开发中，除非该数据有明确可知的线程竞争，否则我们在编写代码时一般不需要因为这个原因刻意把用到的long和double变量专门声明为volatile。
+
+- **原子性、可见性与有序性**
+
+  - Java内存模型是围绕着在并发过程中如何处理原子性、可见性和有序性这三个特征来建立的，我们逐个来看一下哪些操作实现了这三个特性。
+    - 1.**原子性（Atomicity）**
+      - 由Java内存模型来直接保证的原子性变量操作包括read、load、assign、use、store和write这六个，我们大致可以认为，**基本数据类型的访问、读写都是具备原子性的**（例外就是long和double的非原子性协定，读者只要知道这件事情就可以了，无须太过在意这些几乎不会发生的例外情况）。
+      - 如果应用场景需要一个**更大范围的原子性保证（经常会遇到），Java内存模型还提供了lock和unlock操作来满足这种需求**，尽管虚拟机未把lock和unlock操作直接开放给用户使用，但是却提供了**更高层次的字节码指令monitorenter和monitorexit**来隐式地使用这两个操作。
+        - 这两个字节码指令反映到Java代码中就是同步块——synchronized关键字，因此在synchronized块之间的操作也具备原子性。
+    - 2.**可见性（Visibility）**
+      - 可见性就是指当一个线程修改了共享变量的值时，其他线程能够立即得知这个修改。上文在讲解volatile变量的时候我们已详细讨论过这一点。
+      - **Java内存模型是通过在变量修改后将新值同步回主内存，在变量读取前从主内存刷新变量值这种依赖主内存作为传递媒介的方式来实现可见性的，无论是普通变量还是volatile变量都是如此**。
+        - 普通变量与volatile变量的区别是，**volatile的特殊规则保证了新值能立即同步到主内存，以及每次使用前立即从主内存刷新**。因此我们可以说volatile保证了多线程操作时变量的可见性，而普通变量则不能保证这一点。
+      - 除了volatile之外，Java还有两个关键字能实现可见性，它们是 **synchronized 和 final**。
+        - **同步块的可见性是由“对一个变量执行 unlock 操作之前，必须先把此变量同步回主内存中（执行 store、write 操作）”这条规则获得的**。
+        - 而final关键字的可见性是指：**被 final 修饰的字段在构造器中一旦被初始化完成，并且构造器没有把“this”的引用传递出去（this引用逃逸是一件很危险的事情，其他线程有可能通过这个引用访问到“初始化了一半”的对象），那么在其他线程中就能看见final字段的值**。
+    - 3.**有序性（Ordering）**
+      - Java内存模型的有序性在前面讲解volatile时也比较详细地讨论过了，Java程序中天然的有序性可以总结为一句话：**如果在本线程内观察，所有的操作都是有序的**；**如果在一个线程中观察另一个线程，所有的操作都是无序的**。
+        - 前半句是指“线程内似表现为串行的语义”（Within-Thread As-If-Serial Semantics），后半句是指“指令重排序”现象和“工作内存与主内存同步延迟”现象。
+      - Java语言提供了 **volatile 和 synchronized** 两个关键字来保证线程之间操作的有序性
+        - **volatile关键字本身就包含了禁止指令重排序的语义**
+        - **而synchronized则是由“一个变量在同一个时刻只允许一条线程对其进行lock操作”这条规则获得的**，这个规则决定了持有同一个锁的两个同步块只能串行地进入。
+
+- ##### 先行发生原则
+
+  - 如果Java内存模型中所有的有序性都仅靠 volatile 和 synchronized 来完成，那么有很多操作都将会变得非常啰嗦，但是我们在编写Java并发代码的时候并没有察觉到这一点，这是因为Java语言中有一个**“先行发生”（Happens-Before）**的原则。
+    - 这个原则非常重要，它是判断数据是否存在竞争，线程是否安全的非常有用的手段。
+    - 依赖这个原则，我们可以通过几条简单规则一揽子解决并发环境下两个操作之间是否可能存在冲突的所有问题，而不需要陷入Java内存模型苦涩难懂的定义之中。
+  - 现在就来看看“先行发生”原则指的是什么。先行发生是Java内存模型中定义的两项操作之间的偏序关系，比如说操作A先行发生于操作B，其实就是说在发生操作B之前，操作A产生的影响能被操作B观察到，“影响”包括修改了内存中共享变量的值、发送了消息、调用了方法等。
+  - 下面是Java内存模型下一些“天然的”先行发生关系，这些先行发生关系无须任何同步器协助就已经存在，可以在编码中直接使用。如果两个操作之间的关系不在此列，并且无法从下列规则推导出来，则它们就没有顺序性保障，虚拟机可以对它们随意地进行重排序。
+    - **程序次序规则（Program Order Rule）**：在一个线程内，按照控制流顺序，书写在前面的操作先行发生于书写在后面的操作。注意，这里说的是控制流顺序而不是程序代码顺序，因为要考虑分支、循环等结构。
+    - **管程锁定规则（Monitor Lock Rule）**：一个 unlock 操作先行发生于后面对同一个锁的 lock 操作。这里必须强调的是“同一个锁”，而“后面”是指时间上的先后。
+    - **volatile变量规则（Volatile Variable Rule）**：对一个volatile变量的写操作先行发生于后面对这个变量的读操作，这里的“后面”同样是指时间上的先后。
+    - **线程启动规则（Thread Start Rule）**：Thread对象的start()方法先行发生于此线程的每一个动作。
+    - **线程终止规则（Thread Termination Rule）**：线程中的所有操作都先行发生于对此线程的终止检测，我们可以通过Thread::join()方法是否结束、Thread::isAlive()的返回值等手段检测线程是否已经终止执行。
+    - **线程中断规则（Thread Interruption Rule）**：对线程interrupt()方法的调用先行发生于被中断线程的代码检测到中断事件的发生，可以通过Thread::interrupted()方法检测到是否有中断发生。
+    - **对象终结规则（Finalizer Rule）**：一个对象的初始化完成（构造函数执行结束）先行发生于它的 finalize()方法的开始。
+    - **传递性（Transitivity）**：如果操作A先行发生于操作B，操作B先行发生于操作C，那就可以得出操作A先行发生于操作C的结论。
+  - Java语言无须任何同步手段保障就能成立的先行发生规则有且只有上面这些
+
+参考文档：
+
+1. [2024年面试准备-3-JVM篇.md](./2024年面试准备-3-JVM篇.md) 12.3 Java 内存模型
+
+## Java 线程的实现
+
+- Java线程的实现
+  - 但从JDK 1.3起，“主流”平台上的“主流”商用Java虚拟机的线程模型普遍都被替换为基于操作系统原生线程模型来实现，即采用 **1：1 的线程模型**。
+  - **以 HotSpot 为例，它的每一个 Java 线程都是直接映射到一个操作系统原生线程来实现的**，而且中间没有额外的间接结构，所以HotSpot自己是不会去干涉线程调度的（可以设置线程优先级给操作系统提供调度建议），全权交给底下的操作系统去处理，所以何时冻结或唤醒线程、该给线程分配多少处理器执行时间、该把线程安排给哪个处理器核心去执行等，都是由操作系统完成的，也都是由操作系统全权决定的。
+- 操作系统支持怎样的线程模型，在很大程度上会影响上面的 Java 虚拟机的线程是怎样映射的，这一点在不同的平台上很难达成一致，因此《Java虚拟机规范》中才不去限定 Java 线程需要使用哪种线程模型来实现。
+  - 线程模型只对线程的并发规模和操作成本产生影响，对 Java 程序的编码和运行过程来说，这些差异都是完全透明的。
+- Java 线程调度
+  - 线程调度是指系统为线程分配处理器使用权的过程，调度主要方式有两种，分别是协同式（Cooperative Threads-Scheduling）线程调度和抢占式（Preemptive Threads-Scheduling）线程调度。
+    - **Java使用的线程调度方式就是抢占式调度**。
+  - 不过，**线程优先级并不是一项稳定的调节手段**，很显然因为主流虚拟机上的Java线程是被映射到系统的原生线程上来实现的，所以**线程调度最终还是由操作系统说了算**。
+
+参考文档：
+
+1. [2024年面试准备-3-JVM篇.md](./2024年面试准备-3-JVM篇.md) 12.4.1 线程的实现、12.4.2 Java 线程调度
+
 # 多线程
 
 ## 进程通信
@@ -548,6 +932,103 @@
 参考文档：
 
 1. [操作系统：进程与线程之间的区别及联系](https://zhuanlan.zhihu.com/p/505594640)
+
+## 协程
+
+- 内核线程的局限
+
+  - Java目前的并发编程机制就与上述架构趋势产生了一些矛盾，1：1的内核线程模型是如今Java虚拟机线程实现的主流选择，但是这种映射到操作系统上的线程天然的缺陷是切换、调度成本高昂，系统能容纳的线程数量也很有限。
+  - 传统的Java Web服务器的线程池的容量通常在几十个到两百之间，当程序员把数以百万计的请求往线程池里面灌时，系统即使能处理得过来，但其中的切换损耗也是相当可观的。
+
+- 协程的复苏
+
+  - **内核线程的调度成本主要来自于用户态与核心态之间的状态转换**，而这两种状态转换的开销主要来自于响应中断、保护和恢复执行现场的成本。
+  - 由于最初多数的用户线程是被设计成协同式调度（Cooperative Scheduling）的，所以它有了一个别名——**“协程”（Coroutine）**。
+    - 又由于这时候的协程会完整地做调用栈的保护、恢复工作，所以今天也被称为**“有栈协程”（Stackful Coroutine）**，起这样的名字是为了便于跟后来的**“无栈协程”（Stackless Coroutine）**区分开。
+    - 无栈协程不是本节的主角，不过还是可以简单提一下它的典型应用，即各种语言中的await、async、yield这类关键字。
+      - 无栈协程本质上是一种有限状态机，状态保存在闭包里，自然比有栈协程恢复调用栈要轻量得多，但功能也相对更有限。
+  - 协程的主要优势是轻量，无论是有栈协程还是无栈协程，都要比传统内核线程要轻量得多。
+  - 协程当然也有它的局限，需要在应用层面实现的内容（调用栈、调度器这些）特别多，这个缺点就不赘述了。
+    - 具体到Java语言，还会有一些别的限制，譬如HotSpot这样的虚拟机，Java调用栈跟本地调用栈是做在一起的。
+    - 如果在协程中调用了本地方法，还能否正常切换协程而不影响整个线程？
+    - 另外，如果协程中遇传统的线程同步措施会怎样？譬如Kotlin提供的协程实现，一旦遭遇synchronize关键字，那挂起来的仍将是整个线程。
+
+- Java 的解决方案
+
+  - 对于有栈协程，有一种特例实现名为纤程（Fiber），这个词最早是来自微软公司，后来微软还推出过系统层面的纤程包来方便应用做现场保存、恢复和纤程调度。
+    - OpenJDK在2018年创建了Loom项目，这是Java用来应对本节开篇所列场景的官方解决方案，根据目前公开的信息，如无意外，日后该项目为Java语言引入的、与现在线程模型平行的新并发编程机制中应该也会采用“纤程”这个名字，不过这显然跟微软是没有任何关系的。(注：然而 JDK 21 实际引入时叫的是“虚拟线程”)
+    - 从Oracle官方对“什么是纤程”的解释里可以看出，它就是一种典型的有栈协程
+  - 在新并发模型下，一段使用纤程并发的代码会被分为两部分——执行过程（Continuation）和调度器（Scheduler）。
+
+- Java 21 的落地实现：虚拟线程
+
+  - 和 Kotlin 的对比
+
+    - **Java 是有栈协程，协程上下文保存在与执行处独立的栈上**，所以异步函数可以直接像正常函数那样写，程序执行到阻塞部分时 JVM 内部自动挂起；
+    - **Kotlin 是无栈协程，因为干预不了 JVM，所以协程上下文必须保存在堆上**，同时得显式声明函数是可挂起的，否则不知道什么函数支持挂起（suspend 在转译为字节码时会添加 Continuation 参数）。
+
+  - Java 协程的调度是通过 **ForkJoinPool** 来实现的，因此也是具有 **work stealing** 机制的
+
+  - 使用指南
+
+    - **请大方使用同步阻塞 IO**
+
+      - 在 “一个请求一个线程” 模型中使用平台线程的成本很高，因为平台线程与操作系统线程对应（操作系统线程是一种相对稀缺的资源），阻塞了平台线程，会让它无事可做一直处于阻塞中，这样就会造成很大的资源浪费。
+      - 然而，在这个模型中使用虚拟线程就很合适，**因为虚拟线程非常廉价就算被阻塞也不会造成资源浪费**。因此在虚拟线程出来后，Java 的设计者是建议我们应该以简单的同步风格编写代码并使用阻塞 IO。
+
+    - **避免池化虚拟线程**
+
+      - 关于虚拟线程使用方面最难理解的一件事情就是，我们不应该池化虚拟线程。虽然虚拟线程具有与平台线程相同的行为，但虚拟线程和线程池其实是两种概念。
+
+        - 平台线程是一种稀缺资源，因为它很宝贵。越宝贵的资源就越需要管理，管理平台线程最常见的方法是使用线程池。
+        - 虚拟线程是一种非常廉价的资源，每个虚拟线程不应代表某些共享的、池化的资源，而应代表单一任务。在应用程序中，我们应该直接使用虚拟线程而不是通过线程池使用它。
+
+      - 那么我们应该创建多少个虚拟线程嘞？答案是不必在乎虚拟线程的数量，我们有多少个并发任务就可以有多少个虚拟线程。
+
+      - 建议使用虚拟线程执行器，代码如下：
+
+        ```java
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+           Future<ResultA> f1 = executor.submit(task1);
+           Future<ResultB> f2 = executor.submit(task2);
+           // ... use futures
+        }
+        ```
+
+        - 上面代码虽然仍使用 ExecutorService，但从 **Executors.newVirtualThreadPerTaskExecutor() 方法返回的执行器不再使用线程池**。它会为每个提交的任务都创建一个新的虚拟线程。
+        - 此外，ExecutorService 本身是轻量级的，我们可以像创建任何简单对象一样直接创建一个新的 ExecutorService 对象而不必考虑复用。
+
+    - **使用信号量限制并发**
+
+      - 使用虚拟线程时，如果要限制访问某些服务的并发请求，则应该使用专门为此目的设计的 Semaphore 类。
+      - 简单地使用信号量阻塞某些虚拟线程可能看起来与将任务提交到固定数量线程池有很大不同，但事实并非如此。
+        - 将任务提交到等待任务池会将它们排队处理，信号量在内部(或任何其他阻塞同步构造)构造了一个阻塞线程队列，这些任务在阻塞线程队列上也会进行排队处理。
+        - 我们可以将平台线程池认作是从等待任务队列中提取任务进行处理的工作人员，然后将虚拟线程视为任务本身，在任务或者线程可以执行之前将会被阻塞，但它们在计算机中的底层表示上实际是相同的。
+        - 这里想告诉大家的就是不管是线程池的任务排队，还是信号量内部的线程阻塞，它们之间是由等效性的。在虚拟线程某些需要限制并发数场景下，直接使用信号量即可。
+
+    - **不要在线程局部变量中缓存可重用对象**
+
+      - 虚拟线程支持线程局部变量（ThreadLocal），就像平台线程一样。通常线程局部变量用于将一些特定于上下文的信息与当前运行的代码关联起来，例如当前事务和用户 ID。
+        - 对于虚拟线程来说，使用线程局部变量是完全合理的。但是如果考虑更安全、更有效的线程局部变量，可以使用 Scoped Values。
+      - 线程局部变量有一种用途与虚拟线程是不太适合的，那就是缓存可重用对象。
+        - 可重用对象的创建成本通常很高，通常消耗大量内存且可变，还不是线程安全的。它们被缓存在线程局部变量中，以减少它们实例化的次数以及它们在内存中的实例数量，好处是它们可以被线程上不同时间运行的多个任务重用，避免昂贵对象的重复创建。
+      - 对于线程局部变量缓存可重用对象的问题，没有什么好的通用替代方案，但对于 SimpleDateFormat，我们应该将其替换为 DateTimeFormatter。DateTimeFormatter 是不可变的，因此单个实例就可以由所有线程共享
+
+    - **避免长时间和频繁的 synchronized**
+
+      - 当前虚拟线程实现由一个限制是，在同步块或方法内执行 synchronized 阻塞操作会导致 JDK 的虚拟线程调度程序阻塞宝贵的操作系统线程，而如果阻塞操作是在同步块或方法外完成的，则不会被阻塞。我们称这种情况为 “Pinning”。
+      - 如果阻塞操作既长期又频繁，则 “Pinning” 可能会对服务器的吞吐量产生不利影响。如果阻塞操作短暂（例如内存中操作）或不频繁则可能不会产生不利影响。
+      - 为了检测可能有害的 “Pinning” 实例，（JDK Flight Recorder (JFR) 在 “Pinning” 阻塞时间超过 20 毫秒时，会发出 jdk.VirtualThreadPinned 事件。
+        - 或者我们可以使用系统属性 jdk.tracePinnedThreads 在线程被 “Pinning” 阻塞时发出堆栈跟踪。
+        - 启动 Java 程序时添加 -Djdk.tracePinnedThreads=full 运行，会在线程被 “Pinning” 阻塞时打印完整的堆栈跟踪，突出显示本机帧和持有监视器的帧。使用 -Djdk.tracePinnedThreads=short 运行，会将输出限制为仅有问题的帧。
+      - 如果这些机制检测到既长期又频繁 “Pinning” 的地方，请在这些特定地方将 synchronized 替换为 ReentrantLock。
+
+参考文档：
+
+1. [2024年面试准备-3-JVM篇.md](./2024年面试准备-3-JVM篇.md) 12.5 Java 与协程
+2. [为什么我认为 Java 虚拟线程不会取代 Kotlin 协程 - 知乎](https://zhuanlan.zhihu.com/p/647257179)
+3. [Java 21 虚拟线程：使用指南（一）- 博客园](https://www.cnblogs.com/waynaqua/p/17935918.html)
+4. [Java 新技术：虚拟线程使用指南（二）- 博客园](https://www.cnblogs.com/waynaqua/p/17954092)
 
 ## 查看线程/进程 CPU 使用率
 
@@ -606,6 +1087,28 @@
 
 1. [死锁的四个必要条件](https://blog.csdn.net/jyy305/article/details/70077042)
 
+## Java 线程状态
+
+- Java语言定义了6种线程状态，在任意一个时间点中，一个线程只能有且只有其中的一种状态，并且可以通过特定的方法在不同状态之间转换。这6种状态分别是：
+  - **新建（New）**：创建后尚未启动的线程处于这种状态。
+  - **运行（Runnable）**：包括操作系统线程状态中的Running和Ready，也就是处于此状态的线程有可能正在执行，也有可能正在等待着操作系统为它分配执行时间。
+  - **无限期等待（Waiting）**：处于这种状态的线程不会被分配处理器执行时间，它们要等待被其他线程显式唤醒。以下方法会让线程陷入无限期的等待状态：
+    - 没有设置Timeout参数的Object::wait()方法；
+    - 没有设置Timeout参数的Thread::join()方法；
+    - LockSupport::park()方法。
+  - **限期等待（Timed Waiting）**：处于这种状态的线程也不会被分配处理器执行时间，不过无须等待被其他线程显式唤醒，在一定时间之后它们会由系统自动唤醒。以下方法会让线程进入限期等待状态：
+    - Thread::sleep()方法；
+    - 设置了Timeout参数的Object::wait()方法；
+    - 设置了Timeout参数的Thread::join()方法；
+    - LockSupport::parkNanos()方法；
+    - LockSupport::parkUntil()方法。
+  - **阻塞（Blocked）**：线程被阻塞了，“阻塞状态”与“等待状态”的区别是“阻塞状态”在等待着获取到一个排它锁，这个事件将在另外一个线程放弃这个锁的时候发生；而“等待状态”则是在等待一段时间，或者唤醒动作的发生。在程序等待进入同步区域的时候，线程将进入这种状态。
+  - **结束（Terminated）**：已终止线程的线程状态，线程已经结束执行。
+
+参考文档：
+
+1. [2024年面试准备-3-JVM篇.md](./2024年面试准备-3-JVM篇.md) 12.4.3 状态转换
+
 ## 有 synchronized 为什么还提供 Lock？
 
 - 参考死锁的必要条件
@@ -660,13 +1163,626 @@
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景十一：为啥局部变量是线程安全的？
 
+## 线程池：ThreadPoolExecutor 七大参数
+
+ThreadPoolExecutor 7 大参数
+
+1. int **corePoolSize**：
+
+   - 线程池中的常驻核心线程数
+
+2. int **maximumPoolSize**
+
+   - 线程池能够容纳同时执行的最大线程数，此值必须大于等于 1
+
+3. long **keepAliveTime**
+
+   - 多余的空闲线程的存活时间。当前线程池数量超过 corePoolSize 时，当空闲时间达到 keepAliveTime 值时，多余空闲线程会被销毁直到只剩下 corePoolSize 个线程为止
+
+4. TimeUnit **unit**
+
+   - keepAliveTime 的单位。
+
+5. `BlockingQueue<Runnable>` **workQueue**
+
+   - 任务队列，被提交但尚未被执行的任务。
+
+6. ThreadFactory **threadFactory**
+
+   - 表示生成线程池中工作线程的线程工厂，用于创建线程一般用默认的即可。
+
+7. RejectedExecutionHandler **handler**
+
+   - 拒绝策略，表示当队列满了并且工作线程大于等于线程池的最大线程数（maximumPoolSize）时如何来拒绝
+
+   - 线程池的拒绝策略你谈谈
+     - 是什么（1：01）
+     - JDK 内置的拒绝策略
+       - **AbortPolicy**（默认）：直接抛出 RejectedExecutionException 异常阻止系统正常运行。
+       - **CallerRunsPolicy**：“调用者运行”一种调节机制，该策略既不会抛弃任务，也不会抛出异常，而是将某些任务回退到调用者，从而降低新任务的流量。
+       - **DiscardOldestPolicy**：抛弃队列中等待最久的任务，然后把当前任务加入队列中尝试再次提交当前 任务。
+       - **DiscardPolicy**：直接丢弃任务，不予任何处理也不抛出异常。如果允许任务丢失，这是最好的一种方案。
+     - 以上内置拒绝策略均实现了 **RejectedExecutionHandler** 接口
+
+参考文档：
+
+1. [《尚硅谷Java大厂面试题第2季》笔记.md](../视频笔记/《尚硅谷Java大厂面试题第2季》笔记.md) P49、P51
+
+## 线程池：Executors 默认创建方法
+
+- 了解
+
+  - **Executors.newScheduledThreadPool(int)**
+
+    - 创建一个核心线程固定大小的线程池，用于定时执行任务。核心线程数量固定，最大线程数量 Integer.MAX_VALUE。适用于定时执行任务的场景。
+
+    - ```java
+      return new ScheduledThreadPoolExecutor(corePoolSize);
+      
+      public ScheduledThreadPoolExecutor(int corePoolSize) {
+          // 对应 ThreadPoolExecutor
+          super(corePoolSize, Integer.MAX_VALUE,
+                DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
+                new DelayedWorkQueue());
+      }
+      ```
+
+  - **Executors.newSingleThreadScheduledExecutor()**
+
+    - 创建一个单线程的定时执行线程池。只包含一个线程，用于串行定时执行任务。
+
+    - ```java
+      return new DelegatedScheduledExecutorService
+                  (new ScheduledThreadPoolExecutor(1));
+      ```
+
+  - java8 新出
+
+    - Executors.newWorkStealingPool(int parallelism)
+
+      - 创建一个工作窃取线程池，线程数量根据CPU核心数动态调整。适用于CPU密集型的任务。
+
+      - java8 新增，使用目前机器上可用的处理器作为它的并行级别
+
+      - ```java
+        // 不传 parallelism 的重载方法，默认取 Runtime.getRuntime().availableProcessors()
+        return new ForkJoinPool
+            (parallelism,
+             	ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+             	null, true);
+        ```
+
+- 重点
+
+  - **Executors.newFixedThreadPool(int)**（19：58）
+
+    - 创建一个固定大小的线程池，其中包含指定数量的线程。线程数量是固定的，不会自动扩展。适用于执行固定数量的长期任务。
+
+    - 执行长期的任务，性能好很多
+
+    - ```java
+      return new ThreadPoolExecutor(nThreads, nThreads,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue<Runnable>());
+      ```
+
+  - **Executors.newSingleThreadExecutor()**（20：39）
+
+    - 创建一个单线程的线程池。这个线程池中只包含一个线程，用于串行执行任务。适用于需要按顺序执行任务的场景。
+
+    - 一个任务一个任务执行的场景
+
+    - ```java
+      return new FinalizableDelegatedExecutorService
+                  (new ThreadPoolExecutor(1, 1,
+                                          0L, TimeUnit.MILLISECONDS,
+                                          new LinkedBlockingQueue<Runnable>()));
+      ```
+
+  - **Executors.newCachedThreadPool()**（21：21）
+
+    - 创建一个可缓存的线程池。这个线程池的线程数量可以根据需要自动扩展，如果有可用的空闲线程，就会重用它们；如果没有可用的线程，就会创建一个新线程。适用于执行大量的短期异步任务。
+
+    - 适用：执行很多短期异步的小程序或者负载较轻的服务器
+
+    - ```java
+      return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                    60L, TimeUnit.SECONDS,
+                                    new SynchronousQueue<Runnable>());
+      ```
+
+- 你在工作中单一的/固定数的/可变的三种创建线程池的方法，你用哪个多？超级大坑
+
+  - 答案是一个都不用，我们生产上只能使用自定义的
+
+  - Executors 中 JDK 已经给你提供了，为什么不用？
+
+    - （5：10）
+
+      阿里巴巴 Java 开发手册
+
+      4、【强制】线程池不允许使用 Executors 去创建，而是通过 ThreadPoolExecutor 的方式
+
+      说明：Executors 返回的线程池对象的弊端如下：
+
+      1）FixedThreadPool 和 SingleThreadPool：
+
+      允许的**请求队列长度**为 Integer.MAX_VALUE，可能会堆积大量的请求，从而导致 OOM。
+
+      2）CachedTheadPool 和 ScheduledThreadPool：
+
+      允许的**创建线程数量**为 Integer.MAX_VALUE，可能会创建大量的线程，从而导致 OOM。
+
+参考文档：
+
+1. [《尚硅谷Java大厂面试题第2季》笔记.md](../视频笔记/《尚硅谷Java大厂面试题第2季》笔记.md) P47、P52
+2. [【Java 基础篇】Executors工厂类详解 - CSDN](https://blog.csdn.net/qq_21484461/article/details/133101696)（感觉细节有点问题，还是优先参考源码）
+
+## ForkJoinPool
+
+- 使用场景
+
+  - **ForkJoinPool 就是设计用来解决父子任务有依赖的并行计算问题的。**  
+
+    - 类似于快速排序、二分查找、集合运算等有父子依赖的并行计算问题，都可以用 ForkJoinPool 来解决。
+
+    - 对于 Fibonacci 数列问题，如果用 ForkJoinPool 来实现，其实现代码为：
+
+      ```java
+      @Slf4j
+      public class ForkJoinDemo {
+          // 1. 运行入口
+          public static void main(String[] args) {
+              int n = 20;
+      
+              // 为了追踪子线程名称，需要重写 ForkJoinWorkerThreadFactory 的方法
+              final ForkJoinPool.ForkJoinWorkerThreadFactory factory = pool -> {
+                  final ForkJoinWorkerThread worker = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                  worker.setName("my-thread" + worker.getPoolIndex());
+                  return worker;
+              };
+      
+              //创建分治任务线程池，可以追踪到线程名称
+              ForkJoinPool forkJoinPool = new ForkJoinPool(4, factory, null, false);
+      
+              // 快速创建 ForkJoinPool 方法
+              // ForkJoinPool forkJoinPool = new ForkJoinPool(4);
+      
+              //创建分治任务
+              Fibonacci fibonacci = new Fibonacci(n);
+      
+              //调用 invoke 方法启动分治任务
+              Integer result = forkJoinPool.invoke(fibonacci);
+              log.info("Fibonacci {} 的结果是 {}", n, result);
+          }
+      }
+      
+      // 2. 定义拆分任务，写好拆分逻辑
+      @Slf4j
+      class Fibonacci extends RecursiveTask<Integer> {
+          final int n;
+          Fibonacci(int n) {
+              this.n = n;
+          }
+      
+          @Override
+          public Integer compute() {
+              //和递归类似，定义可计算的最小单元
+              if (n <= 1) {
+                  return n;
+              }
+              // 想查看子线程名称输出的可以打开下面注释
+              //log.info(Thread.currentThread().getName());
+      
+              Fibonacci f1 = new Fibonacci(n - 1);
+              // 拆分成子任务
+              f1.fork();
+              Fibonacci f2 = new Fibonacci(n - 2);
+              // f1.join 等待子任务执行结果
+              return f2.compute() + f1.join();
+          }
+      }
+      ```
+
+    - 如上面代码所示，我们定义了一个 Fibonacci 类，继承了 RecursiveTask 抽象类。在 Fibonacci 类中，我们定义了拆分逻辑，并调用了 join() 等待子线程执行结果。
+
+    - 上面代码中提到的 fork () 和 join () 是 ForkJoinPool 提供的 API 接口，主要用于执行任务以及等待子线程结果。关于其详细用法，我们稍后会讲到。
+
+  - **除了用于处理父子任务有依赖的情形，其实 ForkJoinPool 也可以用于处理需要获取子任务执行结果的场景。**  
+
+    - 例如：我们要计算 1 到 1 亿的和，为了加快计算的速度，我们自然想到算法中的分治原理，将 1 亿个数字分成 1 万个任务，每个任务计算 1 万个数值的综合，利用 CPU 的并发计算性能缩短计算时间。
+    - 对比 ThreadPoolExecutor 和 ForkJoinPool 这两者的实现，可以发现它们都有任务拆分的逻辑，以及最终合并数值的逻辑。但 ForkJoinPool 相比 ThreadPoolExecutor 来说，做了一些实现上的封装，例如：
+      - 不用手动去获取子任务的结果，而是使用 join () 方法直接获取结果。
+      - 将任务拆分的逻辑，封装到 RecursiveTask 实现类中，而不是裸露在外。
+    - 因此对于没有父子任务依赖，但是希望获取到子任务执行结果的并行计算任务，也可以使用 ForkJoinPool 来实现。**在这种情况下，使用 ForkJoinPool 实现更多是代码实现方便，封装做得更加好。**
+
+- 使用指南
+
+  - 使用 ForkJoinPool 来进行并行计算，主要分为两步：
+    1. 定义 RecursiveTask 或 RecursiveAction 的任务子类。
+    2. 初始化线程池及计算任务，丢入线程池处理，取得处理结果。
+  - **首先，我们需要定义一个 RecursiveTask 或 RecursiveAction 的子类，然后再该类的 compute () 方法中定义拆分逻辑和计算逻辑。**  这两个抽象类的区别在于：前者有返回值，后者没有返回值。
+    - 对于 compute () 方法的实现，核心是想清楚：怎么拆分成子任务？什么时候结束拆分？
+  - **接着，初始化 ForkJoinPool 线程池，初始化计算任务，最后将任务丢入线程池中。**
+
+- 原理解析
+
+  - ForkJoinPool 的设计思想是分治算法，即将任务不断拆分（fork）成更小的任务，最终再合并（join）各个任务的计算结果。通过这种方式，可以充分利用 CPU 资源，再结合工作窃取算法（worksteal）整体提高执行效率。
+  - 从图中可以看出 ForkJoinPool 要先执行完子任务才能执行上一层任务。**因此 ForkJoinPool 最适合有父子任务依赖的场景，其次就是需要获取子任务执行结果的场景。比如：Fibonacci 数列、快速排序、二分查找等。**
+
+- 源码实现
+
+  - ForkJoinPool 的主要实现类为：ForkJoinPool 和 ForkJoinTask 抽象类。
+  - ForkJoinTask 实现了 Future 接口，可以用于获取处理结果。
+  - ForkJoinTask 有两个抽象子类：RecursiveAction 和 RecursiveTask 抽象类，其区别在于前者没有返回值，后者有返回值，其类图如下所示。
+
+- 窃取算法
+
+  - 我们知道 ForkJoinPool 的父子任务之间是有依赖关系的，那么 ForkJoinPool 是如何实现的呢？**答案是：利用不同任务队列执行。**  
+    - 在 ForkJoinPool 中有一个数组形式的成员变量 `workQueue[]`，其对应一个队列数组，每个队列对应一个消费线程。丢入线程池的任务，根据特定规则进行转发。
+  - 这样就有一个问题：有些队列可能任务比较多，有些队列任务比较少，这样就会导致不同线程负载不一样，整体不够高效，怎么办呢？
+    - **答案是：利用窃取算法，空闲的线程从尾部去消费其他队列的任务。**
+    - 一般情况下，线程获取自己队列中的任务是 LIFO（Last Input First Output 后进先出）的方式，即类似于栈的操作方式。如下图所示，首先放入队列的时候先将任务 Push 进队列的头部（top），之后消费的时候在 pop 出队列头部（top）。
+    - 而当某个线程对应的队列空闲时，该线程则去队列的底部（base）窃取（poll）任务到自己的队列，然后进行消费。**那问题来了：为什么不从头部（top）获取任务，而要从底部（base）获取任务呢？**  那是为了避免冲突！如果两个线程同时从顶部获取任务，那就会有多线程的冲突问题，就需要加锁操作，从而降低了执行效率。
+
+参考文档：
+
+1. [深入理解 ForkJoinPool：入门、使用、原理 - 掘金](https://juejin.cn/post/7150836399234236430)
+
 # Spring
+
+## 核心组件
+
+- Data Access / Integration
+  - JDBC
+  - ORM
+  - OXM
+  - JMS
+  - Transactions
+- Web（MVC / Remoting）
+  - Web
+  - Servlet
+  - Portlet
+  - Struts
+- AOP
+- Aspects
+- Instrumentation
+- Core Container
+  - Beans
+  - Core
+  - Context
+  - Expression Language
+- Test
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring 核心组件
+
+## 常用模块
+
+- 核心容器
+  - 核心容器提供 Spring 框架的基本功能。核心容器的主要组件是 BeanFactory，它是工厂模式的实现。BeanFactory 使用控制反转（IOC）模式将应用程序的配置和依赖性规范与实际的应用程序代码分开。
+- Spring 上下文
+  - Spring 上下文是一个配置文件，向 Spring 框架提供上下文信息。Spring 上下文包括企业服务，例如 JNDI、EJB、电子邮件、国际化、校验和调度功能。
+- Spring AOP
+  - 通过配置管理特性，Spring AOP 模块直接将面向切面的编程功能集成到了 Spring 框架中。可以将一些通用任务，如安全、事务、日志等集中进行管理，提高了复用性和管理的便捷性。
+- Spring DAO
+  - 为 JDBC DAO 抽象层提供了有意义的异常层次结构，可用该结构来管理异常处理和不同数据库供应商抛出的错误消息。异常层次结构简化了错误处理，并且极大地降低了需要编写的异常代码数量（例如打开和关闭连接）。Spring DAO 的面向 JDBC 的异常遵从通用的 DAO 异常层次结构
+- Spring ORM
+  - Spring 框架插入了若干个 ORM 框架，从而提供了 ORM 的对象关系工具，其中包括 JDO、Hibernate 和 iBatis SQL Map。所有这些都遵从 Spring 的通用事务和 DAO 异常层次结构。
+- Spring Web 模块
+  - Web 上下文模块建立在应用程序上下文模块之上，为基于 Web 的应用程序提供了上下文。所以，Spring 框架支持与 Jakarta Structs 的集成。Web 模块还简化了处理多部分请求以及将请求参数绑定到域对象的工作。
+- Spring MVC 框架
+  - MVC 框架是一个全功能的构建 Web 应用程序的 MVC 实现。通过策略接口，MVC 框架便成为高度可配置的，MVC 容纳了大量视图技术，其中包括 JSP、Velocity、Tiles、iText 和 POI。
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring 常用模块
+
+## 常用注解
+
+- 1
+  - @Controller
+  - @RestController
+    - 相当于 @Controller 和 @ResponseBody 的组合效果
+  - @Component
+  - @Repository
+  - @Service
+- 2
+  - @ResponseBody
+    - 异步请求
+    - 该注解用于将 Controller 的方法返回的对象，通过适当的 HttpMessageConverter 转换为指定模式后，写入到 Response 对象的 body 数据区
+    - 返回的数据不是 html 标签的页面，而是其他某种格式的数据（如 json、xml 等）时使用
+  - @RequestMapping
+    - 一个用来处理请求地址的注解，可用于类或方法上。用于类上，表示类中的所有响应请求的方法都是以该地址作为父路径
+  - @Autowired
+    - 它可以对类成员变量、方法及构造函数进行标注，完成自动装配的工作。通过 @Autorwired 的使用来消除 set、get 方法
+  - @PathVariable
+    - 用于将请求 URL 中的模板变量映射到功能处理方法的参数上，即取出 url 模板中的变量做为参数
+  - @RequestParam
+    - 主要用于在 SpringMVC 后台控制层获取参数，类似一种是 request.getParameter("name")
+  - @RequestHeader
+    - 可以把 Request 请求 header 部分的值绑定到方法的参数上
+- 3
+  - @ModelAttribute
+  - @SessionAttribute
+    - 即将值放到 session 作用域中，写在 class 上面
+  - @Valid
+    - 实体数据校验，可以结合 hibernate validator 一起使用
+  - @CookieValue
+    - 用来获取 Cookie 中的值
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring 常用注解
+
+## 依赖注入
+
+- 构造器注入
+  - 在构造器注入中，依赖关系通过类的构造函数传递。这意味着在创建对象时，依赖的对象实例会作为构造函数的参数传递进来。
+  - 优点：
+    1. 对象的依赖关系在创建时就被确定，对象一旦创建就不可变，有助于保持对象的一致性和可靠性。
+    2. 在构造函数中明确声明依赖，可以使类的使用更加清晰，减少了后续对依赖的猜测。
+- setter 注入
+  - 在Setter注入中，依赖通过类的setter方法进行注入。这意味着你可以在对象创建后随时改变依赖关系。
+  - 优点：
+    1. 灵活性高，可以在运行时动态更改依赖关系。
+    2. 允许逐步构建对象，不需要一次性提供所有依赖。
+- 选择构造器注入还是Setter注入取决于以下因素：
+  1. 不变性需求： 如果对象的依赖关系在创建后不应该更改，构造器注入是一个好的选择。
+  2. 灵活性需求： 如果对象的依赖关系可能在运行时更改，Setter注入更为合适。
+  3. 清晰性： 构造器注入通常更容易理解，因为依赖关系在对象创建时就被确定。
+  4. 依赖数量： 如果类有大量的依赖，构造器注入可能更清晰，而不是在构造函数中添加大量的参数。
+- 在实践中，有时也可以使用构造器注入和Setter注入的组合，以满足不同的需求。
+- 总结：以上论点就是：
+  - **构造器注入提倡不可变性：** 通过构造器注入对象，实现了对象初始化后的不可变性，同时确保所需依赖不为空。这有助于保持对象状态的稳定性。
+  - **构造器注入促使代码质量提升：** 通过构造器注入，可以清晰地看到类的依赖关系，大量构造器参数说明当前类耦合过多、职责过多，从而促使编码者考虑是否需要重构，以提高代码质量和可维护性。
+  - **Setter注入适用于可选依赖：** Setter注入主要用于可选依赖，这些依赖可以在类内部被合理默认赋值。然而，需要注意的是，Setter注入的对象需要进行非空检查，因为它们具有可变性。
+  - **Setter注入支持对象的动态重配置：** 通过Setter注入，对象可以在运行时进行重新配置或重新注入。这使得Setter注入在JMX MBeans等需要动态管理的场景下变得特别有用。
+- 顺便吐槽一下，网上有各种错误的关于 Spring Bean 依赖注入方式有多少种的回答，数字可以从三种开始一直往上加……
+  - 但其实就只有我们提到的：**构造器**和 **setter** 两种。具体可以参考 Spring 官方文档：[**1.4.1. Dependency Injection**: https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-factory-collaborators](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-factory-collaborators) 文档中可以看到：“DI exists in two major variants: [Constructor-based dependency injection](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-constructor-injection) and [Setter-based dependency injection](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-setter-injection).”，即“DI 存在两种：基于构造函数的依赖注入和基于 Setter 的依赖注入。”
+  - 网上大多数错误的文章是把 Bean 相关的一些 Spring 使用方式单独作为一种来和这两种注入方式并列，个人认为其实并不合适。
+    - 一种错误是把 **xml、注解**实现这些具体的**配置写法**作为单独的一种分离出来，这种错误较为明显。
+    - 还有一种错误是误把 **`@Autowired` 或工厂方式**作为单独的种类
+      - 其实前者是把**自动装配功能**错误理解成了注入方式的一种
+      - 而后者是将 **Bean 的生成**与注入本身混淆了。
+  - 个人认为以官方文档为准即可，分享一下相关思考供大家参考。
+
+参考文档
+
+1. [Spring Framework中的依赖注入：构造器注入 vs. Setter注入  - 腾讯云](https://cloud.tencent.com/developer/article/2358469)
+2. [函数式编程和设计模式（Cake模式依赖注入）.md](../个人创作/技术文章/函数式编程和设计模式（Cake模式依赖注入）.md) 1 依赖注入
+
+## 自动装配
+
+- xml
+  - autowire="byName"(按名称自动装配)
+  - autowire="byType" (按类型自动装配)
+- 使用注解
+  1. @Autowired（按类型自动转配的，不支持id匹配）
+     - @Qualifier（不能单独使用，加上@Qualifier则可以根据byName的方式自动装配）
+  2. @Resource（先进行byName查找，失败；再进行byType查找）
+- @Autowired与@Resource异同
+  - 1、@Autowired与@Resource都可以用来装配bean。都可以写在字段上，或写在setter方法上。
+  - 2、@Autowired默认按类型装配（属于spring规范），默认情况下必须要求依赖对象必须存在，如果要允许 null 值，可以设置它的required属性为false，如：@Autowired(required=false)，如果我们想使用名称装配可以结合@Qualifier注解进行使用
+  - 3、@Resource（属于J2EE复返），默认按照名称进行装配，名称可以通过name属性进行指定。如果没有指定name属性，当注解写在字段上时，默认取字段名进行按照名称查找，如果注解写在setter方法上默认取属性名进行装配。当找不到与名称匹配的bean时才按照类型进行装配。但是需要注意的是，**如果name属性一旦指定，就只会按照名称进行装配**。
+  - 它们的作用相同都是用注解方式注入对象，但执行顺序不同。@Autowired先byType，@Resource先byName。
+
+参考文档：
+
+1. [5.自动装配：autowire=“byName“ or “byType“ + 使用注解【@Autowired 、@Qualifier、 @Resource】- CSDN](https://blog.csdn.net/weixin_42214698/article/details/122781230)
+
+## xml bean 标签 autowire 属性
+
+| 模式        | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| no          | (默认)不采用autowire机制。当我们需要使用依赖注入，只能用 ref |
+| byName      | 通过属性的名称自动装配（注入）。Spring会在容器中查找名称与bean属性名称一致的bean，并自动注入到bean属性中。当然bean的属性需要有setter方法。例如：bean A有个属性master，master的setter方法就是setMaster，A设置了autowire=“byName”，那么Spring就会在容器中查找名为master的bean通过setMaster方法注入到A中。 |
+| byType      | 通过类型自动装配（注入）。Spring会在容器中查找类（Class）与bean属性类一致的bean，并自动注入到bean属性中，如果容器中包含多个这个类型的bean，Spring将抛出异常。如果没有找到这个类型的bean，那么注入动作将不会执行。 |
+| constructor | 类似于byType，但是是通过构造函数的参数类型来匹配。假设bean A有构造函数A(B b, C c)，那么Spring会在容器中查找类型为B和C的bean通过构造函数A(B b, C c)注入到A中。与byType一样，如果存在多个bean类型为B或者C，则会抛出异常。但时与byType不同的是，如果在容器中找不到匹配的类的bean，将抛出异常，因为Spring无法调用构造函数实例化这个bean。 |
+| autodetect  | 如果发现默认的构造方法，则用 constructor 模式，否则用 byType 模式 |
+| default     | 采用父级标签的配置。（即beans的default-autowire属性）        |
+
+参考文档：
+
+1. [【Spring】Spring配置文件bean标签的autowire属性 - CSDN](https://blog.csdn.net/qq_30081043/article/details/107531417)
+
+## IOC 容器实现（FactoryBean、ApplicationContext、WebApplication）
+
+- 概念
+
+  - Spring 通过一个配置文件描述 Bean 及 Bean 之间的依赖关系，利用 Java 语言的反射功能实例化 Bean 并建立 Bean 之间的依赖关系。
+  - Spring 的 IoC 容器在完成这些底层工作的基础上，还提供了 Bean 实例缓存、生命周期管理、 Bean 实例代理、事件发布、资源装载等高级服务。
+
+- Spring 容器高层视图
+
+  - Spring 启动时读取应用程序提供的 Bean 配置信息，并在 Spring 容器中生成一份相应的 Bean 配置注册表，然后根据这张注册表实例化 Bean，装配好 Bean 之间的依赖关系，为上层应用提供准备就绪的运行环境。其中 Bean 缓存池为 HashMap 实现
+
+- IOC 容器实现
+
+  - **BeanFactory -** 框架基础设施
+
+    - BeanFactory 是 Spring 框架的基础设施，面向 Spring 本身；ApplicationContext 面向使用 Spring 框架的开发者，几乎所有的应用场合我们都直接使用 ApplicationContext 而非底层的 BeanFactory。
+
+    - ```mermaid
+      classDiagram
+      	DefaultListableBeanFactory <|-- XmlBeanFactory
+      	BeanDefinitionRegistry <|.. DefaultListableBeanFactory
+      	ConfigurableListableBeanFactory <|.. DefaultListableBeanFactory
+      	ListableBeanFactory <|-- ConfigurableListableBeanFactory
+      	BeanFactory <|-- ListableBeanFactory
+      	ConfigurableBeanFactory <|-- ConfigurableListableBeanFactory
+      	HierarchicalBeanFactory <|-- ConfigurableBeanFactory
+      	BeanFactory <|-- HierarchicalBeanFactory
+      	AbstractAutowireCapableBeanFactory <|-- DefaultListableBeanFactory
+      	AbstractBeanFactory <|-- AbstractAutowireCapableBeanFactory
+      	ConfigurableBeanFactory <|.. AbstractBeanFactory
+      	DefaultSingletonBeanRegistry <|-- AbstractBeanFactory
+      	SingletonBeanRegistry <|.. DefaultSingletonBeanRegistry
+      	AutowireCapableBeanFactory <|.. AbstractAutowireCapableBeanFactory
+      	BeanFactory <|-- AutowireCapableBeanFactory
+      ```
+
+    - 详解
+
+      1. *BeanDefinitionRegistry* 注册表
+         - Spring 配置文件中每一个节点元素在 Spring 容器里都通过一个 BeanDefinition 对象表示，它描述了 Bean 的配置信息。而 BeanDefinitionRegistry 接口提供了向容器手工注册 BeanDefinition 对象的方法。
+      2. *BeanFactory* 顶层接口
+         - 位于类结构树的顶端 ，它最主要的方法就是 getBean(String beanName)，该方法从容器中返回特定名称的 Bean，BeanFactory 的功能通过其他的接口得到不断扩展
+      3. *ListableBeanFactory*
+         - 该接口定义了访问容器中 Bean 基本信息的若干方法，如查看 Bean 的个数、获取某一类型 Bean 的配置名、查看容器中是否包括某一 Bean 等方法；
+      4. *HierarchicalBeanFactory* 父子级联
+         - 父子级联 IoC 容器的接口，子容器可以通过接口方法访问父容器； 通过 HierarchicalBeanFactory 接口， Spring 的 IoC 容器可以建立父子层级关联的容器体系，子容器可以访问父容器中的 Bean，但父容器不能访问子容器的 Bean。
+         - Spring 使用父子容器实现了很多功能，比如在 Spring MVC 中，展现层 Bean 位于一个子容器中，而业务层和持久层的 Bean 位于父容器中。这样，展现层 Bean 就可以引用业务层和持久层的 Bean，而业务层和持久层的 Bean 则看不到展现层的 Bean。
+      5. *ConfigurableBeanFactory*
+         - 是一个重要的接口，增强了 IoC 容器的可定制性，它定义了设置类装载器、属性编辑器、容器初始化后置处理器等方法；
+      6. *AutowireCapableBeanFactory* 自动装配
+         - 定义了将容器中的 Bean 按某种规则（如按名字匹配、按类型匹配等）进行自动装配的方法；
+      7. *SingletonBeanRegistry* 运行期间注册单例 *Bean*
+         -  定义了允许在运行期间向容器注册单实例 Bean 的方法；对于单实例（ singleton）的 Bean 来说，BeanFactory 会缓存 Bean 实例，所以第二次使用 getBean() 获取 Bean 时将直接从 IoC 容器的缓存中获取 Bean 实例。Spring 在 DefaultSingletonBeanRegistry 类中提供了一个用于缓存单实例 Bean 的缓存器，它是一个用 HashMap 实现的缓存器，单实例的 Bean 以 beanName 为键保存在这个 HashMap 中。
+      8. 依赖日志框架
+         - 在初始化 BeanFactory 时，必须为其提供一种日志框架，比如使用 Log4J， 即在类路径下提供 Log4J 配置文件，这样启动 Spring 容器才不会报错。
+
+  - **ApplicationContext** 面向开发应用
+
+    - ApplicationContext 由 BeanFactory 派生而来，提供了更多面向实际应用的功能。
+
+    - ApplicationContext 继承了 HierarchicalBeanFactory 和 ListableBeanFactory 接口，在此基础上，还通过多个其他的接口扩展了 BeanFactory 的功能：
+
+      - ```mermaid
+        classDiagram
+        	AbstractXmlApplicationContext <|-- FileSystemXmlApplicationContext
+        	AbstractXmlApplicationContext <|-- ClassPathXmlApplicationContext
+        	AbstractRefreshableConfigApplicationContext <|-- AbstractXmlApplicationContext
+        	AbstractRefreshableApplicationContext <|-- AbstractRefreshableConfigApplicationContext
+        	AbstractApplicationContext <|-- AbstractRefreshableApplicationContext
+        	ConfigurableApplicationContext <|.. AbstractApplicationContext
+        	ApplicationContext <|-- ConfigurableApplicationContext
+        	Lifecycle <|-- ConfigurableApplicationContext
+        	ResourcePatternResolver <|-- ApplicationContext
+        	ResourceLoader <|-- ResourcePatternResolver
+        	MessageSource <|-- ApplicationContext
+        	ApplicationEventPublisher <|-- ApplicationContext
+        	HierachicalBeanFactory <|-- ApplicationContext
+        	ListableBeanFactory <|-- ApplicationContext
+        	BeanFactory <|-- HierachicalBeanFactory
+        	BeanFactory <|-- ListableBeanFactory
+        ```
+
+    - 详解
+
+      1. ClassPathXmlApplicationContext：默认从类路径加载配置文件
+      2. FileSystemXmlApplicationContext：默认从文件系统中装载配置文件
+      3. ApplicationEventPublisher：让容器拥有发布应用上下文事件的功能，包括容器启动事件、关闭事件等。
+      4. MessageSource：为应用提供 i18n 国际化消息访问的功能；
+      5. ResourcePatternResolver ： 所 有 ApplicationContext 实现类都实现了类似于 PathMatchingResourcePatternResolver 的功能，可以通过带前缀的 Ant 风格的资源文件路径装载 Spring 的配置文件。
+      6. LifeCycle：该接口是 Spring 2.0 加入的，该接口提供了 start()和 stop()两个方法，主要用于控制异步处理过程。在具体使用时，该接口同时被 ApplicationContext 实现及具体 Bean 实现，ApplicationContext 会将 start/stop 的信息传递给容器中所有实现了该接口的 Bean，以达到管理和控制 JMX、任务调度等目的。
+      7. ConfigurableApplicationContext 扩展于 ApplicationContext，它新增加了两个主要的方法：refresh()和 close()，让 ApplicationContext 具有启动、刷新和关闭应用上下文的能力。在应用上下文关闭的情况下调用 refresh()即可启动应用上下文，在已经启动的状态下，调用 refresh()则清除缓存并重新装载配置信息，而调用 close()则可关闭应用上下文。
+
+  - **WebApplication** 体系架构
+
+    - WebApplicationContext 是专门为 Web 应用准备的，它允许从相对于 Web 根目录的路径中装载配置文件完成初始化工作。从 WebApplicationContext 中可以获得 ServletContext 的引用，整个 Web 应用上下文对象将作为属性放置到 ServletContext 中，以便 Web 应用环境可以访问 Spring 应用上下文。
+
+    - 在非 Web 应用的环境下，Bean 只有 singleton 和 prototype 两种作用域。WebApplicationContext 为 Bean 添加了三个新的作用域：request、session 和 global session。
+
+    - ```mermaid
+      classDiagram
+      	AbstractRefreshableConfigApplicationContext <|-- AbstractXmlApplicationContext
+      	AbstractRefreshableApplicationContext <|-- AbstractRefreshableConfigApplicationContext
+      	AbstractApplicationContext <|-- AbstractRefreshableApplicationContext
+      	ConfigurableApplicationContext <|.. AbstractApplicationContext
+      	ApplicationContext <|-- ConfigurableApplicationContext
+      	AbstractRefreshableWebApplicationContext <|-- XmlWebApplicationContext
+      	AbstractRefreshableWebApplicationContext <|-- AnnotationWebApplicationContext
+      	AbstractRefreshableWebApplicationContext <|-- GroovyWebApplicationContext
+      	AbstractRefreshableConfigApplicationContext <|-- AbstractRefreshableWebApplicationContext
+      	ConfigurableWebApplicationContext <|.. AbstractRefreshableWebApplicationContext
+      	WebApplicationContext <|-- ConfigurableWebApplicationContext
+      	ApplicationContext <|-- WebApplicationContext
+      ```
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring IOC 原理
+2. [【Spring】Bean的生命周期.md](./来自BlogBackup的面试资料/【Spring】Bean 的生命周期.md)
+
+## bean 作用域
+
+- **Spring Bean** 作用域
+- Spring 3 中为 Bean 定义了 5 种作用域，分别为 **singleton（单例）、prototype（原型）、 request、session 和 global session**
+- 5 种作用域说明如下：
+  - **singleton**：单例模式（多线程下不安全）
+    -  singleton：单例模式，Spring IoC 容器中只会存在一个共享的 Bean 实例，无论有多少个 Bean 引用它，始终指向同一对象。该模式在多线程下是不安全的。Singleton 作用域是 Spring 中的缺省作用域，也可以显示的将 Bean 定义为 singleton 模式
+  - **prototype:**原型模式每次使用时创建
+    - prototype:原型模式，每次通过 Spring 容器获取 prototype 定义的 bean 时，容器都将创建一个新的 Bean 实例，每个 Bean 实例都有自己的属性和状态，而 singleton 全局只有一个对象。根据经验，对有状态的bean使用prototype作用域，而对无状态的bean使用singleton 作用域。
+  - **Request**：一次**request** 一个实例
+    - request：在一次 Http 请求中，容器会返回该 Bean 的同一实例。而对不同的 Http 请求则会产生新的 Bean，而且该 bean 仅在当前 Http Request 内有效,当前 Http 请求结束，该 bean 实例也将会被销毁。
+  - **session**
+    - session：在一次 Http Session 中，容器会返回该 Bean 的同一实例。而对不同的 Session 请求则会创建新的实例，该 bean 实例仅在当前 Session 内有效。同 Http 请求相同，每一次 session 请求创建新的实例，而不同的实例之间不共享属性，且实例仅在自己的 session 请求内有效，请求结束，则实例将被销毁。
+  - **global Session**
+    - global Session：在一个全局的 Http Session 中，容器会返回该 Bean 的同一个实例，仅在使用 portlet context 时有效。
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring IOC 原理
+
+## bean 生命周期
+
+1. 实例化
+   - 实例化一个 Bean，也就是我们常说的 new。
+   - 在实例化**前后**可以执行 **InstantiationAwareBeanPostProcessor** 的 postProcessBeforeInstantiation()/postProcessAfterInstantiation()
+2. 属性赋值
+   - Bean 属性赋值（IOC 依赖注入）
+     - 按照 Spring 上下文对实例化的 Bean 进行配置，也就是 IOC 注入。
+   - **BeanNameAware**
+     - 如果这个 Bean 已经实现了 BeanNameAware 接口，会调用它实现的 setBeanName(String) 方法，此处传递的就是 Spring 配置文件中 Bean 的 id 值
+   - BeanClassLoaderAware
+   - **BeanFactoryAware**
+     - 如果这个 Bean 已经实现了 BeanFactoryAware 接口，会调用它实现的 setBeanFactory，setBeanFactory(BeanFactory)传递的是 Spring 工厂自身（可以用这个方式来获取其它 Bean，只需在 Spring 配置文件中配置一个普通的 Bean 就可以）。
+   - EnvironmentAware
+     - 设置environment在组件使用时调用
+   - EmbeddedValueResolverAware
+     - 设置StringValueResolver 用来解决嵌入式的值域问题
+   - ResourceLoaderAware
+   - ApplicationEventPublisherAware
+   - MessageSourceAware
+   - **ApplicationContextAware**
+     - 如果这个 Bean 已经实现了 ApplicationContextAware 接口，会调用setApplicationContext(ApplicationContext)方法，传入 Spring 上下文（同样这个方式也可以实现步骤"BeanFactoryAware 实现" 的内容，但比它更好，因为 ApplicationContext 是 BeanFactory 的子接口，有更多的实现方法）
+   - ServletContextAware
+     - 运行时设置ServletContext，在普通bean初始化后调用，在InitializingBean.afterPropertiesSet之前调用，在 ApplicationContextAware 之后调用
+     - 注：是在WebApplicationContext 运行时
+3. 初始化
+   - **InitializingBean 接口**
+     - afterPropertiesSet() 方法，先于 init-method 执行
+   - **init-method**
+     - 如果 Bean 在 Spring 配置文件中配置了 init-method 属性会自动调用其配置的初始化方法。
+   - **BeanPostProcessor 接口**
+     - 如果这个 Bean 关联了 BeanPostProcessor 接口，在初始化**前后**将会调用 postProcessBeforeInitialization()/postProcessAfterInitialization() 方法。
+   - 注：以上工作完成以后就可以应用这个 Bean 了，那这个 Bean 是一个 Singleton 的，所以一般情况下我们调用同一个 id 的 Bean 会是在内容地址相同的实例，当然在 Spring 配置文件中也可以配置非Singleton。
+4. Destroy 过期自动清理阶段
+   - 单例 bean
+     - **DisposableBean 接口**
+       - 当 Bean 不再需要时，会经过清理阶段，如果 Bean 实现了 **DisposableBean 这个接口**，会调用那个其实现的 destroy()方法；
+     - **destroy-method** 自配置清理
+       - 最后，如果这个 Bean 的 Spring 配置中配置了 destroy-method 属性，会自动调用其配置的销毁方法。
+       -  bean 标签有两个重要的属性（init-method 和 destroy-method）。用它们你可以自己定制初始化和注销方法。它们也有相应的注解（@PostConstruct 和@PreDestroy）。
+   - 多例 bean
+     - 直接返回 Bean 给用户，剩下的生命周期由用户控制
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring IOC 原理（讲的一坨大便，不推荐看）
+2. [一文读懂 Spring Bean 的生命周期 - CSDN](https://blog.csdn.net/riemann_/article/details/118500805)
+3. [Bean的生命周期（不要背了记思想）- 腾讯云](https://cloud.tencent.com/developer/article/2184201)
 
 ## 循环依赖
 
 三层缓存
 
 - 加入 singletonFactories 三级缓存的前提是**执行了构造器**，所以构造器的循环依赖无法解决。
+- Spring是**不支持**基于**多例Bean**，也就是原型模式下的Bean的setter方法的循环依赖。
+- Spring默认是**不支持基于代理对象的setter方法的循环依赖**
+- @DependsOn注解主要用于指定Bean的实例化顺序，Spring默认是**不支持基于@DependsOn注解的循环依赖**。
 
 三层缓存：
 
@@ -753,6 +1869,64 @@ getBean() -> doGetBean() -> createBean() -> doCreateBean() -> 返回 Bean
 **参考文档**
 
 1. [彻底搞懂Spring之三级缓存解决循环依赖问题 - 知乎](https://zhuanlan.zhihu.com/p/610322151)
+2. [万字长文带你彻底吃透Spring循环依赖，堪称全网最全（文末福利）- 腾讯云](https://cloud.tencent.com/developer/article/2367323)
+
+## AOP 应用场景
+
+1. Authentication 权限
+2. Caching 缓存
+3. Context passing 内容传递
+4. Error handling 错误处理
+5. Lazy loading 懒加载
+6. Debugging 调试
+7. logging, tracing, profiling and monitoring 记录跟踪 优化 校准
+8. Performance optimization 性能优化
+9. Persistence 持久化
+10. Resource pooling 资源池
+11. Synchronization 同步
+12. Transactions 事务
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring AOP 原理
+
+## AOP 核心概念
+
+1. 切面（aspect）：类是对物体特征的抽象，切面就是对横切关注点的抽象
+2. 横切关注点：对哪些方法进行拦截，拦截后怎么处理，这些关注点称之为横切关注点。
+3. 连接点（joinpoint）：被拦截到的点，因为 Spring 只支持方法类型的连接点，所以在 Spring 中连接点指的就是被拦截到的方法，实际上连接点还可以是字段或者构造器。
+4. 切入点（pointcut）：对连接点进行拦截的定义，即匹配连接点的断言。通知和一个切入点表达式关联，并在满足这个切入点的连接点上运行（例如，当执行某个特定名称的方法时），切入点表达式如何和连接点匹配是 AOP 的核心：Spring 缺省使用 AspectJ 切入点语法
+5. 通知（advice）：所谓通知指的就是指拦截到连接点之后要执行的代码，通知分为前置、后置、异常、最终、环绕通知五类。许多 AOP 框架（包括 Spring）都是以拦截器做通知模型，并维护一个以连接点为中心的拦截器链
+   1. 前置通知（Before advice）：在某连接点之前执行的通知，但这个通知不能阻止连接点之前的执行流程（除非它抛出一个异常）
+   2. 后置通知（After returning advice）：在某连接点正常完成后执行的通知：例如，一个方法没有抛出任何异常，正常返回
+   3. 异常通知（After throwing advice）：在方法抛出异常退出时执行的通知
+   4. 最终通知（After (finally) advice）：当某连接点退出的时候执行的通知（不论是正常返回还是异常退出）
+   5. 环绕通知（Around advice）：包围一个连接点的通知，如方法调用。这是最强大的一种通知类型。环绕通知可以在方法调用前后完成自定义的行为。它也会选择是否继续执行连接点或直接返回它自己的返回值或抛出异常来结束执行。
+6. 目标对象（Target Object）：代理的目标对象，即被一个或多个切面所通知的对象。也被称作被通知（adviced）对象。既然 Spring AOP 是通过运行时代理实现的，这个对象永远是一个被代理（proxied）对象
+7. AOP 代理（AOP Proxy）：AOP 框架创建的对象，用来实现切面契约（例如通知方法执行等等）。在 Spring 中，AOP 代理可以是 JDK 动态代理或者 CGLIB 代理。
+8. 织入（weave）：将切面应用到目标对象并导致代理对象创建的过程。把切面连接到其他的应用程序类型或者对象上，并创建一个被通知的对象。这些可以在编译时（例如使用 AspectJ 编译器），类加载时和运行时完成。Spring 和其他纯 Java AOP 框架一样，在运行时完成织入。
+9. 引入（introduction）：在不修改代码的前提下，引入可以在运行期为类动态地添加一些方法或字段。用来给一个类型声明额外的方法或属性（也被称为连接类型声明（inter-type declaration））。Spring 允许引入新的接口（以及一个对应的实现）到任何被代理的对象。例如，你可以使用引入来使一个 bean 实现 JsModified 接口，以便简化缓存机制。
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring AOP 原理
+
+## AOP 两种代理方式
+
+- Spring 提供了两种方式来生成代理对象: JDKProxy 和 Cglib
+  - 具体使用哪种方式生成由 AopProxyFactory 根据 AdvisedSupport 对象的配置来决定。
+  - 默认的策略是如果目标类是接口，则使用 JDK 动态代理技术，否则使用 Cglib 来生成代理。
+- **JDK**动态接口代理
+  - JDK 动态代理主要涉及到 java.lang.reflect 包中的两个类：Proxy 和 InvocationHandler
+  - InvocationHandler是一个接口，通过实现该接口定义横切逻辑，并通过反射机制调用目标类的代码，动态将横切逻辑和业务逻辑编制在一起。
+  - Proxy 利用 InvocationHandler 动态创建一个符合某一接口的实例，生成目标类的代理对象。
+- **CGLib** 动态代理
+  - CGLib 全称为 Code Generation Library，是一个强大的高性能，高质量的代码生成类库，可以在运行期扩展 Java 类与实现 Java 接口，CGLib 封装了 asm，可以再运行期动态生成新的 class。
+  - 和 JDK 动态代理相比较：JDK 创建代理有一个限制，就是只能为接口创建代理实例，而对于没有通过接口定义业务方法的类，则可以通过 CGLib 创建动态代理。
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Spring AOP 原理
 
 ## 事务隔离级别
 
@@ -824,6 +1998,79 @@ getBean() -> doGetBean() -> createBean() -> doCreateBean() -> 返回 Bean
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景二十四：MySQL 如何实现无数据插入，有数据更新？
 
+## B Tree
+
+- B 树的英文是 Balance Tree，也就是多路平衡查找树。简写为 B-Tree（注意横杠表示这两个单词连起来的意思，不是减号）。它的高度远小于平衡二叉树的高度。
+- B 树作为多路平衡查找树，它的每一个节点最多可以包括 M 个子节点，M 称为 B 树的阶。每个磁盘块中包括了关键字和子节点的指针。如果一个磁盘块中包括了 x 个关键字，那么指针数就是 x + 1。
+- 一个 M 阶的 B 树（M > 2）有以下的特性：
+  1. 根节点的儿子数的范围是 [2, M]
+  2. **每个中间节点包含 k - 1 个关键字和 k 个孩子**，孩子的数量 = 关键字的数量 + 1，k 的取值范围为 [ceil(M/2), M]。
+  3. 叶子节点包括 k-1 个关键字（叶子节点没有孩子），k 的取值范围为 [ceil(M/2), M]。
+  4. 假设中间节点的关键字为: Key[1], Key[2], ..., Key[k-1], 且关键字按照升序排序，即 Key[i] < Key[i + 1]。此时 k-1 个关键字相当于划分了 k 个范围，也就是对应着 k 个指针，即为：P[1], P[2], ..., P[k]，其中 P[1] 指向关键字小于 Key[1] 的子树，P[i] 指向关键字属于(Key[i-1], Key[i]) 的子树，P[k] 指向关键字大于 Key[k-1] 的子树。
+  5. **所有叶子节点位于同一层**。
+
+- 小结：
+  1. B 树在插入和删除时如果导致树不平衡，就通过自动调节节点位置来保持树的自平衡
+  2. 关键字集合分布在整个树中，即叶子节点和非叶子节点都存放数据。搜索有可能在非叶子节点结束。
+  3. 其搜索性能等价于在关键字全集内做一次二分查找
+
+参考文档
+
+1. [尚硅谷《MySQL数据库入门到大牛》笔记.md](../视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md) P120
+
+## B+ Tree
+
+- B+ 树也是一种多路搜索树，基于 B 树做出了改进，主流的 DBMS 都支持 B+ 树的索引方式，比如 MySQL。相比于 B-Tree，B+Tree 适合文件索引系统。
+
+- **B+ 树和 B 树的差异**在于以下几点：
+
+  1. **有 k 个孩子的节点就有 k 个关键字**。也就是孩子数量 = 关键字数，而 B 树中，孩子数量 = 关键字数 + 1。
+  2. 非叶子节点的关键字也会同时存在于子节点中，并且是在子节点中所有关键字的最大（或最小）。
+  3. 非叶子节点仅用于索引，不保存数据记录，**跟记录有关的信息都放在叶子节点中**。而 B 树中，非叶子节点既保存索引，也保存数据记录。
+  4. 所有关键字都在叶子节点出现，**叶子节点构成一个有序链表**，而且叶子节点本身按照关键字的大小从小到大顺序链接。
+
+- B+ 树和 B 树有个根本的差异在于，B+ 树中间节点并不直接存储数据。这样的好处都有什么呢？
+
+  - 首先，**B+ 树查询效率更稳定**，因为 B+ 树每次只有访问到叶子节点才能找到对应的数据，而在 B 树中，非叶子节点也会存储数据，这样就会造成查询效率不稳定的情况，有时候访问到了非叶子节点就可以找到关键字，而有时需要访问到叶子节点才能找到关键字。
+  - 其次，**B+ 树的查询效率更高**。这是因为通常 B+ 树比 B 树更矮胖（阶数更大，深度更低），查询所需要的磁盘 I/O 也会更少。同样的磁盘页大小，B+ 树可以存储更多的节点关键字。
+  - 不仅是对单个关键字的查询上，**在查询范围上，B+ 树的效率也比 B 树高**。这是因为所有关键字都出现在 B+ 树的叶子节点中，叶子节点之间会有指针，数据又是递增的，这使得我们范围查找可以通过指针连接查找。而在 B 树中则需要通过中序遍历才能完成查询范围的查找，效率要低很多。
+
+- **思考题：为了减少 IO，索引树会一次性加载吗？**
+
+  1. 数据库索引是存储在磁盘上的，如果数据量很大，必然导致索引的大小也会很大，超过几个 G
+  2. 当我们利用索引查询的时候，是不可能将全部几个 G 的索引都加载进内存的，我们能做的只能是：逐一加载每个磁盘页，因为磁盘页对应着索引树的节点。
+
+- **思考题：B+ 树的存储能力如何？为何说一般查找行记录，最多只需 1~3 次磁盘 IO**
+
+  - InnoDB 存储引擎中页的大小为 16KB，一般表的主键类型为 INT（占用 4 个字节）或 BIGINT（占用 8 个字节），指针类型也一般为 4 或 8 个字节，也就是说一个页（B+Tree 中的一个节点）中大概存储 16KB/(8B+8B)=1K 个键值（因为是估值。为方便计算，这里 K 取值为 10^3。也就是说一个深度为 3 的 B+Tree 索引可以维护 10^3 * 10^3 * 10^3 = 10 亿条记录。这里假定一个数据页也存储 10^3 条行记录数据了）
+  - 实际情况中每个节点可能不能填充满，因此在数据库中，B+Tree 的高度一般都在 2~4 层。MySQL 的 InnoDB 存储引擎在设计时是将根节点常驻内存的，也就是说查找某个键值的行记录时最多只需要 1 ~ 3 次磁盘 I/O 操作。
+
+- **思考题：为什么说 B+ 树比 B树更适合实际应用中操作系统的文件索引和数据库索引**
+
+  1. B+ 树的磁盘读写代价更低
+     - B+ 树的内部节点并没有指向关键字具体信息的指针。因此其内部节点相对于 B 树更小。如果把同一内部节点的关键字存放在同一盘块中，那么盘块所能容纳的关键字数量也越多。一次性读入内存中的需要查找的关键字也就越多。相对来说 IO 读写次数也就降低了。
+
+  2. B+ 树的查询效率更加稳定
+
+     - 由于非终结点并不是最终指向文件内容的节点，而只是叶子节点中关键字的索引。所以任何关键字的查找必须走一条从根节点到叶子节点的路。所有关键字查询的路径长度相同，导致每个数据的查询效率相当。
+
+- **思考题：Hash 索引和 B+ 树索引的区别**
+
+  我们之前讲到过 B+ 树索引的结构，Hash 索引结构和 B+ 树的不同，因此在索引使用上也会有差别。
+
+  1. Hash 索引不能进行范围查询
+  2. Hash 索引不支持联合索引的最左侧原则（即联合索引的部分索引无法使用），而 B+ 树可以。
+  3. Hash 索引不支持 ORDER BY 排序
+  4. InnoDB 不支持哈希索引
+
+- **思考题：Hash 索引与 B+ 树索引是在建索引的时候手动指定吗？**
+
+  - 针对 InnoDB 和 MyISAM 存储引擎，都会默认采用 B+ 树索引，无法使用 Hash 索引。InnoDB 提供的自适应 Hash 是不需要手动指定的。如果是 Memory/Heap 和 NDB 存储引擎，是可以进行选择 Hash 索引的。
+
+参考文档
+
+1. [尚硅谷《MySQL数据库入门到大牛》笔记.md](../视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md) P120
+
 ## 索引类型
 
 - 索引按照**物理实现**方式，索引可以分为 2 种：**聚簇（聚集）**和**非聚簇（非聚集）**索引。
@@ -880,6 +2127,136 @@ getBean() -> doGetBean() -> createBean() -> doCreateBean() -> 返回 Bean
   - 前后都是索引列时可以使用索引合并：index_merge
 - 数据库和表的字符集统一使用 utf8mb4
   - 统一使用 utf8mb4（5.5.3 版本以上支持）兼容性更好，统一字符集可以避免由于字符集转换产生的乱码。**不同的字符集进行比较前需要进行转换会造成索引失效**。
+
+参考文档
+
+1. [尚硅谷《MySQL数据库入门到大牛》笔记.md](../视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md) P141 ~ 142
+
+## 覆盖索引
+
+- 什么是覆盖索引？
+  - **理解方式一：**索引是高效找到行的一个方法，但是一般数据库也能使用索引找到一个列的数据，因此它不必读取整个行。毕竟索引叶子节点存储了它们索引的数据；当能通过读取索引就可以得到想要的数据，那就不需要读取行了。**一个索引包含了满足查询结果的数据就叫做覆盖索引**。
+  - **理解方式二**：非聚簇符合索引的一种形式，它包括在查询里的 SELECT、JOIN 和 WHERE 子句用到的所有列（即建索引的字段正好是覆盖查询条件中所涉及的字段）。
+  - 简单说就是，`索引列+主键`包含 SELECT 到 FROM 之间查询的列。
+- 覆盖索引的利弊
+  - **好处：**
+    - **1、避免 InnoDB 表进行索引的二次查询（回表）**
+      - InnoDB 是以聚集索引的顺序来存储的，对于 InnoDB 来说，二级索引在叶子节点中所保存的是行的主键信息，如果是用二级索引查询数据，在查找到相应的键值后，还需通过主键进行二次查询才能获取我们真实所需要的数据。
+      - 在覆盖索引中，二级索引的键值中可以获取所要的数据，避免了对主键的二次查询，减少了 IO 操作，提升了查询效率。
+    - **2、可以把随机 IO 变成顺序 IO 加快查询效率**
+      - 由于覆盖索引是按键值的顺序存储的，对于 IO 密集型的范围查找来说，对比随机从磁盘读取每一行的数据 IO 要少的多，因此引用覆盖索引在访问时也可以把磁盘的随机读取的 IO 转变成索引查找的顺序 IO。
+    - **由于覆盖索引可以减少树的搜索次数，显著提升查询性能，所以使用覆盖索引是一个常用的性能优化手段。**
+  - **弊端：**
+    - 索引字段的维护总是有代价的。因此，在建立冗余索引来支持覆盖索引时就需要权衡考虑了。这是业务 DBA，或者称为业务数据架构师的工作。
+
+参考文档
+
+1. [尚硅谷《MySQL数据库入门到大牛》笔记.md](../视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md) P147
+
+## 索引下推
+
+- Index Condition Pushdown（ICP）是 MySQL 5.6 中新特性，是一种在存储引擎层使用索引过滤数据的优化方式。
+
+  - 如果没有 ICP，存储引擎会遍历索引以定位基表中的行，并将它们返回给 MySQL 服务器，由 MySQL 服务器评估 `WHERE` 后面的条件是否保留行。
+  - 启用 ICP 后，如果部分 `WHERE` 条件可以仅使用索引中的列进行筛选，则 MySQL 服务器会把这部分 `WHERE` 条件放到存储引擎筛选。然后存储引擎通过使用索引条目来筛选数据，并且只有在满足这一条件时才从表中读取行。
+    - 好处：ICP 可以减少存储引擎必须访问基表的次数和 MySQL 服务器必须访问存储引擎的次数。
+    - 但是，ICP 的加速效果取决于存储引擎内通过 ICP 筛选掉的数据的比例。
+
+- ICP 的开启/关闭
+
+  - 默认情况下启用索引条件下推。可以通过设置系统变量 `optimizer_switch` 控制：`index_condition_pushdown`
+
+    ```mysql
+    # 打开索引下推
+    SET optimizer_switch = 'index_condition_pushdown=on';
+    # 关闭索引下推
+    SET optimizer_switch = 'index_condition_pushdown=off';
+    ```
+
+  - 当使用索引条件下推时，`EXPLAIN` 语句输出结果中 `Extra` 列内容显示为 `Using index condition`。
+
+- ICP 使用案例
+
+  - 建表
+
+  - 插入数据
+
+  - 为该表定义联合索引 zip_last_first(zipcode, lastname, firstname)。如果我们知道了一个人的邮编，但是不确定这个人的姓氏，我们可以进行如下检索：
+
+    ```mysql
+    SELECT * FROM people
+    WHERE zipcode='000001'
+    AND lastname LIKE '%张%'
+    AND address LIKE '%北京市%';
+    ```
+
+    执行查看 SQL 的查询计划，`Extra` 中显示了 `Using index condition`，这表示使用了索引下推。另外， Using where 表示条件中包含需要过滤的非索引列的数据，即 address LIKE '%北京市%' 这个条件并不是索引列，需要在服务端过滤掉。
+
+    如果不想出现 Using where，把 address LIKE '%北京市%' 去掉即可
+
+    这个表中存在两个索引，分别是：
+
+    - 主键索引
+    - 二级索引 zip_last_first
+
+    下面我们关闭 ICP 查看执行计划
+
+    ```mysql
+    SET optimizer_switch = 'index_condition_pushdown=off';
+    ```
+
+    查看执行计划，已经没有了 Using index condition，表示没有使用 ICP
+
+    ```mysql
+    EXPLAIN SELECT * FROM people
+    WHERE zipcode='000001'
+    AND lastname LIKE '%张%'
+    AND address LIKE '%北京市%';
+    ```
+
+- ICP 的使用条件
+
+  1. 如果表访问的类型为 range、ref、eq_ref 和 ref_or_null 可以使用 ICP
+  2. ICP 可以用于 `InnoDB` 和 `MyISAM` 表，包括分区表 `InnoDB` 和 `MyISAM` 表
+  3. 对于 `InnoDB` 表，ICP 仅用于二级索引。ICP 的目标是减少全行读取次数，从而减少 I/O 操作。
+  4. 当 SQL 使用覆盖索引时，不支持 ICP。因为这种情况下使用 ICP 不会减少 I/O。
+  5. 相关子查询的条件不能使用 ICP
+
+参考文档
+
+1. [尚硅谷《MySQL数据库入门到大牛》笔记.md](../视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md) P148
+
+## ACID
+
+- **原子性（atomicity）**
+
+  原子性是指事务是一个不可分割的工作单位，要么全部提交，要么全部失败回滚。即要么转账成功，要么转账失败，是不存在中间的状态。如果无法保证原子性会怎么样？就会出现数据不一致的情形，A 账户减去 100 元，而 B 账户增加 100 元操作失败，系统将无故丢失 100 元。
+
+- **一致性（consistency）**
+
+  根据定义，一致性是指事务执行前后，数据从一个**合法性状态**变换到另外一个**合法性状态**。这种状态是**语义上**的而不是语法上的，跟具体的业务有关。
+
+  那么什么是合法的数据状态呢？满足**预定的约束**的状态就叫做合法的状态。通俗一点，这状态是由你自己来定义的（比如满足现实世界中的约束）。满足这个状态，数据就是一致的，不满足这个状态，数据就是不一致的！如果事务中某个操作失败了，系统就会自动撤销当前正在执行的事务，返回到事务操作之前的状态。
+
+- **隔离性（isolation）**
+
+  事务的隔离性是指一个事务的执行**不能被其他事务干扰**，即一个事务内部的操作及使用的数据对**并发**的其他事务是隔离的，并发执行的各个事务之间不能互相干扰。
+
+- **持久性（durability）**
+
+  持久性是指一个事务一旦被提交，它对数据库中数据的改变就是**永久性的**，接下来的其他操作和数据库故障不应该对其有任何影响。
+
+  持久性是通过**事务日志**来保证的。日志包括了**重做日志**和**回滚日志**。当我们通过事务对数据进行修改的时候，首先会将数据库的变化信息记录到重做日志中，然后再对数据库中对应的行进行修改。这样做的好处是，即使数据库系统崩溃，数据库重启后也能找到没有更新到数据库系统中的重做日志，重新执行，从而使事务具有持久性。
+
+> 总结
+>
+> ACID 是事务的四大特性，在这四个特性中，原子性是基础，隔离性是手段，一致性是约束条件，而持久性是我们的目的。
+>
+> 数据库事务，其实就是数据库设计者为了方便起见，把需要保证**原子性**、**隔离性**、**一致性**和**持久性**的一个或多个数据库操作称为一个事务
+
+参考文档
+
+1. [尚硅谷《MySQL数据库入门到大牛》笔记.md](../视频笔记/尚硅谷《MySQL数据库入门到大牛》笔记.md) P161
 
 ## 事务隔离级别
 
@@ -1664,6 +3041,854 @@ Flush tables with read lock
 
 1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P163
 
+## 单线程 / 多线程
+
+- Redis 3.x 单线程时代但性能依旧很快的主要原因
+
+  - 基于内存操作：Redis 的所有数据都存在内存中，因此所有的运算都是内存级别的，所以他的性能比较高；
+  - 数据结构简单：Redis 的数据结构是专门设计的，而这些简单的数据结构的查找和操作的时间大部分复杂度都是 O(1)，因此性能比较高；
+  - 多路复用和非阻塞 I/O：Redis 使用 I/O 多路复用功能来监听多个 socket 连接客户端，这样就可以使用一个线程连接来处理多个请求，减少线程切换带来的开销，同时也避免了 I/O 阻塞操作
+  - 避免上下文切换：因为是单线程模型，因此就避免了不必要的上下文切换和多线程竞争，这就省去了多线程切换带来的时间和性能上的消耗，而且单线程不会导致死锁问题的发生
+
+- **Redis 4.0 之前**一直采用单线程的主要原因有以下三个
+
+  1. 使用单线程模型是 Redis 的开发和维护更简单，因为单线程模型方便开发和调试
+  2. 即使使用单线程模型也并发的处理多客户端的请求，主要使用的是 IO 多路复用和非阻塞 IO
+  3. 对于 Redis 系统来说，**主要的性能瓶颈是内存或者网络带宽而并非 CPU**.
+
+- Redis 是基于内存操作的，**因此他的瓶颈可能是机器的内存或者网络带宽而并非 CPU**，既然 CPU 不是瓶颈，那么自然就采用单线程的解决方案了，况且使用多线程比较麻烦。**但是在 Redis 4.0 中开始支持多线程了，例如后台删除、备份等功能**。
+
+  - RDB bgsave
+  - AOF 重写
+  - 惰性删除
+    - 大 key 问题
+    - 在 Redis 4.0 就引入了多个线程来实现数据的异步惰性删除等功能，但是其处理读写请求的仍然只有一个线程，所以仍然算是狭义上的单线程。
+
+- **在 Redis 6/7 中，非常受关注的第一个新特性就是多线程**。
+
+  - 随着网络硬件的性能提升，Redis 的性能瓶颈有时会出现在网络 IO 的处理上，也就是说，单个主线程处理网络请求的速度跟不上底层网络硬件的速度
+
+  - 为了应对这个问题：**采用多个 IO 线程来处理网络请求，提高网络请求处理的并行度，Redis 6/7 就是采用的这种方法**。
+
+  - 但是，Redis 的多 IO 线程只是用来处理网络请求的，**对于读写操作命令 Redis 仍然使用单线程来处理**
+
+    - 这是因为，Redis 处理请求时，网络处理经常是瓶颈，通过多个 IO 线程并行处理网络操作，可以提升实例的整体处理性能。而继续使用单线程执行命令操作，就不用为了保证 Lua 脚本、事务的原子性，额外开发多线程**互斥加锁机制了（不管加锁操作处理）**，这样一来，Redis 线程模型实现就简单了。
+
+  - 主线程和 IO 线程四个阶段
+
+    - **阶段一：服务端和客户端建立 Socket 连接，并分配处理线程**
+
+      首先，主线程负责接收建立连接请求。当有客户端请求和实例建立 Socket 连接时，主线程会创建和客户端的连接，并把 Socket 放入全局等待队列中。紧接着，主线程通过轮询方法把 Socket 连接分配给 IO 线程。
+
+    - **阶段二：IO 线程读取并解析请求**
+
+      主线程一旦把 Socket 分配给 IO 线程，就会进入阻塞状态，等待 IO 线程完成客户端请求读取和解析。因为有多个 IO 线程在并行处理。所以，这个过程很快就可以完成。
+
+    - **阶段三：主线程执行请求操作**
+
+      等到 IO 线程解析完请求，主线程还是会以单线程的方式执行这些命令操作。
+
+    - **阶段四：IO 线程回写 Socket 和主线程清空全局队列**
+
+      当主线程执行完请求操作后，会把需要返回的结果写入缓冲区，然后，主线程会阻塞等待 IO 线程，把这些结果回写到 Socket 中，并返回给客户端。和 IO 线程读取和解析请求一样，IO 线程回写 Socket 时，也是有多个线程在并发执行，所以回写 Socket 的速度也很快。等到 IO 线程回写 Socket 完毕，主线程会清空全局队列，等待客户端和后续请求。
+
+- Redis 采用 **Reactor 模式**的网络模型，对于一个客户端请求，主线程负责一个完整的处理过程：
+
+  读取 socket -> 解析请求 -> 执行操作 -> 写入 socket
+
+参考文档：
+
+1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P101 ~ 102
+
+## 持久化（RDB、AOF）
+
+- RDB（Redis DataBase）
+
+  - **默认开启**
+
+  - 自动触发
+
+    - Redis 6.0.16 以下在 Redis.conf 配置文件中的 SNAPSHOTTING 下配置 save 参数，来触发 Redis 的 RDB 持久化条件，比如 “save m n”：表示 m 秒内数据集存在 n 次修改时，自动触发 bgsave
+
+      - save 900 1：每隔 900s（15min），如果有超过 1 个 key 发生了变化，就写一份新的 RDB 文件
+
+        save 300 10：每隔 300s（5min），如果有超过 10 个 key 发生了变化，就写一份新的 RDB 文件
+
+        save 60 10000：每隔 60s（1min），如果有超过 10000 个 key 发生了变化，就写一份新的 RDB 文件
+
+    - Redis 7 版本，按照 redis.conf 里配置的 `save <seconds> <changes>`
+
+  - 手动触发
+
+    - save（阻塞） 和 bgsave（默认，fork 子线程来持久化）
+
+  - 如何恢复
+
+    - 将备份文件（dump.rdb）移动到 redis 安装目录并启动服务即可
+
+  - 如何检查修复 dump.rdb 文件
+
+    - `redis-check-rdb /myredis/dumpfiles/dump6379.rdb`
+
+- AOF（Append Only File）
+
+  - **默认不开启**
+
+  - 三种写回策略
+
+    - | 配置项   | 写回时机           | 优点                     | 缺点                             |
+      | -------- | ------------------ | ------------------------ | -------------------------------- |
+      | Always   | 同步写回           | 可靠性高，数据基本不丢失 | 每个写命令都要落盘，性能影响较大 |
+      | Everysec | 每秒写回           | 性能适中                 | 宕机时丢失 1 秒内的数据          |
+      | No       | 操作系统控制的写回 | 性能好                   | 宕机时丢失数据较多               |
+
+  - 重写机制
+
+    - AOF 文件重写并不是对原文件进行重新整理，而是直接读取服务器现有的键值对，然后用一条命令去代替之前记录这个键值对的多条命令，生成一个新的文件后去替换原来的 AOF 文件
+
+    - 自动触发
+
+      - auto-aof-rewrite-percentage 100
+
+        auto-aof-rewrite-min-size 64mb
+
+        注意，**同时满足，且的关系**才会触发
+
+    - 手动触发
+
+      - 客户端向服务器发送 bgrewriteaof 命令
+
+  - 异常修复命令：`redis-check-aof --fix` 进行修复
+
+- RDB-AOF 混合持久化
+
+  - 设置 `aof-use-rdb-preamble` 的值为 yes
+  - RDB 镜像做全量持久化，AOF 做增量持久化
+
+- 同时关闭 RDB + AOF
+
+  - `save ""`
+    - 禁用 rdb
+    - 禁用 rdb 持久化模式下，我们仍然可以使用命令 save、bgsave 生成 rdb 文件
+  - `appendonly no`
+    - 禁用 aof
+    - 禁用 aof 持久化模式下，我们仍然可以使用命令 bgrewriteaof 生成 aof 文件
+
+参考文档：
+
+1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P28 ~ 46
+
+## keys * 的问题 / 引出 scan
+
+- 大批量往 redis 里面插入 2000W 测试数据 key
+
+  - Linux Bash 下面执行，插入 100W
+
+    - ```bash
+      # 生成 100W 条 redis 批量设置 kv 的语句（key=kn, value=vn）写入到 /tmp 目录下的 redisTest.txt 文件中
+      for((i=1;i<=100*10000;i++)); do echo "set k$i v$i" >> /tmp/redisTest.txt ;done;
+      ```
+
+  - 通过 redis 提高的管道 --pipe 命令插入 100W 大批量数据
+
+    - 结合自己机器的地址
+
+      ```shell
+      cat /tmp/redisTest.txt | /opt/redis-7.0.0/src/redis-cli -h 127.0.0.1 -p 6379 -a 111111 --pipe
+      redis-cli -a 111111 dbsize
+      ```
+
+      100w 数据插入 redis 花费 5.8 秒左右
+
+- 某快递巨头真实生产案例新闻
+
+  - 新闻
+
+    - 对 Redis 稍微有点使用经验的人都知道线上是不能执行 keys * 相关命令的，虽然其模糊匹配功能使用非常方便也很强大，在小数据量情况下使用没什么问题，数据量大会导致 Redis 锁住及 CPU 飙升，在生产环境建议禁用或者重命名！
+
+  - keys * 你试试 100W 花费多少秒遍历查询
+
+    - keys * （34.74s） flushdb (2.16s)
+
+    - keys * 这个指令有致命的弊端，在实际环境中最好不要使用
+
+      > 这个指令没有 offset、limit 参数，是要一次性吐出所有满足条件的 key，由于 redis 是单线程的，其所有操作都是原子的，而 keys 算法是遍历算法，复杂度是 O(n)，如果实例中有千万级以上的 key，这个指令就会导致 Redis 服务卡顿，所有读写 Redis 的其它的指令都会被延后甚至会超时报错，可能会引起缓存雪崩甚至数据库宕机
+
+  - 生产上限制 keys */flushdb/flushall 等危险命令以防止误删误用？
+
+    - 通过配置设置禁用这些命令，redis.conf 在 SECURITY 这一项中
+
+      - ```
+        rename-command keys ""
+        rename-command flushdb ""
+        rename-command flushall ""
+        ```
+
+- 不用 keys * 避免卡顿，那该用什么
+
+  - scan 命令登场
+
+    - 一句话，类似 mysql limit 的**但不完全相同**
+
+  - Scan 命令用于迭代数据库中的数据库键
+
+    - 语法
+
+      - SCAN cursor [MATCH pattern] [COUNT count]
+
+        基于游标的迭代器，需要基于上一次的游标延续之前的迭代过程
+
+        以 0 作为游标开始一次新的迭代，直到命令返回游标 0 完成一次遍历
+
+        **不保证每次执行都返回某个给定数量的元素，支持模糊查询**
+
+        一次返回的数量不可控，只能是大概率符合 count 参数
+
+    - 特点
+
+      - redis Scan 命令基本语法如下：
+
+        SCAN cursor [MATCH pattern] [COUNT count]
+
+        - cursor - 游标
+        - pattern - 匹配的模式
+        - count - 指定从数据集里返回多少元素，默认值为 10
+
+        SCAN 命令是一个基于游标的迭代器，每次被调用之后，都会向用户返回一个新的游标，**用户在下次迭代时需要使用这个新游标作为 SCAN 命令的游标参数**，以此来延续之前的迭代过程。
+
+        SCAN 返回一个包含**两个元素的数组**，第一个元素是用于进行下一次迭代的新游标，第二个元素则是一个数组，这个数组中包含了所有被迭代的元素。**如果新游标返回零表示迭代已结束。**
+
+        SCAN 的遍历顺序**非常特别，它不是从第一维数组的第零位一直遍历到末尾，而是采用了高位进位加法来遍历。之所以使用这样特殊的方式进行遍历，是考虑到字典的扩容和缩容时避免槽位的遍历重复和遗漏**
+
+    - 使用
+
+      - ```
+        127.0.0.1:6379> keys *
+        1) "db_number"
+        2) "key1"
+        3) "myKey"
+        127.0.0.1:6379> scan 0 MATCH * COUNT 1
+        1) "2"
+        2) 1) "db_number"
+        127.0.0.1:6379> scan 2 MATCH * COUNT 1
+        1) "1"
+        2) 1) "myKey"
+        127.0.0.1:6379> scan 1 MATCH * COUNT 1
+        1) "3"
+        2) 1) "key1"
+        127.0.0.1:6379> scan 3 MATCH * COUNT 1
+        1) "0"
+        2) (empty list or set)
+        ```
+
+参考文档：
+
+1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P105
+
+## Big Key 问题
+
+- 多大算 Big
+
+  - 参考《阿里云 Redis 开发规范》
+
+    - 【强制】：拒绝 bigkey（防止网卡流量、慢查询）
+
+      **string 类型控制在 10KB 以内，hash、list、set、zset 元素个数不要超过 5000**.
+
+      反例：一个包含 200 万个元素的 list
+
+      **非字符串的 bigkey，不要使用 del 删除，使用 hscan、sscan、zscan 方式渐进式删除，同时要注意防止 bigkey 过期时间自动删除问题**（例如一个 200 万的 zset 设置 1 小时过期，会触发 del 操作，造成阻塞，而且该操作不会出现在慢查询中（lantency 可查））
+
+  - string 和二级结构
+
+    - string 是 value，最大 512MB 但是 >= 10KB 就是 bigkey
+    - list、hash、set 和 zset，个数超过 5000 就是 bigkey
+      - 疑问？？？
+        - list
+          - 一个列表最多可以包含 2^32-1 个元素（4294967295，每个列表超过 40 亿个元素）。
+        - hash
+          - Redis 中每个 hash 可以存储 2^32 - 1 键值对（40 多亿）
+        - set
+          - 集合中最大的成员数为 2^32 - 1（4294967295，每个集合可存储 40 多亿个成员）。
+        - ...
+
+- 哪些危害
+
+  - 内存不均，集群迁移困难
+  - 超时删除，大 key 删除作梗
+  - 网络流量阻塞
+
+- 如何产生
+
+  - 社交类
+    - 王心凌粉丝列表，典型案例粉丝逐步递增
+  - 汇总统计
+    - 某个报表，月日年经年累月的积累
+
+- 如何发现
+
+  - **redis-cli --bigkeys**
+
+    - **好处，见最下面总结**
+
+      给出**每种数据结构 Top 1 bigkey**，同时给出**每种数据类型的键值个数 + 平均大小**
+
+      **不足**
+
+      想查询大于 10kb 的所有 key，--bigkeys 参数就无能为力了，需要用到 memory usage 来计算每个键值的字节数
+
+      redis-cli --bigkeys -a 111111
+
+      redis-cli -h 127.0.0.1 -p 6379 -a 111111 -bigkeys
+
+      每隔 100 条 scan 指令就会休眠 0.1s，ops 就不会剧烈抬升，但是扫描的时间会变长
+
+      redis-cli -h 127.0.0.1 -p 7001 --bigkeys -i 0.1
+
+  - **MEMORY USAGE 键**
+
+    - 计算每个键值的字节数
+    - 官网
+
+- 如何删除
+
+  - 参考《阿里云 Redis 开发规范》
+
+    - 【强制】：拒绝 bigkey（防止网卡流量、慢查询）
+
+      **string 类型控制在 10KB 以内，hash、list、set、zset 元素个数不要超过 5000.**
+
+      反例：一个包含 200 万个元素的 list
+
+      **非字符串的 bigkey，不要使用 del 删除，使用 hscan、sscan、zscan 方式渐进式删除，同时要注意防止 bigkey 过期时间自动删除问题**（例如一个 200 万的 zset 设置 1 小时过期，会触发 del 操作，造成阻塞，而且该操作不会出现在慢查询中（lantency 可查））
+
+  - 官网
+
+  - 普通命令
+
+    - String
+
+      - 一般用 del，如果过于庞大 unlink
+
+    - hash
+
+      - 使用 hscan 每次获取少量 field-value，再使用 hdel 删除每个 field
+
+      - 命令
+
+        - Redis HSCAN 命令会用于迭代哈希表中的键值对
+
+          **语法**
+
+          redis HSCAN 命令基本语法如下：
+
+          HSCAN key cursor [MATCH pattern] [COUNT count]
+
+          - cursor - 游标
+          - pattern - 匹配的模式
+          - count - 指定从数据集里返回多少元素，默认值为 10
+
+          **可用版本**
+
+          大于等于 2.8.0
+
+          **返回值**
+
+          返回的每个元素都是一个元组，每一个元组元素由一个字段（field）和值（value）组成
+
+      - 阿里手册
+
+        - 1、Hash 删除：hsan + hdel
+
+          ```java
+          public void delBigHash(String host, int port, String password, String bigHashKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              ScanParams scanParams = new ScanParams().count(100);
+              String cursor = "0";
+              do {
+                  ScanResult<Entry<String, String>> scanResult = jedis.hscan(bigHashKey, cursor, scanParams);
+                  List<Entry<String, String>> entryList = scanResult.getResult();
+                  if (entryList != null && !entryList.isEmpty()) {
+                      for (Entry<String, String> entry : entryList) {
+                          jedis.hdel(bigHashKey, entry.getKey());
+                      }
+                  }
+                  cursor = scanResult.getStringCursor();
+              } while (!"0".equals(cursor));
+              
+              // 删除 bigkey
+              jedis.del(bigHashKey);
+          }
+          ```
+
+    - list
+
+      - 使用 ltrim 渐进式逐步删除，直到全部删除完成
+
+      - 命令
+
+        - Redis Ltrim 对一个列表进行修剪（trim），就是说，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除。
+
+          下标 0 表示列表的第一个元素，以 1 表示列表的第二个元素，以此类推。你也可以使用负数下标，以 -1 表示列表的最后一个元素，-2 表示列表的倒数第二个元素，以此类推。
+
+          **语法**
+
+          redis Ltrim 命令基本语法如下：
+
+          LTRIM KEY_NAME START STOP
+
+          **可用版本**
+
+          大于等于 1.0.0
+
+          **返回值**
+
+          命令执行成功时，返回 ok
+
+      - 阿里手册
+
+        - 2、List 删除：ltrim
+
+          ```java
+          public void delBigList(String host, int port, String password, String bigListKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              long llen =  jedis.llen(bigListKey);
+              int counter = 0;
+              int left = 100;
+              while (counter < llen) {
+                  // 每次从左侧截掉 100 个
+                  jedis.ltrim(bigListKey, left, llen);
+                  counter += left;
+              }
+              // 最终删除 key
+              jedis.del(bigListKey);
+          }
+          ```
+
+    - set
+
+      - 使用 sscan 每次获取部分元素，再使用 srem 命令删除每个元素
+
+      - 命令
+
+      - 阿里手册
+
+        - 3、Set 删除：sscan + srem
+
+          ```java
+          public void delBigSet(String host, int port, String password, String bigSetKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              ScanParams scanParams = new ScanParams().count(100);
+              String cursor = "0";
+              do {
+                  ScanResult<String> scanResult = jedis.sscan(bigSetKey, cursor, scanParams);
+                  List<String> memberList = scanResult.getResult();
+                  if (memberList != null && !memberList.isEmpty()) {
+                      for (String member : memberList) {
+                          jedis.srem(bigSetKey, member);
+                      }
+                  }
+                  cursor = scanResult.getStringCursor();
+              } while (!"0".equals(cursor));
+              
+              // 删除 bigkey
+              jedis.del(bigHashKey);
+          }
+          ```
+
+    - zset
+
+      - 使用 zscan 每次获取部分元素，再使用 ZREMRANGEBYRANK 命令删除每个元素
+
+      - 命令
+
+      - 阿里手册
+
+        - ```java
+          public void delBigZset(String host, int port, String password, String bigZsetKey) {
+              Jedis jedis = new Jedis(host, port);
+              if (password != null && !"".equals(password)) {
+                  jedis.auth(password);
+              }
+              ScanParams scanParams = new ScanParams().count(100);
+              String cursor = "0";
+              do {
+                  ScanResult<Tuple> scanResult = jedis.zscan(bigZsetKey, cursor, scanParams);
+                  List<Tuple> tupleList = scanResult.getResult();
+                  if (tupleList != null && !tupleList.isEmpty()) {
+                      for (Tuple tuple : tupleList) {
+                          jedis.srem(bigZsetKey, tuple.getElement());
+                      }
+                  }
+                  cursor = scanResult.getStringCursor();
+              } while (!"0".equals(cursor));
+              
+              // 删除 bigkey
+              jedis.del(bigHashKey);
+          }
+          ```
+
+BigKey 生产调优
+
+- redis.conf 配置文件 LAZY FREEING 相关说明
+
+  - 阻塞和非阻塞删除命令
+
+    - Redis 有两个原语来删除键。一种称为 **DEL，是对象的阻塞删除**。这意味着服务器停止处理新命令，以便以同步方式回收与对象关联的所有内存。如果删除的键与一个小对象相关联的所有内存。如果删除的键与一个小对象相关联，则执行 DEL 命令所需的时间非常短，可与大多数其它命令相媲美
+
+      Redis 中的 O(1) 或 O(log_N) 命令。但是，如果键与包含数百万个元素的聚合值相关联，则服务器可能会阻塞很长时间（甚至几秒钟）才能完成操作。
+
+      基于上述原因，Redis 还提供了非阻塞删除原语，例如 **UNLINK（非阻塞 DEL）**以及 **FLUSHALL 和 FLUSHDB 命令的 ASYNC 选项**，以便在后台回收内存。这些命令在恒定时间内执行。另一个线程将尽可能快地逐步释放后台中的对象。
+
+      FLUSHALL 和 FLUSHDB 的 DEL、UNLINK 和 ASYNC 选项是用户控制的。这取决于应用程序的设计，以了解何时使用其中一个是个好主意。然而，作为其它操作的副作用，Redis 服务器有时不得不删除键或刷新整个数据库。具体而言，Redis 在以下场景中独立于用户调用删除对象
+
+  - 优化配置
+
+    - ```
+      lazyfree-lazy-server-del no 改为 Yes
+      replica-lazy-flush no 改为 Yes
+      
+      lazyfree-lazy-user-del no 改为 Yes
+      ```
+
+参考文档：
+
+1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P106
+
+## 缓存双写一致性
+
+- 反馈回来的面试题
+
+  - 一图
+
+    - 通用查询方法三部曲
+
+      1 OK，直接从 redis 获得并返回
+
+      2 next，redis 无，从 mysql 获得并返回
+
+      3 完成第 2 步同时，讲 mysql 数据回写 redis，两边数据一致
+
+      问题，上面业务逻辑你用 Java 代码如何写
+
+  - 你只要用缓存，就可能会涉及到 redis 缓存与数据库双存储双写，你只要是双写，就一定会有数据一致性的问题，那么你如何解决一致性问题？
+
+  - 双写一致性，你先动缓存 redis 还是数据库 mysql 哪一个？why？
+
+  - **延时双删**你做过吗？会有哪些问题？
+
+  - 有这么一种情况 ，微服务查询 redis 无 mysql 有，为保证数据双写一致性回写 redis 你需要注意什么？**双检加锁**策略你了解过吗？如何尽量避免缓存击穿？
+
+  - redis 和 mysql 双写 100% 会出纰漏，做不到强一致性，你如何保证**最终一致性**？
+
+  - ……
+
+- 缓存双写一致性，谈谈你的理解
+
+  - 如果 redis 中**有数据**
+
+    - 需要和数据库中的值相同
+
+  - 如果 redis 中**无数据**
+
+    - 数据库中的值要是最新值，且准备回写 redis
+
+  - 缓存按照操作来分，细分 2 种
+
+    - **只读缓存**
+    - 读写缓存
+      - **同步直写策略**
+        - 写数据库后也同步写 redis 缓存，缓存和数据库中的数据一致；
+        - 对于读写缓存来说，要想保证缓存和数据库中的数据一致，就要采用同步直写策略
+      - **异步缓写策略**
+        - 正常业务运行中，mysql 数据变动了，但是可以在业务上容许出现一定时间后才作用于 redis，比如仓库、物流系统
+        - 异常情况出现了，不得不将失败的动作重新修补，有可能需要借助 kafka 或者 RabbitMQ 等消息中间件，实现重试重写
+
+  - 一图代码你如何写
+
+    - 问题》》》？
+
+    - 采用双检加锁策略
+
+      - ```java
+        public String get(String key) {
+            String value = redis.get(key); // 查询缓存
+            if (value != null) {
+                // 缓存存在直接返回
+                return value;
+            } else {
+                // 缓存不存在则对方法加锁
+                // 假设请求量很大，缓存过期
+                synchronized (TestFuture.class) {
+                    value = redis.get(key); // 再查一遍 redis
+                    if (value != null) {
+                        // 查到数据直接返回
+                        return value;
+                    } else {
+                        // 二次查询缓存也不存在，直接查 DB
+                        value = dao.get(key);
+                        // 数据缓存
+                        redis.setnx(key, value, time);
+                        // 返回
+                        return value;
+                    }
+                }
+            }
+        }
+        ```
+
+    - Code
+
+- 数据库和缓存一致性的几种更新策略
+
+  - 目的
+
+    - 总之，我们要达到最终一致性！
+
+      - **给缓存设置过期时间，定期清理缓存并回写，是保证最终一致性的解决方案。**
+
+        我们可以对存入缓存的数据设置过期时间，所有的**写操作以数据库为准**，对缓存操作只是尽最大努力即可。也就是说如果数据库写成功，缓存更新失败，那么只要到达过期时间，则后面的读请求自然会从数据库中读取新值然后回填缓存，达到一致性，**切记，要以 mysql 的数据库写入库为准**。
+
+        上述方案和后续落地案例是调研后的主流 + 成熟的做法，但是考虑到各个公司业务系统的差距，**不是 100% 绝对正确，不保证绝对适配全部情况，**请同学们自行酌情选择打法，合适自己的最好。
+
+  - 可以停机的情况
+
+    - 挂牌报错，凌晨升级，温馨提示，服务降级
+    - 单线程，这样重量级的数据操作最好不要多线程
+
+  - 我们讨论 4 种更新策略
+
+    - X 先更新数据库，再更新缓存
+
+      - 异常问题 1
+
+        1. 先更新 mysql 的某商品的库存，当前商品的库存是 100，更新为 99 个
+        2. 先更新 mysql 修改为 99 成功，然后更新 redis
+        3. **此时假设异常出现**，更新 redis 失败了，这导致 mysql 里面的库存是 99 而 redis 里面的还是 100.
+        4. 上述发生，会让数据库里面和缓存 redis 里面数据不一致，**读到 redis 脏数据**
+
+      - 异常问题 2
+
+        - 【先更新数据库，再更新缓存】，A、B 两个线程发起调用
+
+          【正常逻辑】
+
+          1. A update mysql 100
+          2. A update redis 100
+          3. B update mysql 80
+          4. B update redis 80
+
+          ============
+
+          【异常逻辑】多线程环境下，A、B 两个线程有快有慢，有前有后有并行
+
+          1. A update mysql 100
+          2. B update mysql 80
+          3. B update redis 80
+          4. A update redis 100
+
+          ============
+
+          最终结果，mysql 和 redis 数据不一致，mysql 80，redis 100
+
+    - X 先更新缓存，再更新数据库
+
+      - X 不太推荐
+
+        - 业务上一般把 mysql 作为**底单数据库**，保证最后解释
+
+      - 异常问题 2
+
+        - 【先更新数据库，再更新缓存】，A、B 两个线程发起调用
+
+          【正常逻辑】
+
+          1. A update redis 100
+          2. A update mysql 100
+          3. B update redis 80
+          4. B update mysql 80
+
+          ============
+
+          【异常逻辑】多线程环境下，A、B 两个线程有快有慢，有前有后有并行
+
+          1. A update redis 100
+          2. B update redis 80
+          3. B update mysql 80
+          4. A update mysql 100
+
+          ============
+
+          --- mysql 100，redis 80
+
+    - X 先删除缓存，再更新数据库
+
+      - 异常问题
+
+        - 步骤分析 1，先删除缓存，再更新数据库
+
+          - （10:40）
+
+            阳哥自己这里写 20 秒，是自己乱写的，表示更新数据库可能失败，实际中不可能，哈哈~
+
+            1 A 线程先成功删除了 redis 里面的数据，然后去更新 mysql，此时 mysql 正在更新中，还没有结束。（比如网络延时）**B 突然出现要来读取缓存数据**。
+
+        - 步骤分析 2，先删除缓存，再更新数据库（13:25）
+
+        - 步骤分析 3，先删除缓存，再更新数据库（14:03）
+
+        - 上面 3 步骤串讲梳理（16:30）
+
+      - 解决方案
+
+        - 采用**延时双删策略**（20:39）
+
+        - 双删方案面试题
+
+          - 这个删除该休眠多久呢？
+
+            - （22:14）
+
+              **第一种方法：**加百毫秒即可
+
+              **第二种方法：**新启动一个后台监控程序
+
+          - 这种同步淘汰策略，吞吐量降低怎么办？
+
+            - （23:38）
+
+              ```java
+              CompletableFuture.supplyAsync(() -> {
+                  
+              }).whenComplete((t, u) -> {
+                  
+              }).exceptionally(e -> {
+                  
+              }).get();
+              ```
+
+          - 后续看门狗 WatchDog 源码分析
+
+    - **先更新数据库，再删除缓存**
+
+      - 异常问题（27:59）
+
+      - 业务指导思想
+
+        - 微软云
+        - 我们后面的阿里巴巴 Canal 也是类似的思想
+          - 上述的订阅 binlog 程序在 mysql 中有现成的中间件叫 canal，可以完成订阅 binlog 日志的功能。
+
+      - 解决方案
+
+        - （33:43）
+
+          暂存到消息队列中
+
+          没成功删除，从消息队列中重新读取
+
+          成功删除，从消息队列中去除
+
+          重试超过一定次数，向业务层发送报错信息
+
+      - 类似经典的分布式事务问题，只有一个权威答案
+
+        - 最终一致性
+          - 流量充值，先下发短信实际充值可能滞后 5 分钟，可以接受
+          - 电商发货，短信下发但是物流明天见
+
+  - 小总结
+
+    - 如何选择方案？利弊如何（36:56）
+    - 一图总结（39:11）
+
+
+参考文档：
+
+1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P107 ~ 109
+
+## 缓存预热、雪崩、穿透、击穿
+
+- 缓存预热（5:37）
+
+  - @PostConstruct 初始化白名单数据
+
+- 缓存雪崩
+
+  - 发生
+    - redis 主机挂了，Redis 全盘崩溃，偏硬件运维
+    - redis 中有大量 key 同时过期大面积失效，偏软件开发
+  - 预防 + 解决
+    - redis 中 key 设置为永不过期 or 过期时间错开
+    - redis 缓存集群实现高可用
+      - 主从 + 哨兵
+      - Redis Cluster
+      - 开启 Redis 持久化机制 aof/rdb，尽快恢复缓存集群
+    - 多缓存结合预防雪崩
+      - ehcache 本地缓存 + redis 缓存
+    - 服务降级
+      - Hystrix 或者阿里 sentinel 限流 & 降级（10:03）
+    - **人民币玩家**
+      - 阿里云-云数据库 Redis 版
+
+- 缓存穿透
+
+  - 是什么
+    - 请求去查询一条记录，先查 redis 无，后查 mysql 无，**都查询不到该条记录，**但是请求每次都会打到数据库上去，导致后台数据库压力暴增，这种现象我们称为缓存穿透，这个 redis 变成了一个摆设……
+    - 简单说就是本来无一物，两库都没有。既不在 Redis 缓存库，也不在 mysql，数据库存在被多次暴击风险
+  - 解决
+    - 缓存穿透 | 恶意攻击 | 空对象缓存、bloomfilter 过滤器
+    - 一图（16:11）
+    - 方案1：空对象缓存或者缺省值
+      - 一般 OK（17:48）
+      - But
+        - 黑客或者恶意攻击
+          - 黑客会对你的系统进行攻击，拿一个不存在的 id 去查询数据，会产生大量的请求到数据库去查询。可能会导致你的数据库由于压力过大而宕掉
+          - key 相同打你系统
+            - 第一次打到 mysql，空对象缓存后第二次就返回 defaultNull 缺省值，避免 mysql 被攻击，不用再到数据库中去走一圈了
+          - **key 不同打你系统**
+            - 由于存在空对象缓存和缓存回写（看自己业务不限死），redis 中的无关紧要的 key 也会越写越多**（记得设置 redis 过期时间）**
+    - 方案2：Google 布隆过滤器 Guava 解决缓存穿透
+
+- 缓存击穿
+
+  - 是什么
+    - 大量的请求同时查询一个 key 时，此时这个 key 正好失效了，就会导致大量的请求都打到数据库上面去
+    - **简单说就是热点 key 突然失效了，暴打 mysql**
+    - 备注
+      - 穿透和击穿，截然不同
+  - 危害
+    - 会造成某一时刻数据库请求量过大，压力剧增
+    - 一般技术部门需要知道**热点 key 是那些个**？做到心里有数防止击穿
+  - 解决
+    - 缓存击穿 | 热点 key 失效 | 互斥更新、随机退避、差异失效时间
+    - 热点 key 失效
+      - 时间到了自然清除但还没被访问到
+      - delete 掉的 key，刚巧又被访问
+    - 方案1：差异失效时间，对于访问频繁的热点 key，干脆就不设置过期时间
+    - **方案2：互斥更新，采用双检加锁策略**（8:20）
+
+- | 缓存问题     | 产生原因               | 解决方案                               |
+  | ------------ | ---------------------- | -------------------------------------- |
+  | 缓存更新方式 | 数据变更、缓存时效性   | 同步更新、失效更新、异步更新、定时更新 |
+  | 缓存不一致   | 同步更新失败、异步更新 | 增加重试、补偿任务、最终一致           |
+  | 缓存穿透     | 恶意攻击               | 空对象缓存、bloomfilter 过滤器         |
+  | 缓存击穿     | 热点 key 失效          | 互斥更新、随机退避、差异失效时间       |
+  | 缓存雪崩     | 缓存挂掉               | 快速失败熔断、主从模式、集群模式       |
+
+参考文档：
+
+1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P124 ~ 127
+
 ## 布隆过滤器
 
 - 原理
@@ -1749,211 +3974,64 @@ Flush tables with read lock
 
 1. [Redis详解（十三）------ Redis布隆过滤器 -  博客园](https://www.cnblogs.com/ysocean/p/12594982.html)
 
-## 单线程 / 多线程
+## 过期删除策略
 
-- Redis 3.x 单线程时代但性能依旧很快的主要原因
+- 三种不同的删除策略：
+  1. **立即删除**。在设置键的过期时间时，创建一个回调事件，当过期时间达到时，由时间处理器自动执行键的删除操作。
+     - 立即删除能保证内存中数据的最大新鲜度，因为它保证过期键值会在过期后马上被删除，其所占用的内存也会随之释放。但是立即删除对cpu是最不友好的。因为删除操作会占用cpu的时间，如果刚好碰上了cpu很忙的时候，比如正在做交集或排序等计算的时候，就会给cpu造成额外的压力。
+     - 而且目前redis事件处理器对时间事件的处理方式–无序链表，查找一个key的时间复杂度为O(n),所以并不适合用来处理大量的时间事件。
+  2. **惰性删除**。键过期了就过期了，不管。每次从dict字典中按key取值时，先检查此key是否已经过期，如果过期了就删除它，并返回nil，如果没过期，就返回键值。
+     - 惰性删除是指，某个键值过期后，此键值不会马上被删除，而是等到下次被使用的时候，才会被检查到过期，此时才能得到删除。所以惰性删除的缺点很明显:浪费内存。dict字典和expires字典都要保存这个键值的信息。
+     - 举个例子，对于一些按时间点来更新的数据，比如log日志，过期后在很长的一段时间内可能都得不到访问，这样在这段时间内就要拜拜浪费这么多内存来存log。这对于性能非常依赖于内存大小的redis来说，是比较致命的。
+  3. **定时删除**。每隔一段时间，对expires字典进行检查，删除里面的过期键。
+     可以看到，第二种为被动删除，第一种和第三种为主动删除，且第一种实时性更高。
+     - 从上面分析来看，立即删除会短时间内占用大量cpu，惰性删除会在一段时间内浪费内存，所以定时删除是一个折中的办法。
+     - 定时删除是：每隔一段时间执行一次删除操作，并通过限制删除操作执行的时长和频率，来减少删除操作对cpu的影响。另一方面定时删除也有效的减少了因惰性删除带来的内存浪费。
+- Redis 使用的策略
+  - redis使用的过期键值删除策略是：**惰性删除 + 定期删除**，两者配合使用。
 
-  - 基于内存操作：Redis 的所有数据都存在内存中，因此所有的运算都是内存级别的，所以他的性能比较高；
-  - 数据结构简单：Redis 的数据结构是专门设计的，而这些简单的数据结构的查找和操作的时间大部分复杂度都是 O(1)，因此性能比较高；
-  - 多路复用和非阻塞 I/O：Redis 使用 I/O 多路复用功能来监听多个 socket 连接客户端，这样就可以使用一个线程连接来处理多个请求，减少线程切换带来的开销，同时也避免了 I/O 阻塞操作
-  - 避免上下文切换：因为是单线程模型，因此就避免了不必要的上下文切换和多线程竞争，这就省去了多线程切换带来的时间和性能上的消耗，而且单线程不会导致死锁问题的发生
+参考文档
 
-- **Redis 4.0 之前**一直采用单线程的主要原因有以下三个
+1. [Redis过期键的删除策略 - CSDN](https://blog.csdn.net/ThinkWon/article/details/101522970)
 
-  1. 使用单线程模型是 Redis 的开发和维护更简单，因为单线程模型方便开发和调试
-  2. 即使使用单线程模型也并发的处理多客户端的请求，主要使用的是 IO 多路复用和非阻塞 IO
-  3. 对于 Redis 系统来说，**主要的性能瓶颈是内存或者网络带宽而并非 CPU**.
+## 内存淘汰策略
 
-- Redis 是基于内存操作的，**因此他的瓶颈可能是机器的内存或者网络带宽而并非 CPU**，既然 CPU 不是瓶颈，那么自然就采用单线程的解决方案了，况且使用多线程比较麻烦。**但是在 Redis 4.0 中开始支持多线程了，例如后台删除、备份等功能**。
+- redis 缓存淘汰策略
 
-  - RDB bgsave
-  - AOF 重写
-  - 惰性删除
-    - 大 key 问题
-    - 在 Redis 4.0 就引入了多个线程来实现数据的异步惰性删除等功能，但是其处理读写请求的仍然只有一个线程，所以仍然算是狭义上的单线程。
+  - redis 配置文件（0：14）
+  - lru 和 lfu 算法的区别是什么（1：30）
+  - 有哪些（redis 7 版本）
+    1. **noeviction**：不会驱逐任何 key，表示即使内存达到上限也不进行置换，所有能引起内存增加的命令都会返回 error
+    2. **allkeys-lru**：对所有 key 使用 LRU 算法进行删除，优先删除掉最近最不经常使用的 key，用以保存新数据
+    3. **volatile-lru**：对所有设置了过期时间的 key 使用 LRU 算法进行删除
+    4. **allkeys-random**：对所有 key 随机删除
+    5. **volatile-random**：对所有设置了过期时间的 key 随机删除
+    6. **volatile-ttl**：删除马上要过期的 key
+    7. **allkeys-lfu**：对所有 key 使用 LFU 算法进行删除
+    8. **volatile-lfu**：对所有设置了过期时间的 key 使用 LFU 算法进行删除
+  - 上面总结
+    - 2 * 4 = 8
+    - 2 个维度
+      - 过期键中筛选，volatile
+      - 所有键中筛选，allkeys
+    - 4 个方面
+      - LRU
+      - LFU
+      - random
+      - ttl
+    - 8 个选项
+  - 你平时用哪一种（8:33）
+  - 如何配置、修改
+    - 直接使用 config 命令
+    - 直接 redis.conf 配置文件
 
-- **在 Redis 6/7 中，非常受关注的第一个新特性就是多线程**。
-
-  - 随着网络硬件的性能提升，Redis 的性能瓶颈有时会出现在网络 IO 的处理上，也就是说，单个主线程处理网络请求的速度跟不上底层网络硬件的速度
-
-  - 为了应对这个问题：**采用多个 IO 线程来处理网络请求，提高网络请求处理的并行度，Redis 6/7 就是采用的这种方法**。
-
-  - 但是，Redis 的多 IO 线程只是用来处理网络请求的，**对于读写操作命令 Redis 仍然使用单线程来处理**
-
-    - 这是因为，Redis 处理请求时，网络处理经常是瓶颈，通过多个 IO 线程并行处理网络操作，可以提升实例的整体处理性能。而继续使用单线程执行命令操作，就不用为了保证 Lua 脚本、事务的原子性，额外开发多线程**互斥加锁机制了（不管加锁操作处理）**，这样一来，Redis 线程模型实现就简单了。
-
-  - 主线程和 IO 线程四个阶段
-
-    - **阶段一：服务端和客户端建立 Socket 连接，并分配处理线程**
-
-      首先，主线程负责接收建立连接请求。当有客户端请求和实例建立 Socket 连接时，主线程会创建和客户端的连接，并把 Socket 放入全局等待队列中。紧接着，主线程通过轮询方法把 Socket 连接分配给 IO 线程。
-
-    - **阶段二：IO 线程读取并解析请求**
-
-      主线程一旦把 Socket 分配给 IO 线程，就会进入阻塞状态，等待 IO 线程完成客户端请求读取和解析。因为有多个 IO 线程在并行处理。所以，这个过程很快就可以完成。
-
-    - **阶段三：主线程执行请求操作**
-
-      等到 IO 线程解析完请求，主线程还是会以单线程的方式执行这些命令操作。
-
-    - **阶段四：IO 线程回写 Socket 和主线程清空全局队列**
-
-      当主线程执行完请求操作后，会把需要返回的结果写入缓冲区，然后，主线程会阻塞等待 IO 线程，把这些结果回写到 Socket 中，并返回给客户端。和 IO 线程读取和解析请求一样，IO 线程回写 Socket 时，也是有多个线程在并发执行，所以回写 Socket 的速度也很快。等到 IO 线程回写 Socket 完毕，主线程会清空全局队列，等待客户端和后续请求。
-
-- Redis 采用 **Reactor 模式**的网络模型，对于一个客户端请求，主线程负责一个完整的处理过程：
-
-  读取 socket -> 解析请求 -> 执行操作 -> 写入 socket
-
-参考文档：
-
-1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P101 ~ 102
-
-## 持久化（RDB、AOF）
-
-- RDB（Redis DataBase）
-
-  - 自动触发
-
-    - Redis 6.0.16 以下在 Redis.conf 配置文件中的 SNAPSHOTTING 下配置 save 参数，来触发 Redis 的 RDB 持久化条件，比如 “save m n”：表示 m 秒内数据集存在 n 次修改时，自动触发 bgsave
-
-      - save 900 1：每隔 900s（15min），如果有超过 1 个 key 发生了变化，就写一份新的 RDB 文件
-
-        save 300 10：每隔 300s（5min），如果有超过 10 个 key 发生了变化，就写一份新的 RDB 文件
-
-        save 60 10000：每隔 60s（1min），如果有超过 10000 个 key 发生了变化，就写一份新的 RDB 文件
-
-    - Redis 7 版本，按照 redis.conf 里配置的 `save <seconds> <changes>`
-
-  - 手动触发
-
-    - save（阻塞） 和 bgsave（默认，fork 子线程来持久化）
-
-  - 如何恢复
-
-    - 将备份文件（dump.rdb）移动到 redis 安装目录并启动服务即可
-
-  - 如何检查修复 dump.rdb 文件
-
-    - `redis-check-rdb /myredis/dumpfiles/dump6379.rdb`
-
-- AOF（Append Only File）
-
-  - 三种写回策略
-
-    - | 配置项   | 写回时机           | 优点                     | 缺点                             |
-      | -------- | ------------------ | ------------------------ | -------------------------------- |
-      | Always   | 同步写回           | 可靠性高，数据基本不丢失 | 每个写命令都要落盘，性能影响较大 |
-      | Everysec | 每秒写回           | 性能适中                 | 宕机时丢失 1 秒内的数据          |
-      | No       | 操作系统控制的写回 | 性能好                   | 宕机时丢失数据较多               |
-
-  - 重写机制
-
-    - AOF 文件重写并不是对原文件进行重新整理，而是直接读取服务器现有的键值对，然后用一条命令去代替之前记录这个键值对的多条命令，生成一个新的文件后去替换原来的 AOF 文件
-
-    - 自动触发
-
-      - auto-aof-rewrite-percentage 100
-
-        auto-aof-rewrite-min-size 64mb
-
-        注意，**同时满足，且的关系**才会触发
-
-    - 手动触发
-
-      - 客户端向服务器发送 bgrewriteaof 命令
-
-  - 异常修复命令：`redis-check-aof --fix` 进行修复
-
-- RDB-AOF 混合持久化
-
-  - 设置 `aof-use-rdb-preamble` 的值为 yes
-  - RDB 镜像做全量持久化，AOF 做增量持久化
-
-- 同时关闭 RDB + AOF
-
-  - `save ""`
-    - 禁用 rdb
-    - 禁用 rdb 持久化模式下，我们仍然可以使用命令 save、bgsave 生成 rdb 文件
-  - `appendonly no`
-    - 禁用 aof
-    - 禁用 aof 持久化模式下，我们仍然可以使用命令 bgrewriteaof 生成 aof 文件
+- redis 缓存淘汰策略配置性能建议
+  - 避免存储 bigkey
+  - 开启惰性淘汰，lazyfree-lazy-eviction=yes
 
 参考文档：
 
-1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P28 ~ 46
-
-## 缓存预热、雪崩、穿透、击穿
-
-- 缓存预热（5:37）
-
-  - @PostConstruct 初始化白名单数据
-
-- 缓存雪崩
-
-  - 发生
-    - redis 主机挂了，Redis 全盘崩溃，偏硬件运维
-    - redis 中有大量 key 同时过期大面积失效，偏软件开发
-  - 预防 + 解决
-    - redis 中 key 设置为永不过期 or 过期时间错开
-    - redis 缓存集群实现高可用
-      - 主从 + 哨兵
-      - Redis Cluster
-      - 开启 Redis 持久化机制 aof/rdb，尽快恢复缓存集群
-    - 多缓存结合预防雪崩
-      - ehcache 本地缓存 + redis 缓存
-    - 服务降级
-      - Hystrix 或者阿里 sentinel 限流 & 降级（10:03）
-    - **人民币玩家**
-      - 阿里云-云数据库 Redis 版
-
-- 缓存穿透
-
-  - 是什么
-    - 请求去查询一条记录，先查 redis 无，后查 mysql 无，**都查询不到该条记录，**但是请求每次都会打到数据库上去，导致后台数据库压力暴增，这种现象我们称为缓存穿透，这个 redis 变成了一个摆设……
-    - 简单说就是本来无一物，两库都没有。既不在 Redis 缓存库，也不在 mysql，数据库存在被多次暴击风险
-  - 解决
-    - 缓存穿透 | 恶意攻击 | 空对象缓存、bloomfilter 过滤器
-    - 一图（16:11）
-    - 方案1：空对象缓存或者缺省值
-      - 一般 OK（17:48）
-      - But
-        - 黑客或者恶意攻击
-          - 黑客会对你的系统进行攻击，拿一个不存在的 id 去查询数据，会产生大量的请求到数据库去查询。可能会导致你的数据库由于压力过大而宕掉
-          - key 相同打你系统
-            - 第一次打到 mysql，空对象缓存后第二次就返回 defaultNull 缺省值，避免 mysql 被攻击，不用再到数据库中去走一圈了
-          - **key 不同打你系统**
-            - 由于存在空对象缓存和缓存回写（看自己业务不限死），redis 中的无关紧要的 key 也会越写越多**（记得设置 redis 过期时间）**
-    - 方案2：Google 布隆过滤器 Guava 解决缓存穿透
-
-- 缓存击穿
-
-  - 是什么
-    - 大量的请求同时查询一个 key 时，此时这个 key 正好失效了，就会导致大量的请求都打到数据库上面去
-    - **简单说就是热点 key 突然失效了，暴打 mysql**
-    - 备注
-      - 穿透和击穿，截然不同
-  - 危害
-    - 会造成某一时刻数据库请求量过大，压力剧增
-    - 一般技术部门需要知道**热点 key 是那些个**？做到心里有数防止击穿
-  - 解决
-    - 缓存击穿 | 热点 key 失效 | 互斥更新、随机退避、差异失效时间
-    - 热点 key 失效
-      - 时间到了自然清除但还没被访问到
-      - delete 掉的 key，刚巧又被访问
-    - 方案1：差异失效时间，对于访问频繁的热点 key，干脆就不设置过期时间
-    - **方案2：互斥更新，采用双检加锁策略**（8:20）
-
-- | 缓存问题     | 产生原因               | 解决方案                               |
-  | ------------ | ---------------------- | -------------------------------------- |
-  | 缓存更新方式 | 数据变更、缓存时效性   | 同步更新、失效更新、异步更新、定时更新 |
-  | 缓存不一致   | 同步更新失败、异步更新 | 增加重试、补偿任务、最终一致           |
-  | 缓存穿透     | 恶意攻击               | 空对象缓存、bloomfilter 过滤器         |
-  | 缓存击穿     | 热点 key 失效          | 互斥更新、随机退避、差异失效时间       |
-  | 缓存雪崩     | 缓存挂掉               | 快速失败熔断、主从模式、集群模式       |
-
-参考文档：
-
-1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P124 ~ 127
+1. [《尚硅谷Redis零基础到进阶》笔记.md](../视频笔记/《尚硅谷Redis零基础到进阶》笔记.md) P144
 
 ## 分布式锁（SETNX、Lua、Redisson、RedLock）
 
@@ -2863,6 +4941,55 @@ upstream bakend{
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景三十二：Nginx 如何解决跨域问题？
 
+# Docker
+
+## Namespace
+
+- docker 的实现方式
+
+  - 很多开发者都知道，docker容器本质上是宿主机的进程
+  - Docker 通过 **namespace 实现了资源隔离**
+  - 通过 **cgroups 实现了资源限制**
+  - 通过**写时复制机制（copy-on-write）实现了高效的文件操作**。
+
+- 当进一步深入 namespace 和 cgroups 等技术细节时，大部分开发者都会感到茫然无措。尤其是接下来解释libcontainer 的工作原理时，我们会接触大量容器核心知识。所以在这里，希望先带领大家走进linux内核，了解 namespace 和 cgroups 的技术细节。
+
+  - namespace 资源隔离
+
+    - linux内核提拱了6种namespace隔离的系统调用，如下图所示，但是真正的容器还需要处理许多其他工作。
+
+      | namespace | 系统调用参数  | 隔离内容                   |
+      | --------- | ------------- | -------------------------- |
+      | UTS       | CLONE_NEWUTS  | 主机名或域名               |
+      | IPC       | CLONE_NEWIPC  | 信号量、消息队列和共享内存 |
+      | PID       | CLONE_NEWPID  | 进程编号                   |
+      | Network   | CLONE_NEWNET  | 网络设备、网络战、端口等   |
+      | Mount     | CLONE_NEWNS   | 挂载点（文件系统）         |
+      | User      | CLONE_NEWUSER | 用户组和用户组             |
+
+    - 实际上，**linux 内核实现 namespace 的主要目的，就是为了实现轻量级虚拟化技术服务**。在同一个 namespace 下的进程合一感知彼此的变化，而对外界的进程一无所知。这样就可以让容器中的进程产生错觉，仿佛自己置身一个独立的系统环境中，以达到隔离的目的。
+
+    - 需要注意的是，本文所讨论的namespace实现针对的是linux内核3.8及以后版本。
+
+    - PID namespace
+
+      - PID namespace隔离非常实用，它对进程PID重新标号，即两个不同namespace下的进程可以有相同的PID。每个PID namespace都有自己的计数程序。
+      - 内核为所有的PID namespace维护了一个树状结构，最顶层的是系统初始时创建的，被称为root namespace，它创建的新PID namespace被称为child namespace(树的子节点)，而原来的PID namespace就是新创建的PID namespace的parent namespace(树的父节点)。通过这种方式，不同的PID namespace会形成一个层级体系。
+        - 所属的父节点可以看到子节点中的进程，并可以通过信号等方式对子节点中的进程产生影响。反过来，子节点却不能看到父节点PID namespace中的任何内容
+
+    - mount namespace
+
+      - mount namespace通过隔离文件系统挂载点对隔离文件系统提供支持，它是历史上第一个Linux namespace，所以标示位比较特殊，就是CLONE_NEWNS。
+      - 隔离后，不同的mount namespace中的文件结构发生变化也互不影响。也可以通过/proc/[pid]/mounts查看到所有挂载在当前namespace中的文件系统，还可以通过/proc/[pid]/mountstats看到mount namespace中文件设备的统计信息，包括挂载文件的名字、文件系统的类型、挂载位置等。
+
+    - 主机上查看一下，docker-run 的进程2117和docker exec进程2354 在同一个namespace (pid对应的namespace的id 是一样)
+
+      - 所以在两个进程中看到的内容是一样的
+
+参考文档：
+
+1. [docker的namespace深入理解 - 博客园](https://www.cnblogs.com/pu20065226/p/13514513.html)
+
 # Linux
 
 ## 创建文件
@@ -2883,6 +5010,54 @@ upstream bakend{
 参考文档：
 
 1. [Linux创建文件的5种方式 - CSDN](https://blog.csdn.net/xtho62/article/details/118194873)
+
+## 查看端口占用情况
+
+- Linux 查看端口占用情况可以使用 **lsof** 和 **netstat** 命令。
+
+- lsof
+
+  - lsof(list open files) 是一个列出当前系统打开文件的工具。
+
+  - lsof 查看端口占用语法格式：
+
+    ```
+    lsof -i:端口号
+    ```
+
+  - 更多 lsof 的命令如下：
+
+    ```
+    lsof -i:8080：查看8080端口占用
+    lsof abc.txt：显示开启文件abc.txt的进程
+    lsof -c abc：显示abc进程现在打开的文件
+    lsof -c -p 1234：列出进程号为1234的进程所打开的文件
+    lsof -g gid：显示归属gid的进程情况
+    lsof +d /usr/local/：显示目录下被进程开启的文件
+    lsof +D /usr/local/：同上，但是会搜索目录下的目录，时间较长
+    lsof -d 4：显示使用fd为4的进程
+    lsof -i -U：显示所有打开的端口和UNIX domain文件
+    ```
+
+- netstat
+
+  - **netstat -tunlp** 用于显示 tcp，udp 的端口和进程等相关情况。
+
+  - netstat 查看端口占用语法格式：
+
+    ```
+    netstat -tunlp | grep 端口号
+    ```
+
+    - -t (tcp) 仅显示tcp相关选项
+    - -u (udp)仅显示udp相关选项
+    - -n 拒绝显示别名，能显示数字的全部转化为数字
+    - -l 仅列出在Listen(监听)的服务状态
+    - -p 显示建立相关链接的程序名
+
+参考文档：
+
+1. [Linux 查看端口占用情况 - RUNOOB](https://www.runoob.com/w3cnote/linux-check-port-usage.html)
 
 ## IO 多路复用
 
