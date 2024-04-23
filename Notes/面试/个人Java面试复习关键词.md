@@ -2337,6 +2337,401 @@ getBean() -> doGetBean() -> createBean() -> doCreateBean() -> 返回 Bean
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景二十五：数据库中事务的隔离级别有哪些？各自有什么特点？
 
+## 事务的源码实现
+
+- 解析
+
+  - 之前在解析自定义标签时提到，`AOP` 和 `TX` 都使用了自定义标签，**按照我们上一篇** `**AOP**` **的学习，再来一遍解析自定义标签的套路：事务自定义标签。**
+
+    - 定位到 `TxNamespaceHandler` 类的初始化方法：
+
+      ```java
+      @Override
+      public void init() {
+          registerBeanDefinitionParser("advice", new TxAdviceBeanDefinitionParser());
+          // 使用 AnnotationDrivenBeanDefinitionParser 解析器，解析 annotation-driven 标签
+          registerBeanDefinitionParser("annotation-driven", new AnnotationDrivenBeanDefinitionParser());
+          registerBeanDefinitionParser("jta-transaction-manager", new JtaTransactionManagerBeanDefinitionParser());
+      }
+      ```
+
+    - 根据上面的方法，`Spring` 在初始化时候，如果遇到诸如 `<tx:annotation-driven>` 开头的配置后，将会使用 `AnnotationDrivenBeanDefinitionParser` 解析器的 `parse` 方法进行解析。
+
+  - `Spring` 中的事务默认是以 `AOP` 为基础，如果需要使用 `AspectJ` 的方式进行事务切入，需要在 `mode` 属性中配置:
+
+    ```xml
+    <tx:annotation-driven mode="aspectj"/>
+    ```
+
+    - 本篇笔记主要围绕着默认实现方式，动态 `AOP` 来学习，如果对于 `AspectJ` 实现感兴趣请查阅更多资料~
+
+  - **注册 InfrastructureAdvisorAutoProxyCreator**
+
+    - 与 `AOP` 一样，在解析时，会创建一个自动创建代理器，在事务 `TX` 模块中，使用的是 `InfrastructureAdvisorAutoProxyCreator`。
+    - 首先来看，在默认配置情况下，`AopAutoProxyConfigurer.configureAutoProxyCreator(element, parserContext)` 做了什么操作：
+      - **在这里注册了代理类和三个** **`bean`，这三个关键** **`bean`** **支撑了整个事务功能，为了待会更好的理解这三者的关联关系，我们先来回顾下** **`AOP`** **的核心概念：**
+        - **Pointcut** 定义一个切点，可以在这个被拦截的方法前后进行切面逻辑。
+        - **Advice** 用来定义拦截行为，在这里实现增强的逻辑，它是一个祖先接口 `org.aopalliance.aop.Advice`。还有其它继承接口，例如 `MethodBeforeAdvice` ，特定指方法执行前的增强。
+        - **Advisor** 用来封装切面的所有信息，主要是上面两个，它用来充当 `Advice` 和 `Pointcut`的适配器。
+      - 回顾完 `AOP` 的概念后，继续来看下这三个关键 `bean`:
+        - **TransactionInterceptor**: 实现了 `Advice` 接口，在这里定义了拦截行为。
+        - **AnnotationTransactionAttributeSource**：封装了目标方法是否被拦截的逻辑，虽然没有实现 `Pointcut` 接口，但是在后面目标方法判断的时候，实际上还是委托给了 `AnnotationTransactionAttributeSource.getTransactionAttributeSource`，通过适配器模式，返回了 `Pointcut` 切点信息。
+        - **TransactionAttributeSourceAdvisor**: 实现了 `Advisor` 接口，包装了上面两个信息。
+      - **这三个** **`bean`** **组成的结构与** **`AOP`** **切面环绕实现的结构一致，所以先学习** **`AOP`** **的实现，对事务的了解会有所帮助**
+    - 接着看我们的自动创建代理器是如何创建的：
+      - `AopNamespaceUtils.registerAutoProxyCreatorIfNecessary(parserContext, element)`
+        - **在这一步中，注册了一个** **`beanName`** **是`org.springframework.aop.config.internalAutoProxyCreator` 的** **`bean`：`InfrastructureAdsivorAutoProxyCreator`**
+        - **可以看到，它实现了** **`InstantiationAwareBeanPostProcessor`** **这个接口，也就是说在`Spring` 容器中，所有 `bean` 实例化时，`Spring`都会保证调用其`postProcessAfterInitialization`** **方法。**
+        - 与上一篇介绍的 `AOP` 代理器一样，在实例化 `bean` 的时候，调用了代理器父类 `AbstractAutoProxyCreator` 的 `postProcessAfterInitialization` 方法
+        - 其中关于 `wrapIfNecessory` 方法，在上一篇 `AOP` 中已经详细讲过，这里讲下这个方法做了什么工作：
+          1. **找出指定 `bean` 对应的增强器**
+          2. **根据找出的增强器创建代理**
+
+  - **匹配标签 match**
+
+    - **在匹配** **`match`** **操作中，区别的是** **`AOP`** **识别的是** **`@Before`** **、`@After`，而我们的事务** **`TX` 识别的是** **`@Transactional`** **标签。**
+    - 判断是否是事务方法的入口方法在这：`org.springframework.transaction.interceptor.TransactionAttributeSourcePointcut#matches`
+
+- 运行
+
+  - **事务增强器 TransactionInterceptor**
+    - `TransactionInterceptor` 支撑着整个事务功能的架构。跟之前 `AOP` 的 `JDK` 动态代理 分析的一样，`TransactionInterceptor` 拦截器继承于 `MethodInterceptor`，所以我们要从它的关键方法 `invoke()` 看起
+  - **事务管理器**
+    - 通过该方法，确定要用于给定事务的特定事务管理器 `TransactionAspectSupport#determineTransactionManager`
+    - 由于最开始我们在 `XML` 文件中配置过 `transactionManager` 属性，所以该方法在我们例子中将会返回类型是 `DataSourceTransactionManager` 的事务管理器
+      - 它实现了 `InitializingBean` 接口，不过只是在 `afterPropertiesSet()` 方法中，简单校验 `dataSource` 是否为空，不细说这个类。
+  - **事务开启**
+    - `TransactionAspectSupport#createTransactionIfNecessary`
+    - 在创建事务方法中，主要完成以下三件事：
+      1. **使用 `DelegatingTransactionAttribute` 包装 `txAttr` 实例**
+      2. **获取事务：`tm.getTransaction(txAttr)`**
+         - 创建对应的事务实例，我们使用的是 `DataSourceTransactionManager` 中的 `doGetTransaction` 方法，创建基于 `JDBC` 的事务实例。
+         - **其中在同一个线程中，判断是否有重复的事务，是在`TransactionSynchronizationManager.getResource(obtainDataSource())` 中完成的**
+         - **结论：`resources`** **是一个** **`ThreadLocal`** **线程私有对象，每个线程独立存储，所以判断是否存在事务，判断的依据是当前线程、当前数据源(DataSource)中是否存在活跃的事务 - `map.get(actualKey)`。**
+      3. **构建事务信息：`prepareTransactionInfo(tm, txAttr, joinpointIdentification, status)`**
+    - 核心方法在第二点和第三点，分别摘取核心进行熟悉。
+      - 获取 TransactionStatus
+      - 获取事务
+      - 处理已存在的事务
+      - 事务挂起
+      - 事务创建
+
+- 小结
+
+  - 在声明式的事务处理中，主要有以下几个处理步骤：
+    1. **获取事务的属性**：`tas.getTransactionAttribute(method, targetClass)`
+    2. **加载配置中配置的 `TransactionManager`**：`determineTransactionManager(txAttr);`
+    3. **不同的事务处理方式使用不同的逻辑**：关于声明式事务和编程式事务，可以查看这篇文章-[Spring编程式和声明式事务实例讲解](https://link.segmentfault.com/?enc=b1jFJN5YhOSu8mhj3wqLtg%3D%3D.8mY0Jeas3Yt6c76rG6jfE3FI4poAtMvGGTbpxLWpDAzKxCGYoRl856A8IizIR0j9q9Q69vgOW7Duo8prLoQ59B38cLnGECwNIh1pGNPls4WIP2sHc%2BSZvczR24aBWTcL)
+    4. **在目标方法执行前获取事务并收集事务信**息：`createTransactionIfNecessary(tm, txAttr, joinpointIdentification)`
+    5. **执行目标方法**：`invocation.proceed()`
+    6. **出现异常，尝试异常处理**：`completeTransactionAfterThrowing(txInfo, ex);`
+    7. **提交事务前的事务信息消除**：`cleanupTransactionInfo(txInfo)`
+    8. **提交事务**：`commitTransactionAfterReturning(txInfo)`
+
+参考文档：
+
+1. [万字长文，带你从源码认识Spring事务原理，让Spring事务不再是面试噩梦 - 思否](https://segmentfault.com/a/1190000022754620)
+
+## 编程式事务和声明式事务
+
+- Sping 中事务的操作用两种：
+
+  1. 编程式事务（手写代码操作事务）
+
+     - MySQL 中使用事务
+
+       - MySQL 中事务有 3 个重要的操作：开启事务、提交事务、回滚事务，它们对应的操作命令如下
+
+         ```mysql
+         -- 开启事务
+         start transaction;
+         
+         -- 业务执⾏
+         -- 提交事务
+         commit;
+         -- 回滚事务
+         rollback;
+         ```
+
+     - Spring 中编程式事务的实现
+
+       - Spring 中手动操作事务和 MySQL操作事务类似，也是有 3 个重要操作
+
+         1. 开启事务（获取事务）
+         2. 提交事务
+         3. 回滚事务
+
+       - Spring Boot 内置了两个对象，DataSourceTransactionManager （事务管理器）用来获取事务（开启事务）、提交或回滚事务的，而 TransactionDefinition 是事务的属性，在获取事务的时候需要将 TransactionDefinition 传递进去从而获得一个事务 TransactionStatus 对象
+
+       - ```java
+         @RestController
+         public class UserController {
+             @Autowired
+             private UserService userService;
+         
+             @Autowired
+             private DataSourceTransactionManager transactionManager;
+         
+             @Autowired
+             private TransactionDefinition transactionDefinition;
+         
+             // 在此方法中使用编程式的事务
+             @RequestMapping("/add")
+             public int add(UserInfo userInfo) {
+                 // 非空效验【验证用户名和密码不为空】
+                 if(userInfo==null || !StringUtils.hasLength(userInfo.getUsername())
+                         || !StringUtils.hasLength(userInfo.getPassword())) {
+                     return 0;
+                 }
+                 // 开启事务（获取事务）
+                 TransactionStatus transactionStatus = transactionManager.getTransaction(transactionDefinition);
+                 int result = userService.add(userInfo);
+                 System.out.println("add 受影响的行数：" + result);
+                 // 提交事务
+                 transactionManager.commit(transactionStatus);
+         //        // 回滚事务
+         //        transactionManager.rollback(transactionStatus);
+                 return result;
+             }
+         }
+         ```
+
+  2. 声明式事务（利用注解自动开启和提交事务）
+
+     - **声明式事务的实现 @Transactional**
+
+       - 声明式事务的实现，只需要**在方法上添加 @Transactional 注解**就可以实现，无序手动开启事务和提交事务，进入方法时自动开启事务，方法执行完全会自动提交事务，如果中途发生了没有处理的异常会自动回滚事务
+
+     - @Transactional 可以用来修饰方法或类：
+
+       - 修饰方法时，**只能应用到 public 方法上，否则不生效**
+       - 修饰类时，说明该注解对该类中所有的 public 方法都生效
+
+     - @Transactional 参数设置
+
+       - | 参数                   | 作用                                                         |
+         | ---------------------- | ------------------------------------------------------------ |
+         | value                  | 当你配置多个事务管理器时，可以使用该属性指定选择用哪个事务管理器 |
+         | transactionManager     | 同上                                                         |
+         | propagation            | 事务的传播行为，默认值为 Propagation.REQUIRED事务的传播行为，默认值为 Propagation.REQUIRED |
+         | isolation              | 事务的隔离级别，默认值为 Isolation.DEFAULT                   |
+         | timeout                | 事务的超时时间，默认值为-1，如果超过该时间限制但事务还没完成，则自动回滚事务 |
+         | readOnly               | 指定事务是否为只读事务，默认值为 false，为了忽略那些不需要事务的方法，比如读取数据可以设置 read-only 为 true |
+         | rolibackFor            | 用于指定能够触发事务回滚的异常类型，可以指定多个异常类型     |
+         | rolibackForClassName   | 同上                                                         |
+         | noRolibackFor          | 抛出指定的异常类型，不回滚事务，也可以指定多个异常类型       |
+         | noRollbackForClassName | 同上                                                         |
+
+     - @Transactional 异常情况
+
+       - @Transactional 在异常被捕获的情况下，不会进⾏事务⾃动回滚
+         - **解决方法1：将异常重新抛出去**
+         - **解决方法2：使用代码的方式手动回滚当前事务**
+           - 手动回滚事务，在⽅法中使⽤ TransactionAspectSupport.currentTransactionStatus() 可以得到当前的事务，然后设置回滚方法 setRollbackOnly 就可以实现回滚了
+
+     - @Transactional 工作原理
+
+       - @Transactional 是基于 AOP 实现的，AOP 又是使用动态代理来实现的。如果目标对象实现了接口，默认情况下采用 JDK 的动态代理，如果目标对象没有实现接口，会使用 CGLIB 动态代理
+       - @Transactional 在开始执行业务之前，通过代理先开启事务，在执行成功之后再提交事务，如果中途遇到异常，则回滚事务
+
+参考文档：
+
+1. [Spring 事务（编程式事务、声明式事务@Transactional、事务隔离级别、事务传播机制）- CSDN](https://blog.csdn.net/m0_58761900/article/details/129032525)
+
+## 多事务管理器下 GC 后自动匹配报错问题
+
+- 简单来说，**解决方法**就是：在多事务管理器（transactionManager）情况下，能使用注解就使用注解 (`<tx:annotation-driven transaction-manager="transactionManager"/>` 和 `@Transactional`），避免使用 `<tx:advice />` 这个配置项。
+
+- 错误现象
+
+  - 由于项目中配置了三个事务管理器(即多个)，导致项目运行一段时间后，配置的事务切面在使用过程中出现以下报错
+    - `org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type [org.springframework.transaction.PlatformTransactionManager] is defined: expected single matching bean but found 3: transactionManager1,transactionManager2,transactionManager`
+  - PlatformTransactionManager(事务管理器)按类型匹配匹配到了三个，导致报错。
+
+- 日志堆栈对应的关键Spring源码
+
+  - TransactionAspectSupport.invokeWithinTransaction:
+
+    ```java
+    public abstract class TransactionAspectSupport implements BeanFactoryAware, InitializingBean {
+        ...
+            
+    	/**
+    	 * General delegate for around-advice-based subclasses, delegating to several other template
+    	 * methods on this class. Able to handle {@link CallbackPreferringPlatformTransactionManager}
+    	 * as well as regular {@link PlatformTransactionManager} implementations.
+    	 * @param method the Method being invoked
+    	 * @param targetClass the target class that we're invoking the method on
+    	 * @param invocation the callback to use for proceeding with the target invocation
+    	 * @return the return value of the method, if any
+    	 * @throws Throwable propagated from the target invocation
+    	 */
+    	protected Object invokeWithinTransaction(Method method, Class<?> targetClass, final InvocationCallback invocation)
+    			throws Throwable {
+    
+    		// If the transaction attribute is null, the method is non-transactional.
+            // 这一步在后面的解决方法中会提到，可以注意下getTransactionAttribute方法
+    		final TransactionAttribute txAttr = getTransactionAttributeSource().getTransactionAttribute(method, targetClass);
+            // 报错的堆栈对应在这：
+    		final PlatformTransactionManager tm = determineTransactionManager(txAttr);
+    		final String joinpointIdentification = methodIdentification(method, targetClass);
+            ...
+        }
+        
+        ...
+            
+        /**
+    	 * Determine the specific transaction manager to use for the given transaction.
+    	 */
+    	protected PlatformTransactionManager determineTransactionManager(TransactionAttribute txAttr) {
+    		// Do not attempt to lookup tx manager if no tx attributes are set
+    		if (txAttr == null || this.beanFactory == null) {
+    			return getTransactionManager();
+    		}
+            // 优先根据获得的TransactionAttribute中的Qualifier判断TransactionManager（事务管理器）
+    		String qualifier = txAttr.getQualifier();
+    		if (StringUtils.hasText(qualifier)) {
+    			return determineQualifiedTransactionManager(qualifier);
+    		}
+            // 否则，根据TransactionAspectSupport中的transactionManagerBeanName属性决定事务管理器
+    		else if (StringUtils.hasText(this.transactionManagerBeanName)) {
+    			return determineQualifiedTransactionManager(this.transactionManagerBeanName);
+    		}
+    		else {
+                // 还是没有的话，就拿默认的事务管理器
+    			PlatformTransactionManager defaultTransactionManager = getTransactionManager();
+    			if (defaultTransactionManager == null) {
+                    // 默认的事务管理器也为空的话，就按类型（PlatformTransactionManager）去自动匹配了——也就是这里报了错
+    				defaultTransactionManager = this.beanFactory.getBean(PlatformTransactionManager.class);
+    				this.transactionManagerCache.putIfAbsent(
+    						DEFAULT_TRANSACTION_MANAGER_KEY, defaultTransactionManager);
+    			}
+    			return defaultTransactionManager;
+    		}
+    	}
+        
+        /**
+    	 * Return the default transaction manager, or {@code null} if unknown.
+    	 */
+    	public PlatformTransactionManager getTransactionManager() {
+    		return this.transactionManagerCache.get(DEFAULT_TRANSACTION_MANAGER_KEY);
+    	}
+    }
+    ```
+
+- 造成错误的出处
+
+  - 使用了类似下面的配置：
+
+    ```xml
+    <beans>
+        <!--省略其它配置-->
+        <tx:advice id="1" transaction-manager="transactionManagerTest">
+            <tx:attributes>
+                <tx:method name="*" rollback-for="Exception"/>
+            </tx:attributes>
+        </tx:advice>
+    
+        <aop:config>
+            <aop:pointcut id="interceptorPointCuts"
+                          expression="execution(* org.nomadic.test.service.WordTestService.*(..))"/>
+            <aop:advisor advice-ref="2"
+                         pointcut-ref="interceptorPointCuts"/>
+        </aop:config>
+    </beans>
+    ```
+
+  - 看上去好似我们在tx:advice上配置了transaction-manager，已经按名字指定了事务管理器，但是为什么就是会在运行一段时间后失效，然后不按名字匹配而是去使用类型匹配bean呢？错误的具体原因就埋藏于此处对应的Spring源码中。
+
+- 错误详细原因
+
+  - 在 `tx:advice` 配置中，无法指定 `tx:attribute` 的 `qualifier` ，导致创建 `TransactionInterceptor` 时，对其 `Properties` 没有设置 `qualifier` ，而是直接将引用的类（transaction-manager）写入了其父类 `TransactionAspectSupport` 的属性 `transactionManagerCache` 中。
+    - 设置transaction-manager的方法：`TransactionAspectSupport.setTransactionManager(transactionManager)`
+    - 存储transactionManager的数据结构：transactionManagerCache：`ConcurrentMap<Object, PlatformTransactionManager> transactionManager = new ConcurrentReferenceHashMap<>(4);`
+    - transactionManagerCache具体对应的类型就是ConcurrentReferenceHashMap：`this(initialCapacity, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL, DEFAULT_REFERENCE_TYPE);`
+      - (DEFAULT_REFERENCE_TYPE = ReferenceType.SOFT)
+    - **而从上述源码可以看出， `transactionManagerCache` 中的值默认都是 `SoftReference` ( 只有 `SOFT` 和 `WEAK` 可选，默认 `SOFT` )，导致当内存不足时，此缓存中的事务配置会被GC回收掉**。
+  - 因此在执行事务的时候，会重新获取，由于没有 `qualifier` ，又没有类名（配置的时候只配置了具体的实例对象），所以 Spring 会通过类型获取，即获取 `PlatformTransactionManager` 的实现，而此时，多事务的情况下，就会有多个 `PlatformTransactionManager` 的 `Bean` 即会出现形如下面的异常`org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type [org.springframework.transaction.PlatformTransactionManager] is defined: expected single matching bean but found 2: transactionManager,transactionManagerTest`。
+
+- 解决方案
+
+  - 方案一：
+
+    - 使用配置bean的方式配置一个 `TransactionInterceptor` ，不使用注解 `tx:advice` 。
+
+    - ```xml
+      <beans>
+          <!--省略其它配置-->
+          <tx:advice id="1" transaction-manager="transactionManagerTest">
+              <tx:attributes>
+                  <tx:method name="*" rollback-for="Exception"/>
+              </tx:attributes>
+          </tx:advice>
+      
+          <!--使用2这个bean替换1这个bean就好了。毕竟注解只是为了配置方便，但是功能有缺陷-->
+          <bean id="2" class="org.springframework.transaction.interceptor.TransactionInterceptor">
+              <property name="transactionAttributeSource">
+                  <bean class="org.springframework.transaction.interceptor.NameMatchTransactionAttributeSource">
+                      <property name="nameMap">
+                          <map>
+                              <entry key="*">
+                                  <bean class="org.springframework.transaction.interceptor.RuleBasedTransactionAttribute">
+                                      <!--指定事务-->
+                                      <property name="qualifier" value="transactionManagerTest"/>
+                                      <property name="rollbackRules">
+                                          <list >
+                                              <bean class="org.springframework.transaction.interceptor.RollbackRuleAttribute">
+                                                  <constructor-arg type="java.lang.Class" value="java.lang.Exception"/>
+                                              </bean>
+                                          </list>
+                                      </property>
+                                  </bean>
+                              </entry>
+                          </map>
+                      </property>
+                  </bean>
+              </property>
+          </bean>
+      </beans>
+      ```
+
+  - 方案二
+
+    - 使用全注解的方式，原因如下。
+
+      1. spring 在解析注解 `@Transactional` 的时候，会将 `value` 的值写入到 `qualifier` 中，和上面 `2` 的配置一样。如果不写，则是空的（会使用默认事务）。所以建议 `@Transactional` 一定要带上 `value` 属性，指定具体的事务管理器。
+         （具体解析@Transactional中间value属性的源码，在SpringTransactionAnnotationParser中可以找到parseTransactionAnnotation方法）
+
+         - 具体调用链可以参考：
+
+         - ```
+           TransactionInterceptor #invoke
+           -->TransactionAspectSupport #invokeWithinTransaction （前面日志报错堆栈对应源码中也出现了）
+           -->AbstractFallbackTransactionAttributeSource #getTransactionAttribute
+           -->AbstractFallbackTransactionAttributeSource #computeTransactionAttribute
+           -->AnnotationTransactionAttributeSource #findTransactionAttribute(Method)
+           -->AnnotationTransactionAttributeSource #determineTransactionAttribute
+           -->SpringTransactionAnnotationParser #parseTransactionAnnotation(AnnotatedElement)
+           -->SpringTransactionAnnotationParser #parseTransactionAnnotation(AnnotationAttributes)
+           ```
+
+      2. `<tx:annotation-driven transaction-manager="transactionManager"/>` 会将属性 `transaction-manager` 的值设置到 `TransactionInterceptor` 的父类 `TransactionAspectSupport` 的 `transactionManagerBeanName` 属性中。如果不指定 `transaction-manager` ，设置的也是 `transactionManager` 。（意味着这个默认的设置在gc后也是可能会丢失的）
+
+      3. 事务执行的时候，在 `TransactionAspectSupport#determineTransactionManager()` 中，先检查 `qualifier` ，再检查 `transactionManagerBeanName` ，如果这两个都没有值，则获取配置的 `TransactionManager bean` 对象。
+
+      4. 如上面原因说的那样，再结合以上三点，由于这个 `TransactionManager bean` 对象是放在 `SoftReference` 中的，随时可能会丢失。所以通过 `tx:advice` 配置的事务是严重不靠谱的，它会丢失`bean`，在单事务管理下没有问题，但是在多事务管理下，就会出现 `org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type [org.springframework.transaction.PlatformTransactionManager] is defined: expected single matching bean but found 2: transactionManager,transactionManagerTest` 这样的异常。所以使用全注解的方式，可以保证事务执行的正确性，另外，可以避免 `tx:advice` 在多事务下出现的异常。
+
+      5. `<tx:annotation-driven transaction-manager="transactionManager"/>` 在 xml 中可以配置多个，但是只有第一个会生效，后面的不会创建新的 `TransactionInterceptor` 实例。
+
+- 总结
+
+  - 这个问题总算是解决了，不再出现事务错误的问题了。
+  - 谨记一点，能使用注解就使用注解 `<tx:annotation-driven transaction-manager="transactionManager"/>` 和 `@Transactional`，避免使用 `<tx:advice />` 这个配置项。
+
+参考文档：
+
+1. 我自己语雀里面的：项目相关内部知识库 - 《经验案例-广告运营平台pms-多事务管理器下配置事务后匹配报错问题》
+
 ## 设计模式
 
 1. **简单工厂(非23种设计模式中的一种)**
@@ -2549,7 +2944,379 @@ getBean() -> doGetBean() -> createBean() -> doCreateBean() -> 返回 Bean
 
 参考文档：
 
-1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md)
+1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md) P8 ~ 10
+
+## 自动配置
+
+- 流程：
+
+  1. 导入 `starter-web`：导入了 web 开发场景
+
+     1. 场景启动器导入了相关场景的所有依赖：`starter-json`、`starter-tomcat`、`springmvc`
+     2. 每个场景启动器都引入了一个 `spring-boot-starter`，核心场景启动器。
+     3. 核心场景启动器引入了 `spring-boot-autoconfigure` 包。
+     4. `spring-boot-autoconfigure` 里面囊括了所有场景的所有配置。
+     5. 只要这个包下的所有类都能生效，那么相当于 SpringBoot 官方写好的整合功能就生效了。
+     6. SpringBoot 默认却扫描不到 `spring-boot-autoconfigure` 下写好的所有配置类。（这些配置类给我们做了整合操作）默认只扫描主程序所在的包。
+
+  2. 主程序：`@SpringBootApplication`
+
+     1. **`@SpringBootApplication` 由三个注解组成 `@SpringBootConfiguration`、`@EnableAutoConfiguration`、`@ComponentScan`**
+
+     2. SpringBoot 默认只能扫描自己主程序所在的包及其下面的子包，扫描不到 `spring-boot-autoconfigure` 包中官方写好的配置类
+
+     3. `@EnableAutoConfiguration`：SpringBoot 开启自动配置的核心。
+
+        1. **是由 `@Import(AutoConfigurationImportSelector.class)` 提供功能的**：批量给容器中导入组件
+        2. SpringBoot 启动会默认加载 124 个配置类
+        3. **这 142 个配置类来自于 `spring-boot-autoconfigure` 下 `META-INF/spring/org.springframework.boot.configure.AutoConfiguration.imports` 文件指定的**
+
+        项目启动的时候利用 @Import 批量导入组件机制把 `autoconfigure` 包下的 142 个 `xxxAutoConfiguration` 类导入进来（自动配置类）
+
+     4. 按需生效：
+
+        并不是这 142 个自动配置类都能生效
+
+        **每个自动配置类，都有条件注解 `@ConditionalOnXxx`，只有条件成立，才能生效**
+
+  3. `xxxAutoConfiguration` 自动配置类
+
+     1. 给容器中使用 @Bean 放一堆组件
+     2. **每个自动配置类都可能有这个注解 `@EnableConfigurationProperties(ServerProperties.class)`，用来把配置文件中配的指定前缀的属性值封装到 `xxxProperties` 属性类中**
+     3. 以 Tomcat 为例：把服务器的所有配置都是以 `server` 开头的。配置都封装到属性类中
+     4. 给容器中放的所有组件的一些核心参数，都来自于 `xxxProperties`。`xxxProperties` 都是和配置文件绑定。
+
+     只需要改配置文件的值，核心组件的底层参数都能修改
+
+  4. 写业务，全程无需关系各种整合（底层这些整合好了，而且也生效了）
+
+- 核心流程：
+
+  1. 导入 `starter`，就会导入 `autoconfigure` 包
+  2. `autoconfigure` 包里面有一个文件 `META-INF/spring/org.springframework.boot.configure.AutoConfiguration.imports`, 里面指定了所有启动要加载的自动配置类
+  3. @EnableAutoConfiguration 会自动地把上面文件里面写的所有**自动配置类都导入进来**。**xxxAutoConfiguration 是有条件注解进行按需加载**
+  4. `xxxAutoConfiguration` 给容器中导入一堆组件，组件都是从 `xxxProperties` 中提取属性值
+  5. `xxxProperties` 又是和**配置文件**进行了绑定
+
+- 效果：导入 `starter`、修改配置文件，就能修改底层行为。
+
+参考文档：
+
+1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md) P11
+
+## 自动配置与 SPI
+
+- 应用关注的三大核心：场景、配置、组件
+- 自动配置流程
+  1. 导入 `starter`
+  2. 依赖导入 `autoconfigure`
+  3. 寻找类路径下 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 文件
+  4. 加载所有自动配置类 `xxxAutoConfiguration`
+     1. 给容器中配置功能组件
+     2. 组件参数绑定到属性类中，`xxxProperties`
+     3. 属性类和配置文件前缀项绑定
+     4. `@Conditional` 派生的条件注解进行判断是否组件生效
+  5. 效果：
+     1. 修改配置文件，修改底层参数
+     2. 所有场景自动配置好直接使用
+     3. 可以注入 SpringBoot 配置好的组件随时使用
+- SPI 机制
+  - ChatGPT 3.5 回答：
+
+    - Java 中的 SPI（Service Provider Interface）是一种软件设计模式，用于在应用程序中动态地发现和加载组件。SPI 的思想是，定义一个接口或抽象类，然后通过在 classpath 中定义实现该接口的类来实现对组件的动态发现和加载。
+    - SPI 的主要目的是解决在应用程序中使用可插拔组件的问题。例如，一个应用程序可能需要使用不同的日志框架或数据库连接池，但是这些组件的选择可能取决于运行时的条件。通过使用 SPI，应用程序可以在运行时发现并加载适当的组件，而无需在代码中硬编码这些组件的实现类。
+    - 在 Java 中，SPI 的实现方式是通过在 META-INF/services 目录下创建一个以服务接口全限定名为名字的文件，文件中包含实现该服务接口的类的全限定名。当应用程序启动时，Java 的 SPI 机制会自动扫描 classpath 中的这些文件，并根据文件中指定的类名来加载实现类。
+    - 通过使用 SPI，应用程序可以实现更灵活、可扩展的架构，同时也可以避免硬编码依赖关系和增加代码的可维护性。
+- 功能开关
+  - 自动配置：全部都配置好，什么都不用管。自动批量导入
+    - 项目一启动，SPI 文件中指定的所有都加载
+  - `@EnableXxx`：手动控制哪些功能的开启；手动导入
+    - 开启 xxx 功能
+    - 都是利用 @Import 把此功能要用的组件导入进去
+
+参考文档：
+
+1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md) P62
+
+## @SpringBootApplication 源码解析
+
+- 源码上的注解
+
+  - ```java
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class), @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class)})
+    ```
+
+- **@SpringBootConfiguration**
+
+  - 就是 @Configuration，容器中的组件、配置类， Spring IOC 启动就会加载创建这个类对象
+
+- **@EnableAutoConfiguration**：开启自动配置
+
+  - 上面有 @AutoConfigurationPackage 和 @Import(AutoConfigurationImportSelector.class)
+
+    - **@AutoConfigurationPackage**：扫描主程序包；加载自己的组件
+
+      - 上面有 `@Import(AutoConfigurationPackages.Registrar.class)`，利用它想要给容器中导入组件。
+      - 把主程序所在的包的所有组件导入进来。
+      - 为什么 SpringBoot 默认只扫描主程序所在的包及其子包
+
+    - **@Import(AutoConfigurationImportSelector.class)**：加载所有自动配置类；加载 starter 导入的组件
+
+      - ```java
+        protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttribute attribute) {
+        	List<String> configurations = ImportCandidates.load(AutoConfiguration.class, getBeanClassLoader()).getCandidates();
+            // ...
+        }
+        ```
+
+      - 扫描 SPI 文件：`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+
+- **@ComponentScan**
+
+  - 组件扫描：排除一些组件
+  - 排除前面已经扫描进来的配置类和自动配置类
+
+参考文档：
+
+1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md) P63
+
+## properties 和 yaml 配置文件的使用：复杂对象表示
+
+- properties
+
+  - ```properties
+    person.name=张三
+    person.age=18
+    person.birthDay=2010/10/12 12:12:12
+    person.like=true
+    person.child.name=李四
+    person.child.age=12
+    person.child.birthDay=2018/10/12
+    person.child.text[0]=abc
+    person.child.text[1]=def
+    person.dogs[0].name=小黑
+    person.dogs[0].age=3
+    person.dogs[1].name=小白
+    person.dogs[1].age=2
+    person.cats.c1.name=小蓝
+    person.cats.c1.age=3
+    person.cats.c2.name=小灰
+    person.cats.c2.age=2
+    ```
+
+- yaml
+
+  - ```yaml
+    person:
+    	name: 张三
+    	age: 18
+    	birth-day: 2010/10/12 12:12:12
+    	like: true
+    	child:
+    		name: 李四
+    		age: 20
+    		birth-day: 2018/10/12
+    		text: ["abc", "def"]
+    	dogs:
+    		- name: 小黑
+    		  age: 3
+    		- name: 小白
+    		  age: 2
+    	cats:
+    		c1:
+    			name: 小蓝
+    			age: 3
+    		c2: {name: 小灰, age: 2} # 对象也可以用 {} 表示
+    ```
+
+  - birthDay 推荐写为 birth-day
+
+  - 文本
+
+    - 单引号不会转义【\n 则为普通字符串显示】
+    - 双引号会转义【\n 会显示为换行符】
+
+  - 大文本
+
+    - `|` 开头，大文本写在下层，保留文本格式，换行符正确显示
+    - `>` 开头，大文本写在下层，没有缩进则折叠换行符，有缩进就保留原格式
+
+  - 多文档合并
+
+    - 使用 `---` 可以把多个 yaml 文档合并在一个文档中。每个文档区依然认为内容独立
+
+参考文档：
+
+1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md) P14 ~ 16
+
+## 自定义 starter
+
+- 过程
+
+  - 创建自定义 starter 项目，引入 `spring-boot-starter` 基础依赖
+  - 编写模块功能，引入模块所有需要的依赖。编写 `xxxAutoConfiguration` 自动配置类
+  - 编写配置文件 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 指定启动需要加载的自动配置
+  - 其他项目引入即可使用
+
+- **1、业务代码**
+
+  - 配置文件自动补全，需要导入以下依赖，重启项目：
+
+    ```xml
+    <dependency>
+    	<groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-configuration-processor</artifactId>
+        <optional>true</optional>
+    </dependency>
+    ```
+
+- **2、基本抽取**
+
+  - 创建 starter 项目，把公共代码需要的所有依赖导入
+  - 把公共代码复制进来
+  - **自己写一个 `XxxAutoConfiguration`，给容器中导入这个场景需要的所有组件（`@Import`）**
+    - 为什么这些组件默认不会扫描进去？
+    - starter 所在的包和引入它的项目的主程序所在的包不是父子层级
+  - **别人引用这个 `starter`，直接导入这个 `XxxAutoConfiguration`，就能把这个场景的组件导入进来**
+  - 功能生效
+  - 测试编写配置文件
+
+- **3、使用 Enable 机制**
+
+  - ```java
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    @Documented
+    @Import(RobotAutoConfiguration.class)
+    public @interface EnableRobot {
+        
+    }
+    ```
+
+    别人引入 `starter` 需要使用 `@EnableRobot` 开启功能
+
+- **4、完全自动配置**
+
+  - 依赖 SpringBoot 的 SPI 机制
+  - **`META-INF/spring/org.springframework.boot.configure.AutoConfiguration.imports` 文件中编写好我们自动配置类的全类名即可**
+  - 项目启动，自动加载我们的自动配置类
+
+参考文档：
+
+1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md) P65
+
+# Spring MVC
+
+## 工作原理
+
+- 图解
+
+  - ```mermaid
+    graph TB
+    u[用户访问浏览器] --1 request请求url--> ds[前端控制器 DispatcherServlet 接收用户请求和响应]
+    ds --2 请求查找 handler--> hm[处理器映射器 HandlerMapping]
+    hm --3 返回一个执行链 HandlerExecutionChain--> ds
+    ds --4 请求适配器执行 Handler--> ha[处理器适配器 HandlerAdapter 去执行 Handler]
+    ha --5 执行--> h[Handler 处理器: 平常叫做 controller]
+    h --6 返回 ModelAndView--> ha
+    ha --7 返回 ModelAndView--> ds
+    ds --8 请求进行视图解析--> vr[视图解析器 View Resolver]
+    vr --9 返回 View--> ds
+    ds --10 视图渲染: 将模型数据填充到 request 域中--> v[View 视图: jsp freemarker excel pdf]
+    ds --11 response 响应--> u
+    ```
+
+- 流程说明（重要）
+
+  1. 客户端（浏览器）发送请求，直接请求到 `DispatchServlet`
+  2. `DispatcherServlet` 根据请求信息调用 `HandlerMapping`，解析请求对应的 `Handler`。
+  3. 解析到对应的 `Handler`（也就是我们平常说的 `Controller` 控制器）后，开始由 `HandlerAdapter` 适配器处理。
+  4. `HandlerAdapter` 会根据 `Handler` 来调用真正的处理器开处理请求，并处理相应的业务逻辑。
+  5. 处理器处理完业务后，会返回一个 `ModelAndView` 对象，`Model` 是返回的数据对象，`View` 是个逻辑上的 View。
+  6. `ViewResolver` 会根据逻辑 `View` 查找实际的 `View`。
+  7. `DispatcherServlet` 把返回的 `Model` 传给 `View`（视图渲染）。
+  8. 把 `View` 返回给请求者（浏览器）
+
+参考文档：
+
+1. 《v3.0-JavaGuide面试突击版.pdf》5.1.6 Spring MVC - SpringMVC 工作原理了解吗？
+
+# MyBatis
+
+## 分页、分页插件原理
+
+- Mybatis 使用 **RowBounds 对象**进行分页，**它是针对 ResultSet 结果集执行的内存分页，而非物理分页**
+  - 可以在 sql 内直接书写带有物理分页的参数来完成物理分页功能，也可以使用分页插件来完成物理分页。
+- 分页插件的基本原理是使用 Mybatis 提供的插件接口，实现自定义插件，**在插件的拦截方法内拦截待执行的 sql，然后重写 sql**，根据 dialect 方言，添加对应的物理分页语句和物理分页参数。
+  - 举例： `select _ from student`，拦截 sql 后重写为： `select t._ from （select \* from student）t limit 0，10`
+  - **MyBatis 插件运行原理**
+    - Mybatis 仅可以编写**针对 `ParameterHandler`、`ResultSetHandler`、`StatementHandler`、`Executor` 这 4 种接口**的插件，Mybatis 使用 **JDK 的动态代理**，为需要拦截的接口生成代理对象以实现接口方法拦截功能
+    - 每当执行这 4 种接口对象的方法时，就会进入拦截方法，具体就是 `InvocationHandler` 的 `invoke()` 方法，当然，只会拦截那些你指定需要拦截的方法。
+    - 实现 Mybatis 的 Interceptor 接口并复写 `intercept()` 方法，然后再给插件编写注解，指定要拦截哪个接口的哪些方法即可，记住，别忘了在配置文件中配置你编写的插件。
+
+参考文档：
+
+1. 《v3.0-JavaGuide面试突击版.pdf》5.2.4 Mybatis 是如何分页的？分页插件的原理是什么？、5.2.5 简述 Mybatis 的插件运行原理，以及如何编写一个插件
+
+## 一级缓存（SqlSession 级别）、二级缓存（mapper 级别）原理
+
+- 一级缓存（SqlSession 级别）
+  - **MyBatis 默认开启一级缓存**
+  - 第一次发出一个查询 sql，sql 查询结果写入 SqlSession 的一级缓存中，缓存使用的数据结构是一个 map。
+    - key：MapperID+offset+limit+Sql+所有的入参
+    - value：用户信息
+  - 同一个 SqlSession 再次发出相同的 sql，就从缓存中取出数据。如果两次中间出现 commit 操作（修改、添加、删除），本 SqlSession 中的一级缓存区域全部清空，下次再去缓存中查询不到所以要从数据库查询，从数据库查询到再写入缓存。
+- 二级缓存原理（mapper 级别）
+  - **MyBatis 默认不开启二级缓存**，需要在MyBtais全局配置文件中进行setting配置开启二级缓存。
+  - **二级缓存的作用域是 SqlSessionFactory 级别，整个应用程序只有一个。**
+  - 二级缓存的范围是 mapper 级别（mapper 同一个命名空间），mapper 以命名空间为单位创建缓存数据结构，结构是 map。
+    - key：MapperID+offset+limit+Sql+所有的入参
+  - mybatis 的二级缓存是通过 CacheExecutor 实现的。
+    - CacheExecutor 其实是 Executor 的代理对象。所有的查询操作，在 CacheExecutor 中都会先匹配缓存中是否存在，不存在则查询数据库。
+  - 具体使用需要配置：
+    1. Mybatis 全局配置中启用二级缓存配置
+    2. 在对应的 Mapper.xml 中配置 cache 节点
+    3. 在对应的 select 查询节点中添加 useCache=true
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》Mybatis 的一级缓存原理（sqlsession级别）
+2. [MyBatis缓存看这一篇就够了（一级缓存+二级缓存+缓存失效+缓存配置+工作模式+测试）- CSDN](https://blog.csdn.net/Lotus_dong/article/details/116334317)
+
+## 解析和运行原理
+
+- MyBatis 与数据库会话步骤
+  1. 创建SqlSessionFactory
+  2. 通过 SqlSessionFactory 创建 SqlSession
+  3. 通过sqlsession执行数据库操作
+  4. 调用session.commit()提交事务
+  5. 调用session.close()关闭会话
+- 工作原理
+  1. **读取 MyBatis 配置文件**：**mybatis-config.xml** 为 MyBatis 的全局配置文件，配置了 MyBatis 的运行环境等信息，例如数据库连接信息。
+  2. **加载映射文件**。映射文件即 SQL 映射文件，该文件中配置了操作数据库的 SQL 语句， 需要在 MyBatis 配置文件 mybatis-config.xml 中加载。mybatis-config.xml 文件可以加 载多个映射文件，每个文件对应数据库中的一张表。
+  3. **构造会话工厂**：通过 MyBatis 的环境等配置信息构建会话工厂 **SqlSessionFactory**。
+  4. **创建会话对象**：由会话工厂创建 **SqlSession** 对象，该对象中包含了执行 SQL 语句的所有方法。
+  5. **Executor 执行器**：MyBatis 底层定义了一个 Executor 接口来操作数据库，它将根据 SqlSession 传递的参数动态地生成需要执行的 SQL 语句，同时负责查询缓存的维护。
+  6. **MappedStatement 对象**：在 Executor 接口的执行方法中有一个 MappedStatement 类型的参数，该参数是对映射信息的封装，用于存储要映射的 SQL 语句的 id、参数等信息。
+  7. **输入参数映射**：输入参数类型可以是 Map、List 等集合类型，也可以是基本数据类型和 POJO 类型。输入参数映射过程类似于 JDBC 对 preparedStatement 对象设置参数的过 程。
+  8. **输出结果映射**：输出结果类型可以是 Map、 List 等集合类型，也可以是基本数据类型 和 POJO 类型。输出结果映射过程类似于 JDBC 对结果集的解析过程。
+- 功能架构
+  - 我们把 Mybatis 的功能架构分为三层
+    - **API接口层**：提供给外部使用的接口API，开发人员通过这些本地API来操纵数据库。接口层 一接收到调用请求就会调用数据处理层来完成具体的数据处理。
+    - **数据处理层**：负责具体的SQL查找、SQL解析、SQL执行和执行结果映射处理等。它主要的 目的是根据调用的请求完成一次数据库操作。
+    - **基础支撑层**：负责最基础的功能支撑，包括连接管理、事务管理、配置加载和缓存处理，这 些都是共用的东西，将他们抽取出来作为最基础的组件。为上层的数据处理层提供最基础的 支撑。
+  - MyBatis的框架架构设计是怎么样的
+    - MyBatis的初始化，会从mybatis-config.xml配置文件，解析构造成 Configuration这个类
+      1. 加载配置：配置来源于两个地方，一处是配置文件，一处是Java代码的注解，将SQL的 配置信息加载成为一个个MappedStatement对象（包括了传入参数映射配置、执行的SQL 语句、结果映射配置），存储在内存中。
+      2. SQL解析：当API接口层接收到调用请求时，会接收到传入SQL的ID和传入对象（可以是 Map、JavaBean或者基本数据类型），Mybatis 会根据SQL的ID找到对应的 MappedStatement，然后根据传入参数对象对MappedStatement进行解析，解析后可以 得到最终要执行的 SQL语句和参数。
+      3. SQL执行：将最终得到的SQL和参数拿到数据库进行执行，得到操作数据库的结果。
+      4. 结果映射：将操作数据库的结果按照映射的配置进行转换，可以转换成HashMap、 JavaBean或者基本数据类型，并将最终结果返回。
+
+参考文档：
+
+1. 《Java岗面试核心MCA版.pdf》MyBatis 的解析和运行原理
 
 # MySQL
 
