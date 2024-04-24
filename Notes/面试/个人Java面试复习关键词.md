@@ -3207,6 +3207,430 @@ getBean() -> doGetBean() -> createBean() -> doCreateBean() -> 返回 Bean
 
 1. [《尚硅谷SpringBoot零基础教程》笔记.md](../视频笔记/《尚硅谷SpringBoot零基础教程》笔记.md) P65
 
+# Spring Cloud
+
+## Gateway（作用、实现原理、核心组件）
+
+- Gateway 在微服务中的作用
+
+  - gateway 最基本的作用，它处理请求是逻辑是根据 **配置的路由** 对请求进行 **预处理** 和 **转发**
+    1. 当 **请求方** 发送一个请求到达 gateway 时，gateway 根据 **配置的路由规则**，找到 **对应的服务名称**。
+    2. 当某个服务存在多个实例时，gateway 会根据 **负载均衡算法**（比如：轮询）从中挑选出一个实例，然后将请求 **转发** 过去。
+    3. 服务实例返回的的响应结果会再经过 gateway 转发给请求方。
+  - 除此之外，还包括但不限于如下功能：
+    - 权限校验
+    - 限流熔断
+    - 请求重试。
+    - 监控统计
+    - 灰度流量
+
+- Gateway 的工作原理
+
+  - 在讨论 gateway 工作原理之前， 我们先思考下， 如果让我们制作一个简单的网关应用， 实现方式有哪些。
+
+  - 实现一个网关的几种方式
+
+    - 根据上一章节末的描述可知， gateway 主要用于请求的转发处理。因此这里就涉及了网络通信的知识。
+      - 基于 Socket API 实现
+      - 基于 Netty 实现
+      - 基于 Web 框架实现
+
+  - 底层实现原理
+
+    - 先简单翻译一下摘自 gateway 官网的描述：
+      - SpringCloud Gateway 是基于 Spring 5.0，Spring Boot 2.0 和 Project Reactor 等技术开发的网关。为了提升网关的性能，SpringCloud Gateway 是**基于 WebFlux 框架实现的**，而 WebFlux 框架底层则使用了**高性能的 Reactor 模式通信框架 Netty**。
+    - 然后我们结合 2.1 章节的分析， 可以将官网的描述成如下大白话：
+      1. 实现网关必将涉及到网络通信，众所周知 `Netty` 是一款 **出色** 的网络通信框架。
+      2. 为了提升网关的性能， gateway 使用到了响应式编程。
+      3. 而 WebFlux 框架底层就使用了高性能的 `Reactor` 模式通信框架 `Netty`，所以可以直接拿来用。
+    - **PS:** 至于什么是响应式编程， 为什么 gateway 基于这些技术能够实现高性能， 这些不是本文探讨的内容，感兴趣的读者可以自行去了解。
+    - 那么， 如何理解 Spring WebFlux，我们暂且就把它当做 Spring WebMVC。一个 web 框架。
+      他们之间很重要的一个区别就在于 webmvc 我们一般会基于 `tomcat` 容器去完成底层的网络通信, 而 webflux 是基于 `Netty`。
+
+  - 如何工作的
+
+    - 流程
+      1. 客户端向 Spring Cloud Gateway 发出请求。
+      2. 如果 Gateway Handler Mapping 找到与请求相匹配的路由，将其发送到 Gateway Web Handler。
+      3. Handler 再通过指定的 **过滤器链** 来将请求发送到我们实际的服务执行业务逻辑，然后返回。
+      4. 过滤器之间用虚线分开是因为过滤器可能会在发送代理请求之前（“pre”）或之后（“post”）执行业务逻辑。
+    - 从图中可以看出， 在 gateway 视角里，它在处理请求时， 划分成如下三大角色：
+      - **HandlerMapping**
+      - **Handler**
+      - **Filter Chain**
+    - 此时， 如果熟悉 Spring MVC 工作原理的可以看出，它和 Springmvc 的核心工作流程是类似的。
+
+  - webflux 的工作原理以及 gateway 是如何基于它进行扩展
+
+    - 上面说到， gateway 底层还是基于 webflux。我们首先简单了解下 webflux 的工作原理， 然后延伸到 gateway 是如何基于 webflux 做扩展的。
+
+    - 流程图
+
+      ```mermaid
+      graph TB
+      	浏览器 --http 请求--> NettyServer --apply--> ReactorHttpHandlerAdapter --handle--> DelayedInitializationHttpHandler --handle--> HttpWebHandlerAdapter --handle--> ExceptionHandlingWebHandler --handle--> WebHandlerDecorator --handle--> org.springframework.web.server.handler.FilteringWebHandler --filter--> DefaultWebFilterChain
+      	DefaultWebFilterChain --filter--> WebFilter___1
+      	DefaultWebFilterChain --handle--> DispatcherHandler___2 --getHandler--> HandlerMapping --handle--> SimpleHandlerAdapter --handle--> org.springframework.cloud.gateway.handler.FilteringWebHandler___3 --filter--> DefaultGatewayFilterChain___4
+      ```
+
+    - 以上是 webflux 处理请求的代码链路。我们着重看下标有颜色的类。
+
+      1. 接受请求的关键类是 `ReactorHttpHandlerAdapter`，他的作用是将 netty 的请求、响应转为 http 的请求、响应， 并交给后面的类处理。
+      2. 标记 ① 位置的过滤器链是 webflux 自身的。
+      3. 标记 ③ 对应的 `FilteringWebHandler` 是 gateway 对 webflux 的扩展。
+      4. 标记 ②③④ 整理对应最上面的 gateway 的工作流程。
+
+    - 简单总结
+
+      1. webflux 在处理请求时，会先执行自身的过滤器链
+      2. 然后通过 HandlerMapping 拿到对应的 Handller
+      3. gateway 通过 **第二步** webflux 提供的扩展点， 实现了对应的接口， 最终导致 **代码链路** 走到了 gateway 中定义的 Handler， 此时 gateway 就可以对到来的请求 “为所欲为” 了。
+      4. gateway 通过定义自己的过滤器链，从而又方便了开发者对其进行自定义扩展。
+
+- **核心组件**
+
+  - Gateway 有三个比较核心的组件， 可以结合如下路由配置看一看：
+
+    ```yaml
+    spring:
+      cloud:
+        gateway:
+          routes:
+          - id: test_route
+            uri: lb://service-A
+            predicates:
+             - Path=/hello
+            filters:
+            - SetRequestHeader=X-Request-Red, Blue
+    ```
+
+  - **Route**
+
+    - gateway 中可以配置多个 `Route`。一个 `Route` 由路由 id，转发的 uri，多个 `Predicates` 以及多个 `Filters` 构成。处理请求时会按优先级排序，找到第一个满足所有 `Predicates` 的 Route。
+
+  - **`Predicates`**
+
+    - 表示路由的匹配条件，可以用来匹配请求的各种属性，如请求路径、方法、header 等。一个 `Route` 可以包含多个 `Predicates`，多个 `Predicates` 最终会合并成一个。
+
+  - **Filter**
+
+    - 过滤器包括了处理请求和响应的逻辑，可以分为 pre 和 post 两个阶段。多个 `Filter` 在 pre 阶段会按优先级高到低顺序执行，post 阶段则是反向执行。gateway 中的 Filter 分为如下两种：
+      - 全局 Filter: 每种全局 `Filter` 在 gateway 中只会有一个实例，会对所有的 `Route` 都生效。
+      - 路由 Filter: 路由 `Filter` 是针对 `Route` 进行配置的，不同的 `Route` 可以使用不同的参数，因此会创建不同的实例。
+
+  - 围绕上述三个组件， gateway 又衍生出了一些其他组件。
+
+    - RouteLocator
+    - RouteDefinitionLocator
+    - RoutePredicateHandlerMapping
+    - FilteringWebHandler
+
+  - 接下来，我们通过对上图进行讲解， 来详细介绍各个组件在 gateway 中的作用。
+
+    - **首先， gateway 本质就是一个 `Springboot` 应用， 他是通过 webflux 框架处理请求和响应，而 webflux 底层是基于 `Netty`。**
+    - 当 gateway 启动时
+      - **Spring 会装载 `GatewayAutoConfiguration` 中配置的一些必要的组件 `Bean`。** 比如：
+        - `GatewayProperties`， 他里面保存了 gateway 的全部配置（其中就有路由配置信息）。
+        - `GlobalFilter` ， gateway 默认的一些全局过滤器。
+        - `RouteDefinitionLocator`， 通过加载路由配置(比如读取 yaml 文件)， 拿到 `RouteDefinition` ， 里面是对路由的定义。
+        - `RouteLocator`， 负责组装 `Route` 对象， `Route` 对象中保存的是路由相关的信息。后续进行路由操作都是基于此对象。（请注意和 `RouteDefinition` 区分开）
+        - `RoutePredicateHandlerMapping` 和 `org.springframework.cloud.gateway.handler.FilteringWebHandler` ， 这两个类是对 `webflux` 中两个组件的扩展实现，后续会说到具体作用。
+      - **启动 Netty Server， 负责监听请求**
+    - 当 gateway 接收到请求时
+      - `webflux` 经过一层层处理后，然后会去调用 `HandlerMapping` 接口，拿到对应的 `Handler`。最后调用 `Handler` 的 `handle` 方法进行业务处理。
+      - **gateway 通过实现 `HandlerMapping` 和 `Handler` 两个接口**，从而把处理请求的 **活儿** 从 `webflux` 手中接过来。
+      - 在上一步中， gateway 已经根据请求信息， 从路由集合中挑选出来了一个匹配的路由，路由信息中包含了一个过滤器链。
+      - 在 `Handler#handle` 方法中，客户端发来的请求会经过上一步中过滤器链， 最终经过层层处理的请求会转发到对应服务中。
+
+- **更多细节组件**
+
+  - RouteDefinition 和 Route
+
+    - **RouteDefinition 定义了一个路由应该包含哪些匹配条件和过滤器，以及这些匹配条件和过滤器使用的参数， 它表示的是一个名词定义**。在使用时 Gateway进行路由时， 会根据 RouteDefinition 对象提供的定义构造出 Route 对象，而 Route 里面提供了很多动作。
+    - 并且我们在前面提到： “一个 `Route` 可以包含多个 `Predicates`，多个 `Predicates` 最终会合并成一个。因此我们可以看到，关于 Predicates，RouteDefinition 里面定义的是一个集合， 而 Route 中只是一个对象。
+
+  - RouteLocator
+
+    - `RouteLocator` 接口中定义了获取路由配置的方法，RouteLocator 有不同的实现，对应了不同的定义路由的方式。
+
+    - 前文中我们提到，定义路由的其中一个方式是通过 `RouteLocatorBuilder` 提供的 API 来构建具体的 `Route`。
+
+    - 如下代码中定义了一个路由，其中包含了一个 path 匹配条件，以及一个添加响应 header 的 filter，请求转发的目标地址是 `https://blog.csdn.net`
+
+      - ```java
+        @Bean
+        public RouteLocator routeLocator(RouteLocatorBuilder builder) {
+          return builder.routes()
+            .route("route-id", r -> r.path("/test")
+        					.filters(f -> f.addResponseHeader("X-TestHeader", "foobar"))
+        					.uri("https://blog.csdn.net")
+        				)
+            .build();
+        }
+        ```
+
+    - 而 `RouteDefinitionRouteLocator` 是 `RouteLocator` 另一种常用的实现 。这种实现依赖于 `RouteDefinitionLocator` 来提供 `RouteDefinition` ，再由 `RouteDefinition` 构造路由。
+
+    - `CompositeRouteLocator `会把所有的 `RouteLocator` 的实现组合起来，再缓存到 `CachingRouteLocator` 中 。
+
+  - RouteDefinitionLocator
+
+    - `RouteDefinitionLocator` 接口定义了获取 `RouteDefinition` 的方法。
+    - 前面我们多次提到 `PropertiesRouteDefinitionLocator` 可以通过解析 gateway 的配置文件中的路由配置拿到 `RouteDefinition` 对象集合
+    - 同上面的 `RouteLocator` 一样， 当 gateway 中有多个 `RouteDefinitionLocator` 实现时 ， 同样会被 `CompositeRouteDefinitionLocator` 组合起来。
+
+  - Filter
+
+    - gateway 处理请求和响应的核心逻辑就在 Filter 中。gateway 本身实现提供了基础通用的过滤器，可以直接配置使用。 比如在请求前后， 分别添加请求头和响应头
+      我们再来看几个比较有意思的全局过滤器：
+      - `NettyRoutingFilter`
+        在这个过滤器里面， 会发送转发请求到具体的 uri。
+      - `ReactiveLoadBalancerClientFilter`
+        当 gateway 接入微服务时， 如果我们请求的服务存在多个实例，会在这里面进行负载均衡的处理。
+
+参考文档：
+
+1. [细到不能再细的 Spring Cloud Gateway 原理分析（内含多张图片讲解）- CSDN](https://blog.csdn.net/cnm10050/article/details/127261680)
+
+## OpenFeign（Feign、使用、核心流程、包扫描、注册 bean、动态代理）
+
+- **Feign 和 OpenFeign**
+
+  - OpenFeign 组件的前身是 Netflix Feign 项目，它最早是作为 Netflix OSS 项目的一部分，由 Netflix 公司开发。后来 Feign 项目被贡献给了开源组织，于是才有了我们今天使用的 Spring Cloud OpenFeign 组件。
+  - **Feign 和 OpenFeign 有很多大同小异之处，不同的是 OpenFeign 支持 MVC 注解**。
+    - 可以认为 OpenFeign 为 Feign 的增强版。
+  - 简单总结下 OpenFeign 能用来做什么：
+    - OpenFeign 是声明式的 HTTP 客户端，让远程调用更简单。
+    - 提供了HTTP请求的模板，编写简单的接口和插入注解，就可以定义好HTTP请求的参数、格式、地址等信息
+    - **整合了Ribbon（负载均衡组件）和 Hystix（服务熔断组件）**，不需要显示使用这两个组件
+    - **Spring Cloud Feign 在 Netflix Feign的基础上扩展了对 SpringMVC 注解的支持**
+
+- **OpenFeign 如何用？**
+
+  - 第一步：Member 服务需要定义一个 OpenFeign 接口：
+
+    ```java
+    @FeignClient("passjava-study")
+    public interface StudyTimeFeignService {
+        @RequestMapping("study/studytime/member/list/test/{id}")
+        public R getMemberStudyTimeListTest(@PathVariable("id") Long id);
+    }
+    ```
+
+    我们可以看到这个 interface 上**添加了注解`@FeignClient`**，而且括号里面指定了服务名：passjava-study。显示声明这个接口用来远程调用 `passjava-study`服务。
+
+  - 第二步：Member 启动类上添加 `@EnableFeignClients`注解开启远程调用服务，且需要开启服务发现。如下所示：
+
+    ```java
+    @EnableFeignClients(basePackages = "com.jackson0714.passjava.member.feign")
+    @EnableDiscoveryClient
+    ```
+
+  - 第三步：Study 服务定义一个方法，其方法路径和 Member 服务中的接口 URL 地址一致即可。
+
+    URL 地址："study/studytime/member/list/test/{id}"
+
+    ```java
+    @RestController
+    @RequestMapping("study/studytime")
+    public class StudyTimeController {
+        @RequestMapping("/member/list/test/{id}")
+        public R memberStudyTimeTest(@PathVariable("id") Long id) {
+           ... 
+        }
+    }
+    ```
+
+  - 第四步：Member 服务的 POM 文件中引入 OpenFeign 组件
+
+    ```xml
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-openfeign</artifactId>
+    </dependency>
+    ```
+
+  - 第五步：引入 studyTimeFeignService，Member 服务远程调用 Study 服务即可。
+
+    ```java
+    @Autowired
+    private StudyTimeFeignService studyTimeFeignService;
+    
+    studyTimeFeignService.getMemberStudyTimeListTest(id);
+    ```
+
+  - 通过上面的示例，我们知道，加了 @FeignClient 注解的接口后，我们就可以调用它定义的接口，然后就可以调用到远程服务了。
+
+    > 这里你是否有疑问：为什么接口都没有实现，就可以调用了？
+
+    OpenFeign 使用起来倒是简单，但是里面的原理可没有那么简单，OpenFeign 帮我们做了很多事情，接下来我们来看下 OpenFeign 的架构原理
+
+- **OpenFeign 的核心流程**
+
+  1. 在 Spring 项目启动阶段，服务 A 的 **OpenFeign 框架会发起一个主动的扫包流程**。
+  2. 从指定的目录下**扫描并加载所有被 @FeignClient 注解修饰的接口，然后将这些接口转换成 Bean**，统一交给 Spring 来管理。
+  3. 根据这些接口会经过 **MVC Contract 协议解析，将方法上的注解都解析出来**，放到 MethodMetadata 元数据中。
+  4. 基于上面加载的**每一个 FeignClient 接口，会生成一个动态代理对象**，指向了一个包含对应方法的 MethodHandler 的 HashMap。MethodHandler 对元数据有引用关系。生成的动态代理对象会被添加到 Spring 容器中，并注入到对应的服务里。
+  5. 服务 A 调用接口，准备发起远程调用。
+  6. 从动态代理对象 Proxy 中找到一个 MethodHandler 实例，生成 Request，包含有服务的请求 URL（不包含服务的 IP）。
+  7. 经过负载均衡算法找到一个服务的 IP 地址，拼接出请求的 URL
+  8. 服务 B 处理服务 A 发起的远程调用请求，执行业务逻辑后，返回响应给服务 A。
+
+- **OpeFeign 包扫描原理**
+
+  - 涉及到了一个 OpenFeign 的注解：`@EnableFeignClients`。根据字面意思可以知道，可以注解是开启 OpenFeign 功能的。
+
+  - 包扫描的基本流程如下：
+
+    1. @EnableFeignClients 这个注解使用 Spring 框架的 `Import` 注解导入了 FeignClientsRegistrar 类，开始了 OpenFeign 组件的加载。PassJava 示例代码如下所示。
+
+       ```java
+       // 启动类加上这个注解
+       @EnableFeignClients(basePackages = "com.jackson0714.passjava.member.feign")
+       
+       // EnableFeignClients 类还引入了 FeignClientsRegistrar 类
+       @Import(FeignClientsRegistrar.class)
+       public @interface EnableFeignClients {
+         ...
+       }
+       ```
+
+    2. FeignClientsRegistrar 负责 Feign 接口的加载。
+
+       ```java
+       @Override
+       public void registerBeanDefinitions(AnnotationMetadata metadata,
+             BeanDefinitionRegistry registry) {
+          // 注册配置
+          registerDefaultConfiguration(metadata, registry);
+          // 注册 FeignClient
+          registerFeignClients(metadata, registry);
+       }
+       ```
+
+    3. registerFeignClients 会扫描指定包。
+
+       核心源码如下，调用 find 方法来查找指定路径 basePackage 的所有带有 @FeignClients 注解的带有 @FeignClient 注解的类、接口。
+
+       ```java
+       Set<BeanDefinition> candidateComponents = scanner
+             .findCandidateComponents(basePackage);
+       ```
+
+    4. 只保留带有 @FeignClient 的接口。
+
+       ```java
+       // 判断是否是带有注解的 Bean。
+       if (candidateComponent instanceof AnnotatedBeanDefinition) {
+         // 判断是否是接口
+          AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) candidateComponent;
+          AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
+         // @FeignClient 只能指定在接口上。
+          Assert.isTrue(annotationMetadata.isInterface(),
+                "@FeignClient can only be specified on an interface");
+       ```
+
+- **注册 FeignClient 到 Spring 的原理**
+
+  - 还是在 registerFeignClients 方法中，当 FeignClient 扫描完后，就要为这些 FeignClient 接口生成一个动态代理对象。
+
+  - 顺藤摸瓜，进到这个方法里面，可以看到这一段代码：
+
+    ```java
+    BeanDefinitionBuilder definition = BeanDefinitionBuilder
+          .genericBeanDefinition(FeignClientFactoryBean.class);
+    ```
+
+  - 核心就是 FeignClientFactoryBean 类，根据类的名字我们可以知道这是一个工厂类，用来创建 FeignClient Bean 的。
+
+  - 我们最开始用的 @FeignClient，里面有个参数 "passjava-study"，这个是注解的属性，当 OpenFeign 框架去创建 FeignClient Bean 的时候，就会使用这些参数去生成 Bean。流程如下：
+
+    - 解析 `@FeignClient` 定义的属性。
+    - 将注解`@FeignClient` 的属性 +  接口 `StudyTimeFeignService`的信息构造成一个 StudyTimeFeignService 的 beanDefinition。
+    - 然后将 beanDefinition 转换成一个 holder，这个 holder 就是包含了 beanDefinition, alias, beanName 信息。
+    - 最后将这个 holder 注册到 Spring 容器中。
+
+  - 源码如下：
+
+    ```java
+    // 生成 beanDefinition
+    AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
+    // 转换成 holder，包含了 beanDefinition, alias, beanName 信息
+    BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className,
+        new String[] { alias });
+    // 注册到 Spring 上下文中。
+    BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
+    ```
+
+- **OpenFeign 动态代理原理**
+
+  - 上面的源码解析中我们也提到了是由这个工厂类  FeignClientFactoryBean 来创建 FeignCient Bean，所以我们有必要对这个类进行剖析。
+  - 在创建 FeignClient Bean 的过程中就会去生成动态代理对象。调用接口时，其实就是调用动态代理对象的方法来发起请求的。
+  - 创建动态代理的原理图如下所示：
+    - 解析 FeignClient 接口上各个方法级别的注解，比如远程接口的 URL、接口类型（Get、Post 等）、各个请求参数等。这里用到了 MVC Contract 协议解析，后面会讲到。
+    - 然后将解析到的数据封装成元数据，并为每一个方法生成一个对应的 MethodHandler 类作为方法级别的代理。相当于把服务的请求地址、接口类型等都帮我们封装好了。这些 MethodHandler 方法会放到一个 HashMap 中。
+    - 然后会生成一个 InvocationHandler 用来管理这个 hashMap，其中 Dispatch 指向这个 HashMap。
+    - 然后使用 Java 的 JDK 原生的动态代理，实现了 FeignClient 接口的动态代理 Proxy 对象。这个 Proxy 会添加到 Spring 容器中。
+    - 当要调用接口方法时，其实会调用动态代理 Proxy 对象的 methodHandler 来发送请求。
+
+- **解析 MVC 注解的原理**
+
+  - 上面我们讲到了接口上是有一些注解的，比如 @RequestMapping，@PathVariable，这些注解统称为 Spring MVC 注解。但是由于 OpenFeign 是不理解这些注解的，所以需要进行一次解析。
+  - 而解析的类就是 `SpringMvcContract` 类，调用 `parseAndValidateMetadata`  进行解析。解析完之后，就会生成元数据列表。
+  - 这个元数据 MethodMetadata 里面有什么东西呢？
+    - 方法的定义，如 StudyTimeFeignService 的 getMemberStudyTimeList 方法。
+    - 方法的参数类型，如 Long。
+    - 发送 HTTP 请求的地址，如 /study/studytime/member/list/test/{id}。
+  - 然后每个接口方法就会有对应的一个 MethodHandler，它里面就包含了元数据，当我们调用接口方法时，其实是调用动态代理对象的 MethodHandler 来发送远程调用请求的。
+
+- **OpenFeign 发送请求的原理**
+
+  - 还是在 ReflectiveFeign 类中，有一个 invoke 方法，会执行以下代码：
+
+    ```java
+    dispatch.get(method).invoke(args);
+    ```
+
+    - 这个 dispatch 我们之前已经讲解过了，它指向了一个 HashMap，里面包含了 FeignClient 每个接口的 MethodHandler 类。
+
+    - 这行代码的意思就是根据 method 找到 MethodHandler，调用它的 invoke 方法，并且传的参数就是我们接口中的定义的参数。
+
+    - 那我们再跟进去看下这个 MethodHandler invoke 方法里面做了什么事情。
+
+      - 我们可以看到这个方法里面生成了 RequestTemplate，它的值类似如下：
+
+        ```http
+        GET /study/list/test/1 HTTP/1.1
+        ```
+
+      - RequestTemplate 转换成 Request，它的值类似如下：
+
+        ```http
+        GET http://passjava-study/study/list/test/1 HTTP/1.1
+        ```
+
+        - 这路径不就是我们要 study 服务的方法，这样就可以直接调用到 study 服了呀！
+        - OpenFeign 帮我们组装好了发起远程调用的一切，我们只管调用就好了。
+
+  - 接着 MethodHandler 会执行以下方法，发起 HTTP 请求。
+
+参考文档：
+
+1. [10000字 | 深入理解 OpenFeign 的架构原理 - 腾讯云](https://cloud.tencent.com/developer/article/2002979)
+
+# Thrift
+
+## 报错 org.apache.thrift.transport.TTransportException: Frame size (1937007972) larger than max length
+
+- 原因：客户端thrift通信端口号 与服务器Tomcat http通信服务端口号相同。服务端的http协议不能解析客户端的thrift（rpc）通信协议。
+  - 如：Tomcat http通信端口号为 8080   客户端thrift通信端口号也为8080 则报此错误。
+- 解决：客户端thrift通信端口号，与服务端thrift端口号保持一致【且客户端、服务端thrift通信协议必须保持一致】。且服务端thrift通信端口号与http服务端口号不相同即可，如 9991。
+  服务端thrift通信端口号，是在项目启动时自动绑定到服务。
+
+参考文档：
+
+1. [Thrift 常见问题 整理 - CSDN](https://blog.csdn.net/LiuKingJia/article/details/82810929)
+
 # Spring MVC
 
 ## 工作原理
@@ -5735,7 +6159,1729 @@ BigKey 生产调优
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景七：讲讲 Redis 的虚拟内存？
 
+# Elasticsearch
+
+## 查询语句（match、sort、bool、_source、from、size、aggs、range、term、mappings）
+
+- ES 是什么
+
+  - 是基于Apache Lucene的开源分布式（全文）搜索引擎，，提供简单的RESTful API来隐藏Lucene的复杂性。
+  - 除了全文搜索引擎之外，还可以这样描述它：
+    1. 分布式的实时文件存储，每个字段都被索引并可被搜索
+    2. 分布式的实时分析搜索引擎
+    3. 可以扩展到成百上千台服务器，处理PB级结构化或非结构化数据。
+
+- ES 数据组织类比
+
+  - | Relational DB      | Elasticsearch   |
+    | ------------------ | --------------- |
+    | 数据库（database） | 索引（indices） |
+    | 表（tables）       | types           |
+    | 行（rows）         | documents       |
+    | 字段（columns）    | fields          |
+
+- ES简单的增删改查
+
+  - 创建一篇文档（有则修改，无则创建)
+
+    ```json
+    PUT test/doc/2
+    {
+      "name":"wangfei",
+      "age":27,
+      "desc":"热天还不让后人不认同"
+    }
+    
+    PUT test/doc/1
+    {
+      "name":"wangjifei",
+      "age":27,
+      "desc":"萨芬我反胃为范围额"
+    }
+    
+    PUT test/doc/3
+    {
+      "name":"wangyang",
+      "age":30,
+      "desc":"点在我心内的几首歌"
+    }
+    ```
+
+  - 查询指定索引信息
+
+    ```HTTP
+    GET test
+    ```
+
+  - 查询指定文档信息
+
+    ```http
+    GET test/doc/1
+    GET test/doc/2
+    ```
+
+  - 查询对应索引下所有数据
+
+    ```json
+    GET test/doc/_search
+    或
+    GET test/doc/_search
+    {
+      "query": {
+        "match_all": {}
+      }
+    }
+    
+    ```
+
+  - 删除指定文档
+
+    ```http
+    DELETE test/doc/3
+    ```
+
+  - 删除索引
+
+    ```http
+    DELETE test
+    ```
+
+  - 修改指定文档方式
+
+    - **PUT 修改时，不指定的属性会自动覆盖，只保留指定的属性**(不正确的修改指定文档方式)
+
+      ```json
+      PUT test/doc/1
+      {
+        "name":"王计飞"
+      }
+      ```
+
+    - **使用 POST 命令，在 id 后面跟_update，要修改的内容放到doc文档（属性）中**(正确的修改指定文档方式)
+
+      ```json
+      POST test/doc/1/_update
+      {
+        "doc":{
+          "desc":"生活就像 茫茫海上"
+        }
+      }
+      ```
+
+- ES 查询的两种方式
+
+  - **查询字符串搜索**
+
+    ```http
+    GET test/doc/_search?q=name:wangfei
+    ```
+
+  - **结构化查询(**单字段查询,不能多字段组合查询)
+
+    ```json
+    GET test/doc/_search
+    {
+      "query":{
+        "match":{
+          "name":"wang"
+        }
+      }
+    }
+    ```
+
+- match 系列之操作
+
+  - **match_all (查询全部)**
+
+    ```json
+    GET test/doc/_search
+    {
+      "query":{
+        "match_all": {
+        }
+      }
+    }
+    ```
+
+  - **match_phrase（短语查询）**
+
+    - 准备数据
+
+      ```json
+      PUT test1/doc/1
+      {
+        "title": "中国是世界上人口最多的国家"
+      }
+      PUT test1/doc/2
+      {
+        "title": "美国是世界上军事实力最强大的国家"
+      }
+      PUT test1/doc/3
+      {
+        "title": "北京是中国的首都"
+      }
+      ```
+
+    - 查询语句
+
+      ```json
+      GET test1/doc/_search
+      {
+        "query":{
+          "match":{
+            "title":"中国"
+          }
+        }
+      }
+      ```
+
+    - 输出结果
+
+      ```json
+      {
+        "took" : 241,
+        "timed_out" : false,
+        "_shards" : {
+          "total" : 5,
+          "successful" : 5,
+          "skipped" : 0,
+          "failed" : 0
+        },
+        "hits" : {
+          "total" : 3,
+          "max_score" : 0.68324494,
+          "hits" : [
+            {
+              "_index" : "test1",
+              "_type" : "doc",
+              "_id" : "1",
+              "_score" : 0.68324494,
+              "_source" : {
+                "title" : "中国是世界上人口最多的国家"
+              }
+            },
+            {
+              "_index" : "test1",
+              "_type" : "doc",
+              "_id" : "3",
+              "_score" : 0.5753642,
+              "_source" : {
+                "title" : "北京是中国的首都"
+              }
+            },
+            {
+              "_index" : "test1",
+              "_type" : "doc",
+              "_id" : "2",
+              "_score" : 0.39556286,
+              "_source" : {
+                "title" : "美国是世界上军事实力最强大的国家"
+              }
+            }
+          ]
+        }
+      }
+      ```
+
+    - 通过观察结果可以发现，虽然如期的返回了中国的文档。但是却把和美国的文档也返回了，这并不是我们想要的。是怎么回事呢？因为这是 **elasticsearch 在内部对文档做分词的时候，对于中文来说，就是一个字一个字分的**，所以，我们搜中国，中和国都符合条件，返回，而美国的国也符合。而我们认为中国是个短语，是一个有具体含义的词。所以 elasticsearch 在处理中文分词方面比较弱势。后面会讲针对**中文的插件**。但**目前我们还有办法解决，那就是使用短语查询 用match_phrase**
+
+    - 短语查询语句
+
+      ```json
+      GET test1/doc/_search
+      {
+        "query":{
+          "match_phrase": {
+            "title": "中国"
+          }
+        }
+      }
+      ```
+
+    - 短语查询结果
+
+      ```json
+      {
+        "took" : 10,
+        "timed_out" : false,
+        "_shards" : {
+          "total" : 5,
+          "successful" : 5,
+          "skipped" : 0,
+          "failed" : 0
+        },
+        "hits" : {
+          "total" : 2,
+          "max_score" : 0.5753642,
+          "hits" : [
+            {
+              "_index" : "test1",
+              "_type" : "doc",
+              "_id" : "1",
+              "_score" : 0.5753642,
+              "_source" : {
+                "title" : "中国是世界上人口最多的国家"
+              }
+            },
+            {
+              "_index" : "test1",
+              "_type" : "doc",
+              "_id" : "3",
+              "_score" : 0.5753642,
+              "_source" : {
+                "title" : "北京是中国的首都"
+              }
+            }
+          ]
+        }
+      }
+      ```
+
+    - 我们搜索中国和世界这两个指定词组时，但又不清楚两个词组之间有多少别的词间隔。那么在搜的时候就要留有一些余地。这时就要用到了**slop**了。相当于正则中的 `中国.*?世界`。这个间隔默认为0
+
+  - **match_phrase_prefix（最左前缀查询）**智能搜索--以什么开头
+
+    - max_expansions 参数理解 前缀查询会非常的影响性能，要对结果集进行限制，就加上这个参数
+
+  - **multi_match（多字段查询)**
+
+    - multi_match是要在多个字段中查询同一个关键字 除此之外，mulit_match甚至可以当做match_phrase和match_phrase_prefix使用，只需要指定type类型即可
+
+    - ```json
+      GET test2/doc/_search
+      {
+        "query": {
+          "multi_match": {
+            "query": "beautiful",
+            "fields": ["title","desc"]
+          }
+        }
+      }
+      ```
+
+    - 当设置属性 `type:phrase` 时 等同于 短语查询
+
+    - 当设置属性 `type:phrase_prefix` 时 等同于 最左前缀查询
+
+- ES 的排序查询
+
+  - es 6.8.4版本中，需要分词的字段不可以直接排序，比如：text类型，如果想要对这类字段进行排序，需要特别设置：对字段索引两次，一次索引分词（用于搜索）一次索引不分词（用于排序），es默认生成的text类型字段就是通过这样的方法实现可排序的。
+
+  - ```json
+    GET test/doc/_search
+    {
+      "query": {
+        "match_all": {}
+      },
+      "sort": [
+        {
+          "age": {
+            "order": "desc"
+          }
+        }
+      ]
+    }
+    ```
+
+- ES 的分页查询
+
+  - from：从哪开始查 size：返回几条结果
+
+  - ```json
+    GET test/doc/_search
+    {
+      "query": {
+        "match_phrase_prefix": {
+          "name": "wang"
+        }
+      },
+      "from": 0,
+      "size": 1
+    }
+    ```
+
+- ES的bool查询 (must、should)
+
+  - must (must字段对应的是个列表，也就是说可以有多个并列的查询条件，一个文档满足各个子条件后才最终返回)
+
+    - ```json
+      #### 单条件查询
+      GET test/doc/_search
+      {
+        "query": {
+          "bool": {
+            "must": [
+              {
+                "match": {
+                "name": "wangfei"
+                }
+              }
+            ]
+          }
+        }
+      }
+      
+      #### 多条件组合查询
+      GET test/doc/_search
+      {
+        "query": {
+          "bool": {
+            "must": [
+              {
+                "match": {
+                  "name": "wanggfei"
+                }
+              },{
+                "match": {
+                  "age": 25
+                }
+              }
+            ]
+          }
+        }
+      }
+      ```
+
+  - should (只要符合其中一个条件就返回)
+
+    - ```json
+      GET test/doc/_search
+      {
+        "query": {
+          "bool": {
+            "should": [
+              {
+                "match": {
+                "name": "wangjifei"
+              }
+              },{
+                "match": {
+                  "age": 27
+                }
+              }
+            ]
+          }
+        }
+      }
+      ```
+
+  - must_not 顾名思义
+
+    - ```json
+      GET test/doc/_search
+      {
+        "query": {
+          "bool": {
+            "must_not": [
+              {
+                "match": {
+                  "name": "wangjifei"
+                }
+              },{
+                "match": {
+                  "age": 27
+                }
+              }
+            ]
+          }
+        }
+      }
+      ```
+
+  - filter(条件过滤查询，过滤条件的范围用range表示gt表示大于、lt表示小于、gte表示大于等于、lte表示小于等于)
+
+    - ```json
+      GET test/doc/_search
+      {
+        "query": {
+          "bool": {
+            "must": [
+              {
+                "match": {
+                  "name": "wangjifei"
+                }
+              }
+            ],
+            "filter": {
+              "range": {
+                "age": {
+                  "gte": 10,
+                  "lt": 27
+                }
+              }
+            }
+          }
+        }
+      }
+      ```
+
+  - **bool查询总结**
+
+    - must：与关系，相当于关系型数据库中的 and。
+    - should：或关系，相当于关系型数据库中的 or。
+    - must_not：非关系，相当于关系型数据库中的 not。
+    - filter：过滤条件。
+    - range：条件筛选范围。
+    - gt：大于，相当于关系型数据库中的 >。
+    - gte：大于等于，相当于关系型数据库中的 >=。
+    - lt：小于，相当于关系型数据库中的 <。
+    - lte：小于等于，相当于关系型数据库中的 <=。
+
+- ES之查询结果过滤
+
+  - 现在，在所有的结果中，我只需要查看name和age两个属性,提高查询效率
+
+    - ```json
+      GET test3/doc/_search
+      {
+        "query": {
+          "match": {
+            "name": "顾"
+          }
+        },
+        "_source": ["name","age"]
+      }
+      ```
+
+- ES之查询结果高亮显示
+
+  - ES的默认高亮显示
+
+    - ```json
+      GET test3/doc/_search
+      {
+        "query": {
+          "match": {
+            "name": "顾老二"
+          }
+        },
+        "highlight": {
+          "fields": {
+            "name": {}
+          }
+        }
+      }
+      ```
+
+  - ES自定义高亮显示（在highlight中，pre_tags用来实现我们的自定义标签的前半部分，在这里，我们也可以为自定义的 标签添加属性和样式。post_tags实现标签的后半部分，组成一个完整的标签。至于标签中的内容，则还是交给fields来完成）
+
+    - ```json
+      GET test3/doc/_search
+      {
+        "query": {
+          "match": {
+            "desc": "性格直"
+          }
+        },
+        "highlight": {
+          "pre_tags": "<b class='key' style='color:red'>",
+          "post_tags": "</b>",
+          "fields": {
+            "desc": {}
+          }
+        }
+      }
+      ```
+
+- ES之精确查询与模糊查询
+
+  - term查询查找包含文档精确的倒排索引指定的词条。也就是精确查找。
+
+    - term和match的区别是：match是经过analyer的，也就是说，文档首先被分析器给处理了。根据不同的分析器，分析的结果也稍显不同，然后再根据分词结果进行匹配。term则不经过分词，它是直接去倒排索引中查找了精确的值了。
+
+    - ```json
+      GET w1/doc/_search
+      {
+        "query": {
+          "term": {
+            "t2": "hi" 
+          }
+        }
+      }
+      ```
+
+  - 查找多个精确值（terms）
+
+    - ```json
+      #### 第一个查询方式
+      GET test/doc/_search
+      {
+        "query": {
+          "bool": {
+            "should": [
+              {
+                "term": {
+                  "age":27
+                }
+              },{
+                "term":{
+                  "age":28
+                }
+              }
+            ]
+          }
+        }
+      }
+      
+      # 第二个查询方式
+      GET test/doc/_search
+      {
+        "query": {
+          "terms": {
+            "age": [
+              "27",
+              "28"
+            ]
+          }
+        }
+      }
+      ```
+
+- ES的聚合查询avg、max、min、sum
+
+  - 需求1、查询from是gu的人的平均年龄。
+
+    - ```json
+      GET zhifou/doc/_search
+      {
+        "query": {
+          "match": {
+            "from": "gu"
+          }
+        },
+        "aggs": {
+          "my_avg": {
+            "avg": {
+              "field": "age"
+            }
+          }
+        },
+        "_source": ["name", "age"]
+      }
+      ```
+
+    - 上例中，首先匹配查询from是gu的数据。在此基础上做查询平均值的操作，这里就用到了聚合函数，其语法被封装在aggs中，而my_avg则是为查询结果起个别名，封装了计算出的平均值。那么，要以什么属性作为条件呢？是age年龄，查年龄的什么呢？是avg，查平均年龄。
+
+    - 如果只想看输出的值，而不关心输出的文档的话可以通过size=0来控制
+
+      - ```json
+        GET zhifou/doc/_search
+        {
+          "query": {
+            "match": {
+              "from": "gu"
+              }
+            },
+            "aggs":{
+              "my_avg":{
+                "avg": {
+                  "field": "age"
+                }
+              }
+            },
+            "size":0,
+            "_source":["name","age"]
+        }
+        ```
+
+  - 需求2、查询年龄的最大值
+
+    - ```json
+      GET zhifou/doc/_search
+      {
+        "query": {
+          "match_all": {}
+        },
+        "aggs": {
+          "my_max": {
+            "max": {
+              "field": "age"
+            }
+          }
+        },
+        "size": 0, 
+        "_source": ["name","age","from"]
+      }
+      ```
+
+  - 需求3、查询年龄的最小值
+
+    - min
+
+  - 需求4、查询符合条件的年龄之和
+
+    - sum
+
+- ES的分组查询
+
+  - 需求： 要查询所有人的年龄段，并且按照1520，2025,25~30分组，并且算出每组的平均年龄。
+
+    - ```json
+      GET zhifou/doc/_search
+      {
+        "size": 0, 
+        "query": {
+          "match_all": {}
+        },
+        "aggs": {
+          "age_group": {
+            "range": {
+              "field": "age",
+              "ranges": [
+                {
+                  "from": 15,
+                  "to": 20
+                },
+                {
+                  "from": 20,
+                  "to": 25
+                },
+                {
+                  "from": 25,
+                  "to": 30
+                }
+              ]
+            }
+          }
+        }
+      }
+      ```
+
+    - 上例中，在aggs的自定义别名age_group中，使用range来做分组，field是以age为分组，分组使用ranges来做，from和to是范围
+
+      - 接下来，我们就要对每个小组内的数据做平均年龄处理。
+
+        - ```json
+          GET zhifou/doc/_search
+          {
+            "size": 0, 
+            "query": {
+              "match_all": {}
+            },
+            "aggs": {
+              "age_group": {
+                "range": {
+                  "field": "age",
+                  "ranges": [
+                    {
+                      "from": 15,
+                      "to": 20
+                    },
+                    {
+                      "from": 20,
+                      "to": 25
+                    },
+                    {
+                      "from": 25,
+                      "to": 30
+                    }
+                  ]
+                },
+                "aggs": {
+                  "my_avg": {
+                    "avg": {
+                      "field": "age"
+                    }
+                  }
+                }
+              }
+            }
+          }
+          ```
+
+- ES之Mappings
+
+  - ```json
+    GET test
+    
+    >>>查询结果
+    {
+      "test" : {
+        "aliases" : { },
+        "mappings" : {
+          "doc" : {
+            "properties" : {
+              "age" : {
+                "type" : "long"
+              },
+              "desc" : {
+                "type" : "text",
+                "fields" : {
+                  "keyword" : {
+                    "type" : "keyword",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "name" : {
+                "type" : "text",
+                "fields" : {
+                  "keyword" : {
+                    "type" : "keyword",
+                    "ignore_above" : 256
+                  }
+                }
+              }
+            }
+          }
+        },
+        "settings" : {
+          "index" : {
+            "creation_date" : "1569133097594",
+            "number_of_shards" : "5",
+            "number_of_replicas" : "1",
+            "uuid" : "AztO9waYQiyHvzP6dlk4tA",
+            "version" : {
+              "created" : "6080299"
+            },
+            "provided_name" : "test"
+          }
+        }
+      }
+    }
+    ```
+
+  - 由返回结果可以看到，分为两大部分：
+
+    - 第一部分关于t1索引类型相关的，包括该索引是否有别名aliases，然后就是mappings信息， 包括索引类型doc，各字段的详细映射关系都收集在properties中。
+    - 另一部分是关于索引t1的settings设置。包括该索引的创建时间，主副分片的信息，UUID等等。
+
+  - mappings 是什么
+
+    - **映射就是在创建索引的时候，有更多定制的内容，更加的贴合业务场景。 用来定义一个文档及其包含的字段如何存储和索引的过程。**
+
+  - 字段的数据类型
+
+    - 简单类型如文本（text）、关键字（keyword）、日期（data）、整形（long）、双精度 （double）、布尔（boolean）或ip。 
+    - 可以是支持JSON的层次结构性质的类型，如对象或嵌套。
+    - 或者一种特殊类型，如geo_point、geo_shape或completion。
+    - 为了不同的目的， 以不同的方式索引相同的字段通常是有用的。
+      - 例如，字符串字段可以作为全文搜索的文本字段进行索引， 也可以作为排序或聚合的关键字字段进行索引。
+      - 或者，可以使用标准分析器、英语分析器和 法语分析器索引字符串字段。这就是多字段的目的。大多数数据类型通过fields参数支持多字段。
+
+  - 一个简单的映射示例
+
+    - ```json
+      PUT mapping_test
+      {
+        "mappings": {
+          "test1":{
+            "properties":{
+              "name":{"type": "text"},
+              "age":{"type":"long"}
+            }
+          }
+        }
+      }
+      ```
+
+参考文档：
+
+1. [ES基本查询语句教程 - 博客园](https://www.cnblogs.com/xiohao/p/12970224.html)
+
 # Kafka
+
+## 基础架构
+
+- 概念
+  1. 为方便扩展，并提高吞吐量，**一个 topic 分为多个 partition**
+  2. 配合分区的设计，提出**消费者组**的概念，组内各个消费者并行消费
+  3. 为提高可用性，**为每个 partition 增加若干个副本**，类似 NameNode HA
+  4. **ZK 中记录谁是 leader**，Kafka 2.8.0 以后也可以配置不采用 ZK
+
+- **Producer**：消息生产者，就是向 Kafka broker 发消息的客户端
+- **Consumer**：消息消费者，向 Kafka broker 取消息的客户端
+
+## 生产者（原理、API、分区、可靠性、幂等性、事务、有序）
+
+- 发送原理
+
+  - 在消息发送的过程中，涉及到了两个线程——main 线程和 Sender 线程。在 main 线程中创建了一个双端队列 RecordAccumulator。main 线程将消息发送给 RecordAccumulator，Sender 线程不断从 RecordAccumulator 中拉取消息发送到 Kafka Broker。
+
+  - Kafka Producer 生产者
+
+    （main 线程：Producer --send(ProducerRecord)--> Interceptors 拦截器 ----> Serializer 序列化器 ----> Patitioner 分区器）
+
+  - RecordAccumulator（默认32M）
+
+    （多个 DQueue，每个 DQueue 中存 ProducerBatch（默认 16k））
+
+  - sender 线程
+
+    （Sender（读取数据）----> NetworkClient（InFlightRequests，默认每个 broker 节点最多缓存 5 个请求）; Sender---->Selector）
+
+    - `batch.size`：只有数据积累到 batch.size 之后，sender 才会发送数据。默认 16k
+    - `linger.ms`：如果数据迟迟未达到 batch.size，sender 等待 linger.ms 设置的时间到了之后就会发送数据。单位 ms，默认值是 0ms，表示没有延迟。
+
+  - Kafka 集群
+
+    （Broker1；Broker2）
+
+    - 应答 acks：
+      - 0：生产者发送过来的数据，不需要等数据落盘应答
+      - 1：生产者发送过来的数据，Leader 收到数据后应答。
+      - -1（all）：生产者发送过来的数据，Leader 和 ISR 队列里面的所有节点收齐数据后应答。-1 和 all 等价。
+
+- 生产者异步发送 API
+
+  - 普通异步发送
+
+    ```java
+    kafkaProducer.send(new ProducerRecord<>("first", "atguigu" + i));
+    ```
+
+  - 带回调函数的异步发送
+
+    - 回调函数会在 producer 收到 ack 时调用，为异步调用，该方法有两个参数，分别是元数据信息（RecordMetadata）和异常信息（Exception），如果 Exception 为 null，说明消息发送成功，如果 Exception 不为 null，说明消息发送失败。
+
+    - 注意：消息发送失败会自动重试，不需要我们在回调函数中手动重试。
+
+    - ```java
+      kafkaProducer.send(new ProducerRecord<>("first", "atguigu" + i), new Callback() {
+          @Override
+          public void onCompletion(RecordMetadata metadata, Exception exception) {
+              if (exception == null) {
+                  System.out.println("主题：" + metadata.topic() + " 分区：" + metadata.partition());
+              }
+          }
+      });
+      ```
+
+- 生产者同步发送 API
+
+  - 只需在异步发送的基础上，再调用一下 get() 方法即可。
+
+  - ```java
+    kafkaProducer.send(new ProducerRecord<>("first", "atguigu" + i)).get();
+    ```
+
+- 生产者分区
+
+  - 好处
+
+    - 便于合理使用存储资源。每个 Partition 在一个 Broker 上存储，可以把海量的数据按照分区切割成一块一块数据存储在多台 Broker 上。合理控制分区的任务，可以实现负载均衡的效果。
+    - 提高并行度。生产者可以以分区为单位发送数据，消费者可以以分区为单位进行消费数据。
+
+  - 发送消息的分区策略
+
+    1. 默认的分区器 DefaultPartitioner
+
+       - 在 IDEA 中 Ctrl + n, 全局查找 DefaultPartitioner 类。在类开头可以看到其注释
+
+         - 如果设置了 partition，用它
+
+         - 如果没有指定 partition，但有 key，就用 key 的 hash 取余
+
+         - 如果都没有，就使用粘性分区（批次满了的时候改变）
+
+       - 在 IDEA 中 Ctrl + n, 全局查找 ProducerRecord 类。在类中可以看到其构造方法，分为几类：
+
+         1. 四个构造方法入参有 partition：指明 partition 的情况，直接将指明的值作为 partition 的值。
+            - 例如 partition = 0，所有数据写入分区 0
+         2. 一个构造方法入参为 `ProducerRecord(String topic, K key, V value)`：没有指明 partition 值但有 key 的情况下，将 key 的 hash 值与 topic 的 partition 数进行取余得到 partition 值。
+         3. 一个构造方法入参为 `ProducerRecord(String topic, V value)`：既没有 partition 值又没有 key 值的情况下，Kafka 采用 Sticky Partition（黏性分区器），会随机选择一个分区，并尽可能一直使用该分区，待该分区的 batch 已满或者已完成，Kafka 再随机一个分区进行使用（和上一次的分区不同）。
+            - 例如：第一次随机选择 0 号分区，等 0 号分区当前批次满了（默认 16k）或者 linger.ms 设置的时间到，Kafka 再随机一个分区进行使用（如果还是 0 会继续随机）。观后注：这里继续随机存疑，看演示不对？
+
+    2. 自定义分区器
+
+       - 实现步骤
+
+         1. 定义类实现 Partitioner 接口
+         2. 重写 partition() 方法
+
+- 生产者如何提升吞吐量
+
+  - batch.size：批次大小，默认 16k
+
+  - linger.ms：等待时间，修改为 5-100ms
+
+  - compression.type：压缩 snappy
+
+  - RecordAccumulator：缓冲区大小，修改为 64m
+
+  - ```java
+    // batch.size：批次大小，默认 16K
+    properties.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+    // linger.ms：等待时间，默认 0
+    properties.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+    // RecordAccumulator：缓冲区大小，默认 32M：buffer.memory
+    properties.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+    // compression.type：压缩，默认 none，可配置值 qzip、snappy、lz4 和 zstd
+    properties.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+    ```
+
+- 数据可靠性
+
+  - ack 应答原理
+
+    - 0：生产者发送过来的数据，不需要等数据落盘应答（丢数）
+    - 1：生产者发送过来的数据，Leader 收到数据后应答（丢数）
+    - -1（all）：生产者发送过来的数据，Leader 和 ISR 队列里面的所有节点收齐数后应答。
+
+    思考：Leader 收到数据，所有 Follower 都开始同步数据，但有一个 Follower 因为某种故障，迟迟不能与 Leader 进行同步，那这个问题怎么解决呢？
+
+    - Leader 维护了一个动态的 in-sync replica set(ISR)，意为和 Leader 保持同步的 Follower + Leader 集合。
+    - 如果 Follower 长时间未向 Leader 发送通信请求或同步数据，则该 Follower 将被踢出 ISR。该时间阈值由 replica.lag.time.max.ms 参数设定，默认 30s。
+    - 这样就不用等长期联系不上或者已经故障的节点。
+
+    数据可靠性分析：
+
+    - 如果分区副本设置为 1 个，或者 ISR 里应答的最小副本数量（min.insync.replicas 默认为 1）设置为 1，和 ack = 1 的效果是一样的，仍然有丢数的风险。
+
+    **数据完全可靠条件 = ACK 级别设置为 -1 + 分区副本大于等于 2 + ISR 里应答的最小副本数量大于等于 2**
+
+    可靠性总结：
+
+    - acks = 0，生产者发送过来数据就不管了，可靠性差，效率高
+    - acks = 1，生产者发送过来数据 Leader 应答，可靠性中等，效率中等
+    - acks = -1，生产者发送过来数据 Leader 和 ISR 队列里面所有 Follow 应答，可靠性高，效率低
+    - **在生产环境中，acks = 0 很少使用；acks = 1，一般用于传输普通日志，允许丢个别数据；acks = -1，一般用于传输和钱相关的数据，对可靠性要求比较高的场景**。
+
+    数据重复分析：
+
+    acks: -1(all)：生产者发送过来的数据，Leader 和 ISR 队列里面的所有节点收齐数据后应答。Leader 在 ack 前崩溃可能导致接收两份 Hello 数据，导致数据重复
+
+  - 代码配置
+
+    ```java
+    // acks
+    properties.put(ProducerConfig.ACK_CONFIG, "1");
+    // 重试次数
+    properties.put(ProducerConfig.RETRIES_CONFIG, 3);
+    ```
+
+- 数据重复
+
+  - 数据传递语义
+
+    - 至少一次（At Least Once） = ACK 级别设置为 -1 + 分区副本大于等于 2 + ISR 里应答的最小副本数量大于等于 2
+    - 最多一次（At Most Once） = ACK 级别设置为 0
+    - 总结：
+      - At Least Once 可以保证数据不丢失，但是不能保证数据不重复
+      - At Most Once 可以保证数据不重复，但是不能保证数据不丢失
+    - 精确一次（Exactly Once）：对于一些非常重要的信息，比如和钱相关的数据，要求数据既不重复也不丢失。
+
+  - Kafka 0.11 版本以后，引入了一项重大特性：幂等性和事务
+
+  - 幂等性
+
+    1. 幂等性原理
+
+       - 幂等性就是指 Producer 不论向 Broker 发送多少次重复数据，Broker 端都只会持久化一条，保证了不重复。
+       - 精确一次（Exactly Once） = 幂等性 + 至少一次（ack = -1 + 分区副本数 >= 2 + ISR 最小副本数量 >= 2）
+       - 重复数据的判断标准：具有<PID, Partition, SeqNumber> 相同主键的消息提交时，Broker 只会持久化一条。其中 PID 是 Kafka 每次重启都会分配一个新的；Partition 表示分区号；Sequence Number 是单调自增的。
+       - 所以幂等性只能保证的是在单分区单会话内不重复。
+
+    2. 如何使用幂等性
+
+       - 开启参数 enable.idempotence 默认为 true，false 关闭
+
+  - 事务
+
+    - Kafka 事务原理
+
+      - 说明：开启事务，必须开启幂等性
+      - Producer 在使用事务功能前，必须先自定义一个唯一的 transactional.id。有了 transactional.id，即使客户端挂掉了，它重启后也能继续处理未完成的事务
+
+    - 过程：
+
+      1. Producer 向 Broker 的 TransactionCoordinator 事务协调器请求 producer id（幂等性需要）
+      2. Broker 的 TransactionCoordinator 返回 producer id
+      3. Producer 发送消息到 Topic A
+      4. Producer 发送 commit 请求到 TransactionCoordinator
+      5. TransactionCoordinator 持久化 commit 请求到 __transaction_state-分区-Leader（存储事务信息的特殊主题。默认有 50 个分区，每个分区负责一部分事务。事务划分是根据 transactional.id 的 hashcode 值 % 50，计算出该事务属于哪个分区。该分区 Leader 副本所在的 broker 节点即为这个 transactional.id 对应的 Transaction Coordinator 节点。）
+      6. TransactionCoordinator 返回成功给 Producer
+      7. TransactionCoordinator 后台发送 commit 请求给 Topic A
+      8. Topic A 返回成功给 TransactionCoordinator
+      9. TransactionCoordinator 持久化事务成功信息
+
+    - Kafka 的事务一共有如下 5 个 API
+
+      ```java
+      // 1. 初始化事务
+      void initTransactions();
+      // 2. 开启事务
+      void beginTransaction() throw ProducerFencedException;
+      // 3. 在事务内提交已经消费的偏移量（主要用于消费者）
+      void sendOffsetsToTransaction(Map<TopicPartition, OffsetAndMetadata> offsets, String consumerGroupId) throws ProducerFencedException;
+      // 4. 提交事务
+      void commitTransaction() throws ProducerFencedException;
+      // 5. 放弃事务（类似于回滚事务的操作）
+      void abortTransaction() throws ProducerFencedException;
+      ```
+
+    - 单个 Producer，使用事务保证消息的仅一次发送
+
+      ```java
+      // 指定事务 id
+      properties.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "transactional_id_01");
+      // ...
+      kafkaProducer.initTransactions();
+      kafkaProducer.beginTransaction();
+      try {
+          // 2. 发送数据
+          for (int i = 0; i < 5; i++) {
+              kafkaProducer.send(new ProducerRecord<>("first", "atguigu" + i));
+          }
+          int i = 1/0;
+      	kafkaProducer.commitTransaction();
+      } catch (Exception e) {
+          kafkaProducer.abortTransaction();
+      } finally {
+          // 3. 关闭资源
+          kafkaProducer.close();
+      }
+      ```
+
+- 数据有序
+
+  - 单分区内，有序（有条件的，详见下节）；多分区，分区与分区间无序
+
+    1. Kafka 在 1.x 版本之前保证数据单分区有序，条件如下：
+
+       `max.in.flight.requests.per.connection=1`（不需要考虑是否开启幂等性）
+
+    2. Kafka 在 1.x 及以后版本保证数据单分区有序，条件如下：
+
+       1. 未开启幂等性 `max.in.flight.requests.per.connection` 需要设置为 1
+
+       2. 开启幂等性 `max.in.flight.requests.per.connection` 需要设置小于等于 5
+
+          原因说明：因为在 Kafka 1.x 以后，启用幂等后，Kafka 服务端会缓存 Producer 发来的最近 5 个 request 的元数据，故无论如何，都可以保证最近 5 个 request 的数据都是有序的。
+
+          如果开启了幂等性且缓存的请求个数小于 5 个，会在服务端重新排序
+
+参考文档：
+
+1. [《尚硅谷Kafka3.x教程》笔记.md](../视频笔记/《尚硅谷Kafka3.x教程》笔记.md) P10 ~ 21
+
+## Broker（工作流程、节点退役服役、副本、文件存储、高效读写）
+
+- 工作流程
+
+  - Zookeeper 存储的 Kafka 信息
+
+    - 如何查看
+      1. 启动 Zookeeper 客户端
+      2. 通过 ls 命令可以查看 Kafka 相关信息 `ls /kafka/`
+    - 在 Zookeeper 的服务端存储的 Kafka 相关信息
+      1. **/kafka/brokers/ids 记录有哪些服务器**
+      2. **/kafka/brokers/topics/first/partitions/0/state 记录谁是 Leader，有哪些服务器可用**
+      3. **/kafka/controller 辅助选举 Leader**
+    - /kafka
+
+      - admin
+        - delete_topics
+      - brokers
+        - ids
+        - topics
+          - first
+            - partitions
+        - seqid
+      - cluster
+        - id
+      - consumers
+        - 0.9 版本之前用于保存 offset 信息
+        - 0.9 版本之后 offset 存储在 kafka 主题中
+      - controller
+      - config
+        - brokers
+        - changes
+        - topics
+        - clients
+        - users
+      - Controller_epoch
+      - log_dir_event_notification
+      - lastest_producer_id_block
+      - lsr_change_notification
+
+  - Kafka Broker 总体工作流程
+
+    1. Broker 启动后在 zk 中注册
+
+    2. controller 谁先注册，谁说了算
+
+    3. 由选举出来的 Controller 监听 brokers 节点变化
+
+    4. Controller 决定 Leader 选举
+
+       选举规则：在 ISR 中存活为前提，按照 AR 中排在前面的优先。（AR：Kafka 分区中的所有副本统称）
+
+    5. Controller 将节点信息上传到 ZK
+
+    6. 其他 Controller 从 ZK 同步相关信息
+
+    7. 假设 Broker1 中 Leader 挂了
+
+    8. Controller 监听到节点变化
+
+    9. 获取 ISR
+
+    10. 选举新的 Leader
+
+    11. 更新 Leader 及 ISR
+
+- 节点服役和退役
+
+  - 服役新节点
+
+    1. 新节点准备
+
+       1. 关闭 hadoop104，并右键执行克隆操作
+       2. 开启 hadoop105，并修改 IP 地址
+       3. 在 hadoop105 上，修改主机名称为 hadoop105
+       4. 重新启动 hadoop104，hadoop105
+       5. 修改 hadoop105 中 kafka 的 broker.id 为 3。
+       6. 删除 hadoop105 中 kafka 下的 datas 和 logs。
+       7. 启动 hadoop102、hadoop103、hadoop104 下的 kafka 集群。
+       8. 单独启动 hadoop105 中的 kafka。
+
+    2. 执行负载均衡操作
+
+       1. 创建一个要均衡的主题
+
+          ```shell
+          vim topics-to-move.json
+          ```
+
+          ```json
+          {
+              "topics": [
+                  {"topic": "first"}
+              ],
+              "version": 1
+          }
+          ```
+
+       2. 生成一个负载均衡的计划
+
+          ```shell
+          bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --topics-to-move-to-json-file topics-to-move.json --broker-list "0,1,2,3" --generate
+          ```
+
+       3. 创建副本存储计划（所有副本存储在 broker0、broker1、broker2、broker3 中）。
+
+          ```shell
+          vim increase-replication-factor.json
+          ```
+
+       4. 执行副本存储计划
+
+          ```shell
+          bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --execute
+          ```
+
+       5. 验证副本存储计划
+
+          ```shell
+          bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --verify
+          ```
+
+  - 退役旧节点
+
+    1. 执行负载均衡操作
+
+       先按照退役一台节点，生成执行计划，然后按照服役时操作流程执行负载均衡。
+
+       1. 创建一个要均衡的主题
+
+          ```shell
+          vim topics-to-move.json
+          ```
+
+       2. 创建执行计划
+
+          ```shell
+          bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --topics-to-move-json-file topics-to-move.json --broker-list "0,1,2" --generate
+          ```
+
+       3. 创建副本存储计划（所有副本存储在 broker0、broker1、broker2 中）
+
+          ```shell
+          vim increase-replication-factor.json
+          ```
+
+       4. 执行副本存储计划
+
+          ```shell
+          bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --execute
+          ```
+
+       5. 验证副本存储计划
+
+          ```shell
+          bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --verify
+          ```
+
+    2. 执行停止命令
+
+       在 hadoop105 上执行停止命令即可
+
+- 副本
+
+  - 基本信息
+
+    1. Kafka 副本作用：提高数据可靠性。
+    2. **Kafka 默认副本 1 个，生产环境一般配置为 2 个，保证数据可靠性**；太多副本会增加磁盘存储空间，增加网络上数据传输，降低效率。
+
+    3. Kafka 中副本分为：**Leader** 和 **Follower**，**Kafka 生产者只会把数据发往 Leader**，然后 Follower 找 Leader 进行同步数据。
+
+    4. Kafka 分区中的所有副本统称为 **AR（Assigned Replicas）**。
+       - AR = ISR + OSR
+       - **ISR，表示和 Leader 保持同步的 Follower 集合**。如果 Follower 长时间未向 Leader 发送通信请求或同步数据，则该 Follower 将被踢出 ISR。该时间阈值由 replica.lag.time.max.ms 参数设定，默认 30s。Leader 发生故障之后，就会从 ISR 中选举新的 Leader。
+       - **OSR，表示 Follower 与 Leader 副本同步时，延迟过多的副本**。
+
+  - Leader 选举
+
+    - **Kafka 集群中有一个 broker 的 Controller 会被选举为 Controller Leader，负责管理集群 broker 的上下线，所有 topic 的分区副本分配和 Leader 选举等工作**。
+
+    - Controller 的信息同步工作是依赖于 Zookeeper 的。
+
+    - Leader 选举流程：
+
+      1. 假设 Broker1 中 Leader 挂了
+
+      2. Controller 监听到节点变化
+
+      3. 获取 ISR
+
+      4. 选举新的 Leader
+
+      5. 更新 Leader 及 ISR
+
+      6. broker 启动后在 zk 中注册
+
+      7. controller 谁先注册，谁先说了算
+
+      8. 由选举出来的 Controller 监听 brokers 节点变化
+
+      9. Controller 决定 Leader 选举
+
+         选举规则：在 ISR 中存活为前提，按照 AR 中排在前面的优先。
+
+      10. Controller 将节点信息上传到 ZK
+
+      11. 其他 Controller 从 ZK 同步相关信息
+
+      12. 假设 Broker1 中 Leader 挂了
+
+      13. Controller 监听到节点变化
+
+      14. 获取 ISR
+
+      15. 选举新的 Leader
+
+      16. 更新 Leader 及 ISR
+
+  - Follower 故障
+
+    - **LEO（Log End Offset）**：每个副本的最后一个 offset，LEO 其实就是最新的 offset + 1。
+    - **HW（High Watermark）**：所有副本中最小的 LEO。
+    - Follower 故障流程
+      1. Follower 发生故障后会被临时踢出 ISR
+      2. 这个期间 Leader 和 Follower 继续接收数据
+      3. 待该 Follower 恢复后，Follower 会读取本地磁盘记录的上次的 HW，并将 log 文件高于 HW 的部分截取掉，从 HW 开始向 Leader 进行同步。
+      4. 等该 Follower 的 LEO 大于等于该 Partition 的 HW，即 Follower 追上 Leader 之后，就可以重新加入 ISR 了。
+
+  - Leader 故障
+
+    - 流程
+      1. Leader 发生故障后，会从 ISR 中选出一个新的 Leader
+      2. 为保证多个副本之间的数据一致性，其余的 Follower 会先将各自的 log 文件高于 HW 的部分截掉，然后从新的 Leader 同步数据。
+    - 注意：这只能保证副本之间的数据一致性，并不能保证数据不丢失或者不重复
+
+  - 分区副本分配
+
+    - 如果 kafka 服务器只有 4 个节点，那么设置 kafka 的分区数大于服务器台数，在 kafka 底层如何分配存储副本呢？
+
+    - 手动调整分区副本存储
+
+      - 在生产环境中，每台服务器的配置和性能不一致，但是 Kafka 只会根据自己的代码规则创建对应的分区副本，就会导致个别服务器存储压力较大，所有需要手动调整分区副本的存储。
+
+      - 手动调整分区副本的步骤如下：
+
+        1. 创建一个新的 topic，名称为 three
+
+           ```shell
+           bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --create --partitions 4 --replication-factor 2 --topic three
+           ```
+
+        2. 查看分区副本存储情况
+
+           ```shell
+           bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --describe --topic three
+           ```
+
+        3. 创建副本存储计划（所有副本都指定存储在 broker0、broker1 中）。
+
+           ```shell
+           vim increase-replication-factor.json
+           ```
+
+           ```json
+           {
+               "version": 1,
+               "partitions": [{"topic":"three","partition":0,"replicas":[0,1]},{"topic":"three","partition":1,"replicas":[0,1]},{"topic":"three","partition":2,"replicas":[1,0]},{"topic":"three","partition":3,"replicas":[1,0]}]
+           }
+           ```
+
+        4. 执行副本存储计划。
+
+           ```shell
+           bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --execute
+           ```
+
+        5. 验证副本存储计划
+
+           ```shell
+           bin/kafka-reassign-partitions.sh --bootstarp-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --verify
+           ```
+
+        6. 查看分区副本存储情况
+
+           ```shell
+           bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --describe --topic three
+           ```
+
+  - Leader Partition 负载均衡
+
+    - 正常情况下，Kafka 本身会自动把 Leader Partition 均匀分散在各个机器上，来保证每台机器的读写吞吐量都是均匀的。但是如果某些 broker 宕机，会导致 Leader Partition 过于集中在其他少部分几台 broker 上，这会导致少数几台 broker 的读写请求压力过高，其他宕机的 broker 重启之后都是 follower partition，读写请求很低，造成集群负载不均衡。
+
+      - auto.leader.rebalance.enable，默认是 true。自动 Leader Partition 平衡
+      - leader.imbalance.per.broker.percentage，默认是 10%。每个 broker 允许的不平衡的 leader 的比率。如果每个 broker 超过了这个值，控制器会触发 leader 的平衡。
+      - leader.imbalance.check.interval.seconds，默认值 300 秒。检查 leader 负载是否平衡的间隔时间。
+
+  - 增加副本因子
+
+    - 在生产环境当中，由于某个主题的重要等级需要提升，我们考虑增加副本。副本数的增加需要先制定计划，然后根据计划指定。
+
+      1. 创建 topic
+
+         ```shell
+         bin/kafka-topics.sh --bootstrap-server hadoop102:9092 --create --partitions 3 --replication-factor 1 --topic four
+         ```
+
+      2. 手动增加副本存储
+
+         1. 创建副本存储计划（所有副本都指定存储在 broker0、broker1、broker2 中）
+
+            ```shell
+            vim increase-replication-factor.json
+            ```
+
+            ```json
+            {
+                "version": 1,
+                "partitions": [{"topic":"four","partition":0,"replicas":[0,1,2]},{"topic":"four","partition":1,"replicas":[0,1,2]},{"topic":"four","partition":2,"replicas":[0,1,2]}]
+            }
+            ```
+
+         2. 执行副本存储计划
+
+            ```shell
+            bin/kafka-reassign-partitions.sh --bootstrap-server hadoop102:9092 --reassignment-json-file increase-replication-factor.json --execute
+            ```
+
+- 文件存储
+
+  - 文件存储机制
+
+    - Topic 数据的存储机制
+      - Topic 是逻辑上的概念，而 partition 是物理上的概念，每个 partition 对应于一个 log 文件，该 log 文件中存储的就是 Producer 生产的数据。Producer 生产的数据会被不断追加到该 log 文件末端，**为防止 log 文件过大导致数据定位效率低下，Kafka 采取了分片和索引机制，将每个 partition 分为多个 segment**。每个 segment 包括：`.index` 文件、`.log` 文件和 `.timeindex` 等文件。这些文件位于一个文件夹下，该文件夹的命名规则为：topic 名称+分区序号，例如：first-0。
+      - 一个 partition 分为多个 segment
+        - .log 日志文件
+        - .index 偏移量索引文件
+        - .timeindex 时间戳索引文件
+        - 其他文件
+        - （说明：index 和 log 文件以当前 segment 的第一条消息的 offset 命名）
+      - 一个 topic 分为多个 partition
+    - index 文件和 log 文件详解
+
+      - 注意：
+        1. index 为稀疏索引，大约每往 log 文件写入 4kb 数据，会往 index 文件写入一索引。参数 log.index.internal.bytes 默认 4kb。
+        2. index 文件中保存的 offset 为相对 offset，这样能确保 offset 的值所占空间不会过大，因此能将 offset 的值控制在固定大小
+
+      - 如何在 log 文件中定位到 offset=600 的 Record？
+        1. 根据目标 offset 定位 Segment 文件
+        2. 找到小于等于目标 offset 的最大 offset 对应的索引项
+        3. 定位到 log 文件
+        4. 向下遍历找到目标 Record
+
+  - 文件清理策略
+
+    - Kafka 中默认的日志保存时间是 7 天，可以通过调整如下参数修改保存时间。
+
+      - log.retention.hours，最低优先级小时，默认 7 天。
+      - log.retention.minutes，分钟。
+      - log.retention.ms，最高优先级毫秒。
+      - log.retention.check.interval.ms，负责设置检查周期，默认 5 分钟。
+
+    - 那么日志一旦超过了设置的时间，怎么处理呢？
+
+    - Kafka 中提供的日志清理策略有 delete 和 compact 两种。
+
+      1. delete 日志删除：将过期数据删除
+
+         - log.cleanup.policy=delete 所有数据启用删除策略
+
+           1. 基于时间：默认打开。以 segment 中所有记录中的最大时间戳作为该文件时间戳。
+           2. 基于大小：默认关闭。超过设置的所有日志总大小，删除最早的 segment。`log.retention.bytes`，默认等于 -1，表示无穷大。
+
+           思考：如果一个 segment 中有一部分数据过期，一部分没有过期，怎么处理？
+
+      2. compact 日志压缩
+
+         对于相同 key 的不同 value 值，只保留最后一个版本
+
+         - log.cleanup.policy=compact 所有数据启用压缩策略
+
+         压缩后的 offset 可能是不连续的，当从这些 offset 消费信息时，将会拿到比这个 offset 大的 offset 对应的消息，并从这个位置开始消费。
+
+         这种策略只适合特殊场景，比如消息的 key 是用户 ID，value 是用户的资料，通过这种压缩策略，整个消息集里就保存了所有用户最新的资料。
+
+- 高效读写
+
+  1. Kafka 本身是分布式集群，可以采用分区技术，**并行度高**
+  2. **读数据采用稀疏索引**，可以快速定位要消费的数据
+
+  3. **顺序写磁盘**
+     - Kafka 的 producer 生产数据，要写入到 log 文件中，写的过程是一直追加到文件末端，为顺序写。官网有数据表明，同样的磁盘，顺序写能达到 600M/s，而随机写只有 100K/s。这与磁盘的机械结构有关，顺序写之所以快，是因为其省去了大量磁头寻址的时间。
+
+  4. **页缓存 + 零拷贝技术**
+     - **零拷贝**：Kafka 的数据加工处理操作交由 Kafka 生产者和 Kafka 消费者处理。Kafka Broker 应用层不关心存储的数据，所以就不用走应用层，传输效率高。
+     - **PageCache 页缓存**：Kafka 重度依赖底层操作系统提供的 PageCache 功能。当上层有写操作时，操作系统只是将数据写入 PageCache。当读操作发生时，先从 PageCache 中查找，如果找不到，再去磁盘中读取。实际上 PageCache 是把尽可能多的空闲内存都当作了磁盘缓存来使用。
+
+
+参考文档：
+
+1. [《尚硅谷Kafka3.x教程》笔记.md](../视频笔记/《尚硅谷Kafka3.x教程》笔记.md) P22 ~ 40
+
+## 消费者（消费者组、API、分区分配、offset）
+
+- 消费方式
+
+  - **pull（拉）模式**：
+    - consumer 采用从 broker 中主动拉取数据。
+    - **Kakfa 采用这种方式。**
+  - **push（推）模式**
+    - Kafka 没有采用这种方式，因为由 broker 决定消息发送速率，很难适应所有消费者的消费速率。例如推送的速度是 50m/s，Consumer1、Consumer2 就来不及处理消息。
+  - pull 模式不足之处是，如果 Kafka 没有数据，消费者可能会陷入循环中，一直返回空数据
+
+- 消费者总体工作流程
+
+  - **每个分区的数据只能由消费者组中的一个消费者消费**
+  - **一个消费者可以消费多个分区数据**
+  - **每个消费者的 offset 由消费者提交到系统主题保存**
+
+- 消费者组的原理
+
+  - Consumer Group(CG)：消费者组，由多个 consumer 组成。形成一个消费者组的条件，是所有消费者的 groupid 相同。
+
+    - 消费者组内每个消费者负责消费不同分区的数据，一个分区只能由一个组内消费者消费。
+    - 消费者组之间互不影响。所有的消费者都属于某个消费者组，即**消费者组是逻辑上的一个订阅者**。
+    - 如果向消费者组中添加更多的消费者，超过主题分区数量，则有一部分消费者就会闲置，不会接收任何消息
+
+- 消费者组的作用
+
+  1. **负载均衡**： 消费者组的主要目的是实现消费者的负载均衡。当一个主题有多个分区时，每个分区的消息可以由不同的消费者组中的消费者并行消费。这样可以确保每个消费者组中的消费者都可以处理消息，从而充分利用系统资源，提高消息处理的并行性和吞吐量。
+     - 实现消费者负载均衡的过程如下：
+       1. **消费者加入消费者组**： 当一个消费者加入消费者组时，它会向 Kafka 集群发送一个加入请求，并声明它所属的消费者组以及它感兴趣的主题。
+       2. **消费者组协调**： Kafka 会将消费者组中的消费者进行协调，并为每个分区分配给一个消费者。消费者组协调器负责维护消费者和分区之间的映射关系。
+       3. **分区分配**： 一旦消费者组协调完成，每个消费者将被分配到一个或多个分区。Kafka 会尽量平均地将分区分配给消费者，以实现负载均衡。
+       4. **分区再平衡**： 当消费者组中的消费者数目发生变化时（新增或移除消费者），或者有新的主题被订阅时，消费者组将进行分区再平衡。这将导致分区重新分配给消费者，以确保负载均衡。
+     - 通过消费者组，Kafka 可以实现消息的负载均衡和消费者的水平扩展，从而处理大规模的实时数据流和实现高吞吐量的消息处理。
+  2. **实现水平扩展**： 通过增加消费者的数量，可以实现消费者组的水平扩展。新加入的消费者可以共同消费主题的消息，从而分担其他消费者的负载，实现消息处理的水平扩展和弹性。
+  3. **实现消息备份**： 在 Kafka 中，如果一个主题的每个分区有多个副本（通过多副本复制机制实现），那么消费者组中的每个消费者可以从不同的副本读取消息。这样，即使某个副本不可用，其他副本仍然可以提供数据，确保消息的可靠性和冗余。
+
+- 消费者组初始化
+
+  - coordinator: 辅助实现消费者组的初始化和分区的分配。
+    - coordinator 节点选择 = groupid 的 hashcode 值 % 50 （__consumer_offsets 的分区数量）
+    - 例如：groupid 的 hashcode 值 = 1，1 % 50 = 1，那么 __consumer_offsets 主题的 1 号分区，在哪个 broker 上，就选择这个节点的 coordinator 作为这个消费者组的老大。消费者组下的所有的消费者提交 offset 的时候就往这个分区去提交 offset。
+      - 每个 consumer 都发送 JoinGroup 请求
+      - 选出一个 consumer 作为 leader
+      - 把要消费的 topic 情况发送给 leader 消费者
+      - leader 会负责制定消费方案
+      - 把消费方案发给 coordinator
+      - Coordinator 就把消费方案下发给各个 consumer
+      - 每个消费者就会和 coordinator 保持心跳（默认 3s），一旦超时 （session.timeout.ms=45s），该消费者会被移除，并触发再平衡；或者消费者处理消息的时间过长（max.poll.interval.ms 5 分钟），也会触发再平衡
+
+- 消费者组详细消费流程
+
+  - ```
+    group consumer
+    
+    ↓ sendFetches 发送消费请求
+    
+    ConsumerNetworkClient
+    
+    - fetch.min.bytes 每批次最小抓取大小，默认1字节
+    - fetch.max.wait.ms 一批数据最小值未达到的超时时间，默认 500ms
+    - fetch.max.bytes 每批次最大抓取大小，默认 50m
+    
+    ↓ send
+    
+    Kafka cluster（broker topic partition）
+    
+    ↓ onSuccess
+    
+    completedFetches (queue) → parseRecord（反序列化） → Interceptors（拦截器） → 处理数据
+    
+    - max.poll.records 一次拉取数据返回消息的最大条数，默认 500 条
+    
+    ↑ FetchedRecords 从队列中抓取数据
+    
+    group consumer
+    ```
+
+- 消费者重要参数
+
+  - | 参数名称                                    | 描述                                                         |
+    | ------------------------------------------- | ------------------------------------------------------------ |
+    | bootstrap.servers                           | 向 Kafka 集群建立初始连接用到的 host/port 列表               |
+    | key.deserializer<br />和 value.deserializer | 指定接收消息的 key 和 value 的反序列化类型。一定要写全类名。 |
+
+- 消费者 API
+
+  - 独立消费者案例（订阅主题）
+
+    - ```java
+      // 1 创建一个消费者 "", "hello"
+      KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(properties);
+      // 2 订阅主题 first
+      ArrayList<String> topics = new ArrayList<>();
+      topics.add("first");
+      kafkaConsumer.subscribe(topics);
+      // 3 消费数据
+      while (true) {
+          ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(1));
+          for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
+              System.out.println(consumerRecord);
+          }
+      }
+      ```
+
+  - 独立消费者案例（订阅分区）
+
+    - ```java
+      // 1 创建一个消费者 "", "hello"
+      KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(properties);
+      // 2 订阅主题对应的分区
+      ArrayList<TopicPartition> topicPartitions = new ArrayList<>();
+      topicPartitions.add(new TopicPartition("first", 0));
+      kafkaConsumer.assign(topicPartitions);
+      // 3 消费数据
+      while (true) {
+          ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(1));
+          for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
+              System.out.println(consumerRecord);
+          }
+      }
+      ```
+
+  - 消费者组案例
+
+- 消费者组中分区的分配
+
+  - 一个 consumer group 中有多个 consumer 组成，一个 topic 有多个 partition 组成，现在的问题是，**到底由哪个 consumer 来消费哪个 partition 的数据**。
+
+  - Kafka 有四种主流的分区分配策略：**Range、RoundRobin、Sticky、CooperativeSticky**。
+
+    - Range
+      - Range 是对每个 topic 而言的。
+      - 首先对同一个 topic 里面的**分区按照序号进行排序**，并对**消费者按照字母顺序进行排序**。
+        - 假如现在有 7 个分区，3 个消费者，排序后的分区将会是 0, 1, 2, 3, 4, 5, 6；消费者排序完之后将会是  C0, C1, C2。
+      - 通过 **partition 数/ consumer 数**来决定每个消费者应该消费几个分区。**如果除不尽，那么前面几个消费者将会多消费 1 个分区。**
+        - 例如，7/3 = 2 余 1，除不尽，那么消费者 C0 便会多消费 1 个分区。8/3 = 2 余 2，除不尽，那么 C0 和 C1 分别多消费一个。
+      - **注意：**如果只是针对 1 个 topic 而言，C0 消费者多消费 1 个分区影响不是很大。但是如果有 N 多个 topic，那么针对每个 topic，消费者 C0 都将多消费 1 个分区，topic 越多，C0 消费的分区会比其他消费者明显多消费 N 个分区。
+        - **容易产生数据倾斜！**
+    - RoundRobin
+      - RoundRobin 针对集群中**所有 Topic 而言**。
+      - RoundRobin 轮询分区策略，是把**所有的 partition 和所有的 consumer 都列出来**，然后**按照 hashcode 进行排序**，最后通过**轮询算法**来分配 partition 给到各个消费者。
+    - Sticky
+      - **粘性分区定义：**可以理解为分配的结果带有“粘性的”。即在执行一次新的分配之前，考虑上一次分配的结果，尽量少的调整分配的变动，可以节省大量的开销。
+      - 粘性分区是 Kafka 从 0.11.x 版本开始引入这种分配策略，**首先会尽量均衡的放置分区到消费者上面**，在出现同一消费组内消费者出现问题的时候，会**尽量保持原有分配的分区不变化。**
+
+  - 可以通过配置参数 **partition.assignment.strategy**，修改分区的分配策略。**默认策略是 Range + CooperativeSticky**。Kafka 可以同时使用多个分区分配策略。
+
+  - 消费者组分区消费方案原理
+
+    - 每个 consumer 都发送 JoinGroup 请求
+    - 选出一个 consumer 作为 leader
+    - 把要消费的 topic 情况发送给 leader 消费者
+    - leader 会负责制定消费方案
+    - 把消费方案发给 coordinator
+    - Coordinator 就把消费方案下发给各个 consumer
+    - 每个消费者就会和 coordinator 保持心跳（默认 3s），一旦超时 （session.timeout.ms=45s），该消费者会被移除，并触发再平衡；或者消费者处理消息的时间过长（max.poll.interval.ms 5 分钟），也会触发再平衡
+
+  - 相关参数
+
+    - | 参数名称                      | 描述                                                         |
+      | ----------------------------- | ------------------------------------------------------------ |
+      | heartbeat.interval.ms         | Kafka 消费者和 coordinator 之间的心跳时间，**默认 3s**。<br />该条目的值必须小于 session.timeout.ms，也不应该高于 session.timeout.ms 的 1/3. |
+      | session.timeout.ms            | Kafka 消费者和 coordinator 之间连接超时时间，**默认 45s**。超过该值，该消费者被移除，消费者组执行再平衡。 |
+      | max.poll.interval.ms          | 消费者处理消息的最大时长，**默认是 5 分钟**。超过该值，该消费者被移除，消费者组执行再平衡。 |
+      | partition.assignment.strategy | 消费者分区分配策略，**默认策略是 Range + CooperativeSticky**。Kafka 可以同时使用多个分区分配策略。可以选择的策略包括：Range、RoundRobin、Sticky、CooperativeSticky |
+
+- 消费者 offset 保存位置
+
+  - Kafka 0.9 版本之前，consumer 默认将 offset 保存在 Zookeeper 中
+  - 从 0.9 版本开始，consumer 默认将 offset 保存在 Kafka 一个内置的 topic 中，**该 topic 为 __consumer_offsets**
+  - __consumer_offsets 主题里面**采用 key 和 value 的方式存储数据**。key 是 group.id + topic + 分区号，value 就是当前 offset 的值。**每隔一段时间，kafka 内部会对这个 topic 进行 compact**，也就是**每个 group.id + topic + 分区号就保留最新数据**。
+
+- 自动提交 offset
+
+  - 为了使我们能够专注于自己的业务逻辑，Kafka 提供了自动提交 offset 的功能。
+  - 自动提交 offset 的相关参数：
+    - **enable.auto.commit**: 是否开启自动提交 offset 功能，默认是 true
+    - **auto.commit.interval.ms**: 自动提交 offset 的时间间隔，默认是 5s
+
+- 手动提交 offset
+
+  - 虽然自动提交 offset 十分简单便利，但由于其是基于时间提交的，开发人员难以把握 offset 提交的时机。因此 Kafka 还提供了手动提交 offset 的 API。
+  - 手动提交 offset 的方法有两种：分别是 **commitSync（同步提交）**和 **commitAsync（异步提交）**。
+  - 两者的相同点是，都会将**本次提交的一批数据最高的偏移量提交**；
+  - 不同点是，**同步提交阻塞当前线程**，一直到提交成功，并且会自动失败重试（由不可控因素导致，也会出现提交失败）；而**异步提交则没有失败重试机制，故有可能提交失败。**
+    - **commitSync（同步提交）：必须等待 offset 提交完毕，再去消费下一批数据。**
+    - **commitAsync（异步提交）：发送完提交 offset 请求后，就开始消费下一批数据了。**
+
+- 指定 Offset 消费
+
+  - **auto.offset.reset = earliest | latest | none** 默认是 latest。
+  - 当 Kafka 中没有初始偏移量（消费者组第一次消费）或服务器上不再存在当前偏移量时（例如该数据已被删除），该怎么办？
+    1. **earliest**：自动将偏移量重置为最早的偏移量，**--from-beginning**。
+
+    2. **latest（默认值）**：自动将偏移量重置为最新偏移量。
+
+    3. none：如果未找到消费者组的先前偏移量，则向消费者抛出异常。
+
+- 指定时间消费
+
+- 漏消费和重复消费
+
+  - **重复消费**：已经消费了数据，但是 offset 没提交。
+  - **漏消费**：先提交 offset 后消费，有可能会造成数据的漏消费。
+  - 具体场景
+    - 场景1：**重复消费**。自动提交 offset 引起。
+
+      1. Consumer 每 5s 提交 offset
+      2. 如果提交 offset 后的 2s，consumer 挂了
+      3. 再次重启 consumer，则从上一次提交的 offset 处继续消费，导致重复消费
+
+    - 场景2：**漏消费**。设置 offset 为手动提交，当 offset 被提交时，数据还在内存中未落盘，此时刚好消费者线程被 kill 掉，那么 offset 已经提交，但是数据未处理，导致这部分内存中的数据丢失。
+      1. 提交 offset
+      2. 消费者消费的数据还在内存中，消费者挂掉，导致漏消费
+  - 如果想完成 Consumer 端的精准一次性消费，那么需要 **Kafka 消费端将消费过程和提交 offset 过程做原子绑定**。此时我们需要将 Kafka 的 offset 保存到支持事务的自定义介质（比如 MySQL）。这部分知识会在后续项目部分涉及。
+
+- 数据积压
+
+  - 如果是 Kafka 消费能力不足，则可以考虑**增加 Topic 的分区数**，并且同时提升消费组的消费者数量，**消费者数 = 分区数**。（两者缺一不可）
+  - 如果是下游的数据处理不及时：**提高每批次拉取的数量。**批次拉取数据过少（拉取数据/处理时间 < 生产速度），使处理的数据小于生产的数据，也会造成数据积压。
+
+参考文档：
+
+1. [什么是消费者组（Consumer Group）？它的作用是什么？如何实现消费者负载均衡？- 腾讯云](https://cloud.tencent.com/developer/news/1191786)
+2. [《尚硅谷Kafka3.x教程》笔记.md](../视频笔记/《尚硅谷Kafka3.x教程》笔记.md) P41 ~ 58
 
 ## 高可用
 
@@ -5769,6 +7915,23 @@ BigKey 生产调优
 参考文档：
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景二：说说消息队列的高可用、不重复消费、可靠传输、顺序消费、消息堆积？ - 如何保障消息不重复消费（幂等性）？
+
+## Kafka 服务幂等性
+
+1. 幂等性原理
+
+   - **幂等性就是指 Producer 不论向 Broker 发送多少次重复数据，Broker 端都只会持久化一条，保证了不重复**。
+   - 精确一次（Exactly Once） = 幂等性 + 至少一次（ack = -1 + 分区副本数 >= 2 + ISR 最小副本数量 >= 2）
+   - 重复数据的判断标准：具有<PID, Partition, SeqNumber> 相同主键的消息提交时，Broker 只会持久化一条。其中 PID 是 Kafka 每次重启都会分配一个新的；Partition 表示分区号；Sequence Number 是单调自增的。
+   - 所以幂等性只能保证的是在单分区单会话内不重复。
+
+2. 如何使用幂等性
+
+   - 开启参数 enable.idempotence 默认为 true，false 关闭
+
+参考文档：
+
+1. [《尚硅谷Kafka3.x教程》笔记.md](../视频笔记/《尚硅谷Kafka3.x教程》笔记.md) P19 3.7.2 幂等性
 
 ## 可靠传输（不丢失）
 
@@ -5825,6 +7988,84 @@ BigKey 生产调优
 参考文档：
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景二：说说消息队列的高可用、不重复消费、可靠传输、顺序消费、消息堆积？ - 如何处理消息堆积？
+
+# RocketMQ
+
+## SpringBoot 整合
+
+1. 引入相关依赖
+
+   ```xml
+   <dependency>
+     <groupId>org.apache.rocketmq</groupId>
+     <artifactId>rocketmq-spring-boot-starter</artifactId>
+   </dependency>
+   ```
+
+2. 添加RocketMQ的相关配置
+
+   ```yaml
+   rocketmq:
+       consumer:
+           group: springboot_consumer_group
+           # 一次拉取消息最大值，注意是拉取消息的最大值而非消费最大值
+           pull-batch-size: 10
+       name-server: 10.5.103.6:9876
+       producer:
+           # 发送同一类消息的设置为同一个group，保证唯一
+           group: springboot_producer_group
+           # 发送消息超时时间，默认3000
+           sendMessageTimeout: 10000
+           # 发送消息失败重试次数，默认2
+           retryTimesWhenSendFailed: 2
+           # 异步消息重试此处，默认2
+           retryTimesWhenSendAsyncFailed: 2
+           # 消息最大长度，默认1024 * 1024 * 4(默认4M)
+           maxMessageSize: 4096
+           # 压缩消息阈值，默认4k(1024 * 4)
+           compressMessageBodyThreshold: 4096
+           # 是否在内部发送失败时重试另一个broker，默认false
+           retryNextServer: false
+   ```
+
+3. 使用提供的模板工具类RocketMQTemplate发送消息
+
+   ```java
+   @RestController
+   public class NormalProduceController {
+     @Setter(onMethod_ = @Autowired)
+     private RocketMQTemplate rocketmqTemplate;
+     
+     @GetMapping("/test")
+     public SendResult test() {
+       Message<String> msg = MessageBuilder.withPayload("Hello,RocketMQ").build();
+       SendResult sendResult = rocketmqTemplate.send(topic, msg);
+     }
+   }
+   ```
+
+4. 实现RocketMQListener接口消费消息
+
+   ```java
+   import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
+   import org.apache.rocketmq.spring.core.RocketMQListener;
+   import org.springframework.stereotype.Component;
+   
+   @Component
+   @RocketMQMessageListener(topic = "your_topic_name", consumerGroup = "your_consumer_group_name")
+   public class MyConsumer implements RocketMQListener<String> {
+   
+       @Override
+       public void onMessage(String message) {
+           // 处理消息的逻辑
+           System.out.println("Received message: " + message);
+       }
+   }
+   ```
+
+参考文档：
+
+1. [SpringBoot整合RocketMQ，老鸟们都是这么玩的！- 知乎](https://zhuanlan.zhihu.com/p/672096914)
 
 # RabbitMQ
 
@@ -7790,6 +10031,199 @@ epoll 是现在最先进的 IO 多路复用器，Redis、Nginx、Linux 中的 Ja
 | fd 拷贝              | 每次调用 select，都需要把 fd 集合从用户态拷贝到内核态 | 每次调用 poll，都需要把 fd 集合从用户态拷贝到内核态 | fd 首次调用 epoll_ctl 拷贝，每次调用 epoll_wait 不拷贝       |
 | 工作效率             | 每次调用都进行线性遍历，时间复杂度为 O(n)             | 每次调用都进行线性遍历，时间复杂度 O(n)             | 事件通知方式，每当 fd 就绪，系统注册的回调函数就会被调用，将就绪 fd 放到 readyList 里面，时间复杂度 O(1) |
 
+## 零拷贝
+
+- 是什么
+
+  - 零拷贝是指计算机执行IO操作时，CPU不需要将数据从一个存储区域复制到另一个存储区域，从而可以减少上下文切换以及CPU的拷贝时间。它是一种`I/O`操作优化技术。
+  - 零拷贝字面上的意思包括两个，“零”和“拷贝”：
+    - “拷贝”：就是指数据从一个存储区域转移到另一个存储区域。
+    - “零” ：表示次数为0，它表示拷贝数据的次数为0。
+  - 合起来，那**零拷贝**就是不需要将数据从一个存储区域复制到另一个存储区域咯。
+
+- 传统 IO 的执行流程
+
+  - 做服务端开发的小伙伴，文件下载功能应该实现过不少了吧。如果你实现的是一个**web程序**，前端请求过来，服务端的任务就是：将服务端主机磁盘中的文件从已连接的socket发出去。
+  - 传统的IO流程，包括read和write的过程。
+    - `read`：把数据从磁盘读取到内核缓冲区，再拷贝到用户缓冲区
+    - `write`：先把数据写入到socket缓冲区，最后写入网卡设备。
+  - 流程如下
+    - 用户应用进程调用read函数，向操作系统发起IO调用，**上下文从用户态转为内核态（切换1）**
+    - DMA控制器把数据从磁盘中，读取到内核缓冲区。
+    - CPU把内核缓冲区数据，拷贝到用户应用缓冲区，**上下文从内核态转为用户态（切换2）**，read函数返回
+    - 用户应用进程通过write函数，发起IO调用，**上下文从用户态转为内核态（切换3）**
+    - CPU将应用缓冲区中的数据，拷贝到socket缓冲区
+    - DMA控制器把数据从socket缓冲区，拷贝到网卡设备，**上下文从内核态切换回用户态（切换4）**，write函数返回
+  - 从流程图可以看出，传统IO的读写流程，包括了4次上下文切换（4次用户态和内核态的切换），4次数据拷贝（**两次CPU拷贝以及两次的DMA拷贝**)，什么是DMA拷贝呢？我们一起来回顾下，零拷贝涉及的**操作系统知识点**哈。
+
+- 知识点回顾
+
+  - 内核空间和用户空间
+    - 我们电脑上跑着的应用程序，其实是需要经过**操作系统**，才能做一些特殊操作，如磁盘文件读写、内存的读写等等。因为这些都是比较危险的操作，**不可以由应用程序乱来**，只能交给底层操作系统来。
+    - 因此，操作系统为每个进程都分配了内存空间，一部分是用户空间，一部分是内核空间。**内核空间是操作系统内核访问的区域，是受保护的内存空间，而用户空间是用户应用程序访问的内存区域。** 以32位操作系统为例，它会为每一个进程都分配了**4G**(2的32次方)的内存空间。
+      - **内核空间**：主要提供进程调度、内存分配、连接硬件资源等功能
+      - **用户空间**：提供给各个程序进程的空间，它不具有访问内核空间资源的权限，如果应用程序需要使用到内核空间的资源，则需要通过系统调用来完成。进程从用户空间切换到内核空间，完成相关操作后，再从内核空间切换回用户空间。
+  - 什么是用户态、内核态
+    - 如果进程运行于内核空间，被称为进程的**内核态**
+    - 如果进程运行于用户空间，被称为进程的**用户态**。
+  - 什么是上下文切换
+    - 什么是上下文
+      - CPU 寄存器，是CPU内置的容量小、但速度极快的内存。而程序计数器，则是用来存储 CPU 正在执行的指令位置、或者即将执行的下一条指令位置。它们都是 CPU 在运行任何任务前，必须的依赖环境，因此叫做CPU上下文。
+    - 上下文切换是指，先把前一个任务的CPU上下文（也就是CPU寄存器和程序计数器）保存起来，然后加载新任务的上下文到这些寄存器和程序计数器，最后再跳转到程序计数器所指的新位置，运行新任务。
+    - 一般我们说的**上下文切换**，就是指内核（操作系统的核心）在CPU上对进程或者线程进行切换。进程从用户态到内核态的转变，需要通过**系统调用**来完成。系统调用的过程，会发生**CPU上下文的切换**。
+    - CPU 寄存器里原来用户态的指令位置，需要先保存起来。接着，为了执行内核态代码，CPU 寄存器需要更新为内核态指令的新位置。最后才是跳转到内核态运行内核任务。
+  - 虚拟内存
+    - 现代操作系统使用虚拟内存，即虚拟地址取代物理地址，使用虚拟内存可以有2个好处：
+      - 虚拟内存空间可以远远大于物理内存空间
+      - 多个虚拟内存可以指向同一个物理地址
+    - 正是**多个虚拟内存可以指向同一个物理地址**，可以把内核空间和用户空间的虚拟地址映射到同一个物理地址，这样的话，就可以减少IO的数据拷贝次数啦
+  - DMA 技术
+    - DMA，英文全称是**Direct Memory Access**，即直接内存访问。**DMA**本质上是一块主板上独立的芯片，允许外设设备和内存存储器之间直接进行IO数据传输，其过程**不需要CPU的参与**。
+    - 我们一起来看下IO流程，DMA帮忙做了什么事情.
+      - 用户应用进程调用read函数，向操作系统发起IO调用，进入阻塞状态，等待数据返回。
+      - CPU收到指令后，对DMA控制器发起指令调度。
+      - DMA收到IO请求后，将请求发送给磁盘；
+      - 磁盘将数据放入磁盘控制缓冲区，并通知DMA
+      - DMA将数据从磁盘控制器缓冲区拷贝到内核缓冲区。
+      - DMA向CPU发出数据读完的信号，把工作交换给CPU，由CPU负责将数据从内核缓冲区拷贝到用户缓冲区。
+      - 用户应用进程由内核态切换回用户态，解除阻塞状态
+    - 可以发现，DMA做的事情很清晰啦，它主要就是**帮忙CPU转发一下IO请求，以及拷贝数据**。为什么需要它的？
+      - 主要就是效率，它帮忙CPU做事情，这时候，CPU就可以闲下来去做别的事情，提高了CPU的利用效率。大白话解释就是，CPU老哥太忙太累啦，所以他找了个小弟（名叫DMA） ，替他完成一部分的拷贝工作，这样CPU老哥就能着手去做其他事情。
+
+- 零拷贝实现的几种方式
+
+  - 零拷贝并不是没有拷贝数据，而是减少用户态/内核态的切换次数以及CPU拷贝的次数。零拷贝实现有多种方式，分别是以下 3 种
+
+  - mmap+write
+
+    - mmap 的函数原型如下：
+
+      ```c
+      void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+      ```
+
+      - addr：指定映射的虚拟内存地址
+      - length：映射的长度
+      - prot：映射内存的保护模式
+      - flags：指定映射的类型
+      - fd:进行映射的文件句柄
+      - offset:文件偏移量
+
+    - 前面一小节，零拷贝相关的知识点回顾，我们介绍了**虚拟内存**，可以把内核空间和用户空间的虚拟地址映射到同一个物理地址，从而减少数据拷贝次数！mmap就是用了虚拟内存这个特点，它将内核中的读缓冲区与用户空间的缓冲区进行映射，所有的IO都在内核中完成。
+
+    - `mmap+write`实现的零拷贝流程如下：
+
+      - 用户进程通过`mmap方法`向操作系统内核发起IO调用，**上下文从用户态切换为内核态**。
+      - CPU利用DMA控制器，把数据从硬盘中拷贝到内核缓冲区。
+      - **上下文从内核态切换回用户态**，mmap方法返回。
+      - 用户进程通过`write`方法向操作系统内核发起IO调用，**上下文从用户态切换为内核态**。
+      - CPU将内核缓冲区的数据拷贝到的socket缓冲区。
+      - CPU利用DMA控制器，把数据从socket缓冲区拷贝到网卡，**上下文从内核态切换回用户态**，write调用返回。
+
+    - 可以发现，`mmap+write`实现的零拷贝，I/O发生了**4**次用户空间与内核空间的上下文切换，以及3次数据拷贝。其中3次数据拷贝中，包括了**2次DMA拷贝和1次CPU拷贝**。
+
+    - `mmap`是将读缓冲区的地址和用户缓冲区的地址进行映射，内核缓冲区和应用缓冲区共享，所以节省了一次CPU拷贝‘’并且用户进程内存是**虚拟的**，只是**映射**到内核的读缓冲区，可以节省一半的内存空间。
+
+  - sendfile
+
+    - `sendfile`是Linux2.1内核版本后引入的一个系统调用函数，API如下：
+
+      ```c
+      ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
+      ```
+
+      - out_fd:为待写入内容的文件描述符，一个socket描述符。，
+      - in_fd:为待读出内容的文件描述符，必须是真实的文件，不能是socket和管道。
+      - offset：指定从读入文件的哪个位置开始读，如果为NULL，表示文件的默认起始位置。
+      - count：指定在fdout和fdin之间传输的字节数。
+
+    - sendfile表示在两个文件描述符之间传输数据，它是在**操作系统内核**中操作的，**避免了数据从内核缓冲区和用户缓冲区之间的拷贝操作**，因此可以使用它来实现零拷贝。
+
+    - sendfile实现的零拷贝流程如下：
+
+      1. 用户进程发起sendfile系统调用，**上下文（切换1）从用户态转向内核态**
+      2. DMA控制器，把数据从硬盘中拷贝到内核缓冲区。
+      3. CPU将读缓冲区中数据拷贝到socket缓冲区
+      4. DMA控制器，异步把数据从socket缓冲区拷贝到网卡，
+      5. **上下文（切换2）从内核态切换回用户态**，sendfile调用返回。
+
+    - 可以发现，`sendfile`实现的零拷贝，I/O发生了**2**次用户空间与内核空间的上下文切换，以及3次数据拷贝。其中3次数据拷贝中，包括了**2次DMA拷贝和1次CPU拷贝**。那能不能把CPU拷贝的次数减少到0次呢？有的，即`带有DMA收集拷贝功能的sendfile`！
+
+  - 带有DMA收集拷贝功能的sendfile
+
+    - linux 2.4版本之后，对`sendfile`做了优化升级，引入SG-DMA技术，其实就是对DMA拷贝加入了`scatter/gather`操作，它可以直接从内核空间缓冲区中将数据读取到网卡。使用这个特点搞零拷贝，即还可以多省去**一次CPU拷贝**。
+    - sendfile+DMA scatter/gather实现的零拷贝流程如下：
+      1. 用户进程发起sendfile系统调用，**上下文（切换1）从用户态转向内核态**
+      2. DMA控制器，把数据从硬盘中拷贝到内核缓冲区。
+      3. CPU把内核缓冲区中的**文件描述符信息**（包括内核缓冲区的内存地址和偏移量）发送到socket缓冲区
+      4. DMA控制器根据文件描述符信息，直接把数据从内核缓冲区拷贝到网卡
+      5. **上下文（切换2）从内核态切换回用户态**，sendfile调用返回。
+    - 可以发现，`sendfile+DMA scatter/gather`实现的零拷贝，I/O发生了**2**次用户空间与内核空间的上下文切换，以及2次数据拷贝。其中2次数据拷贝都是包**DMA拷贝**。这就是真正的 **零拷贝（Zero-copy)** 技术，全程都没有通过CPU来搬运数据，所有的数据都是通过DMA来进行传输的。
+
+- Java 提供的零拷贝方式
+
+  - Java NIO对mmap的支持
+
+    - **Java NIO有一个`MappedByteBuffer`的类，可以用来实现内存映射**。它的底层是调用了Linux内核的**mmap**的API。
+
+    - **mmap的小demo**如下：
+
+      ```java
+      public class MmapTest {
+      
+          public static void main(String[] args) {
+              try {
+                  FileChannel readChannel = FileChannel.open(Paths.get("./jay.txt"), StandardOpenOption.READ);
+                  MappedByteBuffer data = readChannel.map(FileChannel.MapMode.READ_ONLY, 0, 1024 * 1024 * 40);
+                  FileChannel writeChannel = FileChannel.open(Paths.get("./siting.txt"), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                  //数据传输
+                  writeChannel.write(data);
+                  readChannel.close();
+                  writeChannel.close();
+              }catch (Exception e){
+                  System.out.println(e.getMessage());
+              }
+          }
+      }
+      ```
+
+  - Java NIO对sendfile的支持
+
+    - **FileChannel的`transferTo()/transferFrom()`，底层就是sendfile() 系统调用函数**。**Kafka 这个开源项目就用到它**，平时面试的时候，回答面试官为什么这么快，就可以提到零拷贝`sendfile`这个点。
+
+      ```java
+      @Override
+      public long transferFrom(FileChannel fileChannel, long position, long count) throws IOException {
+         return fileChannel.transferTo(position, count, socketChannel);
+      }
+      ```
+
+    - **sendfile的小demo**如下：
+
+      ```java
+      public class SendFileTest {
+          public static void main(String[] args) {
+              try {
+                  FileChannel readChannel = FileChannel.open(Paths.get("./jay.txt"), StandardOpenOption.READ);
+                  long len = readChannel.size();
+                  long position = readChannel.position();
+                  
+                  FileChannel writeChannel = FileChannel.open(Paths.get("./siting.txt"), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                  //数据传输
+                  readChannel.transferTo(position, len, writeChannel);
+                  readChannel.close();
+                  writeChannel.close();
+              } catch (Exception e) {
+                  System.out.println(e.getMessage());
+              }
+          }
+      }
+      ```
+
+参考文档：
+
+1. [看一遍就理解：零拷贝原理详解 - 知乎](https://zhuanlan.zhihu.com/p/447890038)
+
 ## 软链接和硬链接
 
 - 软链接与硬链接是用来干什么的呢？
@@ -8525,6 +10959,38 @@ epoll 是现在最先进的 IO 多路复用器，Redis、Nginx、Linux 中的 Ja
 参考文档：
 
 1. 《我要进大厂系列之面试圣经（第1版）.pdf》场景二十六：BAT 大数据面试题 - 5、如何从大量数据中找出高频词？（百度）；6、如何找出某一天访问百度网站最多的 IP？（百度）；9、如何查询最热门的查询串？（腾讯）
+
+# 广告业务
+
+## 常用术语
+
+| 缩写    | 英文                                    | 中文               | 参考章节  |
+| ------- | --------------------------------------- | ------------------ | --------- |
+| **ADX** | **AD eXchange**                         | **广告交易平台**   | 6.3，14.1 |
+| **CTR** | **Click Through Rate**                  | **点击率**         | 2.3.1     |
+| CDN     | Content Delivery Network                | 内容分发网络       | 11.1      |
+| CVR     | Conversion Rate                         | 转化率             | 2.3.1     |
+| CPA     | Cost per Action                         | 按转化付费         | 2.3.2     |
+| **CPC** | **Cost per Click**                      | **按点击付费**     | 2.3.2     |
+| **CPM** | **Cost per Mille**                      | **按千次展示付费** | 2.3.2     |
+| CPS     | Cost per Sale                           | 按销售额付费       | 2.3.2     |
+| CPT     | Cost per Time                           | 按时间付费         | 2.3.2     |
+| CRM     | Customer Relation Management            | 客户关系管理       | 3.1       |
+| **DSP** | **Demand Side Platform**                | **需求方平台**     | 6.4，14.2 |
+| eCPM    | Expected Cost per Mille                 | 千次展示期望收入   | 2.3.1     |
+| IMEI    | International Mobile Equipment Identity |                    | 6.6.1     |
+| **RTB** | **Real Time Bidding**                   | **实时竞价**       | 6.1       |
+| ROI     | Return on Investment                    | 投入产出比         | 1.2       |
+| RPM     | Revenue per Mille                       | 千次展示收益       | 1.4       |
+| SEM     | Search engine marketing                 | 搜索引擎营销       | 5.4       |
+| **SSP** | **Supply Side Platform**                | **供给方平台**     | 6.5，14.3 |
+
+- RTA 即 Realtime API的简称，用于满足广告主实时个性化的投放需求，这里的实时是指API接口实时调用
+
+参考文档：
+
+1. 《计算广告：互联网商业变现的市场与技术》附录A 主要术语及缩写索引
+2. [RTA一种广告精准投放的新玩法？](https://cloud.tencent.com/developer/article/2054814)
 
 # 算法
 
