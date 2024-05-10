@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://b3l2krnb68cp2"]
+
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project1/Player.cs" id="1_fk2wl"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rg8sl"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_7ynr3"]
+
+[node name="Player" type="RigidBody3D"]
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+max_contacts_reported = 10
+contact_monitor = true
+linear_damp = 1.0
+angular_damp = 3.0
+script = ExtResource("1_fk2wl")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_rg8sl")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_7ynr3")
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]

@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://qf5w4htki5a6"]
+
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project1/MoveHazard.cs" id="1_mqsml"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r8xpg"]
+albedo_color = Color(0.753906, 0.300385, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_q3eed"]
+material = SubResource("StandardMaterial3D_r8xpg")
+size = Vector3(3, 3, 3)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_dlsjt"]
+points = PackedVector3Array(-1.5, -1.49971, -1.49971, 1.5, 1.49978, 1.49978, 1.5, -1.49978, 1.49978, 1.5, 1.49978, -1.49978, -1.5, 1.49971, 1.49971, 1.5, -1.49978, -1.49978, -1.5, -1.49971, 1.49971, -1.5, 1.49971, -1.49971)
+
+[node name="MoveHazard" type="AnimatableBody3D"]
+script = ExtResource("1_mqsml")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("BoxMesh_q3eed")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("ConvexPolygonShape3D_dlsjt")
