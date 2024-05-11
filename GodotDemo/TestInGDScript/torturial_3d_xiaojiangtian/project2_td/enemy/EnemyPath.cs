@@ -4,7 +4,7 @@ using System;
 public partial class EnemyPath : Path3D
 {
     [Export] private PackedScene _enemyScene;
-    [Export] private CanvasLayer _victoryLayer;
+    [Export] private VictoryLayer _victoryLayer;
 
     private DifficultyManager _difficultyManager;
     private Timer _timer;
@@ -48,7 +48,7 @@ public partial class EnemyPath : Path3D
             }
 
             GD.Print("You win!");
-            _victoryLayer.Show();
+            _victoryLayer.Victory();
         }
     }
 }

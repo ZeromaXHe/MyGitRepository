@@ -122,7 +122,7 @@ autostart = true
 
 [node name="Base" parent="." instance=ExtResource("3_ktb4s")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, -8)
-_maxHealth = 50
+MaxHealth = 50
 
 [node name="Label3D" type="Label3D" parent="Base"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
@@ -148,6 +148,7 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 script = ExtResource("8_elplk")
+_startingGold = 600
 
 [node name="Label" type="Label" parent="Bank"]
 layout_mode = 2

@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 public partial class Base : Node3D
 {
-    [Export] private int _maxHealth = 5;
+    [Export] public int MaxHealth = 5;
 
     private Label3D _label3D;
 
@@ -16,8 +16,8 @@ public partial class Base : Node3D
         set
         {
             _currentHealth = value;
-            _label3D.Text = _currentHealth + "/" + _maxHealth;
-            _label3D.Modulate = Colors.Red.Lerp(Colors.White, (float)_currentHealth / _maxHealth);
+            _label3D.Text = _currentHealth + "/" + MaxHealth;
+            _label3D.Modulate = Colors.Red.Lerp(Colors.White, (float)_currentHealth / MaxHealth);
             GD.Print("health was changed");
             if (_currentHealth < 1)
             {
@@ -30,7 +30,7 @@ public partial class Base : Node3D
     public override void _Ready()
     {
         _label3D = GetNode<Label3D>("Label3D");
-        CurrentHealth = _maxHealth;
+        CurrentHealth = MaxHealth;
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
