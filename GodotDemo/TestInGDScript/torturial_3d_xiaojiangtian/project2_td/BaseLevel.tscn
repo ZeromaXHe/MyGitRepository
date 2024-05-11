@@ -1,0 +1,166 @@
+[gd_scene load_steps=18 format=3 uid="uid://cifxgjvuf8o3v"]
+
+[ext_resource type="PackedScene" uid="uid://e3m0gl0cpfcu" path="res://torturial_3d_xiaojiangtian/project2_td/ray_picker_camera/RayPickerCamera.tscn" id="1_6sx5c"]
+[ext_resource type="MeshLibrary" uid="uid://cbfnp7vbt8hiu" path="res://torturial_3d_xiaojiangtian/project2_td/mesh_libraries/SpaceLibrary.tres" id="1_dg0o1"]
+[ext_resource type="PackedScene" uid="uid://dvc0rhfgi0f6v" path="res://torturial_3d_xiaojiangtian/project2_td/enemy/Enemy.tscn" id="2_0ne21"]
+[ext_resource type="PackedScene" uid="uid://dj1wo7ubyrk2r" path="res://torturial_3d_xiaojiangtian/project2_td/base/Base.tscn" id="3_ktb4s"]
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project2_td/enemy/EnemyPath.cs" id="3_ylfdi"]
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project2_td/turret/TurretManager.cs" id="5_c6j8e"]
+[ext_resource type="PackedScene" uid="uid://7ittm68hig54" path="res://torturial_3d_xiaojiangtian/project2_td/turret/Turret.tscn" id="6_w431l"]
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project2_td/Bank.cs" id="8_elplk"]
+[ext_resource type="PackedScene" uid="uid://b403mg68cqeho" path="res://torturial_3d_xiaojiangtian/project2_td/difficulty_manager/DifficultyManager.tscn" id="9_x5drt"]
+[ext_resource type="PackedScene" uid="uid://c5w4bm511i3gl" path="res://torturial_3d_xiaojiangtian/project2_td/ui/VictoryLayer.tscn" id="10_y2m5r"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_m383f"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_p1a7q"]
+sky_material = SubResource("ProceduralSkyMaterial_m383f")
+
+[sub_resource type="Environment" id="Environment_8cn41"]
+background_mode = 2
+sky = SubResource("Sky_p1a7q")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0eqs2"]
+albedo_color = Color(0.25174, 0.53298, 0.570313, 1)
+
+[sub_resource type="Curve3D" id="Curve3D_bx72w"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -26, 0, 6, 0, 0, 0, 0, 0, 0, 14, 0, 6, 0, 0, 0, 0, 0, 0, 14, 0, -2, 0, 0, 0, 0, 0, 0, -14, 0, -2, 0, 0, 0, 0, 0, 0, -14, 0, -8),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0)
+}
+point_count = 5
+
+[sub_resource type="LabelSettings" id="LabelSettings_6vb7g"]
+font_size = 32
+outline_size = 10
+outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Curve" id="Curve_l2d0h"]
+min_value = 10.0
+max_value = 100.0
+_data = [Vector2(0, 10), 0.0, 90.0, 0, 1, Vector2(1, 100), 90.0, 0.0, 1, 0]
+point_count = 2
+
+[node name="BaseLevel" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_8cn41")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+size = Vector3(100, 2, 100)
+material = SubResource("StandardMaterial3D_0eqs2")
+
+[node name="RayPickerCamera" parent="." node_paths=PackedStringArray("_gridMap", "_turretManager") instance=ExtResource("1_6sx5c")]
+_gridMap = NodePath("../GridMap")
+_turretManager = NodePath("../TurretManager")
+
+[node name="GridMap" type="GridMap" parent="."]
+mesh_library = ExtResource("1_dg0o1")
+cell_size = Vector3(4, 4, 4)
+cell_center_y = false
+data = {
+"cells": PackedInt32Array(65532, 0, 0, 65533, 65534, 0, 65533, 0, 0, 65534, 65534, 0, 65534, 0, 0, 65535, 65534, 0, 65535, 0, 0, 0, 65534, 0, 0, 0, 0, 1, 65534, 0, 1, 0, 0, 2, 65534, 0, 2, 0, 0, 3, 65534, 0, 65532, 2, 0, 65533, 2, 0, 65534, 2, 0, 65535, 2, 0, 0, 2, 0, 1, 2, 0, 2, 2, 0, 3, 2, 0, 65531, 65534, 0, 65531, 65535, 0, 65531, 0, 0, 65530, 0, 0, 65530, 65535, 0, 65530, 65534, 0, 65531, 2, 0, 65530, 2, 0, 4, 65534, 0, 4, 65535, 0, 4, 0, 0, 4, 1, 0, 4, 2, 0)
+}
+
+[node name="EnemyPath" type="Path3D" parent="." node_paths=PackedStringArray("_victoryLayer")]
+curve = SubResource("Curve3D_bx72w")
+script = ExtResource("3_ylfdi")
+_enemyScene = ExtResource("2_0ne21")
+_victoryLayer = NodePath("../VictoryLayer")
+
+[node name="Road" type="CSGPolygon3D" parent="EnemyPath"]
+polygon = PackedVector2Array(-1, 0, -1, 0.1, 1, 0.1, 1, 0)
+mode = 2
+path_node = NodePath("..")
+path_interval_type = 0
+path_interval = 0.5
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = false
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+
+[node name="LeftEdge" type="CSGPolygon3D" parent="EnemyPath"]
+polygon = PackedVector2Array(-1.1, 0, -1.1, 0.15, -0.9, 0.15, -0.9, 0)
+mode = 2
+path_node = NodePath("..")
+path_interval_type = 0
+path_interval = 0.5
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = false
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+
+[node name="RightEdge" type="CSGPolygon3D" parent="EnemyPath"]
+polygon = PackedVector2Array(0.9, 0, 0.9, 0.15, 1.1, 0.15, 1.1, 0)
+mode = 2
+path_node = NodePath("..")
+path_interval_type = 0
+path_interval = 0.5
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = false
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+
+[node name="Timer" type="Timer" parent="EnemyPath"]
+wait_time = 2.0
+autostart = true
+
+[node name="Base" parent="." instance=ExtResource("3_ktb4s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, -8)
+_maxHealth = 50
+
+[node name="Label3D" type="Label3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
+billboard = 1
+text = "Hello"
+font_size = 500
+outline_size = 100
+
+[node name="TurretManager" type="Node3D" parent="." node_paths=PackedStringArray("_enemyPath")]
+script = ExtResource("5_c6j8e")
+_turret = ExtResource("6_w431l")
+_enemyPath = NodePath("../EnemyPath")
+
+[node name="Bank" type="MarginContainer" parent="." groups=["Bank"]]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("8_elplk")
+
+[node name="Label" type="Label" parent="Bank"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+text = "金币"
+label_settings = SubResource("LabelSettings_6vb7g")
+
+[node name="DifficultyManager" parent="." instance=ExtResource("9_x5drt")]
+_enemyHealthCurve = SubResource("Curve_l2d0h")
+
+[node name="VictoryLayer" parent="." instance=ExtResource("10_y2m5r")]
+visible = false
+
+[connection signal="timeout" from="EnemyPath/Timer" to="EnemyPath" method="_OnTimerTimeout"]
+[connection signal="StopSpawnEnemies" from="DifficultyManager" to="EnemyPath" method="_OnDifficultyManagerStopSpawnEnemies"]

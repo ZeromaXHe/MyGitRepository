@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://csnt862thompo"]
+
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project2_td/turret/Projectile.cs" id="1_8k8o3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ths3p"]
+albedo_color = Color(0.859375, 0.268555, 0.268555, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_l4b3q"]
+material = SubResource("StandardMaterial3D_ths3p")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_hc6ae"]
+
+[node name="Projectile" type="Area3D"]
+top_level = true
+script = ExtResource("1_8k8o3")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_l4b3q")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_hc6ae")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+autostart = true
+
+[connection signal="area_entered" from="." to="." method="_OnAreaEntered"]
+[connection signal="timeout" from="Timer" to="." method="_OnTimerTimeOut"]

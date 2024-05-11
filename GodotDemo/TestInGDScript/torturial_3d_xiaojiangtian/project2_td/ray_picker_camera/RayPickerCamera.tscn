@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://e3m0gl0cpfcu"]
+
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project2_td/ray_picker_camera/RayPickerCamera.cs" id="1_sohdk"]
+
+[node name="RayPickerCamera" type="Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 0.422618, 0.906308, 0, -0.906308, 0.422618, 0, 17.5, 12.5)
+script = ExtResource("1_sohdk")
+
+[node name="RayCast3D" type="RayCast3D" parent="."]
+target_position = Vector3(0, 0, -2)

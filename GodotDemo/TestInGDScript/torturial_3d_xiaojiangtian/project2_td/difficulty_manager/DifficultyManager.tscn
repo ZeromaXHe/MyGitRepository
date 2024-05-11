@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://b403mg68cqeho"]
+
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project2_td/difficulty_manager/DifficultyManager.cs" id="1_ubcjn"]
+
+[sub_resource type="Curve" id="Curve_y6omm"]
+min_value = 0.25
+max_value = 2.0
+_data = [Vector2(0, 2), 0.0, -1.75, 0, 1, Vector2(1, 0.25), -1.75, 0.0, 1, 0]
+point_count = 2
+
+[node name="DifficultyManager" type="Node"]
+script = ExtResource("1_ubcjn")
+_spawnTimeCurve = SubResource("Curve_y6omm")
+
+[node name="Timer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="Timer" to="." method="_OnTimerTimeout"]

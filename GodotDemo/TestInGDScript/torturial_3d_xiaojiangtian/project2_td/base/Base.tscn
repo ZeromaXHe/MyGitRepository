@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://dj1wo7ubyrk2r"]
+
+[ext_resource type="Script" path="res://torturial_3d_xiaojiangtian/project2_td/base/Base.cs" id="1_w8qld"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s5et6"]
+albedo_color = Color(1, 0.375, 0, 1)
+
+[node name="Base" type="Node3D" groups=["Base"]]
+script = ExtResource("1_w8qld")
+
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+radius = 2.0
+height = 4.0
+sides = 32
+material = SubResource("StandardMaterial3D_s5et6")
