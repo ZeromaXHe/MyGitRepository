@@ -1,0 +1,21 @@
+[gd_scene load_steps=6 format=3 uid="uid://3hlhrpvi7dh6"]
+
+[ext_resource type="Texture2D" uid="uid://cvsh5oqnoh5om" path="res://unlimited_terrain_generation_maomiyuhongbei/tileable_grass_00.png" id="1_4ur44"]
+[ext_resource type="Script" path="res://unlimited_terrain_generation_maomiyuhongbei/Chunk.cs" id="1_bwut4"]
+[ext_resource type="Shader" path="res://unlimited_terrain_generation_maomiyuhongbei/texture_shader.gdshader" id="1_euw1y"]
+[ext_resource type="Texture2D" uid="uid://b0f74ocm1thr3" path="res://unlimited_terrain_generation_maomiyuhongbei/dryground.jpg" id="3_gmy8n"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1h2pu"]
+render_priority = 0
+shader = ExtResource("1_euw1y")
+shader_parameter/min_grass_height = 0.0
+shader_parameter/max_rock_height = 2.0
+shader_parameter/uvscale = Vector2(5, 5)
+shader_parameter/terrain_grass = ExtResource("1_4ur44")
+shader_parameter/terrain_rock = ExtResource("3_gmy8n")
+
+[node name="Chunk" type="MeshInstance3D"]
+material_override = SubResource("ShaderMaterial_1h2pu")
+script = ExtResource("1_bwut4")
+_terrainSize = 200
+_resolution = 20

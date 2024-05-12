@@ -1,0 +1,50 @@
+[gd_scene load_steps=9 format=3 uid="uid://mr17fud8i50d"]
+
+[ext_resource type="Script" path="res://unlimited_terrain_generation_maomiyuhongbei/InfiniteTerrain.cs" id="1_yu8ut"]
+[ext_resource type="PackedScene" uid="uid://3hlhrpvi7dh6" path="res://unlimited_terrain_generation_maomiyuhongbei/Chunk.tscn" id="2_mvi24"]
+[ext_resource type="Script" path="res://unlimited_terrain_generation_maomiyuhongbei/Viewer.cs" id="3_4vlpo"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_web3s"]
+noise_type = 3
+frequency = 0.008
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_byhyp"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_mi2ls"]
+sky_material = SubResource("ProceduralSkyMaterial_byhyp")
+
+[sub_resource type="Environment" id="Environment_wr1ue"]
+background_mode = 2
+sky = SubResource("Sky_mi2ls")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tjesi"]
+albedo_color = Color(0.910156, 0, 0, 1)
+
+[node name="InfiniteTerrain" type="Node3D" node_paths=PackedStringArray("_viewer")]
+script = ExtResource("1_yu8ut")
+_terrainHeight = 40
+_viewDistance = 2000
+_viewer = NodePath("Viewer")
+_chunkMeshScene = ExtResource("2_mvi24")
+_noise = SubResource("FastNoiseLite_web3s")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_wr1ue")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Viewer" type="Marker3D" parent="."]
+script = ExtResource("3_4vlpo")
+_speed = 250
+
+[node name="Camera3D" type="Camera3D" parent="Viewer"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 3, 3)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Viewer"]
+material_override = SubResource("StandardMaterial3D_tjesi")
