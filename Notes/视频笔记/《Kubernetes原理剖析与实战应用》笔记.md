@@ -509,3 +509,643 @@ Kubernetes 社区异常活跃
 **Pod** 是 Kubernetes 项目中实现“容器设计模式”的最佳实践之一
 
 也是 Kubernetes 进行复杂应用编排的基础依赖
+
+# P6 05 Pod：最小调度单元的使用进阶及实践
+
+## 前言
+
+**Pod** 是 Kubernetes 中原子化的部署单元
+
+可以包含一个或多个容器
+
+而且容器之间可以共享网络、存储资源
+
+- Pod 里的某一个容器异常退出了怎么办？
+- 有没有“健康检查”方便你知道业务的真实运行情况，比如容器运行正常，但是业务不工作了？
+- 容器在启动或删除前后，如果需要做一些特殊处理怎么办？比如做一些清理工作
+- 如果容器所在节点宕机，重启后会对你的容器产生影响吗？
+- ……
+
+## Pod 的运行状态
+
+```shell
+$ kubectl get pod twocontainers -o=jsonpath='{.status.phase}'
+Pending
+```
+
+```shell
+$ kubectl get pod twocontainers
+NAME			READY	STATUS				RESTARTS	AGE
+twocontainers	0/2		ContainerCreating	0			13s
+```
+
+处于 **Pending** 状态的 Pod 不外乎以下 2 个原因：
+
+1. Pod 还未被调度
+2. Pod 内的容器镜像在待运行的节点上不存在，需要从镜像中心拉取
+
+```shell
+$ kubectl get pod twocontainers
+NAME			READY	STATUS		RESTARTS	AGE
+twocontainers	2/2		Running		0			2m
+```
+
+- Succeeded
+  - 表示 Pod 内所有容器均成功运行结束
+  - 即正常退出，退出码为 0
+- Failed
+  - 表示 Pod 内的所有容器均运行终止，且至少有一个容器终止失败
+  - 一般这种情况，都是由于容器运行异常退出，或者被系统终止掉了
+- Unknown
+  - 一般是由于 Node 失联导致的 Pod 状态无法获取到
+
+## Pod 的重启策略
+
+Kubernetes 中定义了如下三种重启策略
+
+可以通过 **spec.restartPolicy** 字段在 Pod 定义中进行设置
+
+- Always
+  - 表示一直重启，也是默认的重启策略
+  - Kubelet 会定期查询容器的状态
+  - 一旦某个容器处于退出状态，就对其执行重启操作
+- OnFailure
+  - 表示只有在容器异常退出，即退出码不为 0 时，才会对其进行重启操作
+- Never
+  - 表示从不重启
+
+
+
+比如某些 Java 进程启动速度非常慢，在容器启动阶段其实是无法提供服务的，虽然这个时候该容器是处于运行状态
+
+比如有些服务的进程发生阻塞，导致无法对外提供服务，这个时候容器对外还是显示为运行态
+
+## Pod 中的健康检查
+
+Kubernetes 中提供了一系列的健康检查
+
+可以定制调用来帮助解决类似的问题
+
+称之为 **Probe（探针）**
+
+- livenessProbe
+  - 可以用来探测容器是否真的在“运行”，即“探活”
+- readinessProbe
+  - 用于指示容器是否可以对外提供正常的服务请求，即“就绪”
+- startupProbe
+  - 可以用于判断容器是否已经启动好
+
+
+
+- ExecAction
+  - 可以在容器内执行 shell 脚本
+- HTTPGetAction
+  - 方便对指定的端口和 IP 地址执行 HTTP Get 请求
+- TCPSocketAction
+  - 可以对指定端口进行 TCP 检查
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe-demo
+  namespace: demo
+spec:
+  containers:
+  - name: sise
+    image: quay.io/openshiftlabs/simpleservice:0.5.0
+    ports:
+    - containerPort: 9876
+    readinessProbe:
+      tcpSocket:
+        port: 9876
+      periodSeconds: 10
+    livenessProbe:
+      periodSeconds: 5
+      httpGet:
+        path: /health
+        port: 9876
+    startupProbe:
+      httpGet:
+        path: /health
+        port: 9876
+      failureThreshold: 3
+      periodSeconds: 2
+```
+
+平常使用中
+
+建议你对全部服务同时设置 **readiness** 和 **liveness** 健康检查
+
+## 容器生命周期内的 hook
+
+PostStart 可以在容器启动之后就执行
+
+PreStop 则在容器被停止之前被执行，是一种阻塞式的方式
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lifecycle-demo
+  namespace: demo
+spec:
+  containers:
+  - name: lifecycle-demo-container
+    image: nginx:1.19
+    lifecycle:
+      postStart:
+        exec:
+          command: ["/bin/sh", "-c", "echo Hello from the postStart handler > /usr/share/message"]
+      preStop:
+        exec:
+          command: ["/usr/sbin/nginx", "-s", "quit"]
+```
+
+## init 容器
+
+通常用来做一些初始化工作
+
+比如环境检测、OSS 文件下载、工具安装等等
+
+- 总是运行到完成，可以理解为一次性的任务，不可以运行常驻型任务，因为会 block 应用容器的启动运行
+- 顺序启动执行，下一个的 init 容器都必须在上一个运行成功后才可以启动
+- 禁止使用 readiness/liveness 探针，可以使用 Pod 定义的 **activeDeadlineSeconds**，其中包含了 Init Container 的启动时间
+- 禁止使用 lifecycle hook
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-demo
+  namespace: demo
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.31
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.31
+    command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
+  - name: init-mydb
+    image: busybox: 1.31
+    command: ['sh', '-c', 'until nslookup mydb; do echo waiting for mydb; sleep 2; done;']
+```
+
+## 写在最后
+
+Kubernetes 内部最核心的对象之一，**Pod** 承载了太多的功能
+
+为了增加可扩展、可配置性
+
+Kubernetes 增加了各种 Probe、Hook 等，以此方便使用者进行接入配置
+
+# P7 06 无状态应用：剖析 Kubernetes 业务副本及水平扩展底层原理
+
+## 前言
+
+每一个 Pod 都是应用的一个实例
+
+通常不会直接在 Kubernetes 中创建和运行单个 Pod
+
+因为 Pod 的生命周期是短暂的，即**“阅后即焚”**
+
+
+
+单独地用一个 Pod 来承载业务
+
+**无法保证高可用、可伸缩、负载均衡等要求，而且 Pod 也无法“自愈”**
+
+
+
+这时就需要在 Pod 之上做一层抽象
+
+通过多个副本（Replica）来保证可用 Pod 的数量，避免业务不可用
+
+## 有状态服务 VS 无状态服务
+
+业务的服务类型
+
+- 无状态服务
+  - 如浏览网页
+  - 每次请求都包含了需要的所有信息
+  - 每次请求都和之前的没有任何关系
+- 有状态服务
+  - 如打网络游戏
+  - 其请求是状态化的，服务端需要保存请求的相关信息
+  - 这样每个请求都可以默认地使用之前的请求上下文
+
+## Kubernetes 中的无状态工作负载
+
+Kubernetes 中各个对象的 metadata 字段
+
+都有 **label（标签）** 和**annotation（注解）**两个对象
+
+
+
+- label（标签）
+  - 主要用来标识一些有意义且对象密切相关的信息
+  - 用来支持 labelSelector（标签选择器）以及一些查询操作，还有选择对象
+- annotation（注解）
+  - 主要用来记录一些非识别的信息
+  - 并不用于标识和选择对象
+
+
+
+```shell
+$ kubectl get pod -l label1=value1,label2=value2 -n my-namespace
+```
+
+查询出 my-namespace 这个命名空间下面，带有标签 label1=value1 和 label2=value2 的 pod
+
+label 中的键值对在匹配的时候是**“且”**的关系
+
+
+
+ReplicationController 通常缩写为“rc”
+
+```shell
+$ kubectl get rc -n my-namespace
+```
+
+
+
+**ReplicaSet（简写为 rs）**用来替代 ReplicaController
+
+目前支持三种操作符：**in**、**notin** 和 **exists**
+
+可以用 **environment in (production, qa)** 匹配 label 中带有 environment=production 或 environment=qa 的 pod
+
+可以用 **tier notin (frontend, backend)** 匹配 label 中不带有 tier=frontend 或 tier=backend 的 Pod
+
+```shell
+kuberctl get pods -l environment=production, tier=fronted
+```
+
+```shell
+kubectl get pods -l 'environment in (production),tier in (frontend)'
+```
+
+
+
+Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-demo
+  namespace: demo
+  labels:
+  	app: nginxs
+spec:
+  replicas: 3
+selector:
+  matchLabels:
+    app: nginx
+  template:
+    matadata:
+      labels:
+        app: nginx
+    version: v1
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+```
+
+```shell
+$ kubectl create ns demo
+$ kubectl create -f deploy-demo.yaml
+deployment.apps/nginx-deployment-demo created
+```
+
+```shell
+$ kubectl get rs -n demo
+NAME								DESIRED	CURRENT	READY	AGE
+nginx-deployment-demo-5d65f98bd9	3		3		0		5s
+```
+
+```shell
+$ kubectl get pod -n demo -l app=nginx,version=v1
+```
+
+```shell
+$ kubectl edit deploy nginx-deployment-demo -n demo
+```
+
+```shell
+$ kubectl apply -f deploy-demo.yaml
+```
+
+```shell
+$ kubectl get rs -n demo
+NAME								DESIRED	CURRENT	READY	AGE
+nginx-deployment-demo-5d65f98bd9	3		3		3		4m10s
+nginx-deployment-demo-7594578db7	1		1		0		3s
+```
+
+建议你使用默认的策略来保证可用性
+
+```shell
+$ kubectl get pod -n demo -l app=nginx,version=v1
+```
+
+```shell
+$ kubectl get pod -n demo -l app=nginx -w
+```
+
+## 写在最后
+
+有了 Deployment 这个高级对象
+
+可以很方便地完成无状态服务的发布、更新升级，无须多余的人工参与
+
+就能保证业务的高可用性
+
+# P8 07 有状态应用：Kubernetes 如何通过 StatefulSet 支持有状态应用
+
+## 前言
+
+Kubernetes 中的另外一种工作负载 **StatefulSet**
+
+主要**用于有状态的服务发布**
+
+
+
+在 kubectl 命令行中，一般将 StatefulSet 简写为 sts
+
+在部署一个 StatefulSet 的时候，有个前置依赖对象，即 Service（服务）
+
+## StatefulSet 的特性
+
+```shell
+$ kubectl get pod -n demo -w
+NAME		READY	STATUS				RESTARTS	AGE
+web-demo-0	0/1		ContainerCreating	0			18s
+web-demo-0	1/1		Running				0			20s
+web-demo-1	0/1		Pending				0			0s
+web-demo-1	0/1		Pending				0			0s
+web-demo-1	0/1		ContainerCreating	0			0s
+web-demo-1	1/1		Running				0			2s
+```
+
+```shell
+$ kubectl get pod -n demo -w -l app=nginx
+```
+
+```shell
+$ kubectl get event -n demo -w
+```
+
+```shell
+$ kubectl scale sts web-demo -n demo --replicas=5 statefulset.apps/web-demo scaled
+```
+
+## 如何更新升级 StatefulSet
+
+StatefulSet 中支持两种更新升级策略
+
+- RollingUpdate 是默认的更新策略
+- OnDelete 当更新策略设置为 OnDelete 时必须手动先删除 Pod 才能触发新的 Pod 更新
+
+## 写在最后
+
+StatefulSet 的特点：
+
+- 具备固定的网络标记，比如主机名，域名等
+- 支持持久化存储，而且最好能够跟实例一一绑定
+- 可以按照顺序来部署和扩展
+- 可以按照顺序进行终止和删除操作
+- 在进行滚动升级的时候，也会按照一定顺序
+
+# P9 08 配置管理：Kubernetes 管理业务配置方式有哪些？
+
+## 前言
+
+使用过程中，常常需要对 Pod 进行一些配置管理
+
+比如参数配置文件怎么使用，敏感数据怎么保存传递等等
+
+- 有些不变的配置是可以打包到镜像中的，那可变的配置呢？
+- 信息泄露，很容易引发安全风险，尤其是一些敏感信息，比如密码、密钥等
+- 每次配置更新后，都要重新打包一次，升级应用；镜像版本过多，也给镜像管理和镜像中心存储带来很大的负担
+- 定制化太严重，可扩展能力差，且不容易复用
+
+## ConfigMap
+
+```shell
+$ kubectl create -f cm-demo-mix.yaml
+configmap/cm-demo-mix created
+$ kubectl create -f cm-all-env.yaml
+configmap/cm-demo-all-env created
+```
+
+```shell
+$ kubectl get cm -n demo
+NAME			DATA	AGE
+cm-demo-all-env	2		30s
+cm-demo-mix		4		2s
+$ kubectl describe cm cm-demo-all-env -n demo
+```
+
+## Secret
+
+可以用 Secret 来保存一些敏感的数据信息，比如密码、密钥、token 等
+
+跟 ConfigMap 的用法基本保持一致，都可以用来作为环境变量或者文件挂载
+
+```shell
+$ kubectl create secret -h
+```
+
+## 写在最后
+
+ConfigMap 和 Secret 是 Kubernetes 常用的保存配置数据的对象
+
+可以根据需要选择合适的对象存储数据
+
+- 如果业务自己支持 reload 配置的话，比如 nginx -s reload，可以通过 inotify 感知到文件更新，或者直接定期进行 reload
+- Reloader 通过 watch ConfigMap 和 Secret，一旦发现对象更新，就自动触发对 Deployment 或 StatefulSet 等工作负载对象进行滚动升级
+
+# P10 09 存储类型：如何挑选合适的存储插件？
+
+## 前言
+
+虚拟机时代，大家比较少考虑存储的问题
+
+通过底层 IaaS 平台申请虚拟机时
+
+大多数情况下都会事先预估好需要的容量
+
+方便虚拟机起来后可以稳定的使用这些存储资源
+
+## Kubernetes 中的 Volume 是如何设计的？
+
+| 插件分类     | 主要用途描述                                                 | 卷插件                                                       | 数据是否会随着 Pod 删除而删除 |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ----------------------------- |
+| 临时存储     | 主要用于存储一些临时文件，类似于在操作系统中创建的 tempDir   | EmptyDir                                                     | 是                            |
+| 本地存储     | 用于将一些 Kubernetes 中定义的配置通过 volume 映射到容器中使用 | ConfigMap<br />DownwardAPI<br />Secret                       | 是                            |
+| 本地存储     | 使用宿主机上的存储资源                                       | HostPath<br />Local                                          | 否                            |
+| 自建存储平台 | 客户自己搭建的存储平台                                       | CephFS<br />Ginder<br />GlusterFS<br />NFS<br />RBD<br />……  | 否                            |
+| 云厂商插件   | 一些云厂商提供的插件，供云上的 Kubernetes 使用               | awsElasticBlockStore<br />AzureDisk<br />AzureFile<br />GCEPersistentDisk | 否                            |
+
+## 常见的几种内置 Volume 插件
+
+**ConfigMap** 和 **Secret**
+
+都可以通过 Volume 形式挂载到 Pod 内
+
+
+
+**Downward API**
+
+
+
+**EmptyDir**
+
+
+
+**HostPath**
+
+和 EmptyDir 一样，都是利用宿主机的存储为容器分配资源
+
+两者的区别就是 HostPath 中的数据并不会随着 Pod 被删除而删除，而是会持久地存放在该节点上
+
+- 避免通过容器恶意修改宿主机上的文件内容
+- 避免容器恶意占用宿主机上的存储资源而打爆宿主机
+- 要考虑到 Pod 自身的生命周期，而且 Pod 是会“漂移”重新“长”到别的节点上的，所以要避免过度依赖本地的存储
+
+## 为什么社区要采用 CSI
+
+1. 这些插件对 Kubernetes 代码本身的稳定性以及安全性引入了很多未知的风险，一个很小的 Bug 都有可能导致集群受到攻击或者无法工作
+2. 这些插件的维护和 Kubernetes 的正常迭代紧密耦合在一起，一起打包和编译。即使是某个单一插件出现了 Bug，都需要通过升级 Kubernetes 的版本来修复
+3. 社区需要维护所有的 volume plugin，并且要经过完整的测试验证流程来保证可用性，这给社区的正常迭代平添了很多麻烦
+4. 各个卷插件依赖的包也都要算作 Kubernetes 项目的一部分，这会让 Kubernetes 的依赖变得臃肿
+5. 开发者被迫要将这些插件代码进行开源
+
+# P11 10 存储管理：怎样对业务数据进行持久化存储？
+
+## 前言
+
+Volume 跟 Pod 的**生命周期是绑定的**
+
+当 Pod 被删除后，Volume 中的数据有可能会一同被删除
+
+
+
+- 共享 Volume
+- 复用 Volume 中的数据
+- Volume 自身的一些强关联诉求
+- Volume 功能及语义扩展
+
+## 静态 PV
+
+PV = Persistent Volume
+
+ReadWriteOnce (RWO) 表示该卷只可以以读写方式挂载到一个 Pod 内
+
+ReadOnlyMany (ROX) 表示该卷可以挂载到多个节点上，并被多个 Pod 以只读方式挂载
+
+ReadWriteMany (RWX) 表示卷可以被多个节点以读写方式挂载供多个 Pod 同时使用
+
+```shell
+$ kubectl get pv task-pv-volume
+NAME			CAPACITY	ACCESSMODES	RECLAIMPOLICY	STATUS		STORAGECLASS	AGE
+task-pv-volume	10Gi		RWO			Retain			Available	manual			4s
+```
+
+除 Retain 外还有：
+
+- Recycle，即回收，这个时候会清除 PV 中的数据
+- Delete，即删除，这个策略常在云服务商的存储服务中使用到，比如 AWS EBS
+
+
+
+PVC
+
+```shell
+$ kubectl get pvc -n demo
+```
+
+
+
+PV 状态
+
+- Pending 表示目前该 PV 在后端存储系统中还没创建完成
+- Available 即闲置可用状态，这个时候还没有被绑定到任何 PVC 上
+- Bound 就像上面例子里似的，这个时候已经绑定到某个 PVC 上了
+- Released 表示已经绑定的 PVC 已经被删掉了，但资源还未被回收掉
+- Failed 表示回收失败
+
+
+
+PVC 状态
+
+- Pending 表示还未绑定任何 PV
+- Bound 表示已经和某个 PV 进行了绑定
+- Lost 表示关联的 PV 失联
+
+## 动态 PV
+
+## StatefulSet 中怎么使用 PV 和 PVC？
+
+对于 StatefulSet 管理的 Pod
+
+每个 Pod 使用的 Volume 中的数据都不一样，而且相互之间关系是需要强绑定的
+
+# P12 11 K8s Service：轻松搞定服务发现和负载均衡
+
+## 前言
+
+通过 **PV** 持久化地保存数据
+
+通过 **Deployment** 或 **StatefulSet** 这类工作负载来管理多实例从而保证服务的高可用
+
+## 为什么需要服务发现？
+
+传统的应用部署，服务实例的网络位置是固定的
+
+在 Kubernetes 中，业务都是通过 Pod 来承载的
+
+每个 Pod 的生命周期又很短暂，**用后即焚**，IP 地址也都是随机分配，**动态变化**的
+
+## Kubernetes 中的 Service
+
+## 集群内如何访问 Service？
+
+**如果该 Service 有 ClusterIP 可以直接用这个虚拟 IP 去访问**
+
+比如 nginx-prod-svc-demo 这个 Service
+
+通过 kubectl get svc nginx-prod-svc-demo -n dmeo 或 kubectl get svc nginx-prod-svc-demo -n dmeo 就可以看到其 Cluster IP 为 10.111.193.186，端口号为 80
+
+那么可以通过 http(s)://10.111.193.186:80 就可以访问到该服务
+
+
+
+**当然也可以使用该 Service 的域名，依赖于集群内部的 DNS 即可访问**
+
+同 namespace 下的 Pod 可以直接通过 nginx-prod-svc-demo 这个 Service 名去访问
+
+如果是不同 namespace 下的 Pod 则需要加上该 Service 所在的 namespace 名
+
+即 nginx-prod-svc-demo.demo 去访问
+
+## 集群内部的负载均衡如何实现？
+
+## Headless Service
+
+1. 用户可以自己选择要连接哪个 Pod。通过查询 Service 的 DNS 记录来获取后端真实负载的 IP 地址，自主选择要连接哪个 IP
+2. 可用于部署有状态服务。每个 StatefulSet 管理的 Pod 都有一个单独的 DNS 记录，且域名保持不变。即 `<PodName>.<ServiceName>.<NamespaceName>.svc.cluster.local`。这样 StatefulSet 中的各个 Pod 就可以直接通过 Pod 名字解决相互间身份以及访问问题
+
+## 写在最后
+
+Service 是 Kubernetes 很重要的对象
+
+主要负责为各种工作负载暴露服务，方便各个服务之间互访
