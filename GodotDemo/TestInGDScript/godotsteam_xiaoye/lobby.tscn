@@ -1,0 +1,109 @@
+[gd_scene load_steps=6 format=3 uid="uid://tgbpn0y7xqvw"]
+
+[ext_resource type="Script" path="res://godotsteam_xiaoye/lobby.gd" id="1_831c5"]
+[ext_resource type="PackedScene" uid="uid://bq0uynrgcje8n" path="res://godotsteam_xiaoye/friend_item.tscn" id="2_yciqt"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c1ade"]
+bg_color = Color(0.1875, 0.1875, 0.1875, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sgiax"]
+bg_color = Color(0.183594, 0.183594, 0.183594, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_baig7"]
+bg_color = Color(0.1875, 0.1875, 0.1875, 1)
+
+[node name="Lobby" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_831c5")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+custom_minimum_size = Vector2(300, 300)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 300.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_c1ade")
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="FriendItem" parent="ScrollContainer/VBoxContainer" instance=ExtResource("2_yciqt")]
+layout_mode = 2
+
+[node name="CreateLobbyButton" type="Button" parent="."]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 0
+offset_left = 322.0
+offset_top = 16.0
+offset_right = 330.0
+offset_bottom = 24.0
+text = "创建房间"
+
+[node name="LeaveLobbyButton" type="Button" parent="."]
+custom_minimum_size = Vector2(0, 50)
+offset_left = 322.0
+offset_top = 87.0
+offset_right = 394.0
+offset_bottom = 137.0
+text = "离开房间"
+
+[node name="Lobbies" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -300.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Lobbies"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_sgiax")
+
+[node name="List" type="VBoxContainer" parent="Lobbies/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ChatHBox" type="HBoxContainer" parent="Lobbies"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="Lobbies/ChatHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SendButton" type="Button" parent="Lobbies/ChatHBox"]
+layout_mode = 2
+text = "发送"
+
+[node name="InLobbyUsersScroll" type="ScrollContainer" parent="."]
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 0
+offset_left = 321.0
+offset_top = 180.0
+offset_right = 361.0
+offset_bottom = 220.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_baig7")
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="InLobbyUsersScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[connection signal="pressed" from="CreateLobbyButton" to="." method="_on_create_lobby_button_pressed"]
+[connection signal="pressed" from="LeaveLobbyButton" to="." method="_on_leave_lobby_button_pressed"]
+[connection signal="pressed" from="Lobbies/ChatHBox/SendButton" to="." method="_on_send_button_pressed"]

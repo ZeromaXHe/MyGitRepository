@@ -55,7 +55,7 @@ use_collision = true
 size = Vector3(2, 0.4, 2)
 material = SubResource("StandardMaterial3D_atxnn")
 script = ExtResource("2_cfdv7")
-_filePath = "res://torturial_3d_xiaojiangtian/project1/Level2.tscn"
+_filePath = "res://torturial_3d_xiaojiangtian/project1_boost/Level2.tscn"
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.14, 26.837)

@@ -1,0 +1,35 @@
+[gd_scene load_steps=3 format=3 uid="uid://bq0uynrgcje8n"]
+
+[ext_resource type="Script" path="res://godotsteam_xiaoye/friend_item.gd" id="1_3wj6u"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_mnq2b"]
+
+[node name="FriendItem" type="HBoxContainer"]
+size_flags_horizontal = 3
+script = ExtResource("1_3wj6u")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+texture = ExtResource("1_mnq2b")
+expand_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Name" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+tooltip_text = "test tooltip"
+mouse_filter = 1
+text = "好友名称"
+clip_text = true
+
+[node name="Online" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "在线"
+
+[node name="InviteButton" type="Button" parent="."]
+layout_mode = 2
+text = "邀请"
+
+[connection signal="pressed" from="InviteButton" to="." method="_on_invite_button_pressed"]

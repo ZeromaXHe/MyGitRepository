@@ -15,6 +15,14 @@ run/main_scene="res://resource_loader/resource_loader_test.tscn"
 config/features=PackedStringArray("4.2", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GlobalSteam="*res://godotsteam_xiaoye/global_steam.gd"
+
+[debug]
+
+file_logging/enable_file_logging=true
+
 [dotnet]
 
 project/assembly_name="TestInGDScript"
