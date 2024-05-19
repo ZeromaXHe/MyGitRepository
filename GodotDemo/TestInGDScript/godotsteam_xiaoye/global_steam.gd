@@ -89,7 +89,8 @@ func read_p2p_packet() -> void:
 		if this_packet.is_empty() or this_packet == null:
 			print("WARNING: read an empty packet with non-zero size!")
 		# Get the remote user's ID
-		var packet_sender: int = this_packet['steam_id_remote']
+		# 官方示例是个错的 steam_id_remote，要改成 remote_steam_id，就搞笑！
+		var packet_sender: int = this_packet['remote_steam_id']
 		# Make the packet data readable
 		var packet_code: PackedByteArray = this_packet['data']
 		var readable_data: Dictionary = bytes_to_var(packet_code)
