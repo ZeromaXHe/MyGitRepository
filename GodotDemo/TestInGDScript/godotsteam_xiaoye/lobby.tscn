@@ -50,11 +50,22 @@ text = "创建房间"
 
 [node name="LeaveLobbyButton" type="Button" parent="."]
 custom_minimum_size = Vector2(0, 50)
+layout_mode = 0
 offset_left = 322.0
 offset_top = 87.0
 offset_right = 394.0
 offset_bottom = 137.0
 text = "离开房间"
+
+[node name="StartGameButton" type="Button" parent="."]
+visible = false
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 0
+offset_left = 638.0
+offset_top = 54.0
+offset_right = 710.0
+offset_bottom = 104.0
+text = "开始游戏"
 
 [node name="Lobbies" type="VBoxContainer" parent="."]
 custom_minimum_size = Vector2(300, 0)
@@ -106,4 +117,5 @@ size_flags_vertical = 3
 
 [connection signal="pressed" from="CreateLobbyButton" to="." method="_on_create_lobby_button_pressed"]
 [connection signal="pressed" from="LeaveLobbyButton" to="." method="_on_leave_lobby_button_pressed"]
+[connection signal="pressed" from="StartGameButton" to="." method="_on_start_game_button_pressed"]
 [connection signal="pressed" from="Lobbies/ChatHBox/SendButton" to="." method="_on_send_button_pressed"]

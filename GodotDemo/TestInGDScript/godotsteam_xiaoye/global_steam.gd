@@ -4,6 +4,10 @@ extends Node
 
 var steam_id: int
 var steam_username: String
+var lobby_members: Array = []
+
+var open: bool = false
+
 
 func _init() -> void:
 	# Set your game's Steam app ID here
@@ -14,6 +18,12 @@ func _init() -> void:
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	if open:
+		open_global_steam()
+
+
+func open_global_steam() -> void:
+	open = true
 	initialize_steam()
 	get_steam_data()
 
@@ -64,4 +74,74 @@ func get_steam_data():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if not open:
+		return
 	Steam.run_callbacks()
+	read_p2p_packet()
+
+
+# 参考文档： https://godotsteam.com/tutorials/p2p/#__tabbed_3_2
+func read_p2p_packet() -> void:
+	var packet_size: int = Steam.getAvailableP2PPacketSize(0)
+	# There is a packet
+	if packet_size > 0:
+		var this_packet: Dictionary = Steam.readP2PPacket(packet_size, 0)
+		if this_packet.is_empty() or this_packet == null:
+			print("WARNING: read an empty packet with non-zero size!")
+		# Get the remote user's ID
+		var packet_sender: int = this_packet['steam_id_remote']
+		# Make the packet data readable
+		var packet_code: PackedByteArray = this_packet['data']
+		var readable_data: Dictionary = bytes_to_var(packet_code)
+		# Print the packet to output
+		print("Packet: %s" % readable_data)
+		# Append logic here to deal with packet data
+		if readable_data['message'] == "rpc":
+			var node = get_node(readable_data['node'])
+			node.callv(readable_data['func_name'], readable_data['args'])
+		elif readable_data['message'] == "reset":
+			var node = get_node(readable_data['node'])
+			node.set(readable_data['key'], readable_data['value'])
+
+
+# 参考文档： https://godotsteam.com/tutorials/p2p/#__tabbed_3_2
+func send_p2p_packet(this_target: int, packet_data: Dictionary) -> void:
+	# Set the send_type and channel
+	var send_type: int = Steam.P2P_SEND_RELIABLE
+	var channel: int = 0
+	# Create a data array to send the data through
+	var this_data: PackedByteArray
+	this_data.append_array(var_to_bytes(packet_data))
+	# If sending a packet to everyone
+	if this_target == 0:
+		# If there is more than one user, send packets
+		if lobby_members.size() > 1:
+			# Loop through all members that aren't you
+			for this_member in lobby_members:
+				if this_member['id'] != steam_id:
+					Steam.sendP2PPacket(this_member['id'], this_data, send_type, channel)
+	# Else send it to someone specific
+	else:
+		Steam.sendP2PPacket(this_target, this_data, send_type, channel)
+
+
+# rpc 远程方法调用
+func node_rpc(node: Node, func_name: String, args: Array = []) -> void:
+	send_p2p_packet(0, {"message": "rpc", "node": node.get_path(), "func_name": func_name, "args": args})
+
+
+# 远程调用并执行本地方法
+func node_rpc_sync(node: Node, func_name: String, args: Array = []) -> void:
+	node_rpc(node, func_name, args)
+	node.callv(func_name, args)
+
+
+# rpc 远程修改值
+func node_reset(node: Node, key: String, value) -> void:
+	send_p2p_packet(0, {"message": "reset", "node": node.get_path(), "key": key, "value": value})
+
+
+# rpc 远程修改值并本地调用
+func node_reset_sync(node: Node, key: String, value) -> void:
+	node_reset(node, key, value)
+	node.set(key, value)

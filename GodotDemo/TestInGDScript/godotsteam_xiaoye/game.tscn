@@ -1,0 +1,40 @@
+[gd_scene load_steps=4 format=3 uid="uid://br2sedp7ig1ml"]
+
+[ext_resource type="Script" path="res://godotsteam_xiaoye/game.gd" id="1_d3eq4"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="2_rbu00"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qy5na"]
+size = Vector2(962, 20)
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_d3eq4")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -32.0
+offset_right = 32.0
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "游戏界面"
+
+[node name="P1" type="Marker2D" parent="."]
+position = Vector2(750, 280)
+
+[node name="P2" type="Marker2D" parent="."]
+position = Vector2(350, 288)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(564, 436)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+position = Vector2(3, 0)
+shape = SubResource("RectangleShape2D_qy5na")
+
+[node name="Sprite2D" type="Sprite2D" parent="Floor"]
+position = Vector2(3.00001, 1.54972e-06)
+scale = Vector2(7.51563, 0.15625)
+texture = ExtResource("2_rbu00")

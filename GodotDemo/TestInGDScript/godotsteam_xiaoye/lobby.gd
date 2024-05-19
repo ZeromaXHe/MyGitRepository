@@ -7,7 +7,6 @@ const pre = preload("res://godotsteam_xiaoye/friend_item.tscn")
 var lobby_max_members: int = 4
 var lobby_id: int = 0
 var lobby_data
-var lobby_members: Array = []
 var lobby_members_max: int = 10
 var lobby_vote_kick: bool = false
 var steam_id: int = 0
@@ -18,6 +17,7 @@ var steam_username: String = ""
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	GlobalSteam.open_global_steam()
 	# 加载好友
 	load_friends()
 	
@@ -68,7 +68,7 @@ func check_command_line() -> void:
 func join_lobby(this_lobby_id: int) -> void:
 	print("Attempting to join lobby %s" % lobby_id)
 	# Clear any previous lobby members lists, if you were in a previous lobby
-	lobby_members.clear()
+	GlobalSteam.lobby_members.clear()
 	# Make the lobby join request to Steam
 	Steam.joinLobby(this_lobby_id)
 
@@ -157,6 +157,7 @@ func _on_lobby_joined(this_lobby_id: int, _permissions: int, _locked: bool, resp
 		lobby_id = this_lobby_id
 		# Get the lobby members
 		get_lobby_members()
+		$StartGameButton.visible = Steam.getLobbyOwner(lobby_id) == GlobalSteam.steam_id
 		# Make the initial handshake
 		make_p2p_handshake()
 	# Else it failed for some reason
@@ -181,12 +182,12 @@ func _on_lobby_joined(this_lobby_id: int, _permissions: int, _locked: bool, resp
 
 func make_p2p_handshake() -> void:
 	print("Sending P2P handshake to the lobby")
-	#send_p2p_packet(0, {"message": "handshake", "from": steam_id})
+	GlobalSteam.send_p2p_packet(0, {"message": "handshake", "from": steam_id})
 
 
 func get_lobby_members() -> void:
 	# Clear your previous lobby list
-	lobby_members.clear()
+	GlobalSteam.lobby_members.clear()
 	for item in in_lobby_users_vbox.get_children():
 		item.queue_free()
 	# Get the number of members from this lobby from Steam
@@ -199,7 +200,7 @@ func get_lobby_members() -> void:
 		var member_steam_name: String = Steam.getFriendPersonaName(member_steam_id)
 		# Add them to the list
 		var obj: Dictionary = {"id":member_steam_id, "name":member_steam_name, "status": 1}
-		lobby_members.append(obj)
+		GlobalSteam.lobby_members.append(obj)
 		
 		# 添加到画面上
 		var ins = pre.instantiate()
@@ -283,13 +284,26 @@ func _on_leave_lobby_button_pressed() -> void:
 	if lobby_id != 0:
 		# Send leave request to Steam
 		Steam.leaveLobby(lobby_id)
+		for item in in_lobby_users_vbox.get_children():
+			item.queue_free()
 		# Wipe the Steam lobby ID then display the default lobby ID and player list title
 		lobby_id = 0
 		# Close session with all users
-		for this_member in lobby_members:
+		for this_member in GlobalSteam.lobby_members:
 			# Make sure this isn't your Steam ID
 			if this_member['id'] != steam_id:
 				# Close the P2P session
 				Steam.closeP2PSessionWithUser(this_member['id'])
 		# Clear the local lobby list
-		lobby_members.clear()
+		GlobalSteam.lobby_members.clear()
+
+
+func _on_start_game_button_pressed() -> void:
+	if Steam.getLobbyOwner(lobby_id) != GlobalSteam.steam_id:
+		print("你非房主，不能开始游戏")
+		return
+	GlobalSteam.node_rpc_sync(self, "start")
+
+
+func start() -> void:
+	get_tree().change_scene_to_file("res://godotsteam_xiaoye/game.tscn")
