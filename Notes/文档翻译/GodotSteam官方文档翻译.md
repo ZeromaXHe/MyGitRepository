@@ -85,42 +85,42 @@ $Sprite.texture = icon_texture
 - Godot 2.x, 3.x
 
   ```gdscript
-  # Get the image's handle
+  # 获取图片句柄(handle)
   var icon_handle: int = Steam.getAchievementIcon("ACH_WIN_ONE_GAME")
   
-  # Get the image data
+  # 获取图片数据
   var icon_size: Dictionary = Steam.getImageSize(icon_handle)
   var icon_buffer: Dictionary = Steam.getImageRGBA(icon_handle)
   
-  # Create the image for loading
+  # 创建要加载的 Image 图片
   var icon_image: Image = Image.new()
   icon_image.create_from_data(icon_size.width, icon_size.height, false, Image.FORMAT_RGBA8, icon_buffer["buffer"])
   
-  # Create a texture from the image
+  # 从图片创建一个材质
   var icon_texture: ImageTexture = ImageTexture.new()
   icon_texture.create_from_image(icon_image)
   
-  # Display the texture on a sprite node
+  # 在 Sprite 节点上展示材质
   $Sprite.texture = icon_texture
   ```
 
 - Godot 4.x
 
   ```gdscript
-  # Get the image's handle
+  # 获取图片句柄(handle)
   var icon_handle: int = Steam.getAchievementIcon("ACH_WIN_ONE_GAME")
   
-  # Get the image data
+  # 获取图片数据
   var icon_size: Dictionary = Steam.getImageSize(icon_handle)
   var icon_buffer: Dictionary = Steam.getImageRGBA(icon_handle)
   
-  # Create the image for loading
+  # 创建要加载的 Image 图片
   var icon_image: Image = Image.create_from_data(icon_size.width, icon_size.height, false, Image.FORMAT_RGBA8, icon_buffer["buffer"])
   
-  # Create a texture from the image
+  # 从图片创建一个材质
   var icon_texture: ImageTexture = ImageTexture.create_from_image(icon_image)
   
-  # Display the texture on a sprite node
+  # 在 Sprite 节点上展示材质
   $Sprite.texture = icon_texture
   ```
 
@@ -149,7 +149,7 @@ $Sprite.texture = icon_texture
 首先，在客户端和服务器中，都需要设置两个变量：`auth_ticket` 和 `client_auth_tickets`。显然，您将在 `auth_ticket` 中保留本地客户端的票证字典，并在 `client_auth_tickets` 数组中保留所有连接的客户端的列表。稍后会详细介绍。
 
 ```gdscript
-# Set up some variables
+# 设置一些变量
 var auth_ticket: Dictionary     # Your auth ticket
 var client_auth_tickets: Array  # Array of tickets from other clients
 ```
@@ -160,25 +160,25 @@ var client_auth_tickets: Array  # Array of tickets from other clients
 
   ```gdscript
   func _ready() -> void:
-      Steam.connect("get_auth_session_ticket_response", self, "_on_get_auth_session_ticket_response")
-      Steam.connect("validate_auth_ticket_response", self, "_on_validate_auth_ticket_response")
+  	Steam.connect("get_auth_session_ticket_response", self, "_on_get_auth_session_ticket_response")
+  	Steam.connect("validate_auth_ticket_response", self, "_on_validate_auth_ticket_response")
   ```
 
 - Godot 4.x
 
   ```gdscript
   func _ready() -> void:
-      Steam.get_auth_session_ticket_response.connect(_on_get_auth_session_ticket_response)
-      Steam.validate_auth_ticket_response.connect(_on_validate_auth_ticket_response)
+  	Steam.get_auth_session_ticket_response.connect(_on_get_auth_session_ticket_response)
+  	Steam.validate_auth_ticket_response.connect(_on_validate_auth_ticket_response)
   ```
 
 接下来，当我们接收到信号时，我们实现各自的功能：
 
 ```gdscript
-# Callback from getting the auth ticket from Steam
+# 从 Steam 获得授权（auth）票证后的回调
 func _on_get_auth_session_ticket_response(this_auth_ticket: int, result: int) -> void:
-    print("Auth session result: %s" % result)
-    print("Auth session ticket handle: %s" % this_auth_ticket)
+	print("Auth session result: %s" % result)
+	print("Auth session ticket handle: %s" % this_auth_ticket)
 ```
 
 我们的 `_on_get_auth_session_ticket_response()` 函数将打印出身份验证票证的句柄以及获取票证是否成功（返回1）。您可以根据游戏的需要添加成功或失败的逻辑。如果成功，此时您可能需要将新票证发送到服务器或其他客户端进行验证。
@@ -186,25 +186,25 @@ func _on_get_auth_session_ticket_response(this_auth_ticket: int, result: int) ->
 说到验证：
 
 ```gdscript
-# Callback from attempting to validate the auth ticket
+# 尝试验证身份验证票证的回调
 func _on_validate_auth_ticket_response(auth_id: int, response: int, owner_id: int) -> void:
-    print("Ticket Owner: %s" % auth_id)
+	print("Ticket Owner: %s" % auth_id)
 
-    # Make the response more verbose, highly unnecessary but good for this example
-    var verbose_response: String
-    match response:
-        0: verbose_response = "Steam has verified the user is online, the ticket is valid and ticket has not been reused."
-        1: verbose_response = "The user in question is not connected to Steam."
-        2: verbose_response = "The user doesn't have a license for this App ID or the ticket has expired."
-        3: verbose_response = "The user is VAC banned for this game."
-        4: verbose_response = "The user account has logged in elsewhere and the session containing the game instance has been disconnected."
-        5: verbose_response = "VAC has been unable to perform anti-cheat checks on this user."
-        6: verbose_response = "The ticket has been canceled by the issuer."
-        7: verbose_response = "This ticket has already been used, it is not valid."
-        8: verbose_response = "This ticket is not from a user instance currently connected to steam."
-        9: verbose_response = "The user is banned for this game. The ban came via the Web API and not VAC."
-    print("Auth response: %s" % verbose_response)
-    print("Game owner ID: %s" % owner_id)
+	# 使响应更加冗长，非常不必要，但对本例来说很好
+	var verbose_response: String
+	match response:
+		0: verbose_response = "Steam 已验证用户在线，票证有效，票证未被重复使用。（Steam has verified the user is online, the ticket is valid and ticket has not been reused.）"
+		1: verbose_response = "有问题的用户未连接到 Steam。（The user in question is not connected to Steam.）"
+		2: verbose_response = "用户没有此应用程序 ID 的许可证或票证已过期。（The user doesn't have a license for this App ID or the ticket has expired.）"
+		3: verbose_response = "此游戏禁止用户使用VAC。（The user is VAC banned for this game.）"
+		4: verbose_response = "用户帐户已在其他地方登录，并且包含游戏实例的会话已断开连接。（The user account has logged in elsewhere and the session containing the game instance has been disconnected.）"
+		5: verbose_response = "VAC 无法对此用户执行反作弊检查。（VAC has been unable to perform anti-cheat checks on this user.）"
+		6: verbose_response = "出票人已取消该票证。（The ticket has been canceled by the issuer.）"
+		7: verbose_response = "此票证已被使用，无效。（This ticket has already been used, it is not valid.）"
+		8: verbose_response = "此票证不是来自当前连接到 steam 的用户实例。（This ticket is not from a user instance currently connected to steam.）"
+		9: verbose_response = "此游戏禁止用户使用。此禁令是通过 Web API 而非 VAC 发出的。（The user is banned for this game. The ban came via the Web API and not VAC.）"
+	print("身份验证响应（Auth response）: %s" % verbose_response)
+	print("游戏拥有者 ID（Game owner ID）: %s" % owner_id)
 ```
 
 当票证已验证时，会接收响应 `beginAuthSession()` 的 `_on_validate_auth_ticket_response()` 函数。它会发回被授权用户的 Steam ID、验证结果（如上所示，成功为 0），最后是拥有游戏的用户的 SteamID。
@@ -229,27 +229,27 @@ auth_ticket = Steam.getAuthSessionTicket()
 
 ```gdscript
 func validate_auth_session(ticket: Dictionary, steam_id: int) -> void:
-    var auth_response: int = Steam.beginAuthSession(ticket.buffer, ticket.size, steam_id)
+	var auth_response: int = Steam.beginAuthSession(ticket.buffer, ticket.size, steam_id)
 
-    # Get a verbose response; unnecessary but useful in this example
-    var verbose_response: String
-    match auth_response:
-        0: verbose_response = "Ticket is valid for this game and this Steam ID."
-        1: verbose_response = "The ticket is invalid."
-        2: verbose_response = "A ticket has already been submitted for this Steam ID."
-        3: verbose_response = "Ticket is from an incompatible interface version."
-        4: verbose_response = "Ticket is not for this game."
-        5: verbose_response = "Ticket has expired."
-    print("Auth verifcation response: %s" % verbose_response))
+	# 获得详细的响应；不必要但在本例中有用
+	var verbose_response: String
+	match auth_response:
+		0: verbose_response = "票证对此游戏和此Steam ID有效。（Ticket is valid for this game and this Steam ID.）"
+		1: verbose_response = "票证无效。（The ticket is invalid.）"
+		2: verbose_response = "已经为此 Steam ID 提交了票证。（A ticket has already been submitted for this Steam ID.）"
+		3: verbose_response = "票证来自不兼容的接口版本。（Ticket is from an incompatible interface version.）"
+		4: verbose_response = "此游戏不提供门票。（Ticket is not for this game.）"
+		5: verbose_response = "票证已过期。（Ticket has expired.）"
+	print("身份校验验证响应（Auth verifcation response）: %s" % verbose_response))
 
-    if auth_response == 0:
-        print("Validation successful, adding user to client_auth_tickets")
-        client_auth_tickets.append({"id": steam_id, "ticket": ticket.id})
+	if auth_response == 0:
+		print("验证成功，正在将用户添加到 client_auth_tickets")
+		client_auth_tickets.append({"id": steam_id, "ticket": ticket.id})
 
-    # You can now add the client to the game
+	# 您现在可以将客户端添加到游戏中
 ```
 
-如果响应为 `0`（意味着门票有效），您可以允许玩家连接到服务器或游戏。还将接收到一个回调并触发我们的 `_on_validate_auth_ticket_response()` 函数，正如我们之前看到的，该函数将连同身份验证票证提供商的 Steam ID、结果和游戏所有者的 Steam 标识一起发送。当另一个用户取消其身份验证票证时，也会触发此回调。稍后会详细介绍。
+如果响应为 `0`（意味着票证有效），您可以允许玩家连接到服务器或游戏。还将接收到一个回调并触发我们的 `_on_validate_auth_ticket_response()` 函数，正如我们之前看到的，该函数将连同身份验证票证提供商的 Steam ID、结果和游戏所有者的 Steam 标识一起发送。当另一个用户取消其身份验证票证时，也会触发此回调。稍后会详细介绍。
 
 在验证票证后，您需要将玩家的 Steam ID 和票证句柄保存在 `client_auth_tickets` 数组中，作为数组或字典，以便稍后调用它们来取消身份验证会话。在上面的例子中，我们使用了一个字典，这样我们就可以根据用户的 Steam ID 来提取票证句柄。
 
@@ -273,10 +273,10 @@ Steam.endAuthSession(steam_id)
 
 ```gdscript
 for this_client_ticket in client_auth_tickets:
-    Steam.endAuthSession(this_client_ticket.id)
+	Steam.endAuthSession(this_client_ticket.id)
 
-    # Then remove this client from the ticket array
-    client_auth_tickets.erase(this_client_ticket)
+	# 然后从票证数组中删除此客户端
+	client_auth_tickets.erase(this_client_ticket)
 ```
 
 [Steamworks 文档](https://partner.steamgames.com/doc/features/auth)规定，每个玩家必须取消自己的授权票证，并结束与其他玩家开始的任何授权会话。
@@ -324,37 +324,37 @@ var matchmaking_phase: int = 0
 出于我们的目的，我们将创建一个名为“自动匹配”的按钮，并将一个按下 `on_pressed` 的信号连接到它，称为 `_on_auto_matchmake_pressed()`。以下是按下该按钮时触发的功能：
 
 ```gdscript
-# Start the auto matchmaking process.
+# 启动自动匹配过程。
 func _on_auto_matchmake_pressed() -> void:
-    # Set the matchmaking process over
-    matchmake_phase = 0
+	# 重新设置匹配流程
+	matchmake_phase = 0
 
-    # Start the loop!
-    matchmaking_loop()
+	# 开始循环！
+	matchmaking_loop()
 ```
 
 这将启动主循环，为您的玩家寻找匹配的大厅：
 
 ```gdscript
-# Iteration for trying different distances
+# 尝试不同距离的迭代
 func matchmaking_loop() -> void:
-    # If this matchmake_phase is 3 or less, keep going
-    if matchmake_phase < 4:
-        ###
-        # Add other filters for things like game modes, etc.
-        # Since this is an example, we cannot set game mode or text match features.
-        # However you could use addRequestLobbyListStringFilter to look for specific
-        # text in lobby metadata to match different criteria.
+	# 如果此 matrix_phase 为 3 或更低，请继续
+	if matchmake_phase < 4:
+		###
+		# 为游戏模式等添加其他过滤器。
+		# 由于这是一个例子，我们无法设置游戏模式或文本匹配功能。
+		# 但是，您可以使用 addRequestLobbyListStringFilter 来查找特定的
+		# 大厅元数据中的文本以匹配不同的条件。
+		###
 
-        ###
-        # Set the distance filter
-        Steam.addRequestLobbyListDistanceFilter(matchmake_phase)
+		# 设置距离过滤器
+		Steam.addRequestLobbyListDistanceFilter(matchmake_phase)
 
-        # Request a list
-        Steam.requestLobbyList()
+		# 请求一个列表
+		Steam.requestLobbyList()
 
-    else:
-        print("[STEAM] Failed to automatically match you with a lobby. Please try again.")
+	else:
+		print("[STEAM] 未能自动将您与大厅匹配。请再试一次。")
 ```
 
 正如上面代码中所指出的，在搜索大厅之前，玩家可以从中选择不同的过滤器列表。这些可以应用于 `addRequestLobbyListStringFilter()` 提前查找的术语。比如游戏模式、地图、难度等等。
@@ -364,36 +364,36 @@ func matchmaking_loop() -> void:
 这个循环函数一旦找到一些要检查的大厅，就会触发一个回调。对我们的比赛进行排序应该如下所示：
 
 ```gdscript
-# A lobby list was created, find a possible lobby
+# 大厅列表已创建，查找可能的大厅
 func _on_lobby_match_list(lobbies: Array) -> void:
-    # Set attempting_join to false
-    var attempting_join: bool = false
+	# 设置 attempting_join 为 false
+	var attempting_join: bool = false
 
-    # Show the list 
-    for this_lobby in lobbies:
-        # Pull lobby data from Steam
-        var lobby_name: String = Steam.getLobbyData(this_lobby, "name")
-        var lobby_nums: int = Steam.getNumLobbyMembers(this_lobby)
+	# 展示列表
+	for this_lobby in lobbies:
+		# 从 Steam 拉取大厅数据
+		var lobby_name: String = Steam.getLobbyData(this_lobby, "name")
+		var lobby_nums: int = Steam.getNumLobbyMembers(this_lobby)
 
-        ###
-        # Add other filters for things like game modes, etc.
-        # Since this is an example, we cannot set game mode or text match features.
-        # However, much like lobby_name, you can use Steam.getLobbyData to get other
-        # preset lobby defining data to append to the next if statement.
-        ###
+		###
+		# 为游戏模式等添加其他过滤器。
+		# 由于这是一个例子，我们无法设置游戏模式或文本匹配功能。
+		# 但是，与 lobby_name 非常相似，您可以使用 Steam.getLobbyData 来获取其他
+		# 预设的大厅定义数据，以附加到下一个 if 语句中。
+		###
 
-        # Attempt to join the first lobby that fits the criteria
-        if lobby_nums < lobby_max_players and not attempting_join:
-            # Turn on attempting_join
-            attempting_join = true
-            print("Attempting to join lobby...")
-            Steam.joinLobby(this_lobby)
+		# 尝试加入符合条件的第一个大厅
+		if lobby_nums < lobby_max_players and not attempting_join:
+			# 打开 attempting_join
+			attempting_join = true
+			print("尝试加入大厅...")
+			Steam.joinLobby(this_lobby)
 
-    # No lobbies that matched were found, go onto the next phase
-    if not attempting_join:
-        # Increment the matchmake_phase
-        matchmake_phase += 1
-        matchmaking_loop()
+	# 没有找到匹配的大厅，进入下一阶段
+	if not attempting_join:
+		# 增加 matchmake_phase
+		matchmake_phase += 1
+		matchmaking_loop()
 ```
 
 这将遍历返回的每个大厅，如果它们都不匹配，它将迭代 `matche_phase` 变量并再次开始循环，但在距离过滤器中再向前移动一步。
@@ -449,22 +449,22 @@ Steam.getPlayerAvatar()
 
   ```gdscript
   func _on_loaded_avatar(user_id: int, avatar_size: int, avatar_buffer: PoolByteArray) -> void:
-      print("Avatar for user: %s" % user_id)
-      print("Size: %s" % avatar_size)
+      print("用户头像: %s" % user_id)
+      print("尺寸: %s" % avatar_size)
   
-      # Create the image for loading
+      # 创建要加载的图片
       avatar_image = Image.new()
       avatar_image.create_from_data(avatar_size, avatar_size, false, Image.FORMAT_RGBA8, avatar_buffer)
   
-      # Optionally resize the image if it is too large
+      # 如果图像太大，可以选择调整图像大小
       if avatar_size > 128:
           avatar_image.resize(128, 128, Image.INTERPOLATE_LANCZOS)
   
-      # Apply the image to a texture
+      # 将图像应用于材质
       var avatar_texture: ImageTexture = ImageTexture.new()
       avatar_texture.create_from_image(avatar_image)
   
-      # Set the texture to a Sprite, TextureRect, etc.
+      # 将材质设置给 Sprite、TextureRect 等。
       $Sprite.set_texture(avatar_texture)
   ```
 
@@ -472,20 +472,20 @@ Steam.getPlayerAvatar()
 
   ```gdscript
   func _on_loaded_avatar(user_id: int, avatar_size: int, avatar_buffer: PackedByteArray) -> void:
-      print("Avatar for user: %s" % user_id)
-      print("Size: %s" % avatar_size)
+      print("用户头像: %s" % user_id)
+      print("尺寸: %s" % avatar_size)
   
-      # Create the image and texture for loading
+      # 创建要加载的图片和材质
       var avatar_image: Image = Image.create_from_data(avatar_size, avatar_size, false, Image.FORMAT_RGBA8, avatar_buffer)
   
-      # Optionally resize the image if it is too large
+      # 如果图像太大，可以选择调整图像大小
       if avatar_size > 128:
           avatar_image.resize(128, 128, Image.INTERPOLATE_LANCZOS)
   
-      # Apply the image to a texture
+      # 将图像应用于材质
       var avatar_texture: ImageTexture = ImageTexture.create_from_image(avatar_image)
   
-      # Set the texture to a Sprite, TextureRect, etc.
+      # 将材质设置为 Sprite、TextureRect 等。
       $Sprite.set_texture(avatar_texture)
   ```
 
@@ -591,57 +591,57 @@ var game_info: Dictionary = Steam.getFriendGamePlayed(steam_id)
 
 ```gdscript
 func get_lobbies_with_friends() -> Dictionary:
-    var results: Dictionary = {}
+	var results: Dictionary = {}
 
-    for i in range(0, Steam.getFriendCount()):
-        var steam_id: int = Steam.getFriendByIndex(i, Steam.FRIEND_FLAG_IMMEDIATE)
-        var game_info: Dictionary = Steam.getFriendGamePlayed(steam_id)
+	for i in range(0, Steam.getFriendCount()):
+		var steam_id: int = Steam.getFriendByIndex(i, Steam.FRIEND_FLAG_IMMEDIATE)
+		var game_info: Dictionary = Steam.getFriendGamePlayed(steam_id)
 
-        if game_info.empty():
-            # This friend is not playing a game
-            continue
-        else:
-            # They are playing a game, check if it's the same game as ours
-            var app_id: int = game_info['id']
-            var lobby = game_info['lobby']
+		if game_info.empty():
+			# 这个朋友不在玩游戏
+			continue
+		else:
+			# 他们在玩游戏，则检查是不是和我们的游戏一样
+			var app_id: int = game_info['id']
+			var lobby = game_info['lobby']
 
-            if app_id != Steam.getAppID() or lobby is String:
-                # Either not in this game, or not in a lobby
-                continue
+			if app_id != Steam.getAppID() or lobby is String:
+				# 要么不在这个游戏中，要么不在大厅里
+				continue
 
-            if not results.has(lobby):
-                results[lobby] = []
+			if not results.has(lobby):
+				results[lobby] = []
 
-            results[lobby].append(steam_id)
+			results[lobby].append(steam_id)
 
-    return results
+	return results
 ```
 
 如果你想取回 `friend_id -> lobby_id` 的字典，你可以使用：
 
 ```gdscript
 func get_friends_in_lobbies() -> Dictionary:
-    var results: Dictionary = {}
+	var results: Dictionary = {}
 
-    for i in range(0, Steam.getFriendCount()):
-        var steam_id: int = Steam.getFriendByIndex(i, Steam.FRIEND_FLAG_IMMEDIATE)
-        var game_info: Dictionary = Steam.getFriendGamePlayed(steam_id)
+	for i in range(0, Steam.getFriendCount()):
+		var steam_id: int = Steam.getFriendByIndex(i, Steam.FRIEND_FLAG_IMMEDIATE)
+		var game_info: Dictionary = Steam.getFriendGamePlayed(steam_id)
 
-        if game_info.empty():
-            # This friend is not playing a game
-            continue
-        else:
-            # They are playing a game, check if it's the same game as ours
-            var app_id: int = game_info['id']
-            var lobby = game_info['lobby']
+		if game_info.empty():
+			# 这个朋友不在玩游戏
+			continue
+		else:
+			# 他们在玩游戏，则看看这是不是和我们的游戏一样
+			var app_id: int = game_info['id']
+			var lobby = game_info['lobby']
 
-            if app_id != Steam.getAppID() or lobby is String:
-                # Either not in this game, or not in a lobby
-                continue
+			if app_id != Steam.getAppID() or lobby is String:
+				# 要么不在这个游戏中，要么不在大厅里
+				continue
 
-            results[steam_id] = lobby
+			results[steam_id] = lobby
 
-    return results
+	return results
 ```
 
 从这里，您可以随心所欲地创建 UI，并在用户做出选择时简单地调用 `joinLobby(lobby_id)`。
@@ -653,19 +653,19 @@ func get_friends_in_lobbies() -> Dictionary:
 这是您在加入大厅之前可以做的一个小检查：
 
 ```gdscript
-# Check if a friend is in a lobby
+# 检查朋友是否在大厅内
 func is_a_friend_still_in_lobby(steam_id: int, lobby_id: int) -> bool:
-    var game_info: Dictionary = Steam.getFriendGamePlayed(steam_id)
+	var game_info: Dictionary = Steam.getFriendGamePlayed(steam_id)
 
-    if game_info.empty():
-        return false
+	if game_info.empty():
+		return false
 
-    # They are in a game
-    var app_id: int = game_info.id
-    var lobby = game_info.lobby
+	# 他们正在游戏中
+	var app_id: int = game_info.id
+	var lobby = game_info.lobby
 
-    # Return true if they are in the same game and have the same lobby_id
-    return app_id == Steam.getAppID() and lobby is int and lobby == lobby_id
+	# 如果他们在同一个游戏中并且具有相同的 lobby_id，则返回 true
+	return app_id == Steam.getAppID() and lobby is int and lobby == lobby_id
 ```
 
 ### 故障排除
@@ -732,9 +732,9 @@ print("Did Steam initialize?: %s " % initialize_response)
 
 ```gdscript
 func _init() -> void:
-    # Set your game's Steam app ID here
-    OS.set_environment("SteamAppId", str(480))
-    OS.set_environment("SteamGameId", str(480))
+	# 在这里设置你游戏的 Steam 应用 ID
+	OS.set_environment("SteamAppId", str(480))
+	OS.set_environment("SteamGameId", str(480))
 ```
 
 感谢用户 B0TLANNER 提供此方法。
@@ -747,12 +747,12 @@ func _init() -> void:
 
 ```gdscript
 func _ready() -> void:
-    initialize_steam()
+	initialize_steam()
 
 
 func initialize_steam() -> void:
-    var initialize_response: Dictionary = Steam.steamInitEx()
-    print("Did Steam initialize?: %s " % initialize_response)
+	var initialize_response: Dictionary = Steam.steamInitEx()
+	print("Steam 初始化了吗？: %s " % initialize_response)
 ```
 
 默认情况下，`steamInitEx()` 将向 Steamworks 查询本地用户的当前统计信息，并将此数据作为回调（信号）发送回。您可以向函数传递一个布尔值（false）来防止这种行为：`steamInitEx(false)`。
@@ -772,12 +772,12 @@ func initialize_steam() -> void:
 
 ```gdscript
 func initialize_steam() -> void:
-    var initialize_response: Dictionary = Steam.steamInitEx()
-    print("Did Steam initialize?: %s" % initialize_response)
+	var initialize_response: Dictionary = Steam.steamInitEx()
+	print("Steam 初始化了吗?: %s" % initialize_response)
 
-    if initialize_response['status'] > 0:
-        print("Failed to initialize Steam, shutting down: %s" % initialize_response)
-        get_tree().quit()
+	if initialize_response['status'] > 0:
+		print("初始化 Steam 失败，正在关闭: %s" % initialize_response)
+		get_tree().quit()
 ```
 
 如果 Steam 没有初始化并返回除 0 以外的任何状态，则此代码显然会关闭游戏。您可能只想捕获故障数据并继续，尽管 Steamworks 功能无法完全工作。
@@ -802,8 +802,8 @@ var steam_username: String = Steam.getPersonaName()
 
 ```gdscript
 if is_owned == false:
-    print("User does not own this game")
-    get_tree().quit()
+	print("用户没有拥有该游戏")
+	get_tree().quit()
 ```
 
 > **注意**
@@ -822,7 +822,7 @@ Steamworks 的一个非常重要的部分是从 Steam 本身获取回调，以�
 
 ```gdscript
 func _process(_delta: float) -> void:
-    Steam.run_callbacks()
+	Steam.run_callbacks()
 ```
 
 我强烈建议，就像初始化过程一样，将这个 `_process()` 函数和 `Steam.run_callbacks()` 放在全局（单例 singleton）脚本中，这样它就可以一直检查回调。但是，如果您愿意，您可以将它放在任何可能使用回调信息的给定脚本中的任何 `_process()` 函数中。
@@ -833,7 +833,7 @@ func _process(_delta: float) -> void:
 
 ```gdscript
 var initialize_response: Dictionary = steamInitEx(false, 480, true)
-print("Did Steam initialize?: %s " % initialize_response)
+print("Steam 初始化了吗？: %s " % initialize_response)
 ```
 
 但是，您必须传递前两个参数，即是否希望在初始化期间提取本地用户的统计数据和成就，以及游戏的应用程序 ID。
@@ -853,7 +853,7 @@ print("Did Steam initialize?: %s " % initialize_response)
   ```gdscript
   extends Node
   
-  # Steam variables
+  # Steam 变量
   var is_on_steam_deck: bool = false
   var is_online: bool = false
   var is_owned: bool = false
@@ -863,38 +863,38 @@ print("Did Steam initialize?: %s " % initialize_response)
   
   
   func _init() -> void:
-      # Set your game's Steam app ID here
-      OS.set_environment("SteamAppId", str(steam_app_id))
-      OS.set_environment("SteamGameId", str(steam_app_id))
+  	# 在这里设置你游戏的 Steam 应用 ID
+  	OS.set_environment("SteamAppId", str(steam_app_id))
+  	OS.set_environment("SteamGameId", str(steam_app_id))
   
   
   func _ready() -> void:
-      initialize_steam()
+  	initialize_steam()
   
   
   func _process(_delta: float) -> void:
-      Steam.run_callbacks()
+  	Steam.run_callbacks()
   
   
   func initialize_steam() -> void:
-      var initialize_response: Dictionary = Steam.steamInitEx()
-      print("Did Steam initialize?: %s" % initialize_response)
+  	var initialize_response: Dictionary = Steam.steamInitEx()
+  	print("Steam 初始化了吗?: %s" % initialize_response)
   
-      if initialize_response['status'] > 0:
-          print("Failed to initialize Steam. Shutting down. %s" % initialize_response)
-          get_tree().quit()
+  	if initialize_response['status'] > 0:
+  		print("初始化 Steam 失败。正在关闭: %s" % initialize_response)
+  		get_tree().quit()
   
-      # Gather additional data
-      is_on_steam_deck = Steam.isSteamRunningOnSteamDeck()
-      is_online = Steam.loggedOn()
-      is_owned = Steam.isSubscribed()
-      steam_id = Steam.getSteamID()
-      steam_username = Steam.getPersonaName()
+  	# 收集其他数据
+  	is_on_steam_deck = Steam.isSteamRunningOnSteamDeck()
+  	is_online = Steam.loggedOn()
+  	is_owned = Steam.isSubscribed()
+  	steam_id = Steam.getSteamID()
+  	steam_username = Steam.getPersonaName()
   
-      # Check if account owns the game
-      if is_owned == false:
-          print("User does not own this game")
-          get_tree().quit()
+  	# 检查帐户是否拥有游戏
+  	if is_owned == false:
+  		print("用户不拥有此游戏")
+  		get_tree().quit()
   ```
 
 - 有内部应用 ID 和回调
@@ -902,7 +902,7 @@ print("Did Steam initialize?: %s " % initialize_response)
   ```gdscript
   extends Node
   
-  # Steam variables
+  # Steam 变量
   var is_on_steam_deck: bool = false
   var is_online: bool = false
   var is_owned: bool = false
@@ -912,28 +912,28 @@ print("Did Steam initialize?: %s " % initialize_response)
   
   
   func _ready() -> void:
-      initialize_steam()
+  	initialize_steam()
   
   
   func initialize_steam() -> void:
-      var initialize_response: Dictionary = Steam.steamInitEx(false, steam_app_id, true)
-      print("Did Steam initialize?: %s" % initialize_response)
+  	var initialize_response: Dictionary = Steam.steamInitEx(false, steam_app_id, true)
+  	print("Steam 初始化了吗?: %s" % initialize_response)
   
-      if initialize_response['status'] > 0:
-          print("Failed to initialize Steam. Shutting down. %s" % initialize_response)
-          get_tree().quit()
+  	if initialize_response['status'] > 0:
+  		print("初始化 Steam 失败。正在关闭: %s" % initialize_response)
+  		get_tree().quit()
   
-      # Gather additional data
-      is_on_steam_deck = Steam.isSteamRunningOnSteamDeck()
-      is_online = Steam.loggedOn()
-      is_owned = Steam.isSubscribed()
-      steam_id = Steam.getSteamID()
-      steam_username = Steam.getPersonaName()
+  	# 收集其他数据
+  	is_on_steam_deck = Steam.isSteamRunningOnSteamDeck()
+  	is_online = Steam.loggedOn()
+  	is_owned = Steam.isSubscribed()
+  	steam_id = Steam.getSteamID()
+  	steam_username = Steam.getPersonaName()
   
-      # Check if account owns the game
-      if is_owned == false:
-          print("User does not own this game")
-          get_tree().quit()
+  	# 检查账户是否拥有游戏
+  	if is_owned == false:
+  		print("用户不拥有此游戏")
+  		get_tree().quit()
   ```
 
 这包括初始化和基本设置。
@@ -995,21 +995,21 @@ Steam.findLeaderboard( your_leaderboard_name )
 
 ```gdscript
 func _on_leaderboard_find_result(handle: int, found: int) -> void:
-    if found == 1:
-        leaderboard_handle = handle
-        print("Leaderboard handle found: %s" % leaderboard_handle)
-    else:
-        print("No handle was found")
+	if found == 1:
+		leaderboard_handle = handle
+		print("找到了排行榜句柄: %s" % leaderboard_handle)
+	else:
+		print("没找到句柄")
 ```
 
 一旦你有了这个句柄，你就可以使用所有的附加功能。请注意，您不需要保存排行榜句柄，因为它存储在内部。但是，除非您将排行榜存储在本地变量中，否则一次只能使用一个排行榜。我会在本地保存一本句柄词典，如下所示：
 
 ```gdscript
 var leaderboard_handles: Dictionary = {
-    "top_score": handle1,
-    "most_kills": handle2,
-    "most_games": handlde3
-    }
+	"top_score": handle1,
+	"most_kills": handle2,
+	"most_games": handlde3
+	}
 ```
 
 这样，在快速更新排行榜时，您可以调用所需的任何句柄。否则，您必须使用 `findLeaderboard()` 再次查询每个排行榜，然后等待回调，然后上传新的分数。如果你不经常更新排行榜或更新那么多排行榜，那么使用内部存储的句柄可能会很好。
@@ -1028,11 +1028,11 @@ Steam.uploadLeaderboardScore( score, keep_best, details, handle )
 
 ```gdscript
 func _on_leaderboard_score_uploaded(success: int, this_handle: int, this_score: Dictionary) -> void:
-    if success == 1:
-        print("Successfully uploaded scores!")
-        # Add additional logic to use other variables passed back
-    else:
-        print("Failed to upload scores!")
+	if success == 1:
+		print("Successfully uploaded scores!")
+		# 添加额外的逻辑以使用传递回来的其他变量
+	else:
+		print("Failed to upload scores!")
 ```
 
 在大多数情况下，你只是在寻找 1 的成功来证明它是有效的。然而，您可以在游戏中使用信号传回的额外变量作为逻辑。它们包含在名为 `this_score` 的字典中，该字典包含以下密钥：
@@ -1053,7 +1053,7 @@ func _on_leaderboard_score_uploaded(success: int, this_handle: int, this_score: 
 - Godot 2.x, 3.x
 
   ```gdscript
-  # Godot 2 and 3 have no equivalent for to_int32_array I am aware of. Any corrections welcome!
+  # 据我所知，Godot 2 和 3 对于 to_int32_array 没有等价物。欢迎任何更正！
   #
   Steam.uploadLeaderboardScore(score, keep_best, var2bytes(details), handle)
   ```
@@ -1074,7 +1074,7 @@ func _on_leaderboard_score_uploaded(success: int, this_handle: int, this_score: 
 
 ```gdscript
 var details_max: int = Steam.setLeaderboardDetailsMax( value )
-print("Max details: %s" % details_max)
+print("最大详细信息: %s" % details_max)
 ```
 
 在 GodotSteam 4.6 或更高版本中，默认情况下，该值设置为 0，但您可能需要将其更改为与您上传的详细信息数量和上一节的分数相匹配。如果你没有保存分数的任何细节，你可以放心地忽略这一部分，继续请求排行榜条目。
@@ -1106,14 +1106,14 @@ Steam.downloadLeaderboardEntriesForUsers( user_array, leaderboard_handle )
 
 ```gdscript
 func _on_leaderboard_scores_downloaded(message: string, this_leaderboard_handle: int, result: Array) -> void:
-    print("Scores downloaded message: %s" % message)
+	print("下载的分数信息: %s" % message)
 
-    # Save this for later leaderboard interactions, if you want
-    var leaderboard_handle: int = this_leaderboard_handle
+	# 如果需要，请将其保存以供以后的排行榜互动使用
+	var leaderboard_handle: int = this_leaderboard_handle
 
-    # Add logic to display results
-    for this_result in result:
-        # Use each entry that is returned
+	# 添加逻辑以显示结果
+	for this_result in result:
+		# 使用返回的每个条目
 ```
 
 该消息只是一个基本消息，通知您下载的状态；成功与否以及原因。发送回来的第二个片段是作为数组的结果。数组中的每个条目实际上都是一个字典，如下所示：
@@ -1158,3 +1158,917 @@ error while loading shared libraries: libsteam_api.so: cannot open shared object
 ```
 
 这意味着您忘记将 `libsteam_api.so` 放在可执行文件旁边。请记住将其与您已发布的游戏一起包含，如[导出和发布教程](https://godotsteam.com/tutorials/exporting_shipping/)中所述。
+
+## 大厅
+
+其中一个要求更高的教程是多人大厅和通过 Steam 的 P2P 网络；本教程专门介绍了大厅部分，[我们的 P2P 教程介绍了另一半](https://godotsteam.com/tutorials/p2p/)。请注意，仅以此为起点。
+
+我还建议您在继续之前[查看本教程的“附加资源”部分](https://godotsteam.com/tutorials/lobbies/#additional-resources)。
+
+> 相关 GodotSteam 类和函数
+>
+> - [Matchmaking 类](https://godotsteam.com/classes/matchmaking/)
+>   - [addRequestLobbyListFilterSlotsAvailable()](https://godotsteam.com/classes/matchmaking/#addrequestlobbylistfilterslotsavailable)
+>   - [addRequestLobbyListNearValueFilter()](https://godotsteam.com/classes/matchmaking/#addrequestlobbylistnearvaluefilter)
+>   - [addRequestLobbyListNumericalFilter()](https://godotsteam.com/classes/matchmaking/#addrequestlobbylistnumericalfilter)
+>   - [addRequestLobbyListResultCountFilter()](https://godotsteam.com/classes/matchmaking/#addrequestlobbylistresultcountfilter)
+>   - [addRequestLobbyListStringFilter()](https://godotsteam.com/classes/matchmaking/#addrequestlobbyliststringfilter)
+>   - [createLobby()](https://godotsteam.com/classes/matchmaking/#createlobby)
+>   - [getLobbyData()](https://godotsteam.com/classes/matchmaking/#getlobbydata)
+>   - [getLobbyMemberByIndex()](https://godotsteam.com/classes/matchmaking/#getlobbymemberbyindex)
+>   - [getNumLobbyMembers()](https://godotsteam.com/classes/matchmaking/#getnumlobbymembers)
+>   - [joinLobby()](https://godotsteam.com/classes/matchmaking/#joinlobby)
+>   - [leaveLobby()](https://godotsteam.com/classes/matchmaking/#leavelobby)
+>   - [requestLobbyList()](https://godotsteam.com/classes/matchmaking/#requestlobbylist)
+>   - [sendLobbyChatMsg()](https://godotsteam.com/classes/matchmaking/#sendlobbychatmsg)
+>   - [setLobbyData()](https://godotsteam.com/classes/matchmaking/#setlobbydata)
+>   - [setLobbyJoinable()](https://godotsteam.com/classes/matchmaking/#setlobbyjoinable)
+> - [Networking 类](https://godotsteam.com/classes/networking/)
+>   - [allowP2PPacketRelay()](https://godotsteam.com/classes/networking/#allowp2ppacketrelay)
+>   - [closeP2PSessionWithUser()](https://godotsteam.com/classes/networking/#closep2psessionwithuser)
+> - [Friends 类](https://godotsteam.com/classes/friends/)
+>   - [getFriendPersonaName()](https://godotsteam.com/classes/friends/#getfriendpersonaname)
+
+### 设置
+
+首先，让我们设置一些变量以便稍后填写：
+
+```gdscript
+const PACKET_READ_LIMIT: int = 32
+
+var lobby_data
+var lobby_id: int = 0
+var lobby_members: Array = []
+var lobby_members_max: int = 10
+var lobby_vote_kick: bool = false
+var steam_id: int = 0
+var steam_username: String = ""
+```
+
+您的 Steam ID 和用户名实际上可能在不同的 GDScript 中，尤其是如果您像我[在初始化教程中提到](https://godotsteam.com/tutorials/initializing/)的那样使用 `global.gd`。最重要的是 `lobby_id`，它显然包含了大厅的 ID，以及 `lobby_members`，它将是大厅成员及其 Steam ID 64 的一系列字典。
+
+### _ready() 函数
+
+接下来，我们将为 Steamworks 和命令行检查器设置信号连接，如下所示：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func _ready() -> void:
+  	Steam.connect("join_requested", self, "_on_lobby_join_requested")
+  	Steam.connect("lobby_chat_update", self, "_on_lobby_chat_update")
+  	Steam.connect("lobby_created", self, "_on_lobby_created")
+  	Steam.connect("lobby_data_update", self, "_on_lobby_data_update")
+  	Steam.connect("lobby_invite", self, "_on_lobby_invite")
+  	Steam.connect("lobby_joined", self, "_on_lobby_joined")
+  	Steam.connect("lobby_match_list", self, "_on_lobby_match_list")
+  	Steam.connect("lobby_message", self, "_on_lobby_message")
+  	Steam.connect("persona_state_change", self, "_on_persona_change")
+  
+  	# 检查命令行参数
+  	check_command_line()
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func _ready() -> void:
+  	Steam.join_requested.connect(_on_lobby_join_requested)
+  	Steam.lobby_chat_update.connect(_on_lobby_chat_update)
+  	Steam.lobby_created.connect(_on_lobby_created)
+  	Steam.lobby_data_update.connect(_on_lobby_data_update)
+  	Steam.lobby_invite.connect(_on_lobby_invite)
+  	Steam.lobby_joined.connect(_on_lobby_joined)
+  	Steam.lobby_match_list.connect(_on_lobby_match_list)
+  	Steam.lobby_message.connect(_on_lobby_message)
+  	Steam.persona_state_change.connect(_on_persona_change)
+  
+  	# 检查命令行参数
+  	check_command_line()
+  ```
+
+我们将在下面逐一介绍。您注意到我们添加了对命令行参数的检查。以下是我们的基本函数：
+
+```gdscript
+func check_command_line() -> void:
+	var these_arguments: Array = OS.get_cmdline_args()
+
+	# 有一些参数需要处理
+	if these_arguments.size() > 0:
+
+		# 存在 Steam 连接参数
+		if these_arguments[0] == "+connect_lobby":
+
+			# 大厅邀请存在，所以尝试连接到它
+			if int(these_arguments[1]) > 0:
+
+				# 此时，您可能需要更改场景
+				# 有点像加载到大厅屏幕
+				print("命令行大厅 ID: %s" % these_arguments[1])
+				join_lobby(int(these_arguments[1]))
+```
+
+如果玩家接受 Steam 邀请，或者右键单击朋友的名字，然后选择“加入游戏”或“加入大厅”，并且没有打开游戏，这一点很重要。执行任何一个操作都将使用附加命令 `+connect_lobby <Steam Lobby ID>` 启动游戏。遗憾的是，Godot 并没有真正理解这个命令参数，所以必须编写 `check_command_line()` 函数才能在这些约束条件下工作。
+
+此外，您还需要将适当的场景名称添加到 Steamworks 网站上的 Steamworks 启动选项中。您将需要添加完整的场景路径(res://your-scene.tscn)在启动选项的 **Arguments** 行。[你可以在这个链接中阅读更多关于这方面的详细信息](https://github.com/GodotSteam/GodotSteam/issues/100)。非常感谢 **Antokolos** 回答了这个问题并提供了一个坚实的例子。
+
+### 创建大厅
+
+接下来，我们将设置大厅创建功能。您可能需要将此功能连接到游戏中的某个按钮：
+
+```gdscript
+func create_lobby() -> void:
+	# 确保尚未设置大厅
+	if lobby_id == 0:
+		Steam.createLobby(Steam.LOBBY_TYPE_PUBLIC, lobby_max_members)
+```
+
+在本例中，我们使用变量和枚举的 `createLobby()`。第一个变量涵盖大厅的类型；我们正在使用一个对所有人开放的公共大厅。当然，您总共可以使用四种设置：
+
+| 大厅类型枚举            | 值   | 描述                                         |
+| ----------------------- | ---- | -------------------------------------------- |
+| LOBBY_TYPE_PRIVATE      | 0    | 加入大厅的唯一途径是通过邀请。               |
+| LOBBY_TYPE_FRIENDS_ONLY | 1    | 可由朋友和受邀者加入，但不显示在大厅列表中。 |
+| LOBBY_TYPE_PUBLIC       | 2    | 通过搜索返回并对朋友可见。                   |
+| LOBBY_TYPE_INVISIBLE    | 3    | 通过搜索返回，但其他朋友看不到。             |
+
+第二个变量是允许加入大厅的最大玩家人数。此值不能设置为高于 250。
+
+接下来，我们将介绍 Steam 的回调，即大厅已经创建：
+
+```gdscript
+func _on_lobby_created(connect: int, this_lobby_id: int) -> void:
+	if connect == 1:
+		# 设置大厅 ID
+		lobby_id = this_lobby_id
+		print("创建大厅: %s" % lobby_id)
+
+		# 将这个大厅设置为可加入的，以防万一，尽管默认情况下应该就是这样做
+		Steam.setLobbyJoinable(lobby_id, true)
+
+		# 设置一些大厅数据
+		Steam.setLobbyData(lobby_id, "name", "Gramps' Lobby")
+		Steam.setLobbyData(lobby_id, "mode", "GodotSteam test")
+
+		# 如果需要，允许 P2P 连接回退到通过 Steam 中继
+		var set_relay: bool = Steam.allowP2PPacketRelay(true)
+		print("允许 Steam 作为中继备份: %s" % set_relay)
+```
+
+一旦这个回调触发，您将获得您的大厅 ID，您可以将其传递给我们的 `lobby_id` 变量以供以后使用。正如注释所说，默认情况下，大厅应设置为可加入，但为了以防万一，我们将其添加到此处。你也可以让大厅无法进入。
+
+您现在还可以设置一些大厅数据；它可以是您想要的任何**键 / 值**对。我不知道你可以设置的最大成对数量。
+
+您会注意到，我在这一点上将 `allowP2PPacketRelay()` 设置为 true；正如注释所提到的，这允许 P2P 连接在需要时回退到通过 Steam 中继。如果您有 NAT 或防火墙问题，通常会发生这种情况。
+
+### 获取大厅列表
+
+现在我们可以创建大厅了，让我们查询并提取一个大厅列表。我通常有一个按钮，可以打开大厅界面，这是一个按钮列表，每个大厅一个：
+
+```gdscript
+func _on_open_lobby_list_pressed() -> void:
+	# 将距离设置为“世界范围”
+	Steam.addRequestLobbyListDistanceFilter(Steam.LOBBY_DISTANCE_FILTER_WORLDWIDE)
+
+	print("请求大厅列表")
+	Steam.requestLobbyList()
+```
+
+在使用 `requestLobbyList()` 请求大厅列表之前，您可以添加更多搜索查询，如：
+
+`addRequestLobbyListStringFilter()`
+允许您在大厅元数据中查找特定作品（specific works）
+
+`addRequestLobbyListNumericalFilter()`
+添加数字比较过滤器（<=，<，=，>，>=，！=）
+
+`addRequestLobbyListNearValueFilter()`
+使结果接近您给定的指定值
+
+`addRequestLobbyListFilterSlotsAvailable()`
+仅返回具有指定数量可用空位的大厅
+
+`addRequestLobbyListResultCountFilter()`
+设置要返回的结果数
+
+`addRequestLobbyListDistanceFilter()`
+设置搜索大厅的距离，如：
+
+| 大厅距离枚举                    | 值   | 检查距离 |
+| ------------------------------- | ---- | -------- |
+| LOBBY_DISTANCE_FILTER_CLOSE     | 0    | 近       |
+| LOBBY_DISTANCE_FILTER_DEFAULT   | 1    | 默认     |
+| LOBBY_DISTANCE_FILTER_FAR       | 2    | 远       |
+| LOBBY_DISTANCE_FILTER_WORLDWIDE | 3    | 世界范围 |
+
+一旦设置了全部、部分或不设置，就可以调用 `requestLobbyList()`。一旦它提取了您的大厅列表，它将触发回调 `_on_lobby_match_list()`。然后你可以随心所欲地在大厅里兜圈子。
+
+在我们的示例代码中，我做了这样的事情来为每个大厅制作按钮：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func _on_lobby_match_list(these_lobbies: Array) -> void:
+  	for this_lobby in these_lobbies:
+  		# 从 Steam 中提取大厅数据，这些数据特定于我们的示例
+  		var lobby_name: String = Steam.getLobbyData(this_lobby, "name")
+  		var lobby_mode: String = Steam.getLobbyData(this_lobby, "mode")
+  
+  		# 获取当前成员数
+  		var lobby_num_members: int = Steam.getNumLobbyMembers(this_lobby)
+  
+  		# Create a button for the lobby
+  		var lobby_button: Button = Button.new()
+  		lobby_button.set_text("Lobby %s: %s [%s] - %s Player(s)" % [this_lobby, lobby_name, lobby_mode, lobby_num_members])
+  		lobby_button.set_size(Vector2(800, 50))
+  		lobby_button.set_name("lobby_%s" % this_lobby)
+  		lobby_button.connect("pressed", self, "join_lobby", [this_lobby])
+  
+  		# Add the new lobby to the list
+  		$Lobbies/Scroll/List.add_child(lobby_button)
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func _on_lobby_match_list(these_lobbies: Array) -> void:
+  	for this_lobby in these_lobbies:
+  		# 从 Steam 中提取大厅数据，这些数据特定于我们的示例
+  		var lobby_name: String = Steam.getLobbyData(this_lobby, "name")
+  		var lobby_mode: String = Steam.getLobbyData(this_lobby, "mode")
+  
+  		# 获取当前成员数
+  		var lobby_num_members: int = Steam.getNumLobbyMembers(this_lobby)
+  
+  		# 为大厅创建一个按钮
+  		var lobby_button: Button = Button.new()
+  		lobby_button.set_text("大厅 %s: %s [%s] - %s 名玩家" % [this_lobby, lobby_name, lobby_mode, lobby_num_members])
+  		lobby_button.set_size(Vector2(800, 50))
+  		lobby_button.set_name("lobby_%s" % this_lobby)
+  		lobby_button.connect("pressed", Callable(self, "join_lobby").bind(this_lobby))
+  
+  		# 将新大厅加入队列
+  		$Lobbies/Scroll/List.add_child(lobby_button)
+  ```
+
+您现在应该可以调用大厅列表并显示它们了。
+
+### 加入大厅
+
+接下来我们将讨论大厅的问题。单击我们在上一步中创建的大厅按钮之一将启动此功能：
+
+```gdscript
+func join_lobby(this_lobby_id: int) -> void:
+	print("正在尝试加入大厅 %s" % lobby_id)
+
+	# 如果您在以前的大厅，清除以前的任何大厅成员列表
+	lobby_members.clear()
+
+	# 向 Steam 发出大厅加入请求
+	Steam.joinLobby(this_lobby_id)
+```
+
+这将尝试加入您单击的大厅，当成功时，它将触发 `_on_lobby_joined()` 回调：
+
+```gdscript
+func _on_lobby_joined(this_lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
+	# 如果成功加入
+	if response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS:
+		# 将此大厅 ID 设置为您的大厅 ID
+		lobby_id = this_lobby_id
+
+		# 获取大厅成员
+		get_lobby_members()
+
+		# 进行初次握手
+		make_p2p_handshake()
+
+	# 否则它因为某种原因而失败
+	else:
+		# 获取失败原因
+		var fail_reason: String
+
+		match response:
+			Steam.CHAT_ROOM_ENTER_RESPONSE_DOESNT_EXIST: fail_reason = "该大厅不再存在。（This lobby no longer exists.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_NOT_ALLOWED: fail_reason = "你没有加入该房间的许可。（You don't have permission to join this lobby.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_FULL: fail_reason = "大厅已满。（The lobby is now full.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_ERROR: fail_reason = "嗯……意外事件发生！（Uh... something unexpected happened!）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_BANNED: fail_reason = "你被禁止加入该大厅。（You are banned from this lobby.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_LIMITED: fail_reason = "由于帐户受限，您无法加入。（You cannot join due to having a limited account.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_CLAN_DISABLED: fail_reason = "该大厅已锁或已失效。（This lobby is locked or disabled.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_COMMUNITY_BAN: fail_reason = "这个大厅是社区锁定的。（This lobby is community locked.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_MEMBER_BLOCKED_YOU: fail_reason = "大厅中的用户阻止您加入。（A user in the lobby has blocked you from joining.）"
+			Steam.CHAT_ROOM_ENTER_RESPONSE_YOU_BLOCKED_MEMBER: fail_reason = "您屏蔽的用户在大厅中。（A user you have blocked is in the lobby.）"
+
+		print("加入该聊天室失败: %s" % fail_reason)
+
+		# 重新打开大厅列表
+		_on_open_lobby_list_pressed()
+```
+
+要想更清楚地解释这些聊天室的响应，[请查看 Friends 类中的枚举列表](https://godotsteam.com/classes/main/#chatroomenterresponse)。
+
+如果玩家已经在游戏中，并接受 Steam 邀请或点击好友列表中的好友，然后从中选择“加入游戏”，则会触发 `join_requested` 回调。此函数将处理以下问题：
+
+```gdscript
+func _on_lobby_join_requested(this_lobby_id: int, friend_id: int) -> void:
+	# 获取大厅所有者名字
+	var owner_name: String = Steam.getFriendPersonaName(friend_id)
+
+	print("正在加入 %s 的大厅..." % owner_name)
+
+	# 尝试加入大厅
+	join_lobby(this_lobby_id)
+```
+
+然后，它将遵循正常的 `join_lobby()` 过程，设置所有大厅成员、握手等。不要听起来重复，但请再次注意，如果玩家不在游戏中，并接受 Steam 邀请或通过朋友列表加入游戏，那么我们将回到前面讨论的命令行情况。
+
+### 获取大厅成员
+
+根据你如何设置大厅界面，你可能希望玩家看到某种带有玩家列表的聊天窗口。我们的 `get_loby_members()` 将帮助找出大厅里的所有人：
+
+```gdscript
+func get_lobby_members() -> void:
+	# 清除您以前的大厅列表
+	lobby_members.clear()
+
+	# 从 Steam 获取此大厅的成员数量
+	var num_of_members: int = Steam.getNumLobbyMembers(lobby_id)
+
+	# 从 Steam 获取这些玩家的数据
+	for this_member in range(0, num_of_members):
+		# 获取成员的 Steam ID
+		var member_steam_id: int = Steam.getLobbyMemberByIndex(lobby_id, this_member)
+
+		# 获取成员的 Steam 名字
+		var member_steam_name: String = Steam.getFriendPersonaName(member_steam_id)
+
+		# 将他们加入到队列中
+		lobby_members.append({"steam_id":member_steam_id, "steam_name":member_steam_name})
+```
+
+这将从 Steam 中获取大厅成员，然后循环并获取他们的姓名和 Steam ID，然后将他们附加到我们的 `lobby_members` 数组中以供稍后使用。然后，您可以在大厅房间中显示此列表。
+
+### 个人信息变化 / 头像 / 名称
+
+有时你会看到用户的名字和头像，有时是其中之一，不会立即正确显示。这是因为我们的本地用户只真正了解与他们一起玩过的朋友和玩家；存储在本地缓存中的任何内容。
+
+加入大厅一段时间后，Steam 将发送这些数据，从而触发 `persona_state_change` 回调。您需要更新您的玩家列表以反映这一点，并为未知玩家获取正确的名称和头像。我们连接 `_on_persona_change()` 函数将执行以下操作：
+
+```gdscript
+# 一个用户信息改变了
+func _on_persona_change(this_steam_id: int, _flag: int) -> void:
+	# 请确保您在大厅中，并且该用户是有效的，否则 Steam 可能会向您的控制台日志发送垃圾信息
+	if lobby_id > 0:
+		print("一个用户 (%s) 修改了信息，更新大厅列表" % this_steam_id)
+
+		# 更新玩家队列
+		get_lobby_members()
+```
+
+所有这些实际上都是通过再次调用 `get_lobby_Members()` 来刷新我们的大厅列表信息，以获得正确的头像和名称。
+
+### P2P 握手
+
+您还将注意到，在加入大厅的部分，我们启动了最初的 P2P 握手；这只是打开并检查我们的 P2P 会话：
+
+```gdscript
+func make_p2p_handshake() -> void:
+	print("正在向大厅发送 P2P 握手")
+
+	send_p2p_packet(0, {"message": "handshake", "from": steam_id})
+```
+
+我们现在还不了解这一切意味着什么，但我想在这里展示握手函数的代码，因为它被引用了；[在 P2P 教程中详细介绍](https://godotsteam.com/tutorials/p2p/)。你的握手信息可以是任何东西，在大多数情况下都会被忽略。同样，这只是为了测试我们的 P2P 会话。
+
+### 大厅更新 / 更改
+
+现在玩家已经加入大厅，大厅中的每个人都将收到一个回调通知，通知更改。我们将这样处理：
+
+```gdscript
+func _on_lobby_chat_update(this_lobby_id: int, change_id: int, making_change_id: int, chat_state: int) -> void:
+	# 获取进行大厅更改的用户
+	var changer_name: String = Steam.getFriendPersonaName(change_id)
+
+	# 如果玩家已加入大厅
+	if chat_state == Steam.CHAT_MEMBER_STATE_CHANGE_ENTERED:
+		print("%s 已经加入了大厅" % changer_name)
+
+	# 否则，如果玩家已离开大厅
+	elif chat_state == Steam.CHAT_MEMBER_STATE_CHANGE_LEFT:
+		print("%s 已经离开了大厅" % changer_name)
+
+	# 否则，如果玩家被踢
+	elif chat_state == Steam.CHAT_MEMBER_STATE_CHANGE_KICKED:
+		print("%s 已经被踢出大厅" % changer_name)
+
+	# 否则，如果玩家已被禁止
+	elif chat_state == Steam.CHAT_MEMBER_STATE_CHANGE_BANNED:
+		print("%s 已经被禁止进入大厅" % changer_name)
+
+	# 还有一些未知的变化
+	else:
+		print("%s 做了…… 某些事情" % changer_name)
+
+	# 发生更改后立即更新大厅
+	get_lobby_members()
+```
+
+在大多数情况下，这将在玩家加入或离开大厅时更新。然而，如果你添加了踢（kick）或禁止（ban）玩家的功能，它也会显示出来。在这个功能的最后，我总是更新玩家列表，这样我们就可以在大厅中显示正确的玩家列表。
+
+### 大厅聊天 / 信息
+
+你可能还希望玩家能够在大厅里聊天，等待游戏开始。如果您有一个用于消息传递的 LineEdit 节点，单击“发送”按钮应该会触发如下操作：
+
+```gdscript
+func _on_send_chat_pressed() -> void:
+	# 获取输入的聊天信息
+	var this_message: String = $Chat.get_text()
+
+	# 如果有消息
+	if this_message.length() > 0:
+		# 将消息传递给 Steam
+		var was_sent: bool = Steam.sendLobbyChatMsg(lobby_id, this_message)
+
+		# 发送成功吗？
+		if not was_sent:
+			print("ERROR: 聊天消息发送失败")
+
+	# 清除聊天输入
+	$Chat.clear()
+```
+
+$Chat 是您的 **LineEdit**，在您的项目中可能会有所不同。最重要的是获取文本并将其发送到 `sendLobbyChatMsg()`。
+
+### 离开大厅
+
+接下来我们将处理离开大厅的问题。如果您有一个按钮，请将其连接到此函数：
+
+```gdscript
+func leave_lobby() -> void:
+	# 如果在大厅中，离开它
+	if lobby_id != 0:
+		# 向Steam发送离开请求
+		Steam.leaveLobby(lobby_id)
+
+		# 擦除 Steam 大厅 ID，然后显示默认大厅 ID 和玩家列表标题
+		lobby_id = 0
+
+		# 关闭与所有用户的会话
+		for this_member in lobby_members:
+			# 确保这不是您的 Steam ID
+			if this_member['steam_id'] != steam_id:
+
+				# 关闭P2P会话
+				Steam.closeP2PSessionWithUser(this_member['steam_id'])
+
+		# 清除本地大厅列表
+		lobby_members.clear()
+```
+
+这将通知 Steam 您已离开大厅，然后在关闭与大厅中所有玩家的 P2P 会话后清除您的 `lobby_id` 变量以及您的 `lobby_members` 数组。你会注意到，在这一点上，我们没有任何功能可以通过 Steam 处理邀请。稍后将在大厅教程的后半部分添加此内容。
+
+### 下一个
+
+大厅教程到此结束。在这一点上，你可能想[看看P2P教程，它补充了这一章](https://godotsteam.com/tutorials/p2p/)。显然，这段代码不应该用于生产，更应该说是用于了解从哪里开始的非常、非常、非常简单的指南。
+
+### 其他资源
+
+#### 视频教程
+
+喜欢视频教程吗？饱饱眼福！
+
+- [DawnsCrowGames 的 “Godot 教程：GodotSteam 大厅系统”](https://youtu.be/si50G3S1XGU)
+
+#### 相关项目
+
+- [JDare 的 “GodotSteamHL”](https://github.com/JDare/GodotSteamHL)
+
+#### 示例项目
+
+[要查看本教程的实际操作，请查看我们在 GitHub 上的 GodotSteam 示例项目](https://github.com/GodotSteam/GodotSteam-Example-Project)。在那里，您可以获得所使用代码的完整视图，这可以作为您进行分支的起点。
+
+## Mac 注意事项
+
+有些用户在使用 Godot 和 GodotSteam 时可能会在 macOS上 遇到一些问题。本教程页旨在介绍它们。
+
+### M1 和 M2 机器问题
+
+来自用户 **canardbleu**，一个关于使用预编译编辑器和 macOS M1 和 M2 机器的方便提示。
+
+他们的团队表示：“（我们）无法启动任何场景，因为‘文件和文件夹’权限弹出窗口不断弹出。幸运的是，我们能够通过执行以下命令找到解决方法。”
+
+```shell
+codesign -s - --deep /Applications/GodotEditor.app
+```
+
+## P2P 网络
+
+其中一个要求更高的教程是多人大厅和通过 Steam 的 P2P 网络；本教程专门介绍了 P2P 网络部分，[我们的大厅教程介绍了另一半](https://godotsteam.com/tutorials/lobbies/)。
+
+请注意，本教程使用了旧的 **Steamworks Networking 类**，这是一个基本的、基于回合的大厅 / P2P设置。仅以此为起点。
+
+我还建议您在继续之前[查看本教程的“附加资源”部分](https://godotsteam.com/tutorials/p2p/#additional-resources)。
+
+> 相关 GodotSteam 类和函数
+>
+> - [Networking 类](https://godotsteam.com/classes/networking/)
+>   - [acceptP2PSessionWithUser()](https://godotsteam.com/classes/networking/#acceptp2psessionwithuser)
+>   - [getAvailableP2PPacketSize()](https://godotsteam.com/classes/networking/#getavailablep2ppacketsize)
+>   - [readP2PPacket()](https://godotsteam.com/classes/networking/#readp2ppacket)
+>   - [sendP2PPacket()](https://godotsteam.com/classes/networking/#sendp2ppacket)
+> - [Friends 类](https://godotsteam.com/classes/friends/)
+>   - [getFriendPersonaName()](https://godotsteam.com/classes/friends/#getfriendpersonaname)
+
+### _ready() 函数
+
+接下来，我们将为 Steamworks 和命令行检查器设置信号连接，如下所示：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func _ready() -> void:
+  	Steam.connect("p2p_session_request", self, "_on_p2p_session_request")
+  	Steam.connect("p2p_session_connect_fail", self, "_on_p2p_session_connect_fail")
+  
+  	# 检查命令行参数
+  	check_command_line()
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func _ready() -> void:
+  	Steam.p2p_session_request.connect(_on_p2p_session_request)
+  	Steam.p2p_session_connect_fail.connect(_on_p2p_session_connect_fail)
+  
+  	# 检查命令行参数
+  	check_command_line()
+  ```
+
+我们将在下面逐一介绍。
+
+### _process() 函数
+
+我们还需要在 `_process()` 函数中设置 `read_p2p_packet()`，以便它总是在寻找新的数据包：
+
+```gdscript
+func _process(_delta) -> void:
+	Steam.run_callbacks()
+
+	# 如果玩家已连接，则读取数据包
+	if lobby_id > 0:
+		read_p2p_packet()
+```
+
+如果您使用的是 `global.gd` 自动加载单例，那么您可以省略 `run_callbacks()` 命令，因为它们已经在运行了。
+
+以下是来自 **tehsquidge** 的一段很好的代码，用于处理数据包读取：
+
+```gdscript
+func _process(delta):
+	Steam.run_callbacks()
+
+	if lobby_id > 0:
+		read_all_p2p_packets()
+
+
+func read_all_p2p_packets(read_count: int = 0):
+	if read_count >= PACKET_READ_LIMIT:
+		return
+
+	if Steam.getAvailableP2PPacketSize(0) > 0:
+		read_p2p_packet()
+		read_all_p2p_packets(read_count + 1)
+```
+
+### P2P 网络 - 会话请求
+
+接下来我们将查看 P2P 网络功能。[在大厅教程中](https://godotsteam.com/tutorials/lobbies/)，当有人加入大厅时，我们进行了 P2P 握手，它会触发 `p2p_session_request` 回调，进而触发此函数：
+
+```gdscript
+func _on_p2p_session_request(remote_id: int) -> void:
+	# 获取请求者的姓名
+	var this_requester: String = Steam.getFriendPersonaName(remote_id)
+	print("%s 正在请求 P2P 会话" % this_requester)
+
+	# 接受P2P会话；如果需要，可以应用逻辑拒绝此请求
+	Steam.acceptP2PSessionWithUser(remote_id)
+
+	# 进行初次握手
+	make_p2p_handshake()
+```
+
+它非常简单地确认会话请求，接受它，然后发送回握手。
+
+### 读取 P2P 数据包
+
+在握手中，有一个对 `read_p2p_packet()` 函数的调用，该函数执行以下操作：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func read_p2p_packet() -> void:
+  	var packet_size: int = Steam.getAvailableP2PPacketSize(0)
+  
+  	# There is a packet
+  	if packet_size > 0:
+  		var this_packet: Dictionary = Steam.readP2PPacket(packet_size, 0)
+  
+  		if this_packet.empty() or this_packet == null:
+  			print("WARNING: read an empty packet with non-zero size!")
+  
+  		# Get the remote user's ID
+  		var packet_sender: int = this_packet['steam_id_remote']
+  
+  		# Make the packet data readable
+  		var packet_code: PoolByteArray = this_packet['data']
+  		var readable_data: Dictionary = bytes2var(packet_code)
+  
+  		# Print the packet to output
+  		print("Packet: %s" % readable_data)
+  
+  		# Append logic here to deal with packet data
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func read_p2p_packet() -> void:
+  	var packet_size: int = Steam.getAvailableP2PPacketSize(0)
+  
+  	# There is a packet
+  	if packet_size > 0:
+  		var this_packet: Dictionary = Steam.readP2PPacket(packet_size, 0)
+  
+  		if this_packet.is_empty() or this_packet == null:
+  			print("WARNING: read an empty packet with non-zero size!")
+  
+  		# Get the remote user's ID
+  		var packet_sender: int = this_packet['steam_id_remote']
+  
+  		# Make the packet data readable
+  		var packet_code: PackedByteArray = this_packet['data']
+  		var readable_data: Dictionary = bytes_to_var(packet_code)
+  
+  		# Print the packet to output
+  		print("Packet: %s" % readable_data)
+  
+  		# Append logic here to deal with packet data
+  ```
+
+如果数据包大小大于零，那么它将获得发送者的 Steam ID 和他们发送的数据。行 `bytes2var`（Godot 2.x，3.x）或`bytes_to_var`（Godot 4.x）非常重要，因为它将数据解码回您可以读取和使用的内容。解码后，您可以将数据传递给游戏的任何数量的函数。
+
+### 发送 P2P 数据包
+
+除了握手之外，你可能还想在玩家之间来回传递很多不同的数据。
+
+我的设置有两个参数：第一个是作为字符串的收件人，第二个是字典。我认为字典最适合发送数据，这样你就可以有一个键/值对来参考，并减少接收端的混乱。每个数据包将通过以下函数：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func send_p2p_packet(this_target: int, packet_data: Dictionary) -> void:
+  	# 设置 send_type 和 channel
+  	var send_type: int = Steam.P2P_SEND_RELIABLE
+  	var channel: int = 0
+  
+  	# 创建一个数据数组以发送数据
+  	var this_data: PoolByteArray
+  	this_data.append_array(var2bytes(packet_data))
+  
+  	# 如果向每个人发送数据包
+  	if this_target == 0:
+  		# 如果有多个用户，发送数据包
+  		if lobby_members.size() > 1:
+  			# 循环遍历所有不是您的成员
+  			for this_member in lobby_members:
+  				if this_member['steam_id'] != steam_id:
+  					Steam.sendP2PPacket(this_member['steam_id'], this_data, send_type, channel)
+  
+  	# 否则发送给特定的人
+  	else:
+  		Steam.sendP2PPacket(this_target, this_data, send_type, channel)
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func send_p2p_packet(this_target: int, packet_data: Dictionary) -> void:
+  	# 设置 send_type 和 channel
+  	var send_type: int = Steam.P2P_SEND_RELIABLE
+  	var channel: int = 0
+  
+  	# 创建一个数据数组以发送数据
+  	var this_data: PackedByteArray
+  	this_data.append_array(var_to_bytes(packet_data))
+  
+  	# 如果向每个人发送数据包
+  	if this_target == 0:
+  		# 如果有多个用户，发送数据包
+  		if lobby_members.size() > 1:
+  			# 循环遍历所有不是您的成员
+  			for this_member in lobby_members:
+  				if this_member['steam_id'] != steam_id:
+  					Steam.sendP2PPacket(this_member['steam_id'], this_data, send_type, channel)
+  
+  	# 否则发送给特定的人
+  	else:
+  		Steam.sendP2PPacket(this_target, this_data, send_type, channel)
+  ```
+
+`send_type` 变量将与以下枚举和整数相对应：
+
+| 发送类型枚举                     | 值   | 描述               |
+| -------------------------------- | ---- | ------------------ |
+| P2P_SEND_UNRELIABLE              | 0    | 发送不可靠         |
+| P2P_SEND_UNRELIABLE_NO_DELAY     | 1    | 发送不可靠且无延迟 |
+| P2P_SEND_RELIABLE                | 2    | 发送可靠           |
+| P2P_SEND_RELIABLE_WITH_BUFFERING | 3    | 发送可靠且有缓冲   |
+
+所使用的通道应与读取和发送功能相匹配。您可能想要使用多个通道，因此这显然应该进行调整。
+
+随着游戏复杂性的增加，您可能会发现发送的数据量显著增加。响应式、有效网络的核心原则之一是减少您发送的数据量，以减少某些部分被破坏的机会或者要求游戏玩家拥有非常快速的互联网连接才能玩游戏。
+
+幸运的是，我们可以在发送函数中引入**压缩**，以缩小数据的大小，而无需更改整个字典。这个概念很简单；当我们调用 **var2ytes**（Godot 2.x，3.x）或 **var_to_bytes**（Godot 4.x）函数时，我们将字典（或其他一些变量）转换为 **PoolByteArray**（Godot 2.x，3.0x）或 **PackedByteArray**（Godot 4.x），并通过互联网发送。
+
+我们可以用一行代码将 **PoolByteArray** / **PackedByteArray** 压缩得更小：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func send_p2p_packet(target: int, packet_data: Dictionary) -> void:
+  	# 设置 send_type 和 channel
+  	var send_type: int = Steam.P2P_SEND_RELIABLE
+  	var channel: int = 0
+  
+  	# 创建一个数据数组以发送数据
+  	var this_data: PoolByteArray
+  
+  	# 使用 GZIP 压缩方法压缩我们从字典中创建的 PoolByteArray
+  	var compressed_data: PoolByteArray = var2bytes(packet_data).compress(File.COMPRESSION_GZIP)
+  	this_data.append_array(compressed_data)
+  
+  	# 如果向每个人发送数据包
+  	if target == 0:
+  		# 如果有多个用户，发送数据包
+  		if lobby_members.size() > 1:
+  			# 循环遍历所有不是您的成员
+  			for this_member in lobby_members:
+  				if this_member['steam_id'] != steam_id:
+  					Steam.sendP2PPacket(this_member['steam_id'], this_data, send_type, channel)
+  
+  	# 否则发送给特定的人
+  	else:
+  		Steam.sendP2PPacket(target, this_data, send_type, channel)
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func send_p2p_packet(target: int, packet_data: Dictionary) -> void:
+  	# 设置 send_type 和 channel
+  	var send_type: int = Steam.P2P_SEND_RELIABLE
+  	var channel: int = 0
+  
+  	# 创建一个数据数组以发送数据
+  	var this_data: PackedByteArray
+  
+  	# 使用 GZIP 压缩方法压缩我们从字典中创建的 PackedByteArray
+  	var compressed_data: PackedByteArray = var_to_bytes(packet_data).compress(FileAccess.COMPRESSION_GZIP)
+  	this_data.append_array(compressed_data)
+  
+  	# 如果向每个人发送数据包
+  	if target == 0:
+  		# 如果有多个用户，发送数据包
+  		if lobby_members.size() > 1:
+  			# 循环遍历所有不是您的成员
+  			for this_member in lobby_members:
+  				if this_member['steam_id'] != steam_id:
+  					Steam.sendP2PPacket(this_member['steam_id'], this_data, send_type, channel)
+  
+  	# 否则发送给特定的人
+  	else:
+  		Steam.sendP2PPacket(target, this_data, send_type, channel)
+  ```
+
+当然，我们现在已经通过互联网向其他人发送了一个**压缩**的 PoolByteArray / PackedByteArray，因此当他们收到数据包时，他们需要先**解压缩** PoolByteArray / PackedByteArray，然后才能对其进行解码。为了实现这一点，我们在 `read_p2p_packet` 函数中添加了一行代码，如下所示：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func read_p2p_packet() -> void:
+  	var packet_size: int = Steam.getAvailableP2PPacketSize(0)
+  
+  	# 有包
+  	if packet_size > 0:
+  		var this_packet: Dictionary = Steam.readP2PPacket(packet_size, 0)
+  
+  		if this_packet.empty() or this_packet == null:
+  			print("WARNING: 读取大小为非零的空数据包!")
+  
+  		# 获取远程用户的 ID
+  		var packet_sender: int = this_packet['steam_id_remote']
+  
+  		# 使数据包数据可读
+  		var packet_code: PoolByteArray = this_packet['data']
+  
+  		# 在将数组转换为可用字典之前对其进行解压缩
+  		var readable_data: Dictionary = bytes2var(packet_code.decompress_dynamic(-1, File.COMPRESSION_GZIP))
+  
+  		# 打印要输出的数据包
+  		print("Packet: %s" % readable_data)
+  
+  		# 在此处附加逻辑以处理数据包数据
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func read_p2p_packet() -> void:
+  	var packet_size: int = Steam.getAvailableP2PPacketSize(0)
+  
+  	# 有包
+  	if packet_size > 0:
+  		var this_packet: Dictionary = Steam.readP2PPacket(packet_size, 0)
+  
+  		if this_packet.is_empty() or this_packet == null:
+              print("WARNING: 读取大小为非零的空数据包!")
+  
+  		# 获取远程用户的 ID
+  		var packet_sender: int = this_packet['steam_id_remote']
+  
+  		# 使数据包数据可读
+  		var packet_code: PackedByteArray = this_packet['data']
+  
+  		# 在将数组转换为可用字典之前对其进行解压缩
+  		var readable_data: Dictionary = bytes_to_var(packet_code.decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP))
+  
+  		# 打印要输出的数据包
+  		print("Packet: %s" % readable_data)
+  
+  		# 在此处附加逻辑以处理数据包数据
+  ```
+
+这里需要注意的关键点是，**发送和接收的格式必须相同**。Godot 中有很多关于压缩的内容，远远超出了本教程的范围；要了解更多信息，[请在此处阅读相关内容](https://docs.godotengine.org/en/stable/classes/class_poolbytearray.html#class-poolbytearray-method-compress)。
+
+### P2P 会话失败
+
+在本教程的最后一部分中，我们将使用以下函数处理 P2P 故障，该函数由 `p2p_session_connect_fail` 回调触发：
+
+```gdscript
+func _on_p2p_session_connect_fail(steam_id: int, session_error: int) -> void:
+	# 如果没有给出错误
+	if session_error == 0:
+		print("WARNING: 会话失败 %s: 没有给出错误" % steam_id)
+
+	# 否则，如果目标用户没有运行相同的游戏
+	elif session_error == 1:
+		print("WARNING: 会话失败 %s: 目标用户未运行同一游戏" % steam_id)
+
+	# 否则，如果本地用户不拥有应用程序/游戏
+	elif session_error == 2:
+		print("WARNING: 会话失败 %s: 本地用户不拥有应用程序/游戏" % steam_id)
+
+	# 否则，如果目标用户未连接到 Steam
+	elif session_error == 3:
+		print("WARNING: 会话失败 %s: 目标用户未连接到 Steam" % steam_id)
+
+	# 否则，如果连接超时
+	elif session_error == 4:
+		print("WARNING: 会话失败 %s: 连接超时" % steam_id)
+
+	# 否则，如果未使用
+	elif session_error == 5:
+		print("WARNING: 会话失败 %s: 未使用的" % steam_id)
+
+	# 否则没有已知错误
+	else:
+		print("WARNING: 会话失败 %s: 未知错误 %s" % [steam_id, session_error])
+```
+
+这将打印一条警告消息，以便您了解会话连接失败的原因。从这里，您可以添加任何您想要的附加功能，如重试连接或其他功能。
+
+### 下一个
+
+P2P 教程到此结束。在这一点上，你可能想[看看大厅教程（如果你还没有），这是对这一教程的补充](https://godotsteam.com/tutorials/lobbies/)。显然，这段代码不应该用于生产，更多是用于作为关于从哪里开始的非常、非常、非常简单的指南。
+
+### 其他资源
+
+#### 建议阅读材料
+
+我强烈建议阅读其中的部分或全部内容，以更好地理解网络。
+
+- [Valve 的网络文档](https://partner.steamgames.com/doc/features/multiplayer/networking)
+- [ThusSpokeNomad 的“游戏网络资源”](https://github.com/ThusSpokeNomad/GameNetworkingResources)
+- [“如何编写网络游戏？” on StackOverflow](https://gamedev.stackexchange.com/questions/249/how-to-write-a-network-game)
+- [Gaffer On Games 的网络](https://web.archive.org/web/20180823014743/https://gafferongames.com/tags/networking)
+- [Gabriel Gambetta的“客户端/服务器游戏架构”](https://www.gabrielgambetta.com/client-server-game-architecture.html)
+
+#### 相关项目
+
+[JDare的“GodotSteamHL”](https://github.com/JDare/GodotSteamHL)
+
+#### 示例项目
+
+[要查看本教程的实际操作，请查看我们在 GitHub 上的 GodotSteam 示例项目](https://github.com/GodotSteam/GodotSteam-Example-Project)。在那里，您可以获得所使用代码的完整视图，这可以作为您进行分支的起点。
