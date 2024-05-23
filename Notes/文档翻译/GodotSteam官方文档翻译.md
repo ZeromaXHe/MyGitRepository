@@ -2072,3 +2072,898 @@ P2P 教程到此结束。在这一点上，你可能想[看看大厅教程（如
 #### 示例项目
 
 [要查看本教程的实际操作，请查看我们在 GitHub 上的 GodotSteam 示例项目](https://github.com/GodotSteam/GodotSteam-Example-Project)。在那里，您可以获得所使用代码的完整视图，这可以作为您进行分支的起点。
+
+## 轻松移除 Steam
+
+很多人喜欢在其他平台上发布，如 Playstation、XBox、Switch、Itch.io 等。删除深度嵌入的 Steamworks 内容可能会很痛苦，有些人选择为游戏的 Steam 版本保留单独的存储库。然而，还有一种替代方法：以编程方式忽略 Steamworks 位。以下是用户在 Discord 中分享的一些示例。
+
+### 我们是如何做到的
+
+因此，我将在本教程中使用的示例是基于 Rutger 提交的解决方案 #2。我正在我当前的项目中积极使用此功能。
+
+我们将创建两个变量来保存我们的平台和 Steamworks 对象，然后在尝试执行任何操作之前，修改通常的 `initialize_stream()` 函数来查找 Steam 单例：
+
+```gdscript
+var this_platform: String = "steam"
+var steam_api: Object = null
+
+# 初始化 Steam
+func initialize_steam() -> void:
+	if Engine.has_singleton("Steam"):
+		this_platform = "steam"
+		steam_api = Engine.get_singleton("Steam")
+
+		var initialized: Dictionary = steam_api.steamInitEx(false)
+
+		print("[STEAM] Steam 初始化了吗?: %s" % initialized))
+
+		# 如果它确实失败了，让我们找出原因并将 steam_api 对象置空
+		if initialized['status'] > 0:
+			print("未能初始化 Steam，禁用所有 Steamworks 功能: %s" % initialized)
+			steam_api = null
+
+		# 用户在线吗?
+		steam_id = steam_api.getSteamID()
+		steam_name = steam_api.getPersonaName()
+
+	else:
+		this_platform = "itch"  # 可以是其他任何东西，比如主机平台等。
+		steam_id = 0
+		steam_name = "You"
+```
+
+现在，我们可以使用 `steam_api` 对象在游戏的其他地方调用我们的 steam 函数，如果没有 Steamworks，它不会因为缺少 singleton 调用而导致游戏崩溃。
+
+我还创建了一个助手函数来快速检查是否可以使用 Steam 方式，如下所示：
+
+```gdscript
+func is_steam_enabled() -> bool:
+	if this_platform == "steam" and steam_api != null:
+		return true
+	return false
+```
+
+由于它在我的全局脚本中，所以可以在我需要使用 Steam 函数的任何地方调用它。如果这个函数没有返回 true，那么我的代码就会忽略相关的 Steam 部分，如下所示：
+
+```gdscript
+func fire_steam_achievement(value: int) -> void:
+	if not achievements[value]:
+		achievements[value] = true
+
+		# 将变量传递给 Steam 并将其关闭
+		var this_achievement: String = "ACHIEVE"+str(value)
+
+		# 现在，如果 Steam 存在并已启用，请使用 Steamworks 功能
+		if is_steam_enabled():
+			var was_set: bool = steam_api.setAchievement(ACHIEVE)
+			print("[STEAM] Firing achievement %s, success: %s" % [this_achievement, was_set])
+
+			var was_stored: bool = steam_api.storeStats()
+			print("[STEAM] Statistics stored: %s" % was_stored)
+```
+
+因此，当您需要导出到非 Steam 平台时，您只需使用普通 Godot 模板，就不必担心其他任何事情！根本不需要不同版本的游戏。
+
+下面我们有两个提交的关于如何实现这一目标的用户建议；上面的例子所示，是基于解决方案 #2 的，但如果这对您更有意义，也要检查解决方案 1。
+
+### 解决方案 1：多个文件
+
+Albey 在 GDScript 中分享了一些解决方案的脚本，其中有三个独立的文件。`SteamHandler.gd` 文件交换了游戏的哪个版本：
+
+```gdscript
+extends Node
+
+var interface: SteamIntegrationBlank
+
+func _ready() -> void:
+	if OS.has_feature("Steam"):
+		interface = load("res://Entities/Autoloads/Steam/SteamIntegration.gd").new()
+	else:
+		interface = load("res://Entities/Autoloads/Steam/SteamIntegrationBlank.gd").new()
+
+	interface.initialise_steam()
+	if interface.status != interface.STATUS_OK:
+		get_tree().quit()
+```
+
+`SteamIntegrationBlank.gd` 文件处理 Steam 不存在时发生的情况：
+
+```gdscript
+extends Reference
+class_name SteamIntegrationBlank
+
+const STATUS_OK = 1
+const STATUS_STEAM_NOT_RUNNING = 20
+var status := STATUS_OK
+
+func initialise_steam() -> void:
+	pass
+```
+
+最后是 Steam 存在时的 `SteamIntegration.gd` 文件：
+
+```gdscript
+extends SteamIntegrationBlank
+
+const APP_ID = ***
+
+func initialise_steam() -> void:
+	if Steam.restartAppIfNecessary(APP_ID):
+		status = STATUS_STEAM_NOT_RUNNING
+		return
+
+	var init: Dictionary = Steam.steamInit()
+	status = init['status']
+```
+
+### 解决方案 2：检查 Singleton
+
+[Roost Games（Cat Cafe Manager 的制造商）的 Rutger](https://catcafemanager.com/) 分享了一条关于它的花絮：“如果有人想知道如何做到这一点，因为我必须通过 Switch 端口找到，我有一个全局变量 `platform` 作为任何特定于平台的东西的包装器，它只会在 `_ready()` 中这样做”。他的示例代码如下：
+
+```gdscript
+if Engine.has_singleton("Steam"):
+	self.platform = "steam"
+	self.Steam = Engine.get_singleton("Steam")
+```
+
+### GDExtension 的注意事项
+
+使用 GodotSteam 的 GDExtension 时，还需要更改位于项目中 .godot 文件夹中的 `extension_list.cfg` 文件。如果你不这样做，那么游戏在运行时会在你的日志文件中产生一些错误。然而，它们是无害的，只是有点烦人。[有人提议纠正这种行为，所以祈祷吧！](https://github.com/godotengine/godot-proposals/issues/9322)
+
+希望这些例子能给你一些关于如何从游戏中删除 Steamworks 功能的想法，而不必制作一堆不同的构建和存储库。
+
+## 丰富状态
+
+这个简短的教程是关于你游戏的丰富状态；特别是游戏增强了丰富状态。你可能在你的朋友列表中看到过一个游戏中的朋友，其中有一个次要的文本字符串，其中包含一些关于游戏的信息。通常是关于他们所处的级别、大厅、玩家数量等。好吧，这就是本教程的全部内容。
+
+[您可以在 Steamworks 文档中阅读更多关于增强丰富状态的信息。](https://partner.steamgames.com/doc/features/enhancedrichpresence)
+
+> 相关 GodotSteam 类和函数
+>
+> - [Friends 类](https://godotsteam.com/classes/friends/)
+>   - [setRichPresence()](https://godotsteam.com/classes/friends/#setrichpresence)
+
+### 设置
+
+首先，您需要在 Steamworks 后端设置本地化文件。显然，如果没有这一步骤，丰富状态文本就不会真正起作用，因为它没有任何可参考的内容。您需要这样设置您的文本文件：
+
+```json
+"lang" {
+    "language" {
+        "english" {
+            "tokens" {
+                "#something1"   "Rich presence string"
+                "#something2"   "Another string"
+                "#something_with_input" "{something: %input%"
+            }
+        }
+    }
+}
+```
+
+确保用制表符分隔标记括号中的字符串。此外，在尝试测试文件之前，请确保在上传文件后发布更改。这些更改必须在 Steamworks 中实时显示。
+
+你可以把各种语言放在自己的嵌套中，这样这些语言就可以向用户展示如何专门设置 Steam 客户端语言。每个 token 中的第一个字符串是您最终将在游戏代码中使用的字符串。
+
+### 建议的代码
+
+我有一个全局函数，在我的 `global.gd` 中，它可以在我的项目中的任何地方调用并处理这个问题。它是这样写的：
+
+```gdscript
+func set_rich_presence(token: String) -> void:
+	# 设置 token
+    var setting_presence = Steam.setRichPresence("steam_display", token)
+
+	# 调试它
+	print("设置丰富状态到 "+str(token)+": "+str(setting_presence))
+```
+
+在任何要设置标记的场景中：
+
+```gdscript
+global.set_rich_presence("#something1")
+```
+
+现在 Steam 将把你朋友列表中的文本设置为你在 Steamworks 后端的令牌列表中设置的文本。您也可以将鼠标悬停在自己的个人资料图片上，以查看游戏中的文本；用于测试目的。
+
+[这里的 SDK 文档中详细介绍](https://partner.steamgames.com/doc/api/ISteamFriends#SetRichPresence)了您可以设置的其他标记。
+
+### GDNative 中的奇怪 Bug
+
+在 **Windows 版本的 GDNative** 中，GodotSteam 和 Samsfacee 的插件中都存在一个奇怪的错误。有时 `setRichPresence()` 函数会将密钥作为值发送。它并不一致，但碰巧足够明显和痛苦。
+
+请注意，预编译模块版本、GDExtension 版本或 Linux 或 OSX 的 GDNative 版本中都不存在此错误。
+
+这种行为似乎肯定是 GDNative 的问题，所以我们无法在我们的上真正解决它，并且一个问题已经提交到 Godot GitHub 页面。
+
+值得庆幸的是，**Furcifer** 已经分享了一些代码来帮助解决这个问题！
+
+```gdscript
+var iteration = 0
+var richPresenceKeyValue = []
+var updatingRichPresence = false
+
+func callNextFrame(methodName, arguments = []):
+	get_tree().connect("idle_frame", self, methodName, arguments, CONNECT_ONESHOT)
+
+func updateRichPresence():
+	iteration = 0
+	richPresenceKeyValue.clear()
+
+	addRichPresence("numwins", String(Game.getNumWins()))
+	addRichPresence("steam_display", "#status_Ingame")
+
+	if not updatingRichPresence:
+		updatingRichPresence = true
+		setPresenceDelayed()
+
+func addRichPresence(key, value):
+	richPresenceKeyValue.push_back([key, value])
+	Steam.setRichPresence(key, value)
+
+func setPresenceDelayed():
+	var remaining = []
+	for tuple in richPresenceKeyValue:
+		var success = forceSetProperty(tuple[0], tuple[1])
+		if not success:
+			remaining.push_back(tuple)
+
+	richPresenceKeyValue = remaining
+
+	if not richPresenceKeyValue.empty():
+		iteration += 1
+		recallSetPresenceDelayed() # recalls this function after a frame
+	else:
+		updatingRichPresence = false
+
+func recallSetPresenceDelayed():
+	Util.callNextFrame(self, "setPresenceDelayed")
+
+func forceSetProperty(key : String, value : String) -> bool:
+	for i in 10:
+		var setval = Steam.getFriendRichPresence(STEAM_ID, key)
+		if setval == key:
+			#print("could not set key ", key, " - iteration: ", iteration, "/",i)
+			Steam.setRichPresence(key, value)
+		else:
+			return true
+
+	return false
+```
+
+### 其他资源
+
+#### 视频教程
+
+喜欢视频教程吗？饱饱眼福！
+
+[FinePointCGI的“建立丰富状态”](https://www.youtube.com/watch?v=VCwNxfYZ8Cw&t=4762s)
+
+#### 示例项目
+
+[要查看本教程的实际操作，请查看我们在 GitHub 上的 GodotSteam 示例项目。](https://github.com/GodotSteam/GodotSteam-Example-Project)在那里，您可以获得所使用代码的完整视图，这可以作为您进行分支的起点。
+
+## 统计数据和成就
+
+在某个时候，你可能想将统计数据保存到 Steam 的数据库和/或使用他们的成就系统。你会想[在 Steam 的文档中阅读这些内容](https://partner.steamgames.com/doc/features/achievements)，因为我不会介绍如何在 Steamworks 后端设置它的基础知识。
+
+> 相关 GodotSteam 类和函数
+>
+> - [User Stats 类](https://godotsteam.com/classes/user_stats/)
+>   - [requestCurrentStats()](https://godotsteam.com/classes/user_stats/#requestcurrentstats)
+>   - [getAchievement()](https://godotsteam.com/classes/user_stats/#getachievement)
+>   - [setAchievement()](https://godotsteam.com/classes/user_stats/#setschievement)
+>   - [setStatFloat()](https://godotsteam.com/classes/user_stats/#setstatfloat)
+>   - [setStatInt()](https://godotsteam.com/classes/user_stats/#setstatint)
+>   - [storeStats()](https://godotsteam.com/classes/user_stats/#storestats)
+
+### 准备工作
+
+首先，您需要在 Steamworks 后端设置您的成就和统计数据。最重要的是，您希望实时发布这些更改。如果没有，它们将不会暴露于 Steamworks API，并且在尝试检索或设置它们时会出现错误。一旦它们发布，您就可以继续学习本教程。
+
+### 获取 Steam 统计数据和成就
+
+在大多数情况下，启动游戏时，您会希望从 Steam 的服务器中为本地用户获取所有相关成就和统计数据。有几种方法可以处理从 Steam 服务器接收的统计数据/成就数据的回调连接。除非您选择通过向 `steamInit()` 或 `steamInitEX()` 函数传递 `false` 来关闭它；它将自动请求本地用户的当前统计数据和成就。我一般通过假来防止这种情况发生。
+
+要从结果回调中检索数据，您需要将 `current_stats_received` 回调连接到如下函数：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  Steam.connect("current_stats_received", self, "_on_steam_stats_ready", [], CONNECT_ONESHOT)
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  Steam.current_stats_received.connect(_on_steam_stats_ready)
+  ```
+
+您会注意到 `CONNECT_ONESHOT` 被传递以防止它多次触发。这是因为每当更新或接收到统计数据时，都会发送该信号，并将再次运行 `_on_steam_stats_ready()`。
+
+在我的用例中，这是不可取的，但在您的用例中可能是这样。如果您不介意每次触发 `_on_steam_stats_ready()`，根据函数的逻辑，可以随意省略这一部分，如下所示：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  Steam.connect("current_stats_received", self, "_on_steam_stats_ready")
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  Steam.current_stats_received.connect(_on_steam_stats_ready)
+  ```
+
+如果你像我一样保留 `CONNECT_ONESHOT`，我建议用 `requestUserStats()` 调用 Steam stat 更新，并传递用户的 Steam ID。此函数适用于任何用户：本地或远程。您还需要以类似的方式连接其信号：
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  Steam.connect("user_stats_received", self, "_on_steam_stats_ready")
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  Steam.user_stats_received.connect(_on_steam_stats_ready)
+  ```
+
+它可以连接到与 `requestCurrentStats()` 相同的函数，因为它们会发回相同的数据。对于我们的例子，这里是我们在连接信号中列出的 `_on_steam_stats_ready()` 函数：
+
+```gdscript
+func _on_steam_stats_ready(game: int, result: int, user: int) -> void:
+	print("该游戏的 ID: %s" % game)
+	print("调用结果: %s" % result)
+	print("该用户的 Steam ID: %s" % user)
+```
+
+### 使用数据
+
+在该功能中，您可以检查结果是否符合您的预期（理想情况下为 1），查看给定的统计数据是否适用于当前玩家，并检查游戏的 ID 是否匹配。此外，您现在可以将成就和统计数据传递给局部变量或函数。我经常会将成就传递给一个函数，以正确解析它们，因为它们会返回一个 BOOL 用于检索，而返回一个 BOOL 用于获得或不获得。
+
+```gdscript
+var achievements: Dictionary = {"achieve1":false, "achieve2":false, "achieve3":false}
+
+func _on_steam_stats_ready(game: int, result: int, user: int) -> void:
+	print("该游戏的 ID: %s" % game)
+	print("调用结果: %s" % result)
+	print("该用户的 Steam ID: %s" % user)
+
+	# 获得成就并将其传递给变量
+	get_achievement("acheive1")
+	get_achievement("acheive2")
+	get_achievement("acheive3")
+
+	# 获取统计信息（int）并将其传递给变量
+	var highscore: int = Steam.getStatInt("HighScore")
+	var health: int = Steam.getStatInt("Health")
+	var money: int = Steam.getStatInt("Money")
+
+# 处理成就
+func get_achievement(value: String) -> void:
+	var this_achievement: Dictionary = Steam.getAchievement(value)
+
+	# 成就存在
+	if this_achievement['ret']:
+
+		# 成就解锁
+		if this_achievement['achieved']:
+			achievements[value] = true
+
+		# 成绩被锁
+		else:
+			achievements[value] = false
+
+	# 成就不存在
+	else:
+		achievements[value] = false
+```
+
+### 设定成就
+
+设定成绩和统计数据也很简单。我们将从成就开始。你需要告诉Steam成就已解锁，然后将其存储为“pops”：
+
+```gdscript
+Steam.setAchievement("achieve1")
+Steam.storeStats()
+```
+
+如果你不调用 `storeStats()`，成就弹出窗口不会触发，但应该记录成就。但是，您仍然需要在某个时刻调用 `storeStats()` 来上传它们。我通常会制作一个通用函数来容纳这个过程，然后在需要时调用它：
+
+```gdscript
+func _fire_Steam_Achievement(value: String) -> void:
+	# Set the achievement to an in-game variable
+	achievements[value] = true
+
+	# 将值传递给 Steam 然后发送它
+	Steam.setAchievement(value)
+	Steam.storeStats()
+```
+
+当调用最后一个 `storeStats()` 时，该成就将在视觉上为用户“弹出”并更新他们的 Steam 客户端。
+
+### 设置统计信息
+
+统计遵循一个非常相似的过程；既有基于 int 的，也有基于 float 的。设置为：
+
+```gdcript
+Steam.setStatInt("stat1", value)
+Steam.setStatFloat("stat2", value)
+Steam.storeStats()
+```
+
+当调用最后一个 `storeStats()` 时，统计数据将在Steam的服务器上更新。
+
+### 其他资源
+
+#### 视频教程
+
+喜欢视频教程吗？饱饱眼福！
+
+- [BluePhoenixGames的“Godot+Steam教程”](https://www.youtube.com/watch?v=J0GrG-AffCI&t=571s)
+- [FinePointCGI 的“成就是如何实现的”](https://www.youtube.com/watch?v=VCwNxfYZ8Cw&t=938s)
+- [FinePointCGI 的“让我们谈谈统计”](https://www.youtube.com/watch?v=VCwNxfYZ8Cw&t=1504s)
+- [《Godot 4 Steam成就》作者：Gwitz](https://www.youtube.com/watch?v=dg6fSBe5EEE)
+
+#### 示例项目
+
+[要查看本教程的实际操作，请查看我们在 GitHub 上的 GodotSteam 示例项目](https://github.com/GodotSteam/GodotSteam-Example-Project)。在那里，您可以获得所使用代码的完整视图，这可以作为您进行分支的起点。
+
+## 语音
+
+如果你想在游戏中使用 Steam 的语音功能，我们也可以提供！本示例部分基于 [Godot 的网络语音聊天的 Github 代码库](https://github.com/ikbencasdoei/godot-voip/)和 Valve 的 SpaceWar 示例。用户 **Punny** 和 **ynot01** 提供了其他想法、细节等。
+
+> 相关 GodotSteam 类和函数
+>
+> - [Friends 类](https://godotsteam.com/classes/friends/)
+>   - [setInGameVoiceSpeaking()](https://godotsteam.com/classes/friends/#setingamevoicespeaking)
+> - [User 类](https://godotsteam.com/classes/user/)
+>   - [decompressVoice()](https://godotsteam.com/classes/user/#decompressvoice)
+>   - [getAvailableVoice()](https://godotsteam.com/classes/user/#getavailablevoice)
+>   - [getVoice()](https://godotsteam.com/classes/user/#getvoice)
+>   - [getVoiceOptimalSampleRate()](https://godotsteam.com/classes/user/#getvoiceoptimalsamplerate)
+>   - [startVoiceRecording()](https://godotsteam.com/classes/user/#startvoicerecording)
+>   - [stopVoiceRecording()](https://godotsteam.com/classes/user/#stopvoicerecording)
+
+### 准备工作
+
+首先，我们将设置一组稍后使用的变量。
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  var current_sample_rate: int = 48000
+  var has_loopback: bool = false
+  var local_playback: AudioStreamGeneratorPlayback = null
+  var local_voice_buffer: PoolByteArray = PoolByteArray()
+  var network_playback: AudioStreamGeneratorPlayback = null
+  var network_voice_buffer: PoolByteArray = PoolByteArray()
+  var packet_read_limit: int = 5
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  var current_sample_rate: int = 48000
+  var has_loopback: bool = false
+  var local_playback: AudioStreamGeneratorPlayback = null
+  var local_voice_buffer: PoolByteArray = PackedByteArray()
+  var network_playback: AudioStreamGeneratorPlayback = null
+  var network_voice_buffer: PoolByteArray = PackedByteArray()
+  var packet_read_limit: int = 5
+  ```
+
+需要快速提及的几件事是，`has_loopback` 将切换您是否能在语音聊天中听到自己的声音。虽然在游戏中不是很好，但在测试时很方便。您还注意到以 `local_`/ `network_` 为前缀的变量；这些是用来存储你和其他人的数据。理论上，`network_` 将覆盖网络/ Steam 的所有音频输出（任何不是你的东西）。
+
+此外，在测试的根目录中，我们需要创建两个 `AudioStreamPlayer` 节点。一个命名为 **Local**，一个命名的 **Network**，我们可以分别用作 `$Local` 和 `$Network`。
+
+为了将语音数据添加到音频流中，我们需要设置 `AudioStreamGeneratorPlayback`。确保 `AudioStreamPlayer` 节点都有和 `AudioStreamGenerator` 作为其流。将流的 `buffer_length` 设置为类似 0.1 的值：
+
+```gdscript
+func _ready() -> void:
+	$Local.stream.mix_rate = current_sample_rate
+	$Local.play()
+	local_playback = $Local.get_stream_playback()
+
+	$Network.stream.mix_rate = current_sample_rate
+	$Network.play()
+	network_playback = $Network.get_stream_playback()
+```
+
+### 获取语音数据
+
+此外，在 `_process()` 函数中，我们将向 `check_for_voice()` 函数添加调用：
+
+```gdscript
+func _process(_delta: float) -> void:
+	check_for_voice()
+```
+
+这个功能基本上只是查看是否有来自 Steam 的语音数据可用，然后获取并发送数据进行处理。
+
+```gdscript
+func check_for_voice() -> void:
+	var available_voice: Dictionary = Steam.getAvailableVoice()
+
+	# 似乎有语音数据
+	if available_voice['result'] == Steam.VOICE_RESULT_OK and available_voice['buffer'] > 0:
+		# Valve 的 getVoice 使用 1024，但 GodotSteam 的设置为 8192？
+		# 我们的尺码可能差距较大；GodotSteam 内部指出，Valve 建议 8kb
+		# 然而，这在标题和太空战争的例子中都没有提到，而是在 Valve 的文档中，这些文档通常是错误的
+		var voice_data: Dictionary = Steam.getVoice()
+		if voice_data['result'] == Steam.VOICE_RESULT_OK and voice_data['written']:
+			print("语音消息有数据: %s / %s" % [voice_data['result'], voice_data['written']])
+
+			# 在这里，我们可以在网络上传递这些语音数据
+			Networking.send_message(voice_data['buffer'])
+
+			# 如果已启用环回，在此时播放
+			if has_loopback:
+				print("Loopback on")
+				process_voice_data(voice_data, "local")
+```
+
+我们的 `Networking.send_message` 功能可以是您用于发送数据包/数据的任何 P2P 网络功能。在写这篇文章的时候，我想知道这有多必要，因为 Steam 正在记录语音数据，我们正在检查是否有可用的数据；如果有人的话，它肯定知道我们在和谁说话。我们需要将这些数据作为数据包发送回吗？
+
+### 处理语音数据
+
+好的，现在我们有了一些东西，让我们听听。我们可能想使用最佳采样率，而不是我们在 `current_sample_rate` 变量中设置的任何值。在这种情况下，我们可以使用此函数：
+
+```gdscript
+func get_sample_rate() -> void:
+	current_sample_rate = Steam.getVoiceOptimalSampleRate()
+	print("当前采样率: %s" % current_sample_rate)
+```
+
+此功能可以附加到按钮上。我们也可以在这个按钮上添加一个切换，以在最佳速率之间切换或返回默认速率。更改采样率时，请记住也要更改 `AudioStreamGenerator` 的混合率：
+
+```gdscript
+func get_sample_rate(is_toggled: bool) -> void:
+	if is_toggled:
+		current_sample_rate = Steam.getVoiceOptimalSampleRate()
+	else:
+		current_sample_rate = 48000
+	$Local.stream.mix_rate = current_sample_rate
+	$Network.stream.mix_rate = current_sample_rate
+	print("当前采样率: %s" % current_sample_rate)
+```
+
+我们已经计算出了样本率，所以让我们试着实际播放这些数据。由于我们只是在测试一些东西，所以我们将使用 `local_` 变量和节点。
+
+- Godot 2.x, 3.x
+
+  ```gdscript
+  func process_voice_data(voice_data: Dictionary, voice_source: String) -> void:
+  	# 之前我们的采样率函数没有修改
+  	get_sample_rate()
+  
+  	var decompressed_voice: Dictionary = Steam.decompressVoice(voice_data['buffer'], voice_data['written'], current_sample_rate)
+  
+  	if decompressed_voice['result'] == Steam.VOICE_RESULT_OK and decompressed_voice['size'] > 0:
+  		print("解压语音: %s" % decompressed_voice['size'])
+  
+  		if voice_source == "local":
+  			local_voice_buffer = decompressed_voice['uncompressed']
+  			local_voice_buffer.resize(decompressed_voice['size'])
+  
+  			# 我们现在创建一个音频流，将数据放入
+  			var local_audio: AudioStreamSample = AudioStreamSample.new()
+  			local_audio.mix_rate = current_sample_rate
+  			local_audio.data = local_voice_buffer
+  			local_audio.format = AudioStreamSample.FORMAT_16_BITS
+  
+  			# 最后，将其放入一个节点并播放
+  			$Local.stream = local_audio
+  			$Local.play()
+  ```
+
+- Godot 4.x
+
+  ```gdscript
+  func process_voice_data(voice_data: Dictionary, voice_source: String) -> void:
+  	# 之前我们的采样率函数没有修改
+  	get_sample_rate()
+  
+  	var decompressed_voice: Dictionary = Steam.decompressVoice(voice_data['buffer'], voice_data['written'], current_sample_rate)
+  
+  	if decompressed_voice['result'] == Steam.VOICE_RESULT_OK and decompressed_voice['size'] > 0:
+  		print("解压语音: %s" % decompressed_voice['size'])
+  
+  		if voice_source == "local":
+  			local_voice_buffer = decompressed_voice['uncompressed']
+  			local_voice_buffer.resize(decompressed_voice['size'])
+  
+  			# 现在，我们遍历 local_voice_buffer 并将样本推送到音频生成器
+  			for i: int in range(0, mini(local_playback.get_frames_available() * 2, local_voice_buffer.size()), 2):
+  				# Steam 的音频数据表示为 16 位单通道 PCM 音频，因此我们需要将其转换为振幅
+  				# 组合低位和高位以获得完整的 16 位值
+  				var raw_value: int = LOCAL_VOICE_BUFFER[0] | (LOCAL_VOICE_BUFFER[1] << 8)
+  				# 将其设为 16 位有符号整数
+  				raw_value = (raw_value + 32768) & 0xffff
+  				# 将 16 位整数转换为从 -1 到 1 的浮点值
+  				var amplitude: float = float(raw_value - 32768) / 32768.0
+  
+  				# push_frame() 使用 Vector2 参数。x 表示左通道，y 表示右通道
+  				local_playback.push_frame(Vector2(amplitude, amplitude))
+  
+  				# 删除使用过的采样
+  				local_voice_buffer.remove_at(0)
+  				local_voice_buffer.remove_at(0)
+  ```
+
+### 录制语音
+
+那么，我们实际上是如何将语音数据传输到 Steam 的呢？我们需要设置一个可以切换并连接到以下功能的按钮：
+
+```gdscript
+func record_voice(is_recording: bool) -> void:
+	# 如果正在通话，请抑制 Steam UI 中的所有其他音频或语音通信
+	Steam.setInGameVoiceSpeaking(steam_id, is_recording)
+
+	if is_recording:
+		Steam.startVoiceRecording()
+	else:
+		Steam.stopVoiceRecording()
+```
+
+小菜一碟！您会注意到我们的 `setInGameVoiceSpeaking` 有一个注释，它用于抑制来自 Steam UI 的任何声音或其他内容；你肯定会想要的。
+
+您可能想提供始终在线语音聊天的选项，在这种情况下，您可能想在 `_ready()` 或其他地方启动此功能一次，以开始录制，直到播放器将其关闭。
+
+这就是 Steam Voice 聊天的基础。同样，在这个例子中，播放有一种奇怪的起伏，但我们肯定可以在某个时候解决这个问题。
+
+### 其他资源
+
+#### 相关项目
+
+[ikbencasdoei 的 Godot VOIP](https://github.com/ikbencasdoei/godot-voip)
+
+#### 示例项目
+
+[要查看本教程的实际操作，请查看我们在 GitHub 上的 GodotSteam 示例项目](https://github.com/GodotSteam/GodotSteam-Example-Project)。在那里，您可以获得所使用代码的完整视图，这可以作为您进行分支的起点。
+
+## 工坊
+
+一个热门话题出现了：工坊 / UGC。有很多移动部件，在本教程中我们可能会错过相当多。幸运的是，一些聪明人根据他们的经验提供了一些我们可以使用的信息。
+
+> 相关 GodotSteam 类和函数
+>
+> - [Friends 类](https://godotsteam.com/classes/friends/)
+>   - [activateGameOverlayToWebPage()](https://godotsteam.com/classes/friends/#activategameoverlaytowebpage)
+> - [UGC 类](https://godotsteam.com/classes/ugc/)
+>   - [createItem()](https://godotsteam.com/classes/ugc/#createitem)
+>   - [createQueryUserUGCRequest()](https://godotsteam.com/classes/ugc/#createqueryuserugcrequest)
+>   - [getItemInstallInfo()](https://godotsteam.com/classes/ugc/#getiteminstallinfo)
+>   - [getSubscribedItems()](https://godotsteam.com/classes/ugc/#getsubscribeditems)
+>   - [getQueryUGCResult()](https://godotsteam.com/classes/ugc/#getqueryugcresult)
+>   - [releaseQueryUGCRequest()](https://godotsteam.com/classes/ugc/#releasequeryugcrequest)
+>   - [sendQueryUGCRequest()](https://godotsteam.com/classes/ugc/#sendqueryugcrequest)
+>   - [setReturnOnlyIDs()](https://godotsteam.com/classes/ugc/#setreturnonlyids)
+>   - [startItemUpdate()](https://godotsteam.com/classes/ugc/#startitemupdate)
+>   - [submitItemUpdate()](https://godotsteam.com/classes/ugc/#submititemupdate)
+>   - [setItemContent()](https://godotsteam.com/classes/ugc/#setitemcontent)
+>   - [setItemDescription()](https://godotsteam.com/classes/ugc/#setitemdescription)
+>   - [setItemMetadata()](https://godotsteam.com/classes/ugc/#setitemmetadata)
+>   - [setItemPreview()](https://godotsteam.com/classes/ugc/#setitempreview)
+>   - [setItemTags()](https://godotsteam.com/classes/ugc/#setitemtags)
+>   - [setItemTitle()](https://godotsteam.com/classes/ugc/#setitemtitle)
+>   - [setItemUpdateLanguage()](https://godotsteam.com/classes/ugc/#setitemupdatelanguage)
+>   - [setItemVisibility()](https://godotsteam.com/classes/ugc/#setitemvisibility)
+> - [User 类](https://godotsteam.com/classes/user/)
+>   - [getSteamID()](https://godotsteam.com/classes/user/#getsteamid)
+
+### 开始之前
+
+在做任何其他事情之前，你会想阅读 [Valve 在 Workshop / UGC上的文章，其中将涵盖本教程中没有涵盖的许多步骤](https://partner.steamgames.com/doc/features/workshop)。一旦你完成了这项工作，你还应该阅读 [Valve 关于工坊 / UGC 实施的报告，这样你就可以继续了](https://partner.steamgames.com/doc/features/workshop/implementation)。
+
+当你最终读完这两篇文章时，我们就可以开始了。
+
+### 工坊 / UGC 上传 / 下载
+
+[**"被遗忘的梦想游戏"的卡普保罗**（**KarpPaul of Forgotten Dream Games**）为我们提供了关于在 Workshop / UGC 中上传和下载项目的非常棒的教程](https://forgottendreamgames.com/blog/godotsteam-how-to-upload-and-download-user-generated-content-ugc-repost.html)。由于他已经写了所有的东西，包括代码示例，所以当你只需点击链接并阅读全部内容时，没有任何理由在这里重申。
+
+### 在 Workshop / UGC 中使用物品（Items）
+
+**Lyaaaaaaaaaaaaaaa** 提交了一些代码，展示了他们如何在 Workshop / UGC 中使用物品：
+
+```gdscript
+extends Node
+
+class_name Steam_Workshop
+
+signal query_request_success
+
+var published_items  : Array
+var steam = SteamAutoload.steam    # 我不直接使用 “Steam” 来避免非 Steam 构建中的脚本错误。
+
+var _app_id        : int =  ProjectSettings.get_setting("global/steam_app_id")
+var _query_handler : int
+var _page_number   : int = 1
+var _subscribed_items : Dictionary
+
+func _init() -> void:
+	steam.connect("ugc_query_completed", self, "_on_query_completed")
+
+	for item in steam.getSubscribedItems():
+		var info : Dictionary
+		info = get_item_install_info(item)
+		if info["ret"] == true:
+			_subscribed_items[item] = info
+
+
+static func open_tos() -> void:
+	var steam = SteamAutoload.steam
+	var tos_url = "https://steamcommunity.com/sharedfiles/workshoplegalagreement"
+	steam.activateGameOverlayToWebPage(tos_url)
+
+
+func get_item_install_info(p_item_id : int) -> Dictionary:
+	var info : Dictionary
+	info = steam.getItemInstallInfo(p_item_id)
+
+	if info["ret"] == false:
+		var warning = "Item " + String(p_item_id) + " isn't installed or has no content"
+		# 这里是您记录日志/显示错误的代码
+
+	return info
+
+
+func get_published_items(p_page : int = 1, p_only_ids : bool = false) -> void:
+	var user_id : int = steam.getSteamID()
+	var list    : int = steam.USER_UGC_LIST_PUBLISHED
+	var type    : int = steam.WORKSHOP_FILE_TYPE_COMMUNITY
+	var sort    : int = steam.USERUGCLISTSORTORDER_CREATIONORDERDESC
+
+	_query_handler = steam.createQueryUserUGCRequest(user_id, list, type, sort, _app_id, _app_id, p_page)
+	steam.setReturnOnlyIDs(_query_handler, p_only_ids)
+	steam.sendQueryUGCRequest(_query_handler)
+
+
+func get_item_folder(p_item_id : int) -> String:
+	return _subscribed_items[p_item_id]["folder"]
+
+
+func fetch_query_result(p_number_results : int) -> void:
+	var result : Dictionary
+	for i in range(p_number_results):
+		result = steam.getQueryUGCResult(_query_handler, i)
+		published_items.append(result)
+
+	steam.releaseQueryUGCRequest(_query_handler)
+
+
+func _on_query_completed(p_query_handler: int, p_result: int, p_results_returned: int, p_total_matching: int, p_cached: bool) -> void:
+
+	if p_result == steam.RESULT_OK:
+		fetch_query_result(p_results_returned)
+	else:
+		var warning = "Couldn't get published items. Error: " + String(p_result)
+		# 这里是您记录日志/显示错误的代码
+
+	if p_result == 50:
+		_page_number ++ 1
+		get_published_items(_page_number)
+
+	elif p_result < 50:
+		emit_signal("query_request_success", p_results_returned, _page_number)
+```
+
+#### 工坊 / UGC 物品
+
+下面是 Lyaaaaaaaaaaaaaaa 的例子，这里是您的 Workshop / UGC 物品的一个类。
+
+```gdscript
+extends Node
+
+class_name UGC_Item
+
+signal item_created
+signal item_updated
+signal item_creation_failed
+signal item_update_failed
+
+var steam = SteamAutoload.steam # I don't use the `Steam` directly to avoid scripts errors in non-steam builds.
+
+var _app_id  : int = ProjectSettings.get_setting("global/steam_app_id")
+var _item_id : int
+var _update_handler
+
+func _init(p_item_id: int = 0, p_file_type: int = steam.WORKSHOP_FILE_TYPE_COMMUNITY) -> void:
+
+	steam.connect("item_created", self, "_on_item_created")
+	steam.connect("item_updated", self, "_on_item_updated")
+
+	if p_item_id == 0:
+		steam.createItem(_app_id, p_file_type)
+	else:
+		_item_id = p_item_id
+		start_update(p_item_id)
+
+
+func start_update(p_item_id : int) -> void:
+	_update_handler = steam.startItemUpdate(_app_id, p_item_id)
+
+
+func update(p_update_description : String = "Initial commit") -> void:
+	steam.submitItemUpdate(_update_handler, p_update_description)
+
+
+func set_title(p_title : String) -> void:
+	if steam.setItemTitle(_update_handler, p_title) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func set_description(p_description : String = "") -> void:
+	if steam.setItemDescription(_update_handler, p_description) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func set_update_language(p_language : String) -> void:
+	if steam.setItemUpdateLanguage(_update_handler, p_language) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func set_visibility(p_visibility : int = 2) -> void:
+	if steam.setItemVisibility(_update_handler, p_visibility) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func set_tags(p_tags : Array = []) -> void:
+	if steam.setItemTags(_update_handler, p_tags) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func set_content(p_content : String) -> void:
+	if steam.setItemContent(_update_handler, p_content) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func set_preview(p_image_preview : String = "") -> void:
+	if steam.setItemPreview(_update_handler, p_image_preview) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func set_metadata(p_metadata : String = "") -> void:
+	if steam.setItemMetadata(_update_handler, p_metadata) == false:
+		# 这里是您记录日志/显示错误的代码
+
+
+func get_id() -> int:
+	return _item_id
+
+
+func _on_item_created(p_result : int, p_file_id : int, p_accept_tos : bool) -> void:
+	if p_result == steam.RESULT_OK:
+		_item_id = p_file_id
+		# 这里是您记录日志/显示成功的代码
+		emit_signal("item_created", p_file_id)
+	else:
+		var error = "创建工坊物品失败。错误: " + String(p_result)
+		# 这里是您记录日志/显示错误的代码
+		emit_signal("item_creation_failed", error)
+
+	if p_accept_tos:
+		Steam_Workshop.open_tos()
+
+
+func _on_item_updated(p_result : int, p_accept_tos : bool) -> void:
+	if p_result == steam.RESULT_OK:
+		var item_url = "steam://url/CommunityFilePage/" + String(_item_id)
+		# 这里是您记录日志/显示成功的代码
+		steam.activateGameOverlayToWebPage(item_url)
+		emit_signal("item_updated")
+	else:
+		var error = "更新工坊物品失败。错误: " + String(p_result)
+		# 这里是您记录日志/显示错误的代码
+		emit_signal("item_update_failed", error)
+
+	if p_accept_tos:
+		Steam_Workshop.open_tos()
+```
+
+### 奇怪的问题
+
+KarpPaul 有一些关于从 `getQueryUGCResult` 获取“访问被拒绝”的信息：
+
+> 关于我在 steamworks 中遇到的问题（Steam.getQueryUGCResult 在工坊对开发人员和客户可见时返回“访问被拒绝”）。我和 steam 的支持人员谈过了，他们无法重现错误。我检查了 ipc 日志，事实上一切看起来都很正常—— Steam 日志中没有拒绝访问的结果。然而，错误仍然存在于游戏中。不知道为什么会发生这种事，也不知道我怎么做的，也许我做错了。我想知道是否还有其他人会遇到这种情况。。。。无论如何，这并不重要，所以我只是让每个人都能看到我的工坊，并决定暂时忽略这个问题。
