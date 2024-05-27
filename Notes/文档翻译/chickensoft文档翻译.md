@@ -1336,3 +1336,1345 @@ Godot 中的 C# 支持自几年前首次引入以来已经取得了长足的进�
 Godot 可能永远不会成为主导游戏引擎，但我们相信，只要有足够的时间，开源游戏引擎总有一天会主导这个领域。Godot 优先考虑开发人员，当开发人员获胜时，其他人最终也会获胜。
 
 那你还在等什么？当然不是戈多。制作你梦寐以求的独立 C# 游戏！我们将永远在 Discord 提供帮助！访问 Github 上的 Chickensoft！
+
+# Chickensoft
+
+## 👩‍🏫 关于Chickensoft
+
+Chickensoft 是一个致力于 C# Godot 社区的开源组织。我们拥有一个 Discord 服务器，专门为使用 Godot 和 C# 编写游戏、应用程序和工具的开发人员提供支持。
+
+根据 MIT 的许可，所有 Chickensoft 项目都可以免费用于个人和商业项目。有关更多信息，请参阅我们的许可证页面。
+
+## 📖 这是什么？
+
+Chickensoft 是许多开源项目的所在地。由于其中一些项目涉及面很广，因此它们的文档就托管在这里。你可以在主页上看到 Chickensoft 的所有项目。
+
+此外，我们正在努力更好地记录通用 C# 和 Godot 的开发。想添加关于特定主题的注释吗？欢迎为开源的 Chickensoft 网站投稿！
+
+## 🐤 为什么叫这个名字？
+
+Chickensoft 一开始只是我的游戏开发项目的一个愚蠢的个人组织。在使用 Godot 制作游戏时，我最终创建了一些实用程序，使 C# 的开发变得更容易。现在这些项目都有了自己的生活，我已经放弃了发布游戏的尝试。如果出于某种原因，我真的发布了一款商业游戏，它将以不同的名字命名。🥲
+
+## 🪦 一句忠告
+
+对于所有的游戏开发者，我要提醒他们：**不要制作工具——制作游戏**。否则，你最终只会为可能（也可能）帮助他人制作游戏的工具编写文档。最坏的情况是，你可能会陷入编写整个引擎的黑暗深渊。
+
+不幸的是，“不做工具”和“真正做游戏”对游戏开发者来说是难以下咽的药丸。游戏开发是出了名的困难，即使没有编写工具的诱惑。当你最终成功制作游戏时，我们将在社区 Discord 服务器上为你加油！
+
+如果你仍然不听，请随意贡献。只要知道你正踏上一条充满未完成项目和破碎梦想的黑暗道路。😶‍🌫️
+
+# SuperNodes
+
+[SuperNodes](https://github.com/chickensoft-games/SuperNodes) 是一个 C# 源代码生成器，为 Godot 节点脚本提供超能力。
+
+### 🔮 C# 脚本的超级能力
+
+许多编程语言允许您使用诸如 `mixin`、`traits` 甚至 `模板` 和 `宏` 之类的功能将一个类的内容与另一个类相结合。
+
+C#没有这样的特性。😢
+
+> **等等！默认接口实现如何？**
+>
+> 您可能想知道 C# 的默认接口实现功能。不幸的是，默认接口实现不能用于向类添加实例数据。
+>
+> 也就是说，您不能使用默认接口实现将字段添加到类中（而且在某种程度上，您不能添加属性实现，因为它们使用的是隐藏的字段）。
+>
+> 以下是微软对此的看法：
+>
+> > **注意**
+> >
+> > 接口可能不包含实例状态。虽然现在允许使用静态字段，但接口中不允许使用实例字段。接口中不支持实例自动属性，因为它们会隐式声明隐藏字段。
+
+为了弥补 C# 中的这些缺点，SuperNodes 生成器允许您通过向任何普通 Godot 脚本添加 `[SuperNode]` 属性来将其转换为 `SuperNode`。将节点转换为 SuperNode 允许您：
+
+- ✅ 将 PowerUps（本质上是 C# 的混合）应用到节点脚本中。
+- ✅ 与 Godot 的官方源代码生成器一起使用第三方源代码生成器。
+- ✅ 在运行时获取和设置脚本属性和字段的值，而不使用反射。
+- ✅ 在运行时检查脚本属性和字段的属性和类型，而不使用反射。
+- ✅ 使用共享运行时类型跨程序集检查超级节点。
+- ✅ 仅使用源代码 nuget 包的 PowerUps。
+
+制作 PowerUp 也很容易：只需用 `[PowerUp]` 属性标记另一个脚本类，然后将该 PowerUp 应用于 SuperNode。
+
+```c#
+namespace SimpleExample;
+
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(ExamplePowerUp))]
+public partial class ExampleNode : Node {
+  public override partial void _Notification(int what);
+
+  public void OnReady() => SomeMethod();
+
+  public void OnProcess(double delta) => SomeMethod();
+
+  public void SomeMethod() {
+    var d = GetProcessDeltaTime();
+    if (LastNotification == NotificationReady) {
+      GD.Print("We were getting ready.");
+    }
+    else if (LastNotification == NotificationProcess) {
+      GD.Print("We were processing a frame.");
+    }
+  }
+}
+
+// A PowerUp that logs some of the main lifecycle events of a node.
+[PowerUp]
+public partial class ExamplePowerUp : Node {
+  public long LastNotification { get; private set; }
+
+  public void OnExamplePowerUp(int what) {
+    switch ((long)what) {
+      case NotificationReady:
+        GD.Print("PowerUp is ready!");
+        break;
+      case NotificationEnterTree:
+        GD.Print("I'm in the tree!");
+        break;
+      case NotificationExitTree:
+        GD.Print("I'm out of the tree!");
+        break;
+      default:
+        break;
+    }
+    LastNotification = what;
+  }
+}
+```
+
+上面的脚本定义了一个名为 `ExampleNode` 的超级节点，该超级节点应用名为 `ExamplePowerUp` 的 PowerUp。
+
+`ExamplePowerUp` 跟踪节点中发生的最后一个生命周期事件，允许 `ExampleNode` 访问 PowerUp 的 `LastNotification` 属性，就好像它是自己的一样，即使 `ExampleNode` 没有声明这样的属性。
+
+由于源代码生成器的魔力，因此不会出现语法错误。一切都能正确编译，并支持静态类型！
+
+### 🔘 SuperNodes
+
+我们将把上面的例子分成几个小部分来解释发生了什么。
+
+```c#
+[SuperNode(typeof(ExamplePowerUp))]
+```
+
+可以为 `[SuperNode]` 属性提供一个参数列表。每个参数都可以指定一个 PowerUp 或一个表示生命周期方法挂钩的字符串（稍后将详细介绍）。PowerUp 是通过传递 PowerUp 类的类型来指定的，因此我们使用 `typeof` 来标识 `ExamplePowerUp` 的类型。它快速、简单，并且**在编译时工作**！
+
+```c#
+public partial class ExampleNode : Node {
+```
+
+您可能会从 Godot 中编写 C# 脚本中认识到这一点。这只是一个普通的 Godot 脚本类！
+
+```c#
+  public override partial void _Notification(int what);
+```
+
+不幸的是，所有 `[SuperNode]` 脚本都必须包含这个极其冗长的部分方法签名。
+
+> **注意**
+>
+> 如果您忘记添加 `public override partial void _Notification(int what);` 对于您的 SuperNode 脚本，您将从 SuperNodes 生成器收到一条很好的小消息，提醒您使用正确的方法签名来执行此操作（因为我们都知道您可能不想记住这一点）。
+
+为了让 SuperNodes 工作，它必须能够为 Godot 的 `_Notification` 方法生成一个实现。实现生命周期方法允许超级节点调用 PowerUps 和生命周期挂钩，以响应 Godot 节点中发生的任何生命周期事件。
+
+> **注意**
+>
+> 如果您还需要脚本来实现 `_Notification`，只需声明一个具有签名 `public void OnNotification(int what)` 的方法，SuperNodes 将确保在调用 `_Notification` 时调用它。
+
+您可能已经注意到，SuperNode 使用名为 `OnReady` 和 `OnProcess` 的方法，而不是覆盖 `_Ready` 和 `_Process`，它们在其他方面与 Godot 对应方法具有相同的签名。SuperNodes 生成器将在 SuperNodes 内部为每个 Godot 生命周期通知查找名为 `On{LifecycleHandler}` 的方法（有相当多），并调用具有相同名称、前缀为 `On` 的处理程序。
+
+> **提示**
+>
+> 查看生命周期处理程序的完整列表，以确定可以实现哪些方法！
+
+```c#
+public partial class ExampleNode : Node {
+  public override partial void _Notification(int what);
+
+  public void OnReady() => SomeMethod();
+
+  public void OnProcess(double delta) => SomeMethod();
+```
+
+### 🔋 PowerUps
+
+上面示例中的 PowerUp 也是一个普通的脚本类，用于扩展 Godot 节点。唯一的新部分似乎是 `[PowerUp]` 属性，但实际上这里隐藏着一些东西。
+
+```c#
+[PowerUp]
+public partial class ExamplePowerUp : Node {
+  public long LastNotification { get; private set; }
+
+  public void OnExamplePowerUp(int what) {
+    switch ((long)what) {
+      case NotificationReady:
+        GD.Print("PowerUp is ready!");
+        break;
+
+        // ...
+```
+
+在进行 PowerUp 时，SuperNodes 将检查 PowerUp 是否声明了名为 `On{PowerUpName}` 的方法。
+
+在这种情况下，有一个 `OnExamplePowerUp(int what)` 方法，它接收 Godot 通知标识符整数。每当 Godot 事件发生时，SuperNodes 都会从其生成的 `_Notification` 处理程序中调用 `OnExamplePowerUp` 方法，从而允许 PowerUp 执行操作以响应其应用到的任何 SuperNode 的事件。
+
+> **信息**
+>
+> 从现在起，当谈到 PowerUps 时，我们将把 `On{PowerUpName}` 方法称为 `OnPowerUp` 方法。
+
+PowerUps 可以向 C# Godot 脚本添加任何类型的附加实例数据（字段、属性、事件、静态成员等），从而绕过默认接口实现的限制。但这还不是全部。PowerUps 还可以：
+
+- ✅ 将实例数据、方法和事件实现添加到 SuperNodes。
+- ✅ 在超级节点上实现接口。
+- ✅ 接收类型参数（通用 PowerUps）！
+- ✅ 在超级节点上实现通用接口。
+- ✅ 检查和操作超级节点的所有属性和字段，包括来自其他 PowerUps 的属性和字段。
+
+我们将在本文后面的文档中讨论如何在项目中利用这些功能。
+
+### 🪄 魔法之下
+
+SuperNodes 将为 `ExampleNode` 生成几个实现文件，以便能够神奇地增强它。
+
+> **提示**
+> 要显示生成的文件，可以将以下内容添加到 `.csproj` 文件中：
+>
+> ```xml
+> <PropertyGroup>
+>   <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+>   <CompilerGeneratedFilesOutputPath>.generated</CompilerGeneratedFilesOutputPath>
+> </PropertyGroup>
+> ```
+
+
+以下是包含 `_Notification` 方法的主实现文件中的内容：
+
+> **`SimpleExample.ExampleNode.g.cs`**
+>
+> ```c#
+> #nullable enable
+> using Godot;
+> using SuperNodes.Types;
+> 
+> namespace SimpleExample {
+>   partial class ExampleNode {
+>     public override partial void _Notification(int what) {
+>       // Invoke declared lifecycle method handlers.
+>       OnExamplePowerUp(what);
+> 
+>       // Invoke any notification handlers declared in the script.
+>       switch ((long)what) {
+>         case NotificationReady:
+>           OnReady();
+>           break;
+>         case NotificationProcess:
+>           OnProcess(GetProcessDeltaTime());
+>           break;
+>         default:
+>           break;
+>       }
+>     }
+>   }
+> }
+> #nullable disable
+> ```
+
+生成的 `_Notification` 实现允许 SuperNode 跟踪发生的生命周期事件，并将它们分派到脚本的生命周期方法处理程序，以及应用的 PowerUp 中声明的任何 `OnPowerUp` 方法。
+
+SuperNodes 只为脚本中的生命周期处理程序生成 `switch/case` 语句——它不会为每个 Godot 通知标识符生成一个 `case`。如果不声明 `OnReady` 方法，`switch/case` 语句将没有 `NotificationReady` 的 `case`，从而减少了最终二进制文件中跳转指令的数量。
+
+我们几乎没有触及 SuperNodes 和 PowerUps 的表面。如果你玩得很开心，继续阅读以了解更多！
+
+## 📦 安装
+
+只需将以下包引用添加到项目的 `.csproj` 文件中（您可以在 Nuget 上找到最新版本）。不要忘记在 SuperNodes 包引用中包含 `PrivateAssets="all"` 和 `OutputItemType="analyzer"` 属性！
+
+```xml
+<ItemGroup>
+  <!-- Include SuperNodes as a Source Generator -->
+  <PackageReference Include="Chickensoft.SuperNodes" Version="1.1.0" PrivateAssets="all" OutputItemType="analyzer" />
+
+  <!-- Type definitions and attributes used by SuperNodes. -->
+  <!-- By convention, version will be the same as the generator itself. -->
+  <PackageReference Include="Chickensoft.SuperNodes.Types" Version="1.1.0" />
+</ItemGroup>
+```
+
+> **信息**
+>
+> 因为 SuperNodes 是一个源生成器，所以必须包含 `PrivateAssets="all" OutputItemType="analyzer"` 来告诉构建系统如何使用它。
+
+现在，您的节点脚本已经准备好进行超级充电（supercharged） 了！在下一节中，我们将开始解释如何利用 SuperNodes 提供的功能。
+
+## 🤖 源生成器
+
+### 🔄 生命周期挂钩
+
+前面我们提到过，您可以在 SuperNode 上声明生命周期挂钩。在 SuperNodes 的行话中，“生命周期挂钩”只是在节点生命周期事件发生时应调用的方法的名称，如 `Ready`、`Process`、`EnterTree` 等。
+
+让我们举个例子来解释一下！
+
+```c#
+namespace LifecycleExample;
+
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode("MyLifecycleHook")]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+}
+```
+
+`MySuperNode` 类已经声明了一个名为 `MyLifecycleHook` 的生命周期钩子。因为我们已经声明了这个方法，所以 SuperNodes 将知道从其生成的 `_Notification` 实现中调用它。
+
+以下是生成的代码的样子。
+
+```c#
+#nullable enable
+using Godot;
+using SuperNodes.Types;
+
+namespace LifecycleExample {
+  partial class MySuperNode {
+    public override partial void _Notification(int what) {
+      // Invoke declared lifecycle method handlers.
+      MyLifecycleHook(what);
+    }
+  }
+}
+#nullable disable
+```
+
+现在假设我们有另一个源生成器，它在 `MySuperNode` 类上生成一个名为 `MyLifecycleHook` 的方法。
+
+```c#
+// Pretend this implementation is created by another source generator
+public partial class MySuperNode {
+  public void MyLifecycleHook(int what) {
+    if (what == NotificationReady) {
+      GD.Print($"{Name} is ready.");
+    }
+  }
+}
+```
+
+即使 SuperNodes 无法了解其他源生成器，它仍然可以调用声明的生命周期挂钩方法！
+
+我们甚至可以声明多个生命周期方法挂钩和 PowerUps。
+
+```c#
+[SuperNode("MyLifecycleHook", typeof(MyPowerUp), "MyOtherLifecycleHook")]
+public partial class MySuperNode : Node {
+```
+
+> **注意**
+>
+> 超级节点将按照声明的顺序调用生命周期方法钩子和 PowerUps。在上面的示例中，调用将如下所示：
+>
+> ```c#
+> // Code generated by SuperNodes
+> public override partial void _Notification(int what) {
+>   // Invoke declared lifecycle method handlers.
+>   MyLifecycleHook(what);
+>   MyPowerUp(what);
+>   MyOtherLifecycleHook(what);
+> }
+> ```
+>
+> 生命周期挂钩和 PowerUps 总是在用户定义的生命周期处理程序（如 `OnReady`、`OnProcess`、`OnEnterTree` 等）之前调用。
+
+### 😥 源生成器问题
+
+如果您尝试将第三方源代码生成器与 Godot 的官方源代码生成器一起使用，您可能会遇到以下一些限制：
+
+1. 由于 C# 源代码生成器（按设计）彼此不了解，Godot 源代码生成器无法为其他源代码生成器添加到脚本的任何成员生成 GDScript 绑定。
+
+   同样，其他源生成器添加到脚本实现中的属性将不会使用 `[Export]` 属性导出，因为它们生成的代码对官方 Godot 源生成器不可用。
+
+   > **信息**
+   >
+   > 因为源生成器的运行顺序在中是不可配置的 .NET，没有简单的解决方法。请参阅 godotengine/godot#66597，了解有关源代码生成器支持的危险的更多详细信息。
+
+2. 如果多个第三方源生成器添加相同的生命周期方法实现（如 `_Notification`），则生成的代码将无效。源代码生成器无法知道另一个源代码生成器是否会实现相同的方法，因此无法避免生成重复的代码。
+
+> **提示**
+>
+> 我们无法解决问题 #1，但我们*可以*接受它。从本质上讲，由第三方源生成器添加到类中的任何成员在 Godot 或 GDScript 中都不可见，但在 C# 中可以正常工作。如果您主要用 C# 编写代码，这不会给您带来任何问题。
+
+### 💖 源生成器解决方案
+
+从理论上讲，我们**可以**解决问题 #2。
+
+想象两个源生成器，每个源生成器都希望实现 `_Notification` 以执行响应节点脚本的生命周期事件的操作。如果两个生成器都实现了 `_Notification` 并添加到游戏开发者的项目中，代码甚至不会编译，因为在同一个类中会有两个重复的 `_Notification` 方法实现。
+
+那么，我们该如何解决这个问题呢？就像你小时候父母解决问题的方法一样：分享。
+
+#### 🙋 调解人来救援
+
+超级节点可以充当源生成器之间的中介。如果每个想要进入节点生命周期的生成器都创建了一个包含生命周期挂钩方法的实现，那么 SuperNodes 可以在生成的 `_Notification` 方法中调用每个生成器的方法。之后，用户可以简单地将生成器的生命周期方法挂钩的名称添加到他们的 `[SuperNode]` 属性中，以利用其他源生成器。
+
+例如，假设我们创建了一个名为 `PrintOnReady` 的源生成器，该生成器为每个节点脚本生成一个名称为 `PrintOnReady` 的方法。然后，我们可以将 `PrintOnReady` 生命周期方法名称添加到我们的 `[SuperNode]` 属性中，以利用 `PrinteOnReady` 源生成器。
+
+```c#
+// Hypothetical PrintOnReady source generator output.
+public partial class MySuperNode {
+  public void PrintOnReady(int what) {
+    if (what == NotificationReady) {
+      GD.Print($"{Name} is ready.");
+    }
+  }
+}
+```
+
+在我们的节点脚本中，我们可以用 `PrintOnReady` 生命周期钩子方法名称来注释类。
+
+```c#
+[SuperNode("PrintOnReady")]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+}
+```
+
+这很有效，但我们可以做得更好。让我们使用 `nameof` 来确保我们不会意外拼错生命周期挂钩方法的名称！
+
+```c#
+[SuperNode(nameof(MySuperNode.PrintOnReady))]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+}
+```
+
+哇，有点长。如果我们使用多个生成器呢？
+
+```c#
+[SuperNode(nameof(MySuperNode.GeneratedMethod1, MySuperNode.GeneratedMethod2))]
+public partial class MySuperNode : Node {
+```
+
+嗯，那不太有趣。
+
+如果第三方源生成器注入了一个与它添加到每个节点脚本的方法同名的类，该怎么办？
+
+```c#
+// Somewhere in the generated code for PrintOnReady
+public class PrintOnReady {
+  // Nothing to see here — this only exists to help with nameof!
+}
+```
+
+然后我们可以使用 `nameof` 来获取类的名称，这将与方法相同。
+
+```c#
+[SuperNode(nameof(PrintOnReady))]
+public partial class MySuperNode : Node {
+```
+
+啊，太完美了。我们基本上已经开发了一种约定，如果第三方源生成器希望通过允许超级节点为其进行调解来和谐地协同工作，则可以遵循该约定。
+
+#### 🏪 源生成器作者指南
+
+你是源代码生成器的作者吗？你想制作一个兼容的源生成器，利用 Godot 节点的生命周期，并与使用 SuperNodes 的其他生成器很好地配合吗？如果是这样的话，以下是 Chickensoft 的官方指南，可以帮助您入门：
+
+- ☑️ 源生成器应该注入一个与它打算添加到节点脚本中的生命周期挂钩方法同名的类。
+
+  如果源生成器想要添加不同种类的生命周期挂钩方法（取决于节点），它可以为可能添加的每个方法名称注入一个类。注入类名有助于允许用户以类型安全的方式使用 `nameof` 在 `[SuperNode]` 属性中轻松引用方法的名称。
+
+- ☑️ 首选与生成器名称匹配的生命周期方法挂钩名称，这样用户可以通过自动完成更容易地发现方法名称。
+
+- ☑️ 不要实现其他生命周期方法，如 `_Notification`、`_Ready`、`_Process` 等。每当发生任何事件时，生成器的生命周期方法挂钩都会被调用，使生成器能够过滤掉它关心的事件。
+
+- ☑️ 在源生成器的文档/README中，请包括一条说明，说明其用户还必须引用超级节点，以便在响应生命周期事件时调用生成器。
+
+> **信息**
+>
+> 如果您正在开发源生成器，请在 Discord 上与我们联系！我们很乐意回答您的任何问题，并为您提供一个与社区共享工具的地方！
+
+## 📊 静态反射表
+
+下面是一个应用 PowerUp 的 SuperNode 示例。
+
+```c#
+namespace AdvancedReflection;
+
+using System;
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(MyPowerUp))]
+public partial class MySuperNode : Node2D {
+  public override partial void _Notification(int what);
+
+  [Export(PropertyHint.Range, "0, 100")]
+  public int Probability { get; set; } = 50;
+}
+
+[PowerUp]
+public partial class MyPowerUp : Node2D {
+  [Obsolete("MyName is obsolete — please use Identifier instead.")]
+  public string MyName { get; set; } = nameof(MyPowerUp);
+
+  public string Identifier { get; set; } = nameof(MyPowerUp);
+}
+```
+
+`MySuperNode` 脚本有一个导出到 Godot 编辑器的属性 `Probability`。因为它还应用了 `MyPowerUp`，所以SuperNode 最终获得了两个额外的属性：`MyName` 和 `Identifier`。
+
+在编译时，SuperNodes 将为 `MySuperNode` 生成以下静态反射实现。生成的实现包括属性表、属性的属性、类型、可见性、可变性信息以及获取和设置这些属性值的方法。
+
+> **StaticReflectionExample.MySuperNode_Reflection.g.cs**
+>
+> ```c#
+> #nullable enable
+> using System;
+> using System.Collections.Generic;
+> using System.Collections.Immutable;
+> using Godot;
+> using SuperNodes.Types;
+> 
+> namespace StaticReflectionExample {
+>   partial class MySuperNode : ISuperNode {
+>     public ImmutableDictionary<string, ScriptPropertyOrField> PropertiesAndFields
+>       => ScriptPropertiesAndFields;
+> 
+>     public static ImmutableDictionary<string, ScriptPropertyOrField> ScriptPropertiesAndFields { get; }
+>       = new Dictionary<string, ScriptPropertyOrField>() {
+>       ["Identifier"] = new ScriptPropertyOrField(
+>         Name: "Identifier",
+>         Type: typeof(string),
+>         IsField: false,
+>         IsMutable: true,
+>         IsReadable: true,
+>         ImmutableDictionary<string, ImmutableArray<ScriptAttributeDescription>>.Empty
+>       ),
+>       ["MyName"] = new ScriptPropertyOrField(
+>         Name: "MyName",
+>         Type: typeof(string),
+>         IsField: false,
+>         IsMutable: true,
+>         IsReadable: true,
+>         new Dictionary<string, ImmutableArray<ScriptAttributeDescription>>() {
+>           ["global::System.ObsoleteAttribute"] = new ScriptAttributeDescription[] {
+>             new ScriptAttributeDescription(
+>               Name: "ObsoleteAttribute",
+>               Type: typeof(global::System.ObsoleteAttribute),
+>               ArgumentExpressions: new dynamic[] {
+>                 "MyName is obsolete — please use Identifier instead.",
+>               }.ToImmutableArray()
+>             )
+>           }.ToImmutableArray()
+>         }.ToImmutableDictionary()
+>       ),
+>       ["Probability"] = new ScriptPropertyOrField(
+>         Name: "Probability",
+>         Type: typeof(int),
+>         IsField: false,
+>         IsMutable: true,
+>         IsReadable: true,
+>         new Dictionary<string, ImmutableArray<ScriptAttributeDescription>>() {
+>           ["global::Godot.ExportAttribute"] = new ScriptAttributeDescription[] {
+>             new ScriptAttributeDescription(
+>               Name: "ExportAttribute",
+>               Type: typeof(global::Godot.ExportAttribute),
+>               ArgumentExpressions: new dynamic[] {
+>                 Godot.PropertyHint.Range, "0, 100",
+>               }.ToImmutableArray()
+>             )
+>           }.ToImmutableArray()
+>         }.ToImmutableDictionary()
+>       )
+>       }.ToImmutableDictionary();
+> 
+>     public TResult GetScriptPropertyOrFieldType<TResult>(
+>       string scriptProperty, ITypeReceiver<TResult> receiver
+>     ) => ReceiveScriptPropertyOrFieldType(scriptProperty, receiver);
+> 
+>     public static TResult ReceiveScriptPropertyOrFieldType<TResult>(
+>       string scriptProperty, ITypeReceiver<TResult> receiver
+>     ) {
+>       switch (scriptProperty) {
+>         case "Identifier":
+>           return receiver.Receive<string>();
+>         case "MyName":
+>           return receiver.Receive<string>();
+>         case "Probability":
+>           return receiver.Receive<int>();
+>         default:
+>           throw new System.ArgumentException(
+>             $"No field or property named '{scriptProperty}' was found on MySuperNode."
+>           );
+>       }
+>     }
+> 
+>     public dynamic GetScriptPropertyOrField(string scriptProperty) {
+>       switch (scriptProperty) {
+>         case "Identifier":
+>           return Identifier;
+>         case "MyName":
+>           return MyName;
+>         case "Probability":
+>           return Probability;
+>         default:
+>           throw new System.ArgumentException(
+>             $"No field or property named '{scriptProperty}' was found on MySuperNode."
+>           );
+>       }
+>     }
+> 
+>     public void SetScriptPropertyOrField(string scriptProperty, dynamic value) {
+>       switch (scriptProperty) {
+>         case "Identifier":
+>           Identifier = value;
+>           break;
+>         case "MyName":
+>           MyName = value;
+>           break;
+>         case "Probability":
+>           Probability = value;
+>           break;
+>         default:
+>           throw new System.ArgumentException(
+>             $"No field or property named '{scriptProperty}' was found on MySuperNode."
+>           );
+>       }
+>     }
+>   }
+> }
+> #nullable disable
+> ```
+
+### 🎫 可用信息
+
+这是大量生成的代码，需要同时查看。让我们仔细看看发生了什么！
+
+SuperNodes 在每个 SuperNode 类上生成一个名为 `ScriptPropertiesAndFields` 的静态属性。它还生成一个实例成员 `PropertiesAndFields`，该成员只返回 `ScriptPropertiesAndFields` 的值。
+
+```c#
+    public ImmutableDictionary<string, ScriptPropertyOrField> PropertiesAndFields
+      => ScriptPropertiesAndFields;
+
+    public static ImmutableDictionary<string, ScriptPropertyOrField> ScriptPropertiesAndFields { get; }
+      = new Dictionary<string, ScriptPropertyOrField>() {
+```
+
+> **提示**
+>
+> `PropertiesAndFields` 实例属性使外部对象类更容易访问有关特定实例类的静态信息。
+
+`ScriptPropertiesAndFields` 只是在 SuperNode 类（及其任何应用的 PowerUps）中找到的属性和字段名称到 `ScriptPropertyOrField` 对象的映射。
+
+> **注意**
+>
+> `SuperNodes.Types` 包必须包含在每个想要使用 SuperNodes 的项目中，以及任何想要利用 SuperNodes 静态反射功能的程序集中。如果模型是在包中注入而不是共享的，则每个程序集都将有自己的模型副本，这将使跨程序集静态反射更加困难。
+>
+> 有关如何设置超级节点及其运行时类型的信息，请参阅安装。
+
+`ScriptPropertyOrField` 模型包含有关成员是属性还是字段、其可变性和可读性的信息，以及应用于成员的属性字典。
+
+以下是关于 `MyPowerUp` 提供的 `MyName` 属性的详细信息，该属性具有 `[Obsolete]` 属性。
+
+```c#
+// ...
+public static ImmutableDictionary<string, ScriptPropertyOrField> ScriptPropertiesAndFields { get; }
+  = new Dictionary<string, ScriptPropertyOrField>() {
+  // ...
+  ["MyName"] = new ScriptPropertyOrField(
+    Name: "MyName",
+    Type: typeof(string),
+    IsField: false,
+    IsMutable: true,
+    IsReadable: true,
+    new Dictionary<string, ImmutableArray<ScriptAttributeDescription>>() {
+      ["global::System.ObsoleteAttribute"] = new ScriptAttributeDescription[] {
+        new ScriptAttributeDescription(
+          Name: "ObsoleteAttribute",
+          Type: typeof(global::System.ObsoleteAttribute),
+          ArgumentExpressions: new dynamic[] {
+            "MyName is obsolete — please use Identifier instead.",
+          }.ToImmutableArray()
+        )
+      }.ToImmutableArray()
+    }.ToImmutableDictionary()
+  ),
+  // ...
+```
+
+属性字典是属性的完整类型名称到属性描述数组的映射，因为某些属性允许应用多个相同类型。
+
+与 `ScriptPropertyOrField` 模型类似，每个 `ScriptAttributeDescription` 模型都包含有关属性的友好名称、类型以及传递给属性构造函数的参数的信息。由于这些参数是 C# 常量，因此可以在不可变的动态数组中提供。
+
+> **信息**
+>
+> 如果你对动态类型不是很熟悉，你可以在这里阅读更多关于它们的信息。
+
+### 🧐 自省（Introspection）
+
+使用生成的反射实用程序，我们可以在代码库中的任何位置操作超级节点的属性和字段。
+
+#### 📜 SuperNode 自省
+
+在脚本中，您可以访问 `PropertiesAndFields` 字典以获取有关特定属性或字段的信息。
+
+```c#
+[SuperNode(typeof(MyPowerUp))]
+public partial class MySuperNode : Node2D {
+  public override partial void _Notification(int what);
+
+  [Export(PropertyHint.Range, "0, 100")]
+  public int Probability { get; set; } = 50;
+
+  public void OnReady() {
+    foreach (var property in PropertiesAndFields.Keys) {
+      GD.Print($"{property} = {GetScriptPropertyOrField(property)}");
+    }
+    // Change probability to 100
+    SetScriptPropertyOrField("Probability", 100);
+  }
+}
+```
+
+#### 🔋 PowerUp 自省
+
+在 PowerUp 内部，如果（且仅当）为生成的反射表声明存根，则也可以访问它们。您可以使用 `[PowerUpIgnore]` 属性标记存根，以防止它们被复制到 SuperNode 实现中并导致重复的定义错误。
+
+> **提示**
+>
+> 为生成的反射表声明存根的最简单方法是将 PowerUp 类标记为 `abstract`。
+
+```c#
+[PowerUp]
+public abstract partial class MyPowerUp : Node2D {
+  [Obsolete("MyName is obsolete — please use Identifier instead.")]
+  public string MyName { get; set; } = nameof(MyPowerUp);
+
+  public string Identifier { get; set; } = nameof(MyPowerUp);
+
+  #region StaticReflectionStubs
+
+  [PowerUpIgnore]
+  public abstract ImmutableDictionary<string, ScriptPropertyOrField> PropertiesAndFields { get; }
+
+  [PowerUpIgnore]
+  public abstract dynamic GetScriptPropertyOrField(string name);
+
+  [PowerUpIgnore]
+  public abstract void SetScriptPropertyOrField(string name, dynamic value);
+
+  #endregion StaticReflectionStubs
+
+  [PowerUpIgnore]
+
+  public void OnMyPowerUp(int what) {
+    foreach (var property in PropertiesAndFields.Keys) {
+      GD.Print($"{property} = {GetScriptPropertyOrField(property)}");
+    }
+    // Change identifier
+    SetScriptPropertyOrField("Identifier", "AnotherIdentifier");
+  }
+}
+```
+
+#### 📦 交叉装配自省
+
+如果您在另一个程序集中编写代码，该程序集希望从使用 SuperNodes 的程序集中加载代码，那么您可以访问公共生成的静态反射实用程序，就像您在代码库中一样。
+
+```c#
+using AnAssemblyUsingSuperNodes;
+using SuperNodes.Types;
+
+public static void Main() {
+  var mySuperNode = new MySuperNode();
+  var properties = mySuperNode.PropertiesAndFields.Keys;
+
+  // ...
+}
+```
+
+> **提示**
+>
+> 如果要导入多个使用 SuperNodes 并希望存储对 `ScriptPropertyOrField` 对象的引用的程序集，则可以包括 `SuperNodes.Types` 包，以便每个程序集共享相同的反射模型定义。
+
+## 🔄 生命周期处理程序
+
+SuperNodes 允许您实现与 Godot 节点和对象通知相对应的方法，如用于 `NotificationReady` 的 `OnReady` 或代替 `NotificationProcess` 的 `OnProcess`。
+
+同样，还有一个特殊的 `OnNotification(int what)` 方法，可以在收到通知时随时调用。由于 SuperNodes 必须实现 `_Notification(int what)` 本身，这是在脚本中立即接收通知的唯一方法。
+
+以下列表包含可以在 SuperNode 中实现的每个可能的生命周期处理程序。每一个对应于 `Notification` 类型的可以在 `Godot.Node` 或 `Godot.Object` 中找到。
+
+如果 Godot 的通知被更新或重命名，则可以发布相应调整的新版本的 SuperNodes。
+
+请注意，`OnProcess` 和 `OnPhysicsProcess` 是特殊情况，它们都有一个单独的 `double delta` 参数，该参数分别由 `GetProcessDeltaTime()` 和 `GetPhysicsProcessDeltaTime()` 提供。
+
+- `Godot.Object` 通知
+  - `OnPostinitialize` = `NotificationPostinitialize`
+  - `OnPredelete` = `NotificationPredelete`
+- `Godot.Node` 通知
+  - `OnNotification(what)` = `override void _Notification(what)`
+  - `OnEnterTree` = `NotificationEnterTree`
+  - `OnWmWindowFocusIn` = `NotificationWmWindowFocusIn`
+  - `OnWmWindowFocusOut` = `NotificationWmWindowFocusOut`
+  - `OnWmCloseRequest` = `NotificationWmCloseRequest`
+  - `OnWmSizeChanged` = `NotificationWmSizeChanged`
+  - `OnWmDpiChange` = `NotificationWmDpiChange`
+  - `OnVpMouseEnter` = `NotificationVpMouseEnter`
+  - `OnVpMouseExit` = `NotificationVpMouseExit`
+  - `OnOsMemoryWarning` = `NotificationOsMemoryWarning`
+  - `OnTranslationChanged` = `NotificationTranslationChanged`
+  - `OnWmAbout` = `NotificationWmAbout`
+  - `OnCrash` = `NotificationCrash`
+  - `OnOsImeUpdate` = `NotificationOsImeUpdate`
+  - `OnApplicationResumed` = `NotificationApplicationResumed`
+  - `OnApplicationPaused` = `NotificationApplicationPaused`
+  - `OnApplicationFocusIn` = `NotificationApplicationFocusIn`
+  - `OnApplicationFocusOut` = `NotificationApplicationFocusOut`
+  - `OnTextServerChanged` = `NotificationTextServerChanged`
+  - `OnWmMouseExit` = `NotificationWmMouseExit`
+  - `OnWmMouseEnter` = `NotificationWmMouseEnter`
+  - `OnWmGoBackRequest` = `NotificationWmGoBackRequest`
+  - `OnEditorPreSave` = `NotificationEditorPreSave`
+  - `OnExitTree` = `NotificationExitTree`
+  - `OnMovedInParent` = `NotificationMovedInParent`
+  - `OnReady` = `NotificationReady`
+  - `OnEditorPostSave` = `NotificationEditorPostSave`
+  - `OnUnpaused` = `NotificationUnpaused`
+  - `OnPhysicsProcess(double delta)` = `NotificationPhysicsProcess`
+  - `OnProcess(double delta)` = `NotificationProcess`
+  - `OnParented` = `NotificationParented`
+  - `OnUnparented` = `NotificationUnparented`
+  - `OnPaused` = `NotificationPaused`
+  - `OnDragBegin` = `NotificationDragBegin`
+  - `OnDragEnd` = `NotificationDragEnd`
+  - `OnPathRenamed` = `NotificationPathRenamed`
+  - `OnInternalProcess` = `NotificationInternalProcess`
+  - `OnInternalPhysicsProcess` = `NotificationInternalPhysicsProcess`
+  - `OnPostEnterTree` = `NotificationPostEnterTree`
+  - `OnDisabled` = `NotificationDisabled`
+  - `OnEnabled` = `NotificationEnabled`
+  - `OnSceneInstantiated` = `NotificationSceneInstantiated`
+
+## 🧬 高级使用
+
+在第一节中，我们解释了 PowerUps 的基本知识以及如何将它们应用于 SuperNodes。
+
+PowerUps 具有许多功能，允许您以以前只有使用源生成器才能实现的方式增强节点脚本。从某种意义上说，PowerUps 是一种轻量级的静态元编程工具。
+
+#### 🧰 何时使用 PowerUps
+
+向节点脚本中自由添加代码是一项艰巨的任务，因此我们建议为可能应用于大量脚本的系统保留 PowerUps。序列化、依赖项注入、日志记录、分析或与其他组件的集成等都是 PowerUps 的好候选者。
+
+如果你疯狂地使用 PowerUps 进行游戏逻辑，你最终会得到很多生成的代码，这些代码很难阅读和调试。如果你不确定是否应该把一些东西做成 PowerUp，可以随时跳到 Chickensoft Discord 寻求建议。
+
+#### 🪢 通电限制
+
+PowerUps 可以通过扩展它们可以应用到的最不特定的类型来约束它们可以应用的 SuperNodes 的类型。
+
+> **提示**
+> 在 PowerUp 中扩展基类会将 PowerUp 的使用限制为作为扩展类的子类（或子类型）的 SuperNodes。
+
+例如，如果希望 PowerUp 能够应用于 `Node2D`（或其任何子代），则可以在 PowerUp 类中扩展 `Node2D`。如果不扩展 `Node2D` 或其任何子代的 SuperNodes 尝试应用 PowerUp，它们将在编译时出错。
+
+```c#
+namespace PowerUpConstraints;
+
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(MyPowerUp))]
+public partial class MySuperNode : Node3D {
+  public override partial void _Notification(int what);
+}
+
+[PowerUp]
+public partial class MyPowerUp : Node2D { }
+```
+
+> **危险**
+>
+> 由于 `Node3D` 不是 `Node2D` 的祖先，尝试构建上面的代码会导致 `SUPER_NODE_INVALID_POWER_UP` 错误。
+
+#### 💎 命名冲突
+
+如果将两个 PowerUps 应用于一个都声明同一成员的节点，则会出现编译时错误。
+
+```c#
+[SuperNode(typeof(PowerUpA), typeof(PowerUpB))]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+  // ...
+}
+
+[PowerUp]
+public partial class PowerUpA : Node {
+  public string MyName { get; set; } = nameof(PowerUpA);
+}
+
+[PowerUp]
+public partial class PowerUpB : Node {
+  public string MyName { get; set; } = nameof(PowerUpB);
+}
+```
+
+> **危险**
+>
+> 上面的示例导致以下编译器错误：
+>
+> ```
+> The type 'ExampleNode' already contains a definition for 'MyName'
+> ```
+
+聪明的读者可能会认为这是来自多重继承的经典“钻石问题”。
+
+幸运的是，您可以利用 C# 的显式接口实现语法来解决 PowerUps 之间的命名冲突。
+
+```c#
+namespace NamingConflictWorkaround;
+
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(PowerUpA), typeof(PowerUpB))]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+}
+
+public interface IPowerUpA {
+  string MyName { get; }
+}
+
+[PowerUp]
+public class PowerUpA : IPowerUpA {
+  string IPowerUpA.MyName { get; } = nameof(PowerUpA);
+}
+
+public interface IPowerUpB {
+  string MyName { get; }
+}
+
+[PowerUp]
+public class PowerUpB : IPowerUpB {
+  string IPowerUpB.MyName { get; } = nameof(PowerUpB);
+}
+```
+
+在接下来的几节中，我们将解释 PowerUps 的更多高级功能，并提供有关如何在项目中利用这些功能的信息。
+
+### 🔋 PowerUps 和接口
+
+PowerUps 可以代表 SuperNode 实现接口。
+
+每当 SuperNode 应用 PowerUp 时，该 SuperNode 都会实现 PowerUp 也已实现的任何接口。
+
+```c#
+namespace ImplementedInterfaceExample;
+
+using System.Diagnostics;
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(MyPowerUp))]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+
+  public void OnReady()
+    => Debug.Assert(
+      this is IMyPowerUp, "MySuperNode should implement IMyPowerUp"
+    );
+}
+
+public interface IMyPowerUp { }
+
+[PowerUp]
+public class MyPowerUp : IMyPowerUp { }
+```
+
+在编译时，SuperNodes将生成 `MySuperNode` 的实现，并应用 PowerUp 的内容，包括 PowerUp 实现的所有接口！
+
+```c#
+// ImplementedInterfaceExample.MySuperNode_MyPowerUp.g.cs
+#nullable enable
+using Godot;
+using SuperNodes.Types;
+
+namespace ImplementedInterfaceExample {
+  partial class MySuperNode : global::ImplementedInterfaceExample.IMyPowerUp
+  {
+  }
+}
+#nullable disable
+```
+
+### 🪫 泛型 PowerUps
+
+PowerUps 支持泛型参数。使用 PowerUps 作为泛型混合插件可以实现那些在没有昂贵的运行时反射的情况下难以实现、痛苦或不可能实现的模式。
+
+#### 🔌 创建泛型 PowerUp
+
+创建泛型 PowerUp 与创建泛型类相同：
+
+```c#
+namespace GenericPowerUpExample;
+
+using Godot;
+using SuperNodes.Types;
+
+[PowerUp]
+public partial class MyPowerUp<T> : Node {
+  public T Value { get; set; } = default!;
+
+  public void OnMyPowerUp(int what) {
+    if (what == NotificationReady) {
+      if (Value is string) {
+        GD.Print("You gave me a string!");
+      }
+      else if (Value is int) {
+        GD.Print("You gave me an int!");
+      }
+      else {
+        GD.Print("You gave me something else!");
+      }
+    }
+  }
+}
+```
+
+任何应用此 PowerUp 的 SuperNode 都将获得 `T` 指定类型的 `Value` 属性。
+
+#### ⚡️ 使用泛型 PowerUp
+
+要使用泛型 PowerUp，只需在应用 PowerUp 时指定类型参数：
+
+```c#
+namespace GenericPowerUpExample;
+
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(MyPowerUp<string>))]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+
+  public void OnReady() => System.Diagnostics.Debug.Assert(Value is not null);
+}
+```
+
+#### 👯 类型替换
+
+在编译时，SuperNodes 生成器将用 `[SuperNode]` 属性提供给它的类型参数替换 PowerUp 上的类型参数。
+
+以下是为上面的示例生成的代码：
+
+> **GenericPowerUpExample.MySuperNode_MyPowerUp.g.cs**
+>
+> ```c#
+> #nullable enable
+> using Godot;
+> using SuperNodes.Types;
+> 
+> namespace GenericPowerUpExample {
+>   partial class MySuperNode
+>   {
+>     public string Value { get; set; } = default !; // <-- Type was changed!
+>     public void OnMyPowerUp(int what)
+>     {
+>       if (what == NotificationReady)
+>       {
+>         if (Value is string)
+>         {
+>           GD.Print("You gave me a string!");
+>         }
+>         else if (Value is int)
+>         {
+>           GD.Print("You gave me an int!");
+>         }
+>         else
+>         {
+>           GD.Print("You gave me something else!");
+>         }
+>       }
+>     }
+>   }
+> }
+> #nullable disable
+> ```
+
+### ♻️ 共享 PowerUp
+
+要共享 PowerUp，我们需要能够共享它的代码，而不是其内容的编译 `.dll`。如果我们无法共享 PowerUp 的源代码，则 SuperNodes 生成器无法将其应用于 SuperNode。
+
+幸运的是，Nuget 可以用来制作纯源代码的 Nuget 包。
+
+#### 📑 仅源代码 Nuget 包
+
+当一个项目引用纯源代码包时，项目中的任何源代码生成器都可以看到纯源代码的包的内容并从中生成代码。这正是我们想要的！
+
+SuperNodes 包含一个仅限源代码的包示例，您可以根据自己的喜好复制和自定义该包。只需复制它并配置 `.csproj` 文件中的字段以匹配您的项目。
+
+项目中包含的任何源代码都将自动复制到 nuget 包的内容文件中进行分发，所以可以根据需要添加任意多的源文件！
+
+#### 📄 使用仅源代码包
+
+使用纯源代码包与使用普通包有点不同。
+
+##### 🖥 在本地
+
+通过 `<ProjectReference>` 在本地导入仅限源代码的包是不起作用的，因为导入的源代码不会提供给使用项目的源生成器。
+
+要在本地使用仅限源代码的 PowerUp 包，请首先构建项目。
+
+```shell
+cd SharedPowerUps # or wherever your source-only PowerUp project is
+dotnet build
+```
+
+在要导入仅限源代码的 PowerUp 包的项目的解决方案文件旁边添加 `nuget.config`。
+
+在 `nuget.config` 文件中，添加一个密钥（任何名称都可以），该密钥的值包含仅限源代码的 PowerUp 包的路径：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <config>
+  </config>
+  <settings>
+  </settings>
+  <packageSources>
+    <add key="Local Packages" value="/Somewhere/LocalPackages" />
+  </packageSources>
+</configuration>
+```
+
+`nuget.config` 中到本地程序包的路径应与纯源 PowerUp 程序包的 `*.csproj` 文件中的 `<OutputPath>` 相同（或者您可以手动将纯源程序包 `.nupkg` 移动到 `nuget.config` 中指定的本地程序包存储路径）。
+
+最后，在想要使用纯源代码包的项目中，将 `<PackageReference>` 添加到仅源代码包中，如下所示（确保将名称替换为仅源代码的包的名称）。
+
+```xml
+<ItemGroup>
+  <PackageReference Include="SharedPowerUps" Version="1.0.0" PrivateAssets="all" />
+</ItemGroup>
+```
+
+> **注意**
+>
+> 您必须包括 `PrivateAssets="all"`。
+
+`nuget.config` 文件将指示 `dotnet` 或 `nuget` 工具从本地路径正确解析包。
+
+> **注意**
+>
+> 如果您对仅限源代码的 PowerUp 软件包进行更改，则 `dotnet restore` 不会始终了解这些更改。若要强制项目清除其包缓存，请运行以下操作：
+>
+> ```shell
+> cd your_project_using_a_source_only_package
+> dotnet nuget locals --clear all
+> dotnet build
+> ```
+
+##### 📦 来自 Nuget
+
+如果您已经成功发布了纯源代码包，那么使用它应该非常简单，只需将以下内容添加到项目中即可：
+
+```xml
+<ItemGroup>
+  <PackageReference Include="MySharedPowerUps" Version="1.0.0" PrivateAssets="all" />
+</ItemGroup>
+```
+
+### 🔬 高级静态反射
+
+SuperNodes 可以做一些很酷的编码技巧。如果你想学习如何使用它们，你来对地方了！
+
+#### 🗂 访问类型信息
+
+通过在生成的表中查找属性或字段，可以轻松访问 SuperNodes 上属性或字段的普通 `Type` 信息。
+
+```c#
+// ...
+public void OnReady() {
+  var myPropertyType = PropertiesAndFields("MyProperty").Type;
+}
+// ...
+```
+
+> **危险**
+>
+> 不幸的是，从 `Type` 对象转换为泛型类型参数需要在运行时使用反射或代码生成。
+>
+> 不能在 C# 中将变量用作类型参数，因为类型必须在编译时解析。
+>
+> ```c#
+> public void OnReady() {
+>   var myPropertyType = PropertiesAndFields("MyProperty").Type;
+> 
+>   // doesn't work — can't use a variable as a type argument.
+>   myService.SomeMethod<myPropertyType>();
+> }
+> ```
+>
+> 有关更多信息，请随意阅读有关具体化和参数多态性的内容。这听起来像是一种宗教，但事实并非如此。尽管如此，如果你和编程语言理论家交谈，你就不会被完全误导让你留下印象这是一个邪教。
+
+SuperNodes 提供了一种机制，可以将属性或字段的类型信息作为泛型类型参数进行访问。
+
+让我们假设我们正在尝试创建一个 SuperNode，它将序列化它所包含的所有属性和字段。为了举例说明，我们将定义一个伪序列化程序，如下所示：
+
+```c#
+public interface ISerializer {
+  bool Serialize<T>(T value);
+  T Deserialize<T>(dynamic value);
+}
+
+// Stub implementation for example — build or use your own serializer!
+public class MySerializer : ISerializer {
+  public bool Serialize<T>(T value) => true;
+  public T Deserialize<T>(dynamic value) => default!;
+}
+```
+
+> **提示**
+>
+> 在运行时将属性或字段的类型作为泛型类型参数进行访问，这在编写与（例如，序列化程序）接口的代码时会有所帮助。也许你会发现它有其他用途！
+
+接下来，我们将创建一个类型接收器，用于调用序列化程序的 `Serialize` 方法。当我们创建它时，我们将为它提供序列化程序和要序列化的值。
+
+类型接收器实现 `ITypeReceiver.Receive<T>()`，一个由 `SuperNodes.Types` 提供的接口。它允许我们将感兴趣的属性的类型作为类型参数而不是 `Type` 对象来接收。
+
+```c#
+public class MySerializerHelper : ITypeReceiver<bool> {
+  public ISerializer Serializer { get; }
+  public dynamic Value { get; }
+
+  public MySerializerHelper(ISerializer serializer, dynamic value) {
+    Serializer = serializer;
+    Value = value;
+  }
+
+  public bool Receive<TSerialize>()
+    => Serializer.Serialize<TSerialize>(Value);
+}
+```
+
+> **注意**
+>
+> 为什么我们必须创建一个实现接口的类？
+>
+> 不幸的是，C# 不支持带有泛型类型参数的匿名函数（lambdas）。为了解决这个问题，我们必须定义一个实现泛型方法的类，这样我们才能“接收”类型参数。
+
+最后，我们将创建一个 SuperNode，它在调用生成的实用程序方法 `GetScriptPropertyOrFieldType` 时使用我们的类型接收器。要将属性的类型作为类型参数，我们将所需属性的名称和类型接收器的实例传递给 `GetScriptPropertyOrFieldType`。
+
+```c#
+namespace AccessingTypesExample;
+
+using System;
+using Godot;
+using GoDotTest;
+using SuperNodes.Types;
+
+[SuperNode]
+public partial class MySuperNode : Node {
+  /// <summary>This property will be serialized!</summary>
+  public string MyName { get; } = nameof(MySuperNode);
+
+  public override partial void _Notification(int what);
+
+  private readonly ISerializer _serializer = new MySerializer();
+
+  public void OnReady() {
+    foreach (var memberName in PropertiesAndFields.Keys) {
+      var member = PropertiesAndFields[memberName];
+
+      if (!member.IsReadable || member.IsField) { continue; }
+
+      var value = GetScriptPropertyOrField(memberName);
+      var serializerHelper = new MySerializerHelper(_serializer, value);
+      var result = GetScriptPropertyOrFieldType(memberName, serializerHelper);
+      if (!result) {
+        throw new InvalidOperationException(
+          $"Failed to serialize {memberName}."
+        );
+      }
+    }
+  }
+}
+```
+
+在我们的 `OnReady` 方法中，我们获取自己身上所有属性和字段的名称，并对它们进行迭代。
+
+一旦我们有了属性名称和值，我们就会创建类型接收器 `MySerializerHelper` 的实例，并调用 `GetScriptPropertyOrFieldType` 工具方法。然后，`GetScriptPropertyOrFieldType` 工具方法将使用我们请求的属性类型调用类型接收器的 `Receive<T>()` 方法。在类型接收器中，我们使用属性的泛型类型来调用我们的序列化程序——仅此而已！
+
+#### PowerUp  ↔️ SuperNode 通信
+
+PowerUp 的设计方式不应使其需要自己的属性或字段由其应用的 SuperNode 初始化。这样做将要求 SuperNode 在其构造函数或其他生命周期方法中配置其从 PowerUp 获得的成员，这将违背 PowerUp 在 SuperNode 没有任何配置或知识的情况下向 SuperNode 添加功能的目的。
+
+如果您发现自己想在 PowerUp 之外配置 PowerUp，您可能可以使用组合。
+
+然而，在 PowerUp 上公开静态属性是完全可以接受的，该属性为 PowerUp 的每个应用程序配置其使用情况。例如，当主场景加载时，它可以在每个需要配置的 PowerUp 类上配置静态属性。
+
+要在代码中引用 PowerUp 自己的静态属性，必须通过 PowerUp 的类名专门引用静态属性的名称。此外，您应该记得将 `[PowerUpIgnore]` 添加到静态属性中。如果不这样做，静态属性将被复制到应用 PowerUp 的任何超级节点中。
+
+```c#
+#pragma warning disable IDE0002
+[PowerUp]
+public partial class MyPowerUp : Node {
+  [PowerUpIgnore]
+  public static string NameToGreet { get; set; } = default!;
+
+  public void OnMyPowerUp(int what) {
+    if (what == NotificationReady) {
+      GD.Print($"Hello, {MyPowerUp.NameToGreet}!");
+    }
+  }
+}
+#pragma warning restore IDE0002
+```
+
+> **提示**
+>
+> 禁用上面的 IDE0002 可以防止 .NET 建议我们简化引用 `MyPowerUp.NameToGreet` 到 `NameToGreet`。在这种特殊情况下，我们必须完全解析名称，否则 SuperNodes 生成器会认为我们指的是应用 PowerUp 的 SuperNode 上的静态属性。
+
+#### 🧮 显式接口实现
+
+值得一提的是，静态反射支持显式接口实现语法。
+
+为了好玩，这里有一个显式实现接口的通用 PowerUp 示例。
+
+```c#
+namespace ExplicitInterfaceImplementationExample;
+
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(MyPowerUp<int>))]
+public partial class MySuperNode : Node {
+  public override partial void _Notification(int what);
+
+  public void OnReady() { }
+}
+
+[PowerUp]
+public partial class MyPowerUp<T> : Node, IMyPowerUp<T> {
+  T IMyPowerUp<T>.Value { get; } = default!;
+}
+
+public interface IMyPowerUp<T> {
+  T Value { get; }
+}
+```
+
+如果我们查看为 MySuperNode 生成的代码，我们会发现 SuperNodes 生成器将 `Value` 属性引用为 `IMyPowerUp<int>.Value`
+
+```c#
+public static ImmutableDictionary<string, ScriptPropertyOrField> ScriptPropertiesAndFields { get; }
+  = new Dictionary<string, ScriptPropertyOrField>() {
+  ["IMyPowerUp<int>.Value"] = new ScriptPropertyOrField(
+    Name: "IMyPowerUp<int>.Value",
+    Type: typeof(int),
+    IsField: false,
+    IsMutable: false,
+    IsReadable: true,
+    ImmutableDictionary<string, ImmutableArray<ScriptAttributeDescription>>.Empty
+  )
+  }.ToImmutableDictionary();
+```
+
