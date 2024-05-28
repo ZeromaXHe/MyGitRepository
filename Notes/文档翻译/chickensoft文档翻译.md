@@ -2678,3 +2678,896 @@ public static ImmutableDictionary<string, ScriptPropertyOrField> ScriptPropertie
   }.ToImmutableDictionary();
 ```
 
+# 💉 AutoInject
+
+https://github.com/chickensoft-games/AutoInject
+
+在构建时为 C# Godot 脚本注入基于节点的依赖项。
+
+## 📘 背景
+
+当游戏脚本彼此强耦合时，很快就会变得难以维护。依赖注入的各种方法通常用于促进弱耦合。对于 Godot 游戏中的 C# 脚本，提供了 AutoInject，以允许场景树中较高的节点向树中较低的子节点提供依赖关系。
+
+AutoInject 借用了其他基于树的依赖项供应系统中的 `Provider` 和 `Dependent` 的概念。`Provider` 节点为其子节点提供值。`Dependent` 节点从其祖先节点请求值。
+
+因为 `_Ready/OnReady` 是在 Godot 中首先在树下的节点脚本上调用的（请参阅了解树顺序以了解更多信息），所以树中较低的节点通常无法访问它们所需的值，因为直到它们的祖先有机会用自己的 `_Ready/OnReady` 方法创建它们时，这些值才存在。AutoInject 通过临时订阅它发现的仍在从每个 `Dependent` 初始化的每个 `Provider` 来解决这个问题，直到它知道依赖关系已经解决。
+
+在游戏场景树的各个部分上提供“自上而下”的节点有几个优点：
+
+- ✅ 从属节点可以找到提供所需值的最近的祖先，从而允许轻松覆盖提供的值（在需要时）。
+- ✅ 节点可以在场景树中移动，而无需更新其依赖关系。
+- ✅ 最终位于不同提供程序下的节点将自动使用该新提供程序的值。
+- ✅ 脚本不必相互了解。
+- ✅ 数据的自然流动模仿了 Godot 引擎中使用的其他模式。
+- ✅ 通过提供默认的回退值，从属脚本仍然可以在独立的场景中运行。
+- ✅ 将依赖关系范围化到场景树可防止在提供程序节点上方存在无效的值。
+- ✅ 解析发生在 O(n) 中，其中 `n` 是请求从属节点（通常只有少数节点要搜索）上方的树的高度。对于深层树，通过在树的下游重新提供依赖关系来“反映”依赖关系，可以进一步加快速度。
+- ✅ 当节点进入场景树时，将解析依赖项，从而允许随后进行 O(1) 访问。退出并重新进入场景树将再次触发相关性解析过程。
+- ✅ 脚本既可以是从属脚本，也可以是提供程序。
+
+## 📦 安装
+
+AutoInject 是一个仅限源代码的包，它使用 SuperNodes 源代码生成器在构建时生成必要的依赖项注入代码。您需要在项目中包括SuperNodes、SuperNodes 运行时类型和 AutoInject。所有的包装都非常轻。
+
+只需将以下内容添加到项目的 `.csproj` 文件中即可。请务必检查 Nuget 上每个软件包的最新版本。
+
+```xml
+<ItemGroup>
+    <PackageReference Include="Chickensoft.SuperNodes" Version="1.8.0" PrivateAssets="all" OutputItemType="analyzer" />
+    <PackageReference Include="Chickensoft.SuperNodes.Types" Version="1.8.0" />
+    <PackageReference Include="Chickensoft.AutoInject" Version="1.6.0" PrivateAssets="all" />
+</ItemGroup>
+```
+
+## 🐔 Provider
+
+若要为子代节点提供值，请将 `Provider` PowerUp 添加到节点脚本中，并为要提供的每个值实现 `IProvide<T>`。
+
+一旦提供程序初始化了它们提供的值，它们就必须调用 `Provide` 方法来通知 AutoInject，它们所提供的值现在可用。
+
+下面的示例显示了一个节点脚本，该脚本为其子体提供 `string` 值。
+
+```c#
+namespace MyGameProject;
+
+using Chickensoft.AutoInject;
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(Provider))]
+public partial class MyProvider : Node, IProvide<string> {
+  public override partial void _Notification(int what);
+
+  string IProvide<string>.Value() => "Value"
+
+  // Call the Provide() method once your dependencies have been initialized.
+  public void OnReady() => Provide();
+
+  public void OnProvided() {
+    // You can optionally implement this method. It gets called once you call
+    // Provide() to inform AutoInject that the provided values are now 
+    // available.
+  }
+}
+```
+
+## 🐣 Dependent
+
+要在某个子节点中使用提供的值，请将 `Dependent` PowerUp 添加到子节点脚本中，并用 `[Dependency]` 属性标记每个依赖项。当您的节点准备好并开始依赖项解析过程时，SuperNodes 将自动通知 AutoInject。
+
+一旦解析了依赖节点中的所有依赖项，将调用依赖节点的 `OnResolved` 方法（如果被重写）。
+
+```c#
+namespace MyGameProject;
+
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(Dependent))]
+public partial class StringDependent : Node {
+  public override partial void _Notification(int what);
+
+  [Dependency]
+  public string MyDependency => DependOn<string>();
+
+  public void OnResolved() {
+    // All of my dependencies are now available! Do whatever you want with 
+    // them here.
+  }
+}
+```
+
+`OnResolved` 方法将在 `_Ready/OnReady` 之后调用，但在第一帧之前调用，如果（且仅当）它所依赖的所有提供程序在第一帧前调用 `Provide()`。
+
+从本质上讲，`OnResolved` 是在最慢的提供程序完成提供依赖关系时调用的。为了获得最佳体验，不要等到处理完成后才从提供者处调用 `Provide`。
+
+如果您有一个既是 `Dependent` 又是 `Provider` 的节点脚本，则可以安全地从 `OnResolved` 方法调用 `Provide`，使其能够提供依赖关系。
+
+任何 `Provider` 节点的一般经验如下：**尽可能快地调用 `Provide`：从 `_Ready/OnReady` 或从 `OnResolved`**。如果项目中的所有提供程序都遵循此规则，则在处理树中已存在的节点之前，依赖项设置将完成。稍后添加的依赖节点将在节点接收到 `Node.NotificationReady` 通知后开始依赖解析过程。
+
+## 🙏 提示
+
+### 保持依赖关系树的简单性
+
+为了获得最佳结果，请保持依赖关系树的简单性并且不受异步初始化的影响。如果你想变得过于花哨，你可以引入依赖解析死锁。避免复杂的依赖层次结构通常可以在设计游戏时进行一些额外的实验。
+
+### 侦听依赖项
+
+与其订阅父节点的事件，不如考虑订阅依赖项值本身发出的事件。
+
+```c#
+[SuperNode(typeof(Dependent))]
+public partial class MyDependent : Node {
+  public override partial void _Notification(int what);
+
+  [Dependency]
+  public MyValue Value => DependOn<MyValue>();
+
+  public void OnResolved() {
+    // Setup subscriptions once dependencies are valid.
+    MyValue.OnSomeEvent += ValueUpdated
+  }
+
+  public void OnTreeExit() {
+    // Clean up subscriptions here!
+    MyValue.OnSomeEvent -= ValueUpdated
+  }
+
+  public void ValueUpdated() {
+    // Do something in response to the value we depend on changing.
+  }
+}
+```
+
+### 回退值
+
+您可以提供在找不到提供程序时使用的回退值。这样可以更容易地从编辑器中单独运行场景，而不必担心设置生产依赖关系。当然，只有在依赖节点上方找不到该类型的提供程序时，才会使用回退值。
+
+```c#
+[Dependency]
+public string MyDependency => DependOn<string>(() => "fallback_value");
+```
+
+### 伪造依赖项
+
+有时，在测试时，您可能希望“伪造”依赖项的值。伪造的依赖关系优先于依赖节点上方可能存在的任何提供程序以及任何提供的回退值。
+
+```c#
+  [Test]
+  public void FakesDependency() {
+    // Some dependent 
+    var dependent = new MyNode();
+
+    var fakeValue = "I'm fake!";
+    dependent.FakeDependency(fakeValue);
+
+    TestScene.AddChild(dependent);
+
+    dependent._Notification((int)Node.NotificationReady);
+
+    dependent.OnResolvedCalled.ShouldBeTrue();
+    dependent.MyDependency.ShouldBe(fakeValue);
+
+    TestScene.RemoveChild(dependent);
+  }
+```
+
+## AutoInject 的工作原理
+
+AutoInject 使用一种简单、特定的算法来解决依赖关系。
+
+- 当 Dependent PowerUp 添加到 SuperNode 时，SuperNodes 生成器将把代码从从属加电复制到它应用到的节点中。
+- 具有 Dependent PowerUp 的节点脚本会观察其生命周期。当它注意到 `Node.NotificationReady` 信号时，它将开始依赖项解析过程，而无需在节点脚本中编写任何代码。
+- 依赖关系过程如下所示：
+  - 使用 SuperNode 的静态反射表生成来检查节点脚本的所有属性。这允许脚本在不必求助于 C# 的运行时反射调用的情况下进行内省。具有 `[Dependency]` 属性的属性被收集到一组所需的依赖项中。
+  - 所有必需的依赖项都将添加到剩余的依赖项集中。
+  - 从属节点开始搜索其祖先，从自身开始，然后是其父节点，依此类推。
+    - 如果当前搜索节点为任何剩余的依赖项实现了 `IProvide`，则开始单独的解析过程。
+      - 依赖项将提供程序存储在从Dependent PowerUp复制过来的节点脚本的字典属性中。
+      - 依赖项将添加到已找到的依赖项集合中。
+      - 如果提供程序搜索节点尚未提供其依赖项，则依赖项订阅提供程序的 `OnInitialized` 事件。
+      - 挂起的依赖关系提供程序回调跟踪依赖节点的计数器，该计数器还从剩余的依赖关系集中删除该提供程序的依赖关系，并在没有任何剩余内容的情况下启动 OnResolved 进程。
+      - SuperNodes 可以在提供程序节点上订阅事件并跟踪提供程序是否已初始化，它将代码从提供程序 PowerUp 复制到提供程序的节点脚本中。
+    - 在检查完所有剩余的依赖项之后，将从剩余的依赖性集中删除所找到的依赖性集合，并为下一个搜索节点清除所找到的依存性集合。
+    - 如果找到所有依赖项，依赖项将启动 OnResolved 进程并完成搜索。
+    - 否则，搜索节点的父节点将成为下一个要搜索的父节点。
+  - 当找到每个依赖项的提供者，或者到达场景树的顶部时，搜索就结束了。
+
+该算法有一些自然的后果，例如在所有提供程序都提供了值之前，`OnResolved` 不会在依赖项上调用。这是有意的——提供者在调用 `_Ready` 之后，应该同步初始化其提供的值。
+
+AutoInject 的存在主要是为了从依赖项中定位提供程序，并订阅提供程序的时间刚好足够调用它们自己的 `_Ready` 方法——等待的时间比从提供程序调用 `Provide` 的时间长可能会引入依赖项解析死锁或其他指示反模式的不希望出现的情况。
+
+通过在提供程序节点中从 `_Ready` 调用 `Provide()`，可以确保执行顺序同步展开如下：
+
+1. 从属节点 `_Ready`（提供程序的后代，最深的节点先准备好）。
+2. 提供程序节点 `_Ready`（调用 `Provide`）。
+3. 依赖 `OnResolved`
+4. 第 1 帧 `_Process`
+5. 第 2 帧 `_Process`
+6. 等等
+
+通过遵循 `Provide()` 对 `_Ready` 的约定，可以确保所有从属节点在第一个进程调用发生之前都接收到 `OnResolved` 回调，从而确保节点在帧处理开始之前设置好✨.
+
+> 如果您的提供程序也是依赖程序，则可以从 `OnResolved` 调用 `Provide`，以允许它向其子树提供依赖关系，这仍然保证在帧处理开始之前进行依赖关系解析。只是不要等到处理开始后才从您的提供者那里调用`Provide`！
+>
+> 通常，在对依赖项调用帧处理回调**之前**，它们应该能够访问它们的依赖项。
+
+# GoDotTest
+
+https://github.com/chickensoft-games/GoDotTest
+
+Godot 的 C# 测试运行程序。从命令行运行测试，收集代码覆盖率，并在 VSCode 中调试测试。
+
+## 安装
+
+在 nuget 上查找 GoDotTest 的最新版本。使用 Godot 预发布版本的 GoDotTest 版本在版本名称中具有匹配的预发布标签。
+
+将最新版本的 GoDotTest 添加到 `*.csproj` 文件中。请确保将 `*VERSION*` 替换为最新版本。
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Chickensoft.GoDotTest" Version="*VERSION*" />
+</ItemGroup>
+```
+
+## 示例
+
+下面的示例显示了如何编写单元测试。每个测试都扩展所提供的 `TestClass`，并将测试场景作为传递给基类的构造函数参数接收。测试可以使用测试场景来创建节点并将它们添加到场景树中。
+
+```c#
+using Godot;
+using GoDotTest;
+
+public class ExampleTest : TestClass {
+  private readonly ILog _log = new GDLog(nameof(ExampleTest));
+
+  public ExampleTest(Node testScene) : base(testScene) { }
+
+  [SetupAll]
+  public void SetupAll() => _log.Print("Setup everything");
+
+  [Setup]
+  public void Setup() => _log.Print("Setup");
+
+  [Test]
+  public void Test() => _log.Print("Test");
+
+  [Cleanup]
+  public void Cleanup() => _log.Print("Cleanup");
+
+  [CleanupAll]
+  public void CleanupAll() => _log.Print("Cleanup everything");
+
+  [Failure]
+  public void Failure() =>
+    _log.Print("Runs whenever any of the tests in this suite fail.");
+}
+```
+
+测试可以利用生命周期属性来执行设置步骤和/或清理步骤。在每次测试之前调用 `[Setup]` 属性，在每次测试之后调用 `[Cleanup]` 属性。
+
+同样，`[SetupAll]` 属性在第一个测试运行之前调用，`[CleanupAll]` 特性在所有测试运行之后调用。测试总是按照在测试类中定义的顺序执行。
+
+只要同一套件中的测试失败，任何标记有 `Failure` 属性的方法都将运行。故障方法可用于截屏或以特定方式管理错误。
+
+以下是 GoDoTest 为自己的测试显示的测试执行输出：
+
+## 配置
+
+您可以从 Visual Studio 代码在 Godot 中调试测试。为此，您需要为以下启动配置和脚本指定 `GODOT` 环境变量才能正常工作。`GODOT` 变量应指向 Godot 可执行文件的路径。
+
+有关设置用于 Godot 和 GoDotTest 的开发环境的更多信息，请参阅 Chickensoft 安装指南。
+
+## 调试
+
+以下 `launch.json` 文件提供启动配置，用于调试游戏、调试所有测试或调试 Visual Studio 代码中当前打开的测试。要调试当前打开的测试，请确保测试的类名与文件名匹配，这在 C# 中是典型的。
+
+### Godot 4 发布配置
+
+将以下 `tasks.json` 和 `launch.json` 放在项目根目录中名为 `.vscode` 的文件夹中。如果你从 VSCode 中的根目录打开你的项目，你将能够调试你的游戏及其测试。
+
+#### tasks.json
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "--no-restore"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    }
+  ]
+}
+```
+
+#### launch.json
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    // For these launch configurations to work, you need to setup a GODOT
+    // environment variable. On mac or linux, this can be done by adding
+    // the following to your .zshrc, .bashrc, or .bash_profile file:
+    // export GODOT="/Applications/Godot.app/Contents/MacOS/Godot"
+    {
+      "name": "Play",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${env:GODOT4}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+    },
+    {
+      "name": "Debug Tests",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${env:GODOT4}",
+      "args": [
+        // These command line flags are used by GoDotTest to run tests.
+        "--run-tests",
+        "--quit-on-finish"
+      ],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+    },
+    {
+      "name": "Debug Current Test",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${env:GODOT4}",
+      "args": [
+        // These command line flags are used by GoDotTest to run tests.
+        "--run-tests=${fileBasenameNoExtension}",
+        "--quit-on-finish"
+      ],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+    },
+  ]
+}
+```
+
+## 测试场景
+
+在您的项目中创建一个 `test` 文件夹，并在其中创建测试场景。将 C# 脚本添加到测试场景的根目录中，内容如下：
+
+```c#
+using System.Reflection;
+using Godot;
+using GoDotTest;
+
+public partial class Tests : Node2D {
+  public override async void _Ready()
+    => await GoTest.RunTests(Assembly.GetExecutingAssembly(), this);
+}
+```
+
+## 主场景
+
+您使用 GoDotTest 的方式会因您是创建游戏还是使用 Godot 和 C# 的 nuget 包而异。
+
+### 游戏
+
+在主场景中，您可以告诉 GoDotTest 查看提供给 Godot 进程的命令行参数，并构造一个测试环境对象，该对象可用于确定是否应运行测试。
+
+如果需要运行测试，可以指示 GoDotTest 在当前程序集中查找并执行测试。
+
+因为您通常不想在游戏的发行版构建中包含测试，所以可以通过将以下内容添加到 `.csproj` 文件中来从构建中排除所有测试文件（如果测试文件不在名为 `test` 的根目录下的文件夹中，则将 `test/**/*` 更改为项目中测试文件的相对路径）：
+
+```xml
+<PropertyGroup>
+  <DefaultItemExcludes Condition="'$(Configuration)' == 'ExportRelease'">
+    $(DefaultItemExcludes);test/**/*
+  </DefaultItemExcludes>
+</PropertyGroup>
+```
+
+将以下脚本添加到 Godot 游戏的主场景（入口点）中。如果您已经有一个自定义的主场景，请将其重命名为 `Game.tscn`，并创建一个完全空的新主场景。如果您正在制作 3D 游戏，请将根设置为 Node3D，而不是 Node2D。
+
+注意，这个脚本依赖于游戏的实际开始场景是 `Game.tscn`：如果你没有，你需要创建一个。如果不需要运行测试，您的游戏将启动并立即切换到 `Game.tscn`。否则，主场景将要求 GoDotTest 在当前程序集中查找并运行测试。
+
+```c#
+namespace YourGame;
+
+using Godot;
+
+#if DEBUG
+using System.Reflection;
+using GoDotTest;
+#endif
+
+public partial class Main : Node2D {
+#if DEBUG
+  public TestEnvironment Environment = default!;
+#endif
+
+  public override void _Ready() {
+#if DEBUG
+    // If this is a debug build, use GoDotTest to examine the
+    // command line arguments and determine if we should run tests.
+    Environment = TestEnvironment.From(OS.GetCmdlineArgs());
+    if (Environment.ShouldRunTests) {
+      CallDeferred("RunTests");
+      return;
+    }
+#endif
+    // If we don't need to run tests, we can just switch to the game scene.
+    GetTree().ChangeSceneToFile("res://src/Game.tscn");
+  }
+
+#if DEBUG
+  private void RunTests()
+    => _ = GoTest.RunTests(Assembly.GetExecutingAssembly(), this, Environment);
+#endif
+}
+```
+
+### 包
+
+如果您正在创建一个与 Godot 一起使用的 nuget 包，则应该创建一个单独的测试项目来引用您的 nuget 软件包项目。
+
+在测试项目中，创建一个主场景，并向其中添加以下脚本。
+
+```c#
+namespace MyProject.Tests;
+
+using System.Reflection;
+using Godot;
+using GoDotTest;
+
+public partial class Tests : Node2D {
+  public override void _Ready()
+    => _ = GoTest.RunTests(Assembly.GetExecutingAssembly(), this);
+}
+```
+
+为了获得最佳效果，可以考虑使用 Chickensoft 的 `dotnet new` GodotPackage 模板快速创建一个新的 Godot C# 包项目，该项目已经设置为与 GoDotTest 一起使用。
+
+## 日志
+
+如果您在查看测试日志时遇到问题，请尝试在项目设置的“网络限制”中增加`每秒最大字符数`、`每秒最大排队消息数`、`每秒最大错误数` 和 `每秒最大警告数`（您可能需要打开“高级设置”才能查看这些设置）。
+
+## 断言和模拟（Mocking）
+
+GoDotTest 只是一个测试提供程序和测试执行系统。保持 GoDotTest 的范围较小，使我们能够快速更新它，并确保它始终与最新的 Godot 版本配合良好。
+
+对于模拟，我们推荐 LightMock.Generator。它在用法上类似于流行的 `Moq` 库，但在编译时生成 mock，确保了在 .NET 环境的任何库的最大兼容性。为了使 LightMock 的 API 更接近 Moq，您可以使用 Chickensoft 的 LightMoq 适配器。
+
+对于集成测试，我们推荐 GodotTestDriver。GodotTestDriver 允许您创建驱动程序，这些驱动程序允许您模拟输入、等待下一帧、与 UI 元素交互、创建自定义测试驱动程序等。
+
+## 覆盖率
+
+如果您的代码被正确配置为在传入 `--run-tests` 时切换到测试场景（请参见上文），您可以使用 coverlet 工具运行 Godot 并从测试中收集代码覆盖率。
+
+```shell
+coverlet \
+  "./.godot/mono/temp/bin/Debug" --verbosity detailed \
+  --target $GODOT4 \
+  --targetargs "--run-tests --coverage --quit-on-finish" \
+  --format "opencover" \
+  --output "./coverage/coverage.xml" \
+  --exclude-by-file "**/test/**/*.cs" \
+  --exclude-by-file "**/*Microsoft.NET.Test.Sdk.Program.cs" \
+  --exclude-by-file "**/Godot.SourceGenerators/**/*.cs" \
+  --exclude-assemblies-without-sources "missingall"
+```
+
+`--run-tests`、`--coverage` 和 `--quit-on-finish` 标志是 GoDotTest 特有的，它们对 Godot 本身毫无意义。如果您的主场景配置为如上所示正确使用 GoDotTest，那么您可以期望 coverlet 工具使用正确的参数调用 Godot 来开始测试。
+
+由于设置测试覆盖率需要一个精心构建的项目，我们建议查看 Chickensoft GodotPackage 中关于收集覆盖率的部分，并查看该项目中包含的 `coverage.sh` 脚本。
+
+> `--coverage` 标志告诉 GoDotTest 执行 Godot 进程的目的是收集覆盖率。当提供 `--coverage` 标志时，GoDotTest 将强制退出进程，这样它就可以设置整个进程的退出代码，因为 Godot 的 `SceneTree.Quit(int exitCode)` 方法实际上并没有设置退出代码。通过绕过 Godot 从 .NET 强制退出会在进程退出时显示一些错误消息，但它不会引起任何其他问题，可以安全地忽略。
+
+## 它的工作原理
+
+GoDotTest `TestProvider` 使用反射来查找当前程序集中的所有测试套件（扩展所提供的 `TestClass` 的类）。如果测试环境没有提供给 GoDotTest，它会构建自己的 `TestEnvironment`，该环境表示 Godot 启动时提供给它的命令行参数，并根据测试套件名称的存在（如果提供）过滤测试套件。否则，它将运行所有测试套件。
+
+GoDotTest 使用 `TestExecutor` 按照方法在 `TestClass` 中声明的顺序运行方法。测试方法用 `[Test]` 属性表示。
+
+测试输出由响应测试事件的 `TestReporter` 显示。
+
+GoDotTest 将 `await` 它遇到的任何 `aync Task` 测试方法。测试不是并行运行的，也没有任何添加该功能的计划，因为在编写可视化或集成风格的测试时，这会导致竞争条件。GoDotTest 的重点是提供一种可靠的、C# 优先的 Godot 测试方法，该方法以非常简单和确定的方式运行测试。
+
+如果您需要自定义测试的加载和运行方式，可以使用 `GoTest.cs` 中的代码作为起点。
+
+## 命令行参数
+
+- `--run-tests`：这个标志的出现会通知你的游戏应该运行测试。如果已将主场景设置为在它找到此标志时重定向到测试场景（如上所述），则可以在从命令行运行 Godot 时使用传入此标志（用于调试或 CI/CD 目的）来运行测试。
+- `--quit-on-finish`：此标志的存在表示测试运行程序应在应用程序运行完测试后立即退出。
+- `--stop-on-error`：此标志的存在表明测试运行程序在遇到任何测试套件中的第一个错误时应该停止运行测试。如果没有此标志，它将尝试运行所有测试套件。
+- `--sequential`：此标志的存在表明，如果测试套件方法中发生错误，则应跳过测试套件中的后续测试方法。如果您的测试方法依赖于先前成功完成的测试方法，请使用此选项。使用 `--stop-on-error` 时会忽略此标志。
+- `--coverage`：在 Godot 4 中运行测试以收集覆盖率时需要。允许 GoDotTest 强制退出，以便盖玻片正确拾取覆盖物。
+
+有关命令行标志的详细信息，请参见 `TestEnvironment.cs`。
+
+# 🔋 PowerUps
+
+与 SuperNodes 源生成器一起工作的 C# Godot 游戏脚本的电源（power-ups）集合。
+
+目前，此软件包提供了两个 PowerUps：`AutoNode` 和 `AutoSetup`。
+
+- 🌲 AutoNode：自动将字段和属性连接到场景树中相应的节点——还可以使用 GodotNodeInterfaces 通过其接口访问节点。
+- 🛠 AutoSetup：为 Godot 节点脚本中的后期两阶段初始化提供了一种机制，以便于单元测试。
+
+> Chickensoft 还维护了第三个 PowerUp，用于依赖注入，称为 AutoInject，它位于自己的 AutoInject 存储库中。
+
+## 📦 安装
+
+与大多数 nuget 包不同，PowerUp 是作为仅限源代码的 nuget 包提供的，这些包实际上将 PowerUp 的源代码注入到您的项目中。
+
+将代码直接注入到引用 PowerUp 的项目中，可以让 SuperNodes 源代码生成器看到代码并生成所需的胶水，使一切都能在没有反射的情况下工作。
+
+要使用 PowerUps，请将以下内容添加到 `.csproj` 文件中。请确保在 Nuget 上获得每个软件包的最新版本。请注意，`AutoNode` PowerUp 需要 GodotNodeInterfaces 包，这样您就可以通过接口而不是具体类型来访问 Godot 节点，这有助于单元测试。
+
+```xml
+<ItemGroup>
+    <PackageReference Include="Chickensoft.SuperNodes" Version="1.6.1" PrivateAssets="all" OutputItemType="analyzer" />
+    <PackageReference Include="Chickensoft.SuperNodes.Types" Version="1.6.1" />
+    <PackageReference Include="Chickensoft.PowerUps" Version="3.0.1-godot4.2.0-beta.5" PrivateAssets="all" />
+    <PackageReference Include="Chickensoft.GodotNodeInterfaces" Version="2.0.0-godot4.2.0-beta.5 " />
+    <!-- ^ Or whatever the latest versions are. -->
+</ItemGroup>
+```
+
+## 🌲 自动节点
+
+无论何时实例化场景，`AutoNode` PowerUp 都会自动将脚本中的字段和属性连接到场景树中声明的节点路径或唯一的节点名称，而不进行反射。它还可以用于将节点连接为接口，而不是具体的节点类型。
+
+只需将 `[Node]` 属性应用于脚本中要自动连接到场景中节点的任何字段或属性。
+
+如果未在 `[Node]` 属性中指定节点路径，则字段或属性的名称将在帕斯卡命名法（PascalCase）中转换为唯一的节点标识符名称。例如，通过将属性名转换为帕斯卡命名法并在百分号指示符前加上前缀，`_my_unique_node` 下方的字段名将转换为唯一节点路径名 `%MyUniqueNode`。同样，属性名称 `MyUniqueNode` 被转换为 `%MyUniqueNode`，这不是一个很大的转换，因为属性名称已经使用帕斯卡命名法中。
+
+为了获得最佳效果，请对场景树中的节点名称使用帕斯卡命名法（无论如何，Godot 在默认情况下倾向于这样做）。
+
+在下面的例子中，我们使用 GodotNodeInterfaces 来引用节点作为它们的接口，而不是它们的具体 Godot 类型。这使我们能够编写一个单元测试，通过替换模拟节点来伪造场景树中的节点，使我们能够一次测试单个节点脚本，而不会污染我们的测试覆盖率。
+
+```c#
+using Chickensoft.GodotNodeInterfaces;
+using Chickensoft.PowerUps;
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(AutoNode))]
+public partial class MyNode : Node2D {
+  public override partial void _Notification(int what);
+
+  [Node("Path/To/SomeNode")]
+  public INode2D SomeNode { get; set; } = default!;
+
+  [Node] // Connects to "%MyUniqueNode" since no path was specified.
+  public INode2D MyUniqueNode { get; set; } = default!;
+
+  [Node("%OtherUniqueName")]
+  public INode2D DifferentName { get; set; } = default!;
+
+  [Node] // Connects to "%MyUniqueNode" since no path was specified.
+  internal INode2D _my_unique_node = default!;
+}
+```
+
+### 🧪 测试
+
+通过替换 mock 节点，我们可以很容易地为上面的示例编写测试：
+
+```c#
+using System.Threading.Tasks;
+using Chickensoft.GodotNodeInterfaces;
+using Chickensoft.GoDotTest;
+using Chickensoft.PowerUps.Tests.Fixtures;
+using Godot;
+using GodotTestDriver;
+using Moq;
+using Shouldly;
+
+public class MyNodeTest : TestClass {
+  private Fixture _fixture = default!;
+  private MyNode _scene = default!;
+
+  private Mock<INode2D> _someNode = default!;
+  private Mock<INode2D> _myUniqueNode = default!;
+  private Mock<INode2D> _otherUniqueNode = default!;
+
+  public MyNodeTest(Node testScene) : base(testScene) { }
+
+  [Setup]
+  public async Task Setup() {
+    _fixture = new(TestScene.GetTree());
+
+    _someNode = new();
+    _myUniqueNode = new();
+    _otherUniqueNode = new();
+
+    _scene = new MyNode();
+    _scene.FakeNodeTree(new() {
+      ["Path/To/SomeNode"] = _someNode.Object,
+      ["%MyUniqueNode"] = _myUniqueNode.Object,
+      ["%OtherUniqueName"] = _otherUniqueNode.Object,
+    });
+
+    await _fixture.AddToRoot(_scene);
+  }
+
+  [Cleanup]
+  public async Task Cleanup() => await _fixture.Cleanup();
+
+  [Test]
+  public void UsesFakeNodeTree() {
+    // Making a new instance of a node without instantiating a scene doesn't
+    // trigger NotificationSceneInstantiated, so if we want to make sure our
+    // AutoNodes get hooked up and use the FakeNodeTree, we need to do it manually.
+    _scene._Notification((int)Node.NotificationSceneInstantiated);
+
+    _scene.SomeNode.ShouldBe(_someNode.Object);
+    _scene.MyUniqueNode.ShouldBe(_myUniqueNode.Object);
+    _scene.DifferentName.ShouldBe(_otherUniqueNode.Object);
+    _scene._my_unique_node.ShouldBe(_myUniqueNode.Object);
+  }
+}
+```
+
+## 🛠 自动设置
+
+`AutoSetup` 将有条件地从 `_Ready` 调用节点脚本所具有的 `void Setup()` 方法，如果（且仅当）它添加到节点的 `IsTesting` 字段为 false。有条件地调用设置方法可以将节点的后期成员初始化分为两个阶段，从而允许对节点进行单元测试。如果为节点编写测试，只需在 `Setup()` 方法中初始化测试中需要模拟的任何成员。
+
+```c#
+using Chickensoft.PowerUps;
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(AutoSetup))]
+public partial class MyNode : Node2D {
+  public override partial void _Notification(int what);
+
+  public MyObject Obj { get; set; } = default!;
+
+  public void Setup() {
+    // Setup is called from the Ready notification if our IsTesting property
+    // (added by AutoSetup) is false.
+
+    // Initialize values which would be mocked in a unit testing method.
+    Obj = new MyObject();
+  }
+
+  public void OnReady() {
+    // Guaranteed to be called after Setup()
+
+    // Use object we setup in Setup() method (or, if we're running in a unit 
+    // test, this will use whatever the test supplied)
+    Obj.DoSomething();
+  }
+}
+```
+
+> 💡 AutoInject 为同样需要后期两阶段初始化的节点提供了开箱即用的功能。它还提供了一个 `IsTesting` 属性，但将在解析依赖项之后（但在调用 `OnResolved()` 之前）调用 `Setup()` 方法。如果您正在使用AutoInject，请注意，您可以在节点脚本上使用 `AutoSetup` 或 `Dependent` PowerUp，但不能同时使用两者。
+
+# GodotNodeInterfaces
+
+Godot 节点接口和适配器。
+
+## 🤔 什么……为什么？
+
+在完美的世界中，在某些情况下，模拟 Godot 节点进行测试非常有意义：
+
+- 你是一个 TDD 崇拜者。
+- 您想要对 Godot 节点脚本进行单元测试。
+- 您不希望为节点脚本实例化相应的场景。为什么？因为实例化场景也会实例化任何子代及其脚本，等等。仅仅实例化脚本并将其添加到场景中就会导致测试覆盖率被收集，最终它覆盖的应用程序远远超过实际测试中的系统（您试图测试的节点脚本），这使得很难判断哪些脚本尚未测试。
+
+GodotSharp 不公开 Godot 节点的接口，因此使用专有的企业级模拟解决方案模拟它们的成本非常高。
+
+如果你仍然感到困惑，这可能不适合你。这是一种“如果你想要/需要这种东西，你就会知道”的东西。这实际上只适合那些喜欢编写测试并获得 100% 代码覆盖率的完美主义者。
+
+## 🧐 我在这里什么也没看到
+
+这是因为接口和适配器是在构建时根据引用的 GodotSharp API 版本生成的。
+
+以下是生成的接口示例：
+
+```c#
+/// <summary>
+/// <para>Casts light in a 2D environment. A light is defined as a color, an energy value, a mode (see constants), and various other parameters (range and shadows-related).</para>
+/// </summary>
+public interface ILight2D : INode2D {
+    /// <summary>
+    /// <para>The Light2D's blend mode. See <see cref="Light2D.BlendModeEnum" /> constants for values.</para>
+    /// </summary>
+    Light2D.BlendModeEnum BlendMode { get; set; }
+    /// <summary>
+    /// <para>The Light2D's <see cref="Color" />.</para>
+    /// </summary>
+    Color Color { get; set; }
+    /// <summary>
+    /// <para>If <c>true</c>, Light2D will only appear when editing the scene.</para>
+    /// </summary>
+    bool EditorOnly { get; set; }
+
+    ...
+```
+
+这是相应的适配器：
+
+```c#
+/// <summary>
+/// <para>Casts light in a 2D environment. A light is defined as a color, an energy value, a mode (see constants), and various other parameters (range and shadows-related).</para>
+/// </summary>
+public class Light2DAdapter : Node2DAdapter, ILight2D, INodeAdapter {
+  /// <summary>Underlying Godot object this adapter uses.</summary>
+  public new Light2D TargetObj { get; private set; }
+
+  /// <summary>Creates a new Light2DAdapter for Light2D.</summary>
+  /// <param name="object">Godot object.</param>
+  public Light2DAdapter(GodotObject @object) : base(@object) {
+    if (@object is not Light2D typedObj) {
+      throw new System.InvalidCastException(
+        $"{@object.GetType().Name} is not a Light2D"
+      );
+    }
+    TargetObj = typedObj;
+  }
+
+    /// <summary>
+    /// <para>The Light2D's blend mode. See <see cref="Godot.Light2D.BlendModeEnum" /> constants for values.</para>
+    /// </summary>
+    public Light2D.BlendModeEnum BlendMode { get => TargetObj.BlendMode; set => TargetObj.BlendMode = value; }
+
+    ...
+```
+
+以下是适配器工厂的外观：
+
+```c#
+public static class GodotNodes {
+  private static readonly Dictionary<Type, Func<Node, IGodotNodeAdapter>> _adapters = new() {
+      [typeof(INode)] = node => new NodeAdapter(node),
+      [typeof(IAnimationPlayer)] = node => new AnimationPlayerAdapter(node),
+      [typeof(IAnimationTree)] = node => new AnimationTreeAdapter(node),
+      [typeof(ICodeEdit)] = node => new CodeEditAdapter(node),
+      [typeof(IGraphEdit)] = node => new GraphEditAdapter(node),
+
+      ...
+```
+
+### 🤯 使用接口
+
+`GodotNodeInterfaces` 为适配器和普通 Godot 节点添加了一些用于常见子节点操作的扩展方法变体（通过扩展方法）。
+
+- `AddChildEx()`
+- `FindChildEx()`
+- `FindChildrenEx()`
+- `GetChildEx<T>()`
+- `GetChildEx()`
+- `GetChildCountEx()`
+- `GetChildrenEx()`
+- `GetChildOrNullEx()`
+- `GetChildrenEx()`
+- `GetNodeEx()`
+- `GetNodeOrNullEx<T>()`
+- `GetNodeOrNullEx()`
+- `HasNodeEx()`
+- `RemoveChildEx()`
+
+这些方法接收任意对象，这些对象可以是 Godot 节点实例或 Godot 接口适配器。返回节点的方法将返回经过调整的节点，以便您可以继续使用接口类型。
+
+如果使用这些方法而不是 Godot 版本，则可以模拟子树操作，从而更容易地对节点脚本进行单元测试。
+
+## 📦 安装
+
+只需从 nuget 安装软件包！
+
+```shell
+dotnet add package Chickensoft.GodotNodeInterfaces 
+```
+
+## 📖 用法
+
+您可以在 Godot 节点脚本中使用接口，并使用上面提到的各种 Ex 方法来操纵场景树。
+
+一旦设置好了，就可以在节点脚本中使用它。
+
+```c#
+public partial class MyNode : Node2D {
+  public ISprite2D Sprite { get; set; } = default!;
+
+  public override void _Ready() {
+    Sprite = this.GetNodeEx<ISprite2D>("Sprite");
+  }
+}
+```
+
+### 🧪 测试
+
+所有 Godot 节点适配器实现都有一个 `FakeNodes` 字典，每个 Ex 节点操作方法（如 `GetNodeEx`、`GetChildrenEx` 等）首先检查该字典。如果在给定路径的字典中找到模拟节点，则会返回该字典，而不是查找实际节点。这允许测试 Godot 节点。
+
+例如，这里有一个节点，它在 `_Ready` 中获取对其子节点之一的引用。
+
+```c#
+using Chickensoft.GodotNodeInterfaces;
+using Chickensoft.PowerUps;
+using Godot;
+using SuperNodes.Types;
+
+[SuperNode(typeof(AutoNode))]
+public partial class MyNode : Node2D {
+  public override partial void _Notification(int what);
+
+  public INode2D MyChild { get; set; } = default!;
+
+  public void OnReady() {
+    // This automatically finds the node and creates a Godot node adapter
+    // so that we can refer to it by its interface.
+    MyChild = this.GetNodeEx<INode2D>("MyChild");
+  }
+}
+```
+
+> 使用 Chickensoft PowerUp 的 `AutoNode` PowerUp 可以为我们的节点实例使用假节点树。稍后会详细介绍。
+
+由于我们使用接口来引用子节点，所以我们可以在测试中模拟它。
+
+```c#
+[Test]
+public void LoadsGame() {
+  var node = new MyNode();
+
+  var myChild = new Mock<INode2D>().Object;
+
+  // We can fake the children of the node we're testing by supplying
+  // a dictionary of node paths that correspond to mock node objects.
+  // Since we're referencing nodes by interfaces in our node script, this
+  // works!
+  node.FakeNodeTree(new() {
+    ["MyChild"] = myChild.Object
+  });
+
+  node.OnReady();
+
+  // Make sure our node did what we expected it to do.
+  node.MyChild.ShouldBe(myChild.Object);
+}
+```
+
+## 💁 获取帮助
+
+*这个包坏了吗？遇到晦涩难懂的 C# 构建问题？*我们很乐意在 Chickensoft Discord 服务器上为您提供帮助。
+
+## 💪 贡献
+
+该项目包含一个非常匆忙编写的控制台生成器程序，该程序使用反射（yep！）来查找 GodotSharp 中属于或扩展Godot `Node` 类的所有类型，然后生成接口、适配器和适配器工厂。
+
+实际的软件包是空的——我们在 CI/CD 中生成项目，这样我们就可以通过 renovatebot 保持此软件包的最新状态，并在新的 GodotSharp 软件包丢失时自动发布新版本。
+
+### 🐞 调试
+
+提供了 VSCode 启动配置文件，允许您调试生成器程序。当试图找出它生成无效代码的原因时，这可能非常有用。
+
+> **重要**：您必须为上述启动配置设置 `GODOT` 环境变量。如果您还没有这样做，请参阅Chickensoft设置文档。
+
+### 🏚 Renovatebot
+
+此存储库包括一个可与 Renovatebot 一起使用的 `renovate.json` 配置，以帮助其保持最新状态。
+
+> 与 Dependabot 不同，Renovatebot 能够将所有依赖项更新合并为一个拉取请求，这是 Godot C# 存储库的必备功能，每个子项目都需要相同的 Godot.NET.Sdk 版本。如果在多个存储库中拆分依赖关系版本冲突，则 CI 中的构建将失败。
+
+将 Renovatebot 添加到存储库的最简单方法是从 GitHub Marketplace 安装它。请注意，您必须授予它对您希望它监视的每个组织和存储库的访问权限。
+
+所包含的 `renovate.json` 包括一些配置选项，以限制 Renovatebot 打开拉取请求的频率，以及 regex 过滤掉一些版本不好的依赖项以防止无效的依赖项版本更新。
+
+如果您的项目设置为在合并拉取请求之前需要批准，并且您希望利用 Renovatebot 的自动合并功能，则可以安装 Renovate Approve 机器人程序来自动批准 Renovate 依赖关系 PR。如果您需要两个批准，则可以安装相同的 Renovate Approve 2 机器人程序。有关详细信息，请参阅此部分。
