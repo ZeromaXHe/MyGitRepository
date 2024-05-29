@@ -1363,6 +1363,487 @@ Chickensoft 一开始只是我的游戏开发项目的一个愚蠢的个人组�
 
 如果你仍然不听，请随意贡献。只要知道你正踏上一条充满未完成项目和破碎梦想的黑暗道路。😶‍🌫️
 
+# Godot C# 安装指南
+
+https://chickensoft.games/docs/setup
+
+如果你有 .NET SDK 安装后，Godot 4 提供了非常好的开箱即用的开发体验——但如果您想配置环境以简化 IDE 集成和命令行使用，则需要遵循一些额外的步骤。
+
+准备好用 Godot 和 C# 制作游戏了吗？让我们从确保您的开发环境准备就绪开始吧！
+
+> 如果您在某一步上卡住了，或者想通知我们不正确或过时的文档，请在 Discord 上加入我们。
+
+> **提示**
+>
+> 本指南专门针对 **Godot  4**——所有 Chickensoft 软件包都已正式迁移到 Godot 4。
+
+## 📦 安装 .NET SDK
+
+要使用 Godot 4，我们建议安装 .NET 8 SDK。
+
+> **提示**
+>
+> 可以安装的多个版本 .NET SDK。C# 工具（通常）足够智能，可以根据项目的目标框架、`global.json` 文件和 Godot 中的其他设置来选择正确的版本。如果您在 SDK 解决方案方面遇到问题，请随时联系 Discord。
+>
+> 安装 .NET 6 SDK 和/或 .NET 7 SDK 可能也不会有什么坏处。有 .NET 6、7 和 8 将允许您运行各种 C# 项目和工具。
+
+> **信息**
+>
+> 我们经常编写文件路径，如 `~/folder`。`~` 是主文件夹的快捷方式。在 Windows 上，`~` 扩展到类似 `C:\Users\you` 的内容。在 macOS 上，`~` 扩展为 `/Users/you`。在 Linux 上，`~` 扩展到 `/home/you`。例如，`~/Documents` 在 Windows 上扩展为 `C:\Users\you\Documents`，在 macOS 上扩展为 `/Users/you/Documents`，而在 Linux 上扩展为 `/home/you/Documents`。
+
+- macOS
+  - 在 macOS 上使用 Microsoft 提供的安装程序安装 .NET SDK。有关安装 .NET SDK 的详细信息，请参阅微软针对 Mac 的文章。
+- Linux
+  - 在Linux上安装 .NET SDK 时需要注意一些问题，所以请参阅微软对 Linux 的文章。
+- Windows
+  - 以管理员身份打开 PowerShell，然后使用 `winget` 安装 .NET 8 SDK：`winget install dotnet-SDK-8`（或 `winget upgrade` 以升级现有安装）。有关安装 .NET SDK 的详细信息，请参阅 Microsoft 针对 Windows 的文章或发行说明。
+  - 您也可以使用 Microsoft 提供的安装程序安装 .NET SDK，或通过 Visual Studio 2022 社区版。
+
+如果要安装 .NET SDK，您可以[在这里找到所有可用的下载](https://dotnet.microsoft.com/en-us/download/dotnet)。
+
+这个 .NET SDK 安装程序和包管理器倾向于将其放置在每个平台上的标准位置——如果您手动安装，请确保记下安装位置。我们稍后需要。
+
+## ⏳ 使用 Git 进行版本控制
+
+您**绝对**应该使用版本控制系统来跟踪游戏的代码和资产：特别是 [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)。
+
+> **危险**
+>
+> 🔥🔥🔥 出现错误，工具可能会意外清除文件，场景引用可能会被破坏——在开发的混乱中会发生糟糕的事情。
+>
+> **Git 允许您回到过去并撤消不需要的更改**，如果您希望开发不是噩梦般的，这是非常宝贵的😱. 它还允许您轻松地与他人协作，并将代码存储在 GitHub、GitLab 和其他与 git 相关的服务中。
+>
+> 虽然学习 git 可能会让人望而生畏，但作为一名游戏开发人员，保护你宝贵的时间和工作绝对是你的责任，而使用 git 是体验中的一个强制性部分，使你能够做到这一点。**游戏开发非常困难，所以不要让你的工作得不到保护，这会让你自己更加困难**。🔥🔥🔥
+>
+> 请务必将[“撤销 Git 中的更改”](https://www.atlassian.com/git/tutorials/undoing-changes)部分添加到书签中，以防止在下一次危机中出现恐慌。搞砸不是**如果**的问题，而是**什么时候**的问题——所以要做好准备。
+
+正确地学习和使用 git 是一项在开发过程中逐渐积累起来的技能，但[基础知识并不太难](https://www.atlassian.com/git/tutorials/what-is-version-control)，使用 [Visual Studio Code](https://code.visualstudio.com/) 可以让你在大多数情况下不必真正接触命令行就可以做到这一点。
+
+> **信息**
+>
+> 即使你已经在使用 git，但你并不完全适应它，也可以看看前面提到的 [git 初学者指南](https://www.atlassian.com/git/tutorials/what-is-version-control)——在我看来，这是最好的指南，也是我一直向初级工程师推荐的指南。对于任何你可能不确定的事情，你都可以直接进入[高级提示](https://www.atlassian.com/git/tutorials/advanced-overview)。
+
+## 🖥 Shell 环境
+
+让我们将 shell 环境设置为包含指向 .NET SDK 的环境变量。这将允许您从任何位置运行 `dotnet` 命令行工具。我们将使用它安装 GodotEnv 来管理我们的 Godot 安装，使 Godot 游戏开发比以往任何时候都更容易。
+
+> **信息**
+>
+> **👩‍💻 我应该使用哪个外壳？**
+>
+> 为了保持一致性，Chickensoft 正式建议在每个操作系统上使用 bash shell，特别是如果你正在 macOS、Windows 和 Linux 上开发跨平台的游戏——一旦你的环境设置正确，使用 Godot 就很容易做到这一点。
+>
+> 由于 bash shell 默认情况下在 Windows 上不可用，您可以通过安装 git 来访问它，git 包括 git bash for Windows 应用程序。您还可以将 Windows 终端（在 git 安装程序中可以选择添加 Windows 终端配置文件）和 [VSCode 配置为默认使用 bash](https://stackoverflow.com/a/70407051)。
+>
+> Bash 有点深奥，但您可以[很快轻松地学习所需的 Bash 基础知识](https://linuxconfig.org/bash-scripting-tutorial-for-beginners)。或者你可以深入[阅读关于 bash 的整本书](https://tldp.org/LDP/Bash-Beginners-Guide/html/index.html)。
+
+完成此操作后，我们将能够从终端运行 Godot，并为 Visual Studio 代码创建适当的启动配置。
+
+- macOS
+
+  - 如果 `~/.zshrc` 不存在，则需要创建它。
+
+    > **提示**
+    >
+    > 要在 macOS Finder 中切换隐藏文件的可见性，请按 `Cmd + Shift + .`——它也适用于文件对话框！
+
+    将以下内容添加到 `~/.zshrc` 文件中：
+
+    ```shell
+    # .NET SDK Configuration
+    export DOTNET_ROOT="/usr/local/share/dotnet"
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1 # Disable analytics
+    export DOTNET_ROLL_FORWARD_TO_PRERELEASE=1
+    
+    # Add the .NET SDK to the system paths so we can use the `dotnet` tool.
+    export PATH="$DOTNET_ROOT:$PATH"
+    export PATH="$DOTNET_ROOT/sdk:$PATH"
+    export PATH="$HOME/.dotnet/tools:$PATH"
+    
+    # Run this if you ever run into errors while doing a `dotnet restore`
+    alias nugetclean="dotnet nuget locals --clear all"
+    ```
+
+- Linux
+
+  - 如果 `~/.bashrc` 不存在，则需要创建它。将以下内容添加到文件中：
+
+    ```shell
+    # .NET SDK Configuration
+    export DOTNET_ROOT="/usr/share/dotnet"
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1 # Disable analytics
+    export DOTNET_ROLL_FORWARD_TO_PRERELEASE=1
+    
+    # Add the .NET SDK to the system paths so we can use the `dotnet` tool.
+    export PATH="$DOTNET_ROOT:$PATH"
+    export PATH="$DOTNET_ROOT/sdk:$PATH"
+    export PATH="$HOME/.dotnet/tools:$PATH"
+    
+    # Run this if you ever run into errors while doing a `dotnet restore`
+    alias nugetclean="dotnet nuget locals --clear all"
+    ```
+
+- Windows
+
+  - 在 Windows 中，当使用 Git 附带的 bash shell（Git Bash）时，您可以将 shell 配置放在 `~/.bashrc` 中。在文件中，添加以下内容：
+
+    ```shell
+    # .NET SDK Configuration
+    export DOTNET_ROOT="C:\\Program Files\\dotnet"
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1 # Disable analytics
+    export DOTNET_ROLL_FORWARD_TO_PRERELEASE=1
+    
+    # Add the .NET SDK to the system paths so we can use the `dotnet` tool.
+    export PATH="$DOTNET_ROOT:$PATH"
+    export PATH="$DOTNET_ROOT\\sdk:$PATH"
+    export PATH="$HOME\\.dotnet\\tools:$PATH"
+    
+    # Run this if you ever run into errors while doing a `dotnet restore`
+    alias nugetclean="dotnet nuget locals --clear all"
+    ```
+
+> **信息**
+>
+> 取决于的安装 .NET SDK 方式，您可能需要也可能不需要将它们添加到 `~/.bashrc`（linux）或 `~/.zshrc`（macOS）中的路径中。你可以在 bash shell 中运行 `which dotnet`，看看它们是否已经在你的路径上了。如果是，请删除之前添加的 `export PATH` 行。如果不是这样，您应该使用 `DOTNET_ROOT` 指向您的 `dotnet` 根目录，如上所示。
+>
+> 确保 .NET SDK 的路径与此工具在特定系统上的安装位置相匹配，因为如果手动安装，它可能会有所不同。
+
+## 🤖 安装 Godot
+
+您可以使用 Chickensoft 的命令行工具 GodotEnv 在机器上本地管理 Godot 版本（以及在项目中管理 Godot 资产库插件）。
+
+> **信息**
+>
+> 使用 GodotEnv 在您的系统上安装和管理 Godot 提供了许多优势：
+>
+> - ✅ 从Godot TuxFamily下载镜像自动下载、提取和安装任何请求的Godot 4.x+ 版本（支持或不支持 .NET）。
+>
+> - ✅ 自动管理系统上指向您要使用的 Godot 版本的符号链接。符号链接路径永远不会改变——只是它指向的版本。
+>
+>   在 Windows 上，维护符号链接需要管理员权限，这使得手动管理很麻烦。GodotEnv 与 Windows 的用户访问控制（UAC）集成，可在需要时自动请求管理员权限。
+>
+> - ✅ 添加一个指向符号链接位置的系统 `GODOT` 环境变量，通过脚本方便其使用。
+>
+> - ✅ 将 `GODOT` 指向的路径添加到系统的 PATH 中。让初始化 Godot 二进制文件变得轻而易举，只需运行 `godot` 即可打开 GodotEnv 管理的版本。
+>
+> - ✅ 跨平台和机器标准化安装位置，使与其他队友的协作更加容易。
+>
+> - ✅ 快速将系统 Godot 版本更改为任何已安装版本，并列出所有已安装版本。
+
+要安装 GodotEnv，请运行以下操作：
+
+```shell
+dotnet tool install --global Chickensoft.GodotEnv
+```
+
+### 🦾 使用 GodotEnv 安装
+
+您可以通过按此处显示的方式指定 Godot 版本来自动安装 Godot。
+
+```shell
+godotenv godot install 4.0.1
+```
+
+### 😓 手动安装
+
+如果你不相信，你可以手动下载 Godot，并将其安装在任何你想安装的地方。
+
+### 📍 Godot 安装路径
+
+如果您使用 GodotEnv，Godot 版本将自动安装在以下位置：
+
+- macOS
+
+  - | 位置     | 路径                                                         |
+    | -------- | ------------------------------------------------------------ |
+    | 符号连接 | `/Users/{you}/.config/godotenv/godot/bin`                    |
+    | 真实路径 | `/Users/{you}/.config/godotenv/godot/versions/godot_dotnet_{version}/Godot_mono.app/Contents/MacOS/Godot` |
+
+- Linux
+
+  - | 位置     | 路径                                                         |
+    | -------- | ------------------------------------------------------------ |
+    | 符号连接 | `/home/{you}/.config/godotenv/godot/bin`                     |
+    | 真实路径 | `/home/{you}/.config/godotenv/godot/versions/godot_dotnet_{version}/Godot_v{version}-stable_mono_linux_x86_64/Godot_v{version}-stable_mono_linux.x86_64` |
+
+- Windows
+
+  - | 位置     | 路径                                                         |
+    | -------- | ------------------------------------------------------------ |
+    | 符号连接 | `C:\Users\{you}\AppData\Roaming\godotenv\godot\bin`          |
+    | 真实路径 | `C:\Users\{you}\AppData\Roaming\godotenv\godot\versions\godot_dotnet_{version}\Godot_v{version}-stable_mono_win64\Godot_v{version}-stable_mono_win64.exe` |
+
+> **注意**
+>
+> 所有 Chickensoft 模板和 VSCode 启动配置都依赖于一个名为 `GODOT` 的环境变量，该变量包含您要使用的 Godot 版本的路径。
+>
+> **GodotEnv 将自动更新您的环境变量**，通过更新 macOS 上的 `~/.zshrc` 文件或 Linux 上的 `~/.bashrc` 文件来以指向其符号链接，该符号链接又指向 Godot 的活动版本。在 Windows 上，GodotEnv 将自动尝试使用具有请求的管理权限的相关命令提示符命令更新环境变量。
+>
+> **❗️ 在为所有应用程序更新环境变量后，您必须注销并再次登录才能看到更新的值。**
+>
+> 如果您没有使用 GodotEnv，或者想再次检查变量是否存在，请确保您已按如下方式设置了环境变量：
+>
+> - macOS
+>
+>   - 在您的 `~/.zshrc` 文件中，确保存在以下内容。
+>
+>     ```shell
+>     # This should be added to your ~/.zshrc file by GodotEnv automatically, but
+>     # you can also add it manually and change the path of Godot to match
+>     # your system.
+>     export GODOT="/Users/{you}/.config/godotenv/godot/bin"
+>     ```
+>
+> - Linux
+>
+>   - 在你的 `~/.bashrc` 文件中，确保存在如下内容。
+>
+>     ```shell
+>     # This should be added to your ~/.zshrc file by GodotEnv automatically, but
+>     # you can also add it manually and change the path of Godot to match
+>     # your system.
+>     export GODOT="/home/{you}/.config/godotenv/godot/bin"
+>     ```
+>
+> - Windows
+>
+>   - Windows 有一个用于更新环境变量的可视化编辑器。请参阅[本文](https://github.com/sindresorhus/guides/blob/main/set-environment-variables.md#windows-7-and-8)。
+
+如果是手动安装，请考虑将其放置在以下位置之一：
+
+- macOS
+  - 将 Godot 移动到 `/Applications/Godot_mono.app`。不管怎样，这就是你所有其他 Mac 应用程序的位置！
+- Linux
+  - 如果你使用的是 Linux，你可能对把它放在哪里有自己的看法。如果你不确定，你可以把 Godot 可执行文件（及其支持文件）放在用户文件夹中自己的文件夹中：`/home/Godot`。
+- Windows
+  - 在 Windows 上，您可以将 Godot 和任何支持文件放在 `C:\Godot\Godot_mono.exe` 中，或放在用户文件夹 `C:\Users\{you}\Godot` 中自己的文件夹中。
+
+## ⌨️ Visual Studio Code
+
+Chickensoft 的所有包和模板都是为与 Visual Studio Code（VSCode）配合使用而设计的。
+
+您可以在此处下载 Visual Studio Code。
+
+### 🔌 VSCode 扩展
+
+至少，您需要 [`ms-dotnettools.csharp`](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) 扩展。Chickensoft 还[推荐了一些其他扩展](https://github.com/chickensoft-games/GodotGame/blob/main/.vscode/extensions.json)，使开发更容易。
+
+### 💾 Godot 和 C# 的 VSCode 设置
+
+我们需要重新打开 OmniSharp——默认情况下，它不应该被关闭。
+
+将 VSCode 设置作为 JSON 文件打开，然后添加以下设置：
+
+```json
+"dotnetAcquisitionExtension.enableTelemetry": false,
+// Increases project compatibility with the C# extension.
+"dotnet.preferCSharpExtension": true,
+```
+
+Chickensoft 还建议使用以下附加设置来获得愉快的 C# 开发体验：
+
+```json
+"csharp.suppressHiddenDiagnostics": false,
+// Draw a line between selected brackets so you can see blocks of code easier.
+"editor.guides.bracketPairs": "active",
+
+"[csharp]": {
+  "editor.codeActionsOnSave": {
+    "source.addMissingImports": "explicit",
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true
+},
+
+// To make bash the default terminal on Windows, add these:
+"terminal.integrated.defaultProfile.windows": "Git Bash",
+"terminal.integrated.profiles.windows": {
+  "Command Prompt": {
+    "icon": "terminal-cmd",
+    "path": [
+      "${env:windir}\\Sysnative\\cmd.exe",
+      "${env:windir}\\System32\\cmd.exe"
+    ]
+  },
+  "Git Bash": {
+    "icon": "terminal",
+    "source": "Git Bash"
+  },
+  "PowerShell": {
+    "icon": "terminal-powershell",
+    "source": "PowerShell"
+  }
+}
+```
+
+最后，C# 的语义高亮显示有点奇怪，所以你可以通过添加这些颜色调整来解决这个问题：
+
+> **C# 语义语法高亮颜色校正设置**
+>
+> ```json
+> "editor.tokenColorCustomizations": {
+>   "[*Dark*]": {
+>     // Themes that include the word "Dark" in them.
+>     "textMateRules": [
+>       {
+>         "scope": "comment.documentation",
+>         "settings": {
+>           "foreground": "#608B4E"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.attribute",
+>         "settings": {
+>           "foreground": "#C8C8C8"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.cdata",
+>         "settings": {
+>           "foreground": "#E9D585"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.delimiter",
+>         "settings": {
+>           "foreground": "#808080"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.name",
+>         "settings": {
+>           "foreground": "#569CD6"
+>         }
+>       }
+>     ]
+>   },
+>   "[*Light*]": {
+>     // Themes that include the word "Light" in them.
+>     "textMateRules": [
+>       {
+>         "scope": "comment.documentation",
+>         "settings": {
+>           "foreground": "#008000"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.attribute",
+>         "settings": {
+>           "foreground": "#282828"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.cdata",
+>         "settings": {
+>           "foreground": "#808080"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.delimiter",
+>         "settings": {
+>           "foreground": "#808080"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.name",
+>         "settings": {
+>           "foreground": "#808080"
+>         }
+>       }
+>     ]
+>   },
+>   "[*]": {
+>     // Themes that don't include the word "Dark" or "Light" in them.
+>     // These are some bold colors that show up well against most dark and
+>     // light themes.
+>     //
+>     // Change them to something that goes well with your preferred theme :)
+>     "textMateRules": [
+>       {
+>         "scope": "comment.documentation",
+>         "settings": {
+>           "foreground": "#0091ff"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.attribute",
+>         "settings": {
+>           "foreground": "#8480ff"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.cdata",
+>         "settings": {
+>           "foreground": "#0091ff"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.delimiter",
+>         "settings": {
+>           "foreground": "#aa00ff"
+>         }
+>       },
+>       {
+>         "scope": "comment.documentation.name",
+>         "settings": {
+>           "foreground": "#ef0074"
+>         }
+>       }
+>     ]
+>   }
+> },
+
+## ✨ 创建 Godot 项目
+
+Chickensoft 提供了一些 `dotnet new` 模板，帮助您快速创建用于 Godot 4 的 C# 项目。
+
+现在您已经配置了环境（希望从那时起重新启动），您应该能够从终端使用 `dotnet` 工具来安装 Chickensoft 的开发模板。
+
+```shell
+dotnet new install Chickensoft.GodotGame
+dotnet new install Chickensoft.GodotPackage
+```
+
+### 🎮 创建 Godot 游戏
+
+GodotGame 模板允许您快速生成具有 VSCode 调试启动配置、测试（本地和 CI/CD）、代码覆盖率、依赖更新检查和拼写检查的游戏！
+
+要创建一个新游戏，只需运行以下命令并在 Godot 和 VSCode 中打开生成的目录。
+
+```shell
+dotnet new chickengame --name "MyGameName" --param:author "My Name"
+
+cd MyGameName
+dotnet restore
+```
+
+🥳 终于——你终于准备好做游戏了！
+
+### 📦 创建可重复使用的 Nuget 包
+
+如果你想在项目之间共享编译的源代码，或者允许其他人在他们的项目中使用你的代码，你可以发布 Nuget 包。
+
+使用 GodotPackage 模板可以设置具有连续集成、自动格式化、VSCode 调试器配置文件和预配置单元测试项目的包。
+
+```shell
+dotnet new --install Chickensoft.GodotPackage
+
+dotnet new chickenpackage --name "MyPackageName" --param:author "My Name"
+
+cd MyPackageName
+/path/to/godot4 --headless --build-solutions --quit
+dotnet build
+```
+
+在 VSCode 中打开新项目，并使用提供的启动配置来调试应用程序。
+
+> **提示**
+>
+> 如果您需要共享代码**和**其他资源文件，如场景、纹理、音乐和任何其他非 C# 源文件，则应使用 Godot 资产库（Godot Asset Library）包。Chickensoft 的 GodotEnv CLI 工具允许您轻松地在项目中安装和管理插件。
+
 # SuperNodes
 
 [SuperNodes](https://github.com/chickensoft-games/SuperNodes) 是一个 C# 源代码生成器，为 Godot 节点脚本提供超能力。
@@ -3571,3 +4052,2014 @@ public void LoadsGame() {
 所包含的 `renovate.json` 包括一些配置选项，以限制 Renovatebot 打开拉取请求的频率，以及 regex 过滤掉一些版本不好的依赖项以防止无效的依赖项版本更新。
 
 如果您的项目设置为在合并拉取请求之前需要批准，并且您希望利用 Renovatebot 的自动合并功能，则可以安装 Renovate Approve 机器人程序来自动批准 Renovate 依赖关系 PR。如果您需要两个批准，则可以安装相同的 Renovate Approve 2 机器人程序。有关详细信息，请参阅此部分。
+
+# Godot Test Driver
+
+https://github.com/chickensoft-games/GodotTestDriver
+
+这个库提供了一个 API，它简化了编写 Godot 项目的集成测试。
+
+- ✅ 将集成测试与 Godot 项目的实现细节解耦。
+- ✅ 轻松模拟鼠标点击、按键和输入操作。
+- ✅ Godot 的许多内置节点的驱动程序，使模拟复杂交互变得容易。
+- ✅ 支持轻松设置测试夹具并在测试后正确销毁它们。
+
+> **注意**
+>
+> GodotTestDriver 由 derkork 创建，现在由 Chickensoft 开源社区维护（经许可）。
+
+> **注意**
+>
+> GodotTestDriver 不是测试执行器。我们建议 GoDotTest 在 Godot 游戏中执行测试。
+
+## 如何使用 GodotTestDriver
+
+### 安装
+
+GodotTestDriver 发布在 NuGet 上。要添加它，请使用此命令行命令（或 IDE 的 NuGet 工具）：
+
+```shell
+dotnet add package GodotTestDriver
+```
+
+如果您的目标是 `netstandard2.1`，也可以在 `.csproj` 文件中添加以下行，使其与 Godot 一起工作：
+
+```xml
+<PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+</PropertyGroup>
+```
+
+### 真实世界示例
+
+- [OpenSCAD 图形编辑器](https://github.com/derkork/openscad-graph-editor/tree/master/Tests)
+- [Chickensoft 3D 游戏演示](https://github.com/chickensoft-games/GameDemo)
+
+### 固定设施（Fixtures）
+
+此库提供了一个 `Fixture` 类，可用于创建和自动处理 Godot 节点和场景。fixture 确保所有树修改都在主线程上运行。
+
+```c#
+using GodotTestDriver;
+
+class MyTest {
+     // You will need get hold of a SceneTree instance. The way you get
+     // hold of it will depend on the testing framework you use.
+    SceneTree tree = ...;
+    Fixture fixture;
+    Player player;
+    Arena arena;
+
+    // This is a setup method. The exact way of how stuff is set up
+    // differs from framework to framework, but most have a setup
+    // method.
+    async Task Setup() {
+        // Create a new Fixture instance.
+        fixture = new Fixture(tree);
+
+        // load the arena scene. It will be automatically
+        // disposed of when the fixture is disposed.
+        arena = await fixture.LoadAndAddScene<Arena>("res://arena.tscn");
+
+        // load the player. it also will be automatically disposed.
+        player = fixture.LoadScene<Player>("res://player.tscn");
+
+        // add the player to the arena.
+        arena.AddChild(player);
+    }
+
+
+    async Task TestBattle() {
+        // load a monster. again, it will be automatically disposed.
+        var monster = fixture.LoadScene<Monster>("res://monster.tscn");
+
+        // add the monster to the arena
+        arena.AddChild(monster);
+
+        // create a weapon on the fly without loading a scene.
+        // We call fixture.AutoFree to schedule this object for
+        // deletion when the fixture is cleaned up.
+        var weapon = fixture.AutoFree(new Weapon());
+
+        // add the weapon to the player.
+        arena.AddChild(weapon);
+
+
+        // run the actual tests.
+        ....
+    }
+
+    // You can also add custom cleanup steps to the fixture while
+    // the test is running. These will be performed after the
+    // test is done. This is very useful for cleaning up stuff
+    // that is created during the tests.
+    async Task TestSaving() {
+        ...
+        // save the game
+        GameDialog.SaveButton.Click();
+
+        // await file operations here
+
+        // instruct the fixture to delete our savegame in the
+        // cleanup phase.
+        fixture.AddCleanupStep(() => File.Delete("user://savegame.dat"));
+
+        // assert that the game was saved
+        Assert.That(File.Exists("user://savegame.dat"));
+
+        ....
+        // when the test is done, the fixture will run your custom
+        // cleanup step (e.g. delete the save game in this case)
+    }
+
+
+    // This is a cleanup method. Like the setup method, the exact
+    // way of how stuff is cleaned up differs from framework to
+    // framework, but most have a cleanup method.
+    async Task TearDown() {
+        // dispose of anything we created during the test.
+        // this will also run all custom cleanup steps.
+        await Fixture.Cleanup();
+    }
+}
+```
+
+#### 通过命名约定加载场景
+
+如果您的项目中有许多场景，那么一直将场景路径硬编码到测试中可能会变得很麻烦。这也会使在项目中移动场景变得更加困难。
+
+要解决此问题，可以使场景遵循命名约定。例如，假设 `Player/Player.tscn` 场景的根节点是将其脚本存储在 `Player/Player.cs` 中的 `Player` 节点。然后，您可以像这样简单地加载场景：
+
+```c#
+var player = fixture.LoadScene<Player>();
+```
+
+为了实现这一点，场景文件和脚本文件必须具有相同的名称、相同的拼写和大小写，并且必须位于同一目录中，这一点非常重要。唯一的区别必须是文件扩展名-场景文件为 `.tscn`，脚本文件为 `.cs`。
+
+## 测试驱动程序
+
+### 介绍
+
+测试驱动程序充当测试代码和游戏代码之间的抽象层。它们是一个高级界面，测试可以通过它“看到”游戏并与之交互。有了测试驱动程序，你的游戏测试不需要知道游戏是如何在引擎盖下工作的。这使您的测试更易于更改。
+
+### 生成供测试驱动程序工作的节点
+
+测试驱动程序在节点树的一部分上工作。每个测试驱动程序都以一个*生产者*作为参数，这个函数应该从驱动程序将要处理的当前树中生成一个节点。例如，`ButtonDriver` 采用一个生成按钮节点的函数。
+
+该节点的具体生成方式取决于您的游戏和测试设置。假设您将使用具有某种 `SetUp` 方法的经典测试框架：
+
+```c#
+class MyTest {
+
+    ButtonDriver buttonDriver;
+
+    async Task Setup() {
+        buttonDriver = new ButtonDriver(() => GetTree().GetNodeOrNull<Button>("UI/MyButton"));
+
+        // ... more setup here
+    }
+}
+```
+
+在本例中，`ButtonDriver` 将尝试使用 `GetNodeOrNull` 函数获取它应该处理的节点。当构造驱动程序时，它不会检查节点是否实际存在。只有在使用驱动程序时才会发生这种情况。通过这种方式，您可以在没有匹配节点结构的情况下设置驱动程序。这非常有用，因为节点结构可以在测试运行时动态更改（例如，对话框可以添加到场景中或从场景中删除，与怪物或玩家相同）。
+
+### 使用测试驱动程序
+
+创建测试驱动程序后，您可以在测试中使用它：
+
+```c#
+
+void TestButtonDisappearsWhenClicked() {
+    // when
+    // will click the button in its center. This will actually
+    // move the mouse set a click and trigger all the events of a
+    // proper button click.
+    buttonDriver.ClickCenter();
+
+    // then
+    // the button should be present but invisible.
+    Assert.That(button.Visible).IsFalse();
+}
+```
+
+请注意您的测试现在是如何与驱动程序接口的，而不是与底层节点结构接口的。当调用 `ClickCenter` 方法，但按钮实际上不存在且不可见时，该方法将抛出一个异常，解释为什么现在不能单击按钮。这样，当你测试游戏时，你会得到正确的错误消息，而不仅仅是 `NullReferenceException`，这对调试测试有很大帮助。
+
+### 测试驱动程序的组成
+
+单独使用测试驱动程序是很好的，但它只适用于非常简单的情况。大多数时候，你会有复杂的嵌套节点结构，这些结构构成了你的游戏实体和 UI。因此，您可以将测试驱动程序组成树状结构来表示这些实体。假设你弹出一个对话框，询问玩家是否想在退出前保存游戏。它由三个按钮和一个标签组成。
+
+您可以编写一个自定义驱动程序，将此对话框表示为测试：
+
+```c#
+
+// the root of the dialog would be a panel container.
+class ConfirmationDialogDriver : ControlDriver<PanelContainer> {
+
+    // we have a label and three buttons
+    public LabelDriver Label { get; }
+    public ButtonDriver YesButton { get; }
+    public ButtonDriver NoButton { get; }
+    public ButtonDriver CancelButton { get; }
+
+    public ConfirmationDialogDriver(Func<PanelContainer> producer) : base(producer) {
+        // for each of the elements we create a new driver, that
+        // uses a producer fetching the respective node from below
+        // our own root node.
+
+        // Root is a built-in property of the driver base class,
+        // which will run the producer function to get the root node.
+        Label = new LabelDriver(() => Root?.GetNodeOrNull<Label>("VBox/Label"));
+        YesButton = new ButtonDriver(() => Root?.GetNodeOrNull<Button>("VBox/HBox/YesButton"));
+        NoButton = new ButtonDriver(() => Root?.GetNodeOrNull<Button>("VBox/HBox/NoButton"));
+        CancelButton = new ButtonDriver(() => Root?.GetNodeOrNull<Button>("VBox/HBox/CancelButton"));
+    }
+}
+```
+
+现在，我们可以在测试中使用此驱动程序来测试对话框：
+
+```c#
+ConfirmationDialogDriver dialogDriver;
+
+async Task Setup() {
+    // prepare the driver
+    dialogDriver = new ConfirmationDialogDriver(() => GetTree().GetNodeOrNull<PanelContainer>("UI/ConfirmationDialog"));
+}
+
+
+void ClickingYesClosesTheDialog() {
+    // when
+    // we click the yes button.
+    dialogDriver.YesButton.ClickCenter();
+
+    // then
+    // the dialog should be gone.
+    Assert.That(dialogDriver.Visible).IsFalse();
+}
+```
+
+请注意，由于驱动程序的实现方式 `dialogDriver.YesButton` 永远不会抛出 `NullReferenceException`，即使该按钮当前不在树中。这大大简化了测试代码。此外，您的测试代码现在已经与实际的节点结构完全解耦。如果您决定更改对话框的节点结构，则只需要更改 `ConfirmationDialogDriver`，而不需要更改所有使用它的测试。
+
+### 内置驱动程序
+
+- [BaseButtonDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/BaseButtonDriver.cs) - 类似按钮的 UI 元素的驱动程序基类
+- [ButtonDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/ButtonDriver.cs) - 按钮驱动程序
+- [Camera2DDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/Camera2DDriver.cs) - 2D 相机的驱动程序
+- [CanvasItemDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/CanvasItemDriver.cs) - 画布项目的驱动程序
+- [CheckBoxDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/CheckBoxDriver.cs) - 复选框的驱动程序
+- [ControlDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/ControlDriver.cs) - 操作控件的驱动程序的根驱动程序类，可用于任何控件
+- [GraphEditDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/GraphEditDriver.cs) - 图形编辑器的驱动程序
+- [GraphNodeDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/GraphNodeDriver.cs) - 图形节点的驱动程序
+- [ItemListDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/ItemListDriver.cs) - 项目列表的驱动程序
+- [LabelDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/LabelDriver.cs) - 标签驱动程序
+- [LineEditDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/LineEditDriver.cs) - 行编辑的驱动程序
+- [Node2DDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/Node2DDriver.cs) - 2D 节点的驱动程序
+- [NodeDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/NodeDriver.cs) - 根驱动程序类。
+- [OptionButtonDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/OptionButtonDriver.cs) - 选项按钮的驱动程序
+- [PopupMenuDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/PopupMenuDriver.cs) - 弹出菜单的驱动程序
+- [RichTextLabelDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/RichTextLabelDriver.cs) - 富文本标签的驱动程序
+- [Sprite2DDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/Sprite2DDriver.cs) - 2D 精灵的驱动程序
+- [TextEditDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/TextEditDriver.cs) - 文本编辑的驱动程序
+- [WindowDriver](https://github.com/chickensoft-games/GodotTestDriver/blob/main/GodotTestDriver/Drivers/WindowDriver.cs) - 用于窗口的驱动程序
+
+## 输入
+
+GodotTestDriver 提供了许多扩展方法，允许您模拟用户输入。
+
+> **注意**
+>
+> 除了需要经过时间的方法（例如，`Node::HoldActionFor()`）外，这些函数不等待额外的帧经过。当您需要额外的帧来处理输入时，GodotTestDriver 提供等待扩展，如下所述。
+
+### 模拟鼠标输入
+
+GodotTest 在 `Viewport` 上提供了许多扩展功能，允许您模拟视口中的鼠标输入。
+
+```c#
+// you can move the mouse to a certain position (e.g. for simulating a hover)
+viewport.MoveMouseTo(new Vector2(100, 100));
+
+// you can click at a certain position (default is left mouse button)
+viewport.ClickMouseAt(new Vector2(100, 100));
+
+// you can give a ButtonList argument to click with a different mouse button
+viewport.ClickMouseAt(new Vector2(100, 100), ButtonList.Right);
+
+// you can also send single mouse presses and releases
+viewport.PressMouse();
+viewport.ReleaseMouse();
+
+// there is also built-in support for mouse dragging
+// this will press the mouse at the first point, then move it to the
+// second point and release it there.
+viewport.DragMouse(new Vector2(100, 100), new Vector2(400, 400));
+
+// again you can give a ButtonList argument to drag with a different mouse button
+viewport.DragMouse(new Vector2(100, 100), new Vector2(400, 400), ButtonList.Right);
+```
+
+### 模拟键盘输入
+
+GodotTest 在 `SceneTree`/`Node` 上提供了许多扩展功能，允许您模拟键盘输入。
+
+```c#
+// you can press down a key
+node.PressKey(KeyList.A);
+// you can also specify modifiers (e.g. shift+F1)
+node.PressKey(KeyList.F1, shift: true);
+// you can also specify multiple modifiers (e.g. ctrl+shift+F1)
+node.PressKey(KeyList.F1, control: true, shift: true);
+
+// you can release a key
+node.ReleaseKey(KeyList.A);
+
+// you can also combine pressing and releasing a key
+node.TypeKey(KeyList.A);
+```
+
+### 模拟控制器输入
+
+GodotTest 在 `SceneTree` / `Node` 上提供了许多扩展功能，允许您使用 Godot 的 `InputEventJoypadButton` 和 `InputEventJoypadMotion` 事件模拟控制器输入。
+
+```c#
+// you can press down a controller button
+node.PressJoypadButton(JoyButton.Y);
+
+// you can release a controller button
+node.ReleaseJoypadButton(JoyButton.Y);
+
+// you can specify a particular controller device
+var deviceID = 0;
+node.PressJoypadButton(JoyButton.Y, deviceID);
+node.ReleaseJoypadButton(JoyButton.Y, deviceID);
+
+// you can simulate pressure for pressure-sensitive devices
+var pressure = 0.8f;
+node.PressJoypadButton(JoyButton.Y, deviceID, pressure);
+node.ReleaseJoypadButton(JoyButton.Y, deviceID);
+
+// you can combine pressing and releasing a button
+node.TapJoypadButton(JoyButton.Y, deviceID, pressure);
+
+// you can move an analog controller axis to a given position, with 0 being the rest position
+// for instance:
+// * a gamepad trigger will range from 0 to 1
+// * a thumbstick's x-axis will range from -1 to 1
+node.MoveJoypadAxisTo(JoyAxis.RightX, -0.3f);
+
+// you can release a controller axis (equivalent to setting its position to 0)
+node.ReleaseJoypadAxis(JoyAxis.RightX);
+
+// you can specify a particular controller device
+node.MoveJoypadAxisTo(JoyAxis.RightX, -0.3f, deviceID);
+node.ReleaseJoypadAxis(JoyAxis.RightX, deviceID);
+
+// hold a controller button for 1.5 seconds
+await node.HoldJoypadButtonFor(1.5f, JoyButton.Y, deviceID, pressure);
+// hold a controller axis position for 1.5 seconds
+await node.HoldJoypadAxisFor(1.5f, JoyAxis.RightX, -0.3f, deviceID);
+```
+
+使用映射动作模拟控制器输入，用于 Godot 的 `Input.GetActionStrength()`，`Input.GetAxis()` 和 `Input.GetVector()` 方法，请参阅下一节。
+
+### 模拟其他动作
+
+从 2.1.0 版本开始，您现在也可以模拟如下操作：
+
+```c#
+// start the jump action
+node.StartAction("jump");
+// end the jump action
+node.EndAction("jump");
+
+// hold an action pressed for 1 second
+await node.HoldActionFor(1.0f, "jump");
+```
+
+## 等待扩展
+
+GodotTestDriver 在 `SceneTree` 上提供了许多扩展功能，允许您等待某些事件发生。这是集成测试中的一个常见要求，在集成测试中，您将单击或发送一些按键，然后发生一些需要一段时间才能处理的操作。
+
+```c#
+Fixture fixture;
+// this is a custom driver for the game under test
+ArenaDriver arena;
+
+public async Task Setup() {
+    fixture = new Fixture(GetTree());
+    // add the arena to the scene
+    var arenaInstance = fixture.LoadAndAddScene("res://arena.tscn");
+    arena = new ArenaDriver(() => arenaInstance);
+
+    // load a monster and put it into the arena
+    var monster = fixture.LoadScene<Monster>("res://monster.tscn");
+    arena.AddMonster(monster);
+
+    // load a player and put it into the arena
+    var player = fixture.LoadScene<Player>("res://player.tscn");
+    arena.AddPlayer(player);
+}
+
+// you can wait for a certain amount of time for a condition
+// to become true
+public async Task TestCombat() {
+    // when
+    // i open the arena gates
+    arena.OpenGates();
+
+    // then
+    // within 5 seconds the player should be dead because
+    // the monster will attack the player.
+    await GetTree().WithinSeconds(5, () => {
+        // this assertion will be repeatedly run every frame
+        // until it either succeeds or the 5 seconds have elapsed
+        Assert.True(arena.Player.IsDead);
+    });
+}
+
+// you can also check for a condition to stay true for a
+// certain amount of time
+public async Task TestGodMode() {
+    // setup
+    // give god mode to the player
+    arena.Player.EnableGodMode();
+
+    // when
+    // i open the arena gates
+    arena.OpenGates();
+
+    // then
+    // the player will not lose any health within the next 5 seconds
+    await GetTree().DuringSeconds(5, () => {
+        // this assertion will be repeatedly run every frame
+        // until it either fails or the 5 seconds have elapsed
+        Assert.Equal(arenaDriver.Player.MaxHealth, arenaDriver.Player.Health);
+    });
+}
+```
+
+### 编写自己的驱动程序
+
+- 如果受控对象处于执行请求操作的适当状态，则所有调用都应成功。否则，这些调用应该引发 `InvalidOperationException`。例如，如果您使用 `ButtonDriver`，而尝试单击按钮时该按钮当前不可见，则驱动程序将引发 `InvalidOperationException`。
+- 生产者函数永远不应该抛出异常。如果他们找不到节点，他们应该只返回 `null`。
+
+# 💡 LogicBlocks
+
+https://github.com/chickensoft-games/LogicBlocks
+
+为 C# 中的游戏和应用程序提供人性化、层次化的状态机。
+
+逻辑块借用了[状态图 statecharts](https://statecharts.dev/)、状态机和[块 blocs](https://www.flutteris.com/blog/en/reactive-programming-streams-bloc)，以提供灵活且易于使用的 API。
+
+LogicBlocks 不需要开发人员编写复杂的转换表，而是允许开发人员使用状态模式定义读起来像普通代码的自包含状态。逻辑块旨在便于重构，并随着项目的发展从简单的状态机发展到嵌套的分层状态图。
+
+> 🖼 有没有想过你的代码是什么样子的？LogicBlocks 包括一个实验生成器，它允许您将逻辑块可视化为状态图——现在您的图将始终是最新的！
+
+## 🙋 什么是逻辑块（Logic Block）？
+
+**逻辑块是一个可以接收输入、维持状态并产生输出的类**。你如何设计你的状态取决于你自己。输出允许逻辑块侦听器被告知没有像状态那样持久化的一次性事件，允许逻辑块在没有紧密耦合的情况下影响周围的世界。此外，逻辑块状态可以从逻辑块的*黑板*中检索整个逻辑块共享的值。
+
+> 🧑‍🏫 您可能已经注意到，我们从行为树中借用了*黑板*这个术语——这是防止状态和逻辑块之间的依赖关系强耦合的好方法。然而，LogicBlocks 黑板允许您按类型请求对象，而不是基于字符串。
+
+这里是一个电灯开关的最小示例。更多✨ 先进的✨ 示例链接如下。
+
+```c#
+using Chickensoft.LogicBlocks;
+using Chickensoft.LogicBlocks.Generator;
+
+[StateMachine]
+public class LightSwitch : LogicBlock<LightSwitch.State> {
+  public override State GetInitialState() => new State.SwitchedOff();
+
+  public static class Input {
+    public readonly record struct Toggle;
+  }
+
+  public abstract record State : StateLogic {
+    // "On" state
+    public record SwitchedOn : State, IGet<Input.Toggle> {
+      public State On(Input.Toggle input) => new SwitchedOff();
+    }
+
+    // "Off" state
+    public record SwitchedOff : State, IGet<Input.Toggle> {
+      public State On(Input.Toggle input) => new SwitchedOn();
+    }
+  }
+}
+```
+
+## 🖼 可视化逻辑块
+
+逻辑块源生成器可以用于生成代码所表示的状态图的 UML 图。它在您构建项目时运行（并且在 IDE 命令时运行），因此您将始终拥有项目中逻辑块的最新关系图。
+
+以下是由上面的电灯开关示例生成的图表：
+
+- [**`LightSwitch.cs`**](https://github.com/chickensoft-games/LogicBlocks/blob/main/Chickensoft.LogicBlocks.Generator.Tests/test_cases/LightSwitch.cs)
+
+## 👷 如何使用逻辑块？
+
+要与逻辑块交互，只需给它一个输入。输入按接收顺序排队并一次处理一个。
+
+```c#
+var lightSwitch = new LightSwitch();
+
+// Toggle the light switch.
+lightSwitch.Input(new LightSwitch.Input.Toggle());
+
+// You can also access the current state any time.
+lightSwitch.Value.ShouldBeOfType<LightSwitch.State.TurnedOn>();
+```
+
+逻辑块还带有一个简单的绑定系统，可以很容易地进行观察。您可以根据需要创建任意多的绑定，并在完成后简单地处理它们。
+
+```c#
+var binding = lightSwitch.Bind();
+
+binding.When<LightSwitch.State.TurnedOn>()
+  .Call((state) => Console.WriteLine("Light turned on."));
+
+binding.When<LightSwitch.State.TurnedOff>()
+  .Call((state) => Console.WriteLine("Light turned off."));
+
+// ...
+
+binding.Dispose();
+```
+
+*利用声明性绑定可以轻松地使视图或游戏组件与其底层状态保持同步*。您还可以使用绑定进行日志记录，在其他地方触发副作用，或者您能想到的任何其他事情。
+
+## 👩‍🏫 示例
+
+想找更多的例子吗？看看这些更现实、更真实的场景。
+
+- [**`Heater.cs`**](https://github.com/chickensoft-games/LogicBlocks/blob/main/Chickensoft.LogicBlocks.Generator.Tests/test_cases/Heater.cs)
+
+- [**`ToasterOven.cs`**](https://github.com/chickensoft-games/LogicBlocks/blob/main/Chickensoft.LogicBlocks.Generator.Tests/test_cases/ToasterOven.cs)
+
+- [**`VendingMachine.cs`**](https://github.com/chickensoft-games/LogicBlocks/blob/main/Chickensoft.LogicBlocks.Example/VendingMachine.cs)
+
+  [自动售货机示例项目](https://github.com/chickensoft-games/LogicBlocks/blob/main/Chickensoft.LogicBlocks.Example/Program.cs)显示了一个完全构建的 CLI 应用程序，该应用程序模拟自动售货机，包括计时器、库存和现金返还。
+
+## 💡 为什么选择LogicBlocks？
+
+逻辑块试图实现以下目标：
+
+- **🎁 自给自足的状态。**
+
+  逻辑块 API 是以摩尔机器为模型的。每个状态都是一个自包含的类型，它通过从输入处理程序返回新状态来声明可以转换到什么状态。相反，逻辑块也受益于 Mealy 机器的设计：状态可以在进入状态时检查前一个状态，也可以在退出状态时检查下一个状态。在我看来，这结合了“两全其美”，并很好地与面向对象编程相结合。
+
+- **💪 可靠的执行，即使出现错误。**
+
+  错误处理机制在很大程度上受到了 [bloc](https://bloclibrary.dev/#/) 规范实现机制的启发。不再有无效的转换异常、缺少输入处理程序警告等。如果一个状态不能处理输入，则不会发生任何事情——就这么简单！
+
+- **🎰 输入抽象**
+
+  要与逻辑块交互，必须给它一个输入对象。在状态图术语中，`input` 被称为 `event`，但我们不这么称呼它们，以避免与C#的 `event` 概念混淆（这是非常不同的）。
+
+  将输入与状态转换解耦，可以更简单地实现使用逻辑块的组件——它不必担心在给逻辑块输入之前检查逻辑块的状态。这大大减少了条件分支，将复杂性留在了状态内部。
+
+- **🪆 嵌套/层次状态。**
+
+  由于逻辑块将状态视为自包含对象，因此可以简单地使用继承来表示状态层次结构的复合状态。此外，相关的已注册状态入口和出口回调是按层次状态的正确顺序调用的。
+
+- **🧨 能够产生输出。**
+
+  输出只是简单的对象，可以包含侦听器可能感兴趣的相关数据。在状态图术语中，输出被称为 `action`，但我们不这么称呼它们，以避免与 C# 的 `action` 概念混淆，后者非常不同。
+
+  可以在逻辑块的执行期间的任何点产生输出。从状态输入处理程序生成输出允许您在外部世界中触发副作用，而无需您的逻辑块知道它。
+
+- **🔄 同步输入处理。**
+
+  逻辑块总是同步处理输入，允许它们通过立即响应用户输入来为响应用户界面供电。为了处理长时间运行的操作，您可以利用事件驱动的模式，或者自己从利用它们的状态中挂起正在进行的 `Task` 引用。
+
+  默认情况下同步也有助于提高性能和简单性，这使得单线程游戏逻辑变得轻而易举。
+
+- **📝 有序输入处理。**
+
+  所有输入都按照接收到的顺序一次处理一个。如果当前状态没有用于当前输入的输入处理程序，则简单地丢弃该输入。
+
+- **👩‍💻 开发者友好型。**
+
+  逻辑块的设计符合人体工程学，便于重构，并在您迭代预期状态行为时随您扩展。
+
+  如果出于任何原因，您决定从逻辑块迁移到基于表的状态机方法，那么从 Moore 机（LogicBlocks 也利用了自包含状态）到 Mealy 机（基于转换的逻辑）的转换是[非常琐碎的](https://electronics.stackexchange.com/a/73397)。另一种方式几乎没有那么容易。
+
+- **🤝 兼容性。**
+
+  适用于任何支持 `netstandard2.1` 的地方。与 Godot、Unity 或其他 C# 项目一起使用。
+
+- **🪢 内置Fluent绑定。**
+
+  逻辑块带有 `Binding`，这是一个实用程序类，为监视状态和输出提供了流畅的 API。绑定到逻辑块就像调用 `myLogicBlock.Bind()` 一样简单
+
+- **🧪 可测试。**
+
+  使用传统的模拟工具可以很容易地测试逻辑块。您可以模拟逻辑块、其上下文及其绑定，以单独对逻辑块状态和逻辑块使用者进行单元测试。
+
+## 📦 安装
+
+您可以在 nuget 上找到 LogicBlocks 的最新版本。
+
+```shell
+dotnet add package Chickensoft.LogicBlocks
+```
+
+要使用 LogicBlocks 源生成器，请将以下内容添加到 `.csproj` 文件中。确保用 nuget 的最新版本的 LogicBlocks 生成器替换 `3.0.0`。
+
+```xml
+  <PackageReference Include="Chickensoft.LogicBlocks.Generator" Version="3.0.0" PrivateAssets="all" OutputItemType="analyzer" />
+```
+
+一旦安装了这两个包，就可以在项目中使用以下命令强制生成关系图：
+
+```shell
+dotnet build --no-incremental
+```
+
+## 📚 入门
+
+由于 LogicBlock 是基于状态图的，因此它有助于理解状态图的基础知识。以下是一些可以帮助您入门的资源：
+
+- [状态机和状态图简介](https://xstate.js.org/docs/guides/introduction-to-state-machines-and-statecharts/)
+- [Statecharts.dev](https://statecharts.dev/)
+- [UML 状态机（维基百科）](https://en.wikipedia.org/wiki/UML_state_machine)
+
+### ✨ 创建逻辑块
+
+要制作一个逻辑块，您需要一个状态机或状态图的想法。从图中提取一个（或实现现有的图）是一个很好的入门方法。
+
+一旦您对想要构建的内容有了基本的想法，就可以为您的机器创建一个新的类，并简单地扩展 `LogicBlock`。
+
+对于这个例子，我们将创建一个简单的状态机来模拟空间加热器——当室外很冷时，你可能会使用这种类型来加热房间。
+
+我们的空间加热器将可以使用温度供应商服务。这种提供者的接口将被假定为如下：
+
+```c#
+/// <summary>
+/// Temperature sensor that presumably communicates with actual hardware
+/// (not shown here).
+/// </summary>
+public interface ITemperatureSensor {
+  /// <summary>Last recorded air temperature.</summary>
+  double AirTemp { get; }
+  /// <summary>Invoked whenever a change in temperature is noticed.</summary>
+  event Action<double>? OnTemperatureChanged;
+}
+```
+
+不过，稍后会有更多内容。
+
+#### 声明逻辑块
+
+我们需要为我们的逻辑块创建一个基本的脚手架，其中包括一个基本状态类型。逻辑块使用的所有其他状态都将扩展基本状态类型（或者至少是其继承层次结构中的子体）。基本状态必须在逻辑块内部定义为嵌套类型，以便它可以在后台访问 LogicBlocks 所需的类型。
+
+> 每当逻辑块状态作为当前状态附加到逻辑块时，它都会获得自己的逻辑块上下文副本。逻辑块上下文允许状态产生输出，访问黑板上的依赖项，甚至向它们所属的逻辑块添加输入。
+
+我们还将创建一个构造函数，接受逻辑块状态所需的依赖关系。在这种情况下，我们需要前面提到的温度传感器对象。在构造函数中，我们将把它添加到逻辑块的*黑板*中——任何逻辑块状态都可以访问的共享数据集合。
+
+```c#
+using Chickensoft.LogicBlocks;
+using Chickensoft.LogicBlocks.Generator;
+
+[StateMachine]
+public class Heater : LogicBlock<Heater.State> {
+    public static class Input { }
+
+    public abstract record State : StateLogic { }
+    
+    public abstract record Output { }
+
+    public Heater(ITemperatureSensor tempSensor) {
+      // Add the temperature sensor to the blackboard so states can use it.
+      Set(tempSensor);
+    }
+  }
+```
+
+> `LogicBlock` 子类还要求我们实现 `GetInitialState` 方法，但我们还没有任何状态，所以我们稍后将实现它。
+
+通常，逻辑块状态类型应该是扩展 `StateLogic` 记录的记录。`StateLogic` 记录由 LogicBlocks 提供，允许各状态跟踪入口/出口回调。
+
+> [C# 记录](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/records)只是与类相同的引用类型，并增加了免费提供浅相等比较的改进。
+>
+> LogicBlocks 经过优化以避免转换到相同的后续状态，因此使用记录可以让我们在不付出任何努力的情况下利用这一点。
+
+我们还创建了两个空的静态类 `Input` 和 `Output`。LogicBlock 不需要这些，它只是帮助组织我们的输入和输出，这样我们就可以在一个地方看到它们。能够在文件中向上或向下滚动，查看逻辑块可以使用的所有输入和输出，这很好。
+
+最后，我们将 `[StateMachine]` 属性添加到我们的逻辑块类中，以告诉 LogicBlocks 源生成器关于我们的机器。将 `[StateMachine]` 属性放在逻辑块上允许LogicBlocks生成器找到逻辑块并生成将其可视化为图片所需的UML图代码。
+
+### ⤵️ 定义输入和输出
+
+既然我们已经剔除了一个逻辑块，我们就可以定义我们的输入和输出了。当然，这些将针对眼前的问题。
+
+输入只是包含状态工作所需的任何数据的值。逻辑块将输入排队并一次处理一个。当前状态负责处理当前正在处理的任何输入。如果它不处理它，则简单地丢弃输入，并以相同的方式处理任何剩余的输入。
+
+输出是由状态产生并发送到逻辑块的任何侦听器的一次性值。输出可用于保持视图或其他可视化系统（如游戏组件）与机器的当前状态同步。
+
+```c#
+  public static class Input {
+    public readonly record struct TurnOn;
+    public readonly record struct TurnOff;
+    public readonly record struct TargetTempChanged(double Temp);
+    public readonly record struct AirTempSensorChanged(double AirTemp);
+  }
+
+  public static class Output {
+    public readonly record struct FinishedHeating;
+  }
+```
+
+我们的每一个输入都代表了与我们正在设计的机器相关的事情。由于我们正在对空间加热器进行建模，我们已经为所有可能发生的事情提供了输入，例如打开和关闭它，改变目标温度，以及从空气温度传感器接收新的读数。我们还想知道房间何时达到所需的目标温度，所以我们添加了 `FinishedHeating` 输出。
+
+> 您可能注意到，我们将每个输入和输出都设置为 `readonly record struct`。使用记录类型使我们能够利用简写的主构造函数语法，从而大大减少了对简单数据对象所需的键入量。
+>
+> 此外，对输出使用 `readonly record struct` 通常也允许 C# 编译器将它们保留在堆栈中。如果我们使用非值类型（普通记录或类），它们几乎肯定最终会被分配到堆上，这可能会很昂贵。由于几乎在视频游戏或其他高度交互式系统的每一帧都添加输入并产生输出并不罕见，因此尽可能少地分配堆是很重要的。
+
+### 💡 定义状态
+
+我们知道我们的空间加热器将处于三种状态之一：`Off`、`Idle`（打开但不加热）和 `Heating`（打开*并*加热）。由于我们想象中的空间加热器有一个控制所需室温（目标温度）的旋钮，我们知道我们所有的状态都应该具有 `TargetTemp` 属性。最后，我们希望我们的空间加热器能够根据空气温度读数自动启动和停止加热。
+
+让我们首先定义每个状态所共有的信息和行为。我们知道，如果旋转温度旋钮，无论加热器处于何种状态，其目标温度都会发生变化。因此，让我们在基本状态本身上添加一个 `TargetTemp` 属性和一个用于更改目标温度的输入处理程序。这样，所有其他从它继承的状态都将免费获得该功能。这也是有道理的，因为无论加热器是开着还是关着，你都可以转动温度旋钮。
+
+```c#
+[StateMachine]
+public class Heater : LogicBlock<Heater.State> {
+  ...
+
+  public abstract record State : StateLogic, IGet<Input.TargetTempChanged> {
+    public double TargetTemp { get; init; }
+
+    public State On(Input.TargetTempChanged input) => this with {
+      TargetTemp = input.Temp
+    };
+  }
+
+  ...
+}
+```
+
+这看起来很好：每当我们的空间加热器上的假想温度旋钮转动时，它就会更新状态的 `TargetTemp` 属性。
+
+让我们进入 `Off` 状态。这将非常简单。它只需要接收 `TurnOn` 事件并检查温度传感器，看看它是否需要直接进入 `Heating` 状态或应该进入 `Idle` 状态。
+
+```c#
+public record Off : State, IGet<Input.TurnOn> {
+  public State On(Input.TurnOn input) {
+    var tempSensor = Context.Get<ITemperatureSensor>();
+
+    if (tempSensor.AirTemp >= TargetTemp) {
+      // Room is already hot enough.
+      return new Idle() { TargetTemp = TargetTemp };
+    }
+
+    // Room is too cold — start heating.
+    return new Heating() { TargetTemp = TargetTemp };
+  }
+}
+```
+
+注意我们是如何使用 `Context.Get<ITemperatureSensor>` 来获取温度传感器——这就是我们从逻辑块的黑板中获取依赖关系的方式。
+
+我们需要再次使用继承技巧：`Idle` 和 `Heating` 状态都可以关闭，所以我们将创建另一个名为 `Powered` 的抽象状态类，表示加热器正在打开。
+
+```c#
+public abstract record Powered : State, IGet<Input.TurnOff> {
+  public Powered() {
+    // Whenever a Powered state is entered, play a chime to
+    // alert the user that the heater is on. Subsequent states that
+    // inherit from Powered will not play a chime until a different
+    // state has been entered before returning to a Powered state.
+    OnEnter<Powered>((previous) => Context.Output(new Output.Chime()));
+
+    // Unlike OnEnter, OnAttach will run for every state instance that
+    // inherits from this record. Use these to setup your state.
+    //
+    // Attach and detach are great for setting up long-running operations.
+    OnAttach(
+      () => Get<ITemperatureSensor>().OnTemperatureChanged += OnTemperatureChanged
+    );
+
+    OnDetach(
+      () => Get<ITemperatureSensor>().OnTemperatureChanged -= OnTemperatureChanged
+    );
+  }
+
+  public State On(Input.TurnOff input) =>
+    new Off() { TargetTemp = TargetTemp };
+
+  // Whenever our temperature sensor gives us a reading, we will just
+  // provide an input to ourselves. This lets us have a chance to change
+  // the logic block's state.
+  private void OnTemperatureChanged(double airTemp) =>
+    Context.Input(new Input.AirTempSensorChanged(airTemp));
+}
+```
+
+`Powered` 状态更有趣。构造函数注册附加和分离回调，这些回调将为扩展 `Powered` 类的状态的每个实例调用。它还注册了一个入口回调，每当状态机在处于非通电状态后转换到从通电状态继承的状态时，就会调用该入口回调。
+
+> 💡 `OnAttach` 和 `OnDetach` 与 `OnEnter` 和 `OnExit` 不同。`OnEnter` 和 `OnExit` 遵循一个状态的类型层次结构：即，如果您进入一个扩展 `Powered` 的状态，然后进入另一个扩展 `Powered` 的状态，则 `Powered` 的 OnEnter 回调将只调用一次。另一方面，对于进入的每个扩展 `Powered` 的状态，都会调用 `OnAttach` 和 `OnDetach`。
+>
+> 您应该将 `OnEnter` 和 `OnExit` 视为执行理论上正确行为（如生成输出）的地方，将 `OnAttach` 和 `OnDetach` 视为设置实际行为（如注册事件处理程序或执行普通设置）的地方。
+>
+> 最后，*状态附加和入口之间的区别对于序列化很重要*。当反序列化状态机时，您不想重新调用入口回调，但您确实需要执行在序列化状态机之前完成的任何设置。附件回调允许在反序列化时对状态进行旋转备份，而不会产生意外的副作用。
+
+在附件回调中，`Powered` 状态订阅温度传感器的 `OnTemperatureChanged` 事件。同样，它在从逻辑块分离之前取消订阅。
+
+每当空气温度传感器通知我们一个新值时，就会调用状态上的私有方法 `OnTemperatureChanged`。它使用上下文在拥有状态的逻辑块上激发输入。输入将由逻辑块的当前状态处理，在这种情况下，它只是触发输入的状态 `Powered`。这是一个很好的技巧，可以创建对服务的订阅，允许状态触发状态转换以响应其他地方发生的事件。
+
+> 请注意，我们使用了在状态 `Get<TDataType>()` 中提供的方法：它是如上所示的 `Context.Get` 方法的简写，但为我们节省了一些输入。
+
+现在让我们添加 `Idle` 状态。它所需要做的就是对空气温度的变化做出反应，并在温度下降到远低于目标温度时开始加热。由于 `Idle` 将继承 `Powered`，它将自动订阅空气温度的变化，这将导致它接收 `AirTempSensorChanged` 输入。
+
+```c#
+public record Idle : Powered, IGet<Input.AirTempSensorChanged> {
+  public State On(Input.AirTempSensorChanged input) {
+    if (input.AirTemp < TargetTemp - 3.0d) {
+      // Temperature has fallen too far below target temp — start heating.
+      return new Heating() { TargetTemp = TargetTemp };
+    }
+    // Room is still hot enough — keep waiting.
+    return this;
+  }
+}
+```
+
+最后，我们需要制作 `Heating` 状态。它的功能类似于闲置（Idle），但当房间达到目标温度时，它将恢复闲置，而不是打开暖气。
+
+```c#
+public record Heating : Powered, IGet<Input.AirTempSensorChanged> {
+  public State On(Input.AirTempSensorChanged input) {
+    if (input.AirTemp >= TargetTemp) {
+      // We're done heating!
+      Context.Output(new Output.FinishedHeating());
+      return new Idle() { TargetTemp = TargetTemp };
+    }
+    // Room isn't hot enough — keep heating.
+    return this;
+  }
+}
+```
+
+当处理 `AirTempSensorChanged` 输入时，它会检查新温度是否达到或高于目标温度。如果是，它会触发 `FinishedHeating` 输出，让任何逻辑块侦听器都知道我们成功地完成了空间加热器的工作。然后返回 `Idle` 状态。
+
+我们即将完成我们的逻辑块——我们所需要做的就是定义初始状态！
+
+```c#
+[StateMachine]
+public class Heater :
+  LogicBlock<Heater.Input, Heater.State> {
+  ...
+
+  public override State GetInitialState() => new State.Off() {
+    TargetTemp = 72.0
+  };
+
+  ...
+}
+```
+
+每次我们创建逻辑块类时，都必须重写 `GetInitialState` 以提供启动状态。在这种情况下，我们只需返回目标温度为 72 度（华氏度）的关闭状态。
+
+### 🪢 绑定到 LogicBlock
+
+如果您错过了上面的内容，完整的空间加热器示例可在 [`Heater.cs`](https://github.com/chickensoft-games/LogicBlocks/blob/main/Chickensoft.LogicBlocks.Generator.Tests/test_cases/Heater.cs) 中找到。
+
+要使用我们的逻辑块，我们必须首先制作一个符合上面提到的 `ITemperatureSensor` 接口的温度传感器。
+
+```c#
+public record TemperatureSensor : ITemperatureSensor {
+  public double AirTemp { get; set; } = 72.0d;
+  public event Action<double>? OnTemperatureChanged;
+
+  public void UpdateReading(double airTemp) {
+    AirTemp = airTemp;
+    OnTemperatureChanged?.Invoke(airTemp);
+  }
+}
+```
+
+现在，在我们的应用程序或游戏代码的某个地方，我们可以创建一个新的逻辑块实例并绑定到它。
+
+```c#
+var tempSensor = new TemperatureSensor();
+var heater = new Heater(tempSensor);
+
+using var binding = heater.Bind();
+
+var messages = new List<string>();
+
+// Handle an output produced by the heater.
+binding.Handle<Heater.Output.FinishedHeating>(
+  (output) => messages.Add("Finished heating :)")
+);
+
+binding.When<Heater.State.Off>().Call(
+  (state) => messages.Add("Heater turned off")
+);
+
+// Listen to all states that inherit from Heater.State.Powered.
+binding.When<Heater.State.Powered>().Call(
+  (state) => messages.Add("Heater is powered")
+);
+
+binding.When<Heater.State.Idle>().Call(
+  (state) => messages.Add("Heater is idling")
+);
+
+binding.When<Heater.State.Heating>().Call(
+  (state) => messages.Add("Heater is heating")
+);
+
+binding.When<Heater.State>()
+  .Use(
+    data: (state) => state.TargetTemp,
+    to: (temp) => Console.WriteLine($"Heater target temp changed to {temp}")
+  );
+
+heater.Input(new Heater.Input.TurnOn());
+
+// Dropping the temp below target should move it from idling to heating
+tempSensor.UpdateReading(66.0);
+// Raising the temp above target should move it from heating back to idling
+tempSensor.UpdateReading(74);
+
+messages.ShouldBe(new string[] {
+  "Heater is powered",
+  "Heater is idling",
+  "Heater is powered",
+  "Heater is heating",
+  "Finished heating :)",
+  "Heater is powered",
+  "Heater is idling"
+});
+```
+
+请记住，逻辑块的绑定是一次性的。您需要在逻辑块的生命周期中保留对绑定的引用，然后在完成后将其处理掉。
+
+如果状态或从状态中选择的数据没有更改，绑定将不会重新运行回调。
+
+## 🔮 其他提示
+
+### ♻️ 重复使用输入、状态和输出
+
+如果需要编写避免内存中堆分配的高性能代码，可以重用输入和状态。如果您对输出使用 `readonly record struct`，那么它们应该已经避免了堆。
+
+为了便于使用，请考虑将状态所需的任何依赖项传递到逻辑块的构造函数中。然后，在构造函数中，创建逻辑块将使用的状态。最后，在 `GetInitialState` 方法中，通过在黑板中查找返回初始状态。
+
+```c#
+namespace Chickensoft.LogicBlocks.Tests.Fixtures;
+
+using Chickensoft.LogicBlocks.Generator;
+
+[StateMachine]
+public partial class MyLogicBlock : LogicBlock<MyLogicBlock.State> {
+  public static class Input { ... }
+  public abstract record State : StateLogic { ... }
+  public static class Output { ... }
+
+  public MyLogicBlock(IMyDependency dependency) {
+    // Add dependencies and pre-created states to the blackboard so that states
+    // can reuse them.
+    Set(dependency);
+
+    // Add pre-created states to the blackboard so that states can look them up
+    // instead of having to create them.
+    Set(new State.MyFirstState());
+    Set(new State.MySecondState());
+  }
+
+  // Return the initial state by looking it up in the blackboard.
+  public override State GetInitialState() => Context.Get<MyFirstState>();
+}
+```
+
+在其他地方，在您的状态内，您可以查找要转换到的状态。
+
+```c#
+public record MyFirstState : IGet<Input.SomeInput> {
+  public State On(Input.SomeInput input) {
+    // Lookup the state we want to go to.
+    var nextState = Context.Get<MySecondState>();
+    // Transition to the pre-made state.
+    return nextState;
+  }
+}
+```
+
+> 🚨 如果在转换到重用状态之前更改重用状态的属性，则不正确地重用状态可能会破坏绑定，因为绑定仅通过引用缓存状态。为了避免这种情况，不要向可重用状态添加任何额外的属性——相反，使用黑板来存储所有状态的相关数据。
+
+### 🎤 事件
+
+如果需要对逻辑块进行完全控制，则可以手动订阅逻辑块的事件。手动订阅事件可以允许您创建一个自定义绑定系统或其他这样的系统，该系统可以监视输入、处理输出和捕获错误。
+
+```c#
+var logic = new MyLogicBlock();
+
+logic.OnInput += OnInput;
+logic.OnState += OnState;
+logic.OnOutput += OnOutput;
+logic.OnError += OnError;
+
+public void OnInput(object input) =>
+  Console.WriteLine($"Input being processed: {input}");
+
+public void OnState(MyLogicBlock.State state) =>
+  Console.WriteLine($"State changed: {state}");
+
+public void OnOutput(object output) =>
+  Console.WriteLine($"Output: {output}");
+
+public void OnError(Exception error) =>
+  Console.WriteLine($"Error occurred: {error}");
+```
+
+与任何 C# 事件一样，请确保在侦听完逻辑块后取消订阅，以避免造成内存泄漏。
+
+```c#
+logic.OnInput -= OnInput;
+logic.OnState -= OnState;
+logic.OnOutput -= OnOutput;
+logic.OnError -= OnError;
+```
+
+### 📛 错误处理
+
+默认情况下，状态中抛出的异常不会导致逻辑块停止处理输入。相反，逻辑块将调用 `OnError` 事件并继续处理输入。
+
+有两种方法可以将错误添加到逻辑块中。第一种是在状态的输入处理程序中抛出异常。第二种方法是在上下文中调用 `AddError(Exception e)` 方法。无论您选择哪种方式，这两种方法都将导致逻辑块调用其 `HandleError` 方法。唯一的区别在于您所在状态的输入处理程序是否继续运行。当然，抛出异常会中止方法的执行，同时调用 `Context.AddError` 将继续正常执行。
+
+```c#
+// Somewhere inside your logic block...
+
+public record MyState : State IGet<Input.SomeInput> {
+  ...
+
+  public void On(Input.SomeInput input) {
+    // Add an error to the logic block.
+    Context.AddError(new InvalidOperationException("Oops."));
+
+    // Same as above, but breaks out of the method.
+    throw new InvalidOperationException("Oops.");
+
+    // Use Context.AddError if you need to continue execution inside your 
+    // state method. Otherwise, feel free to throw.
+  }
+
+}
+```
+
+在需要手动控制抛出的异常是否停止应用程序的情况下，可以重写逻辑块中的 `HandleError` 方法。
+
+```c#
+[StateMachine]
+public partial class MyLogicBlock : LogicBlock<MyLogicBlock.State> {
+
+  ...
+
+  protected override void HandleError(Exception e) {
+    // This is a great place to log errors.
+
+    // Or you can stop execution on any exception that occurs inside a state.
+    throw e; 
+  }
+
+  ...
+}
+```
+
+### 💥 初始状态副作用
+
+默认情况下，LogicBlocks 不会调用初始状态注册的任何 `OnEnter` 回调，因为 state 属性在第一次访问初始状态时会惰性地创建初始状态。懒惰地创建状态可以使 LogicBlocks API 更符合人体工程学。如果状态没有延迟初始化，那么在您有机会向逻辑块的黑板添加任何内容之前，基本 LogicBlock 构造函数必须设置第一个状态，这使得很难创建具有黑板依赖性的状态。
+
+也就是说，**在很多情况下，您*确实*希望为初始状态运行入口回调，因为您*确实*希望绑定触发**。
+
+要强制 LogicBlock 运行入口回调并创建初始状态（如果还没有），只需在逻辑块上调用 `Start()` 方法。
+
+```c#
+var logic = new MyLogicBlock();
+var binding = logic.Bind();
+binding.Handle<MyLogicBlock.Output.SomeOutput>(
+  (output) => { ... }
+);
+
+// Run initial state's entrance callbacks. Essentially, this forces any 
+// relevant bindings to run in response to the first state, ensuring that 
+// whatever is consuming the logic block is in-sync with the initial state.
+logic.Start();
+```
+
+同样，当您完成逻辑块时，您可以通过调用 `Stop` 来运行最终状态的退出回调。
+
+```c#
+logic.Stop(); // Runs OnExit callbacks for the current (presumably final) state.
+```
+
+### 🧪 测试
+
+LogicBlocks、上下文和绑定都可以被模拟（mocked）。然而，模拟上下文和绑定可能有点麻烦，因此LogicBlocks 允许您创建假绑定和上下文，从而使测试更加简单。
+
+让我们来看看一些例子。
+
+#### 测试 LogicBlock 消费者
+
+想象一下，您有一个名为 `MyObject` 的对象，它使用一个称为 [`MyLogicBlock`](https://github.com/chickensoft-games/LogicBlocks/blob/main/Chickensoft.LogicBlocks.Tests/test/fixtures/MyLogicBlock.cs) 的逻辑块。
+
+该对象做两件事：它注册一个绑定来观察 `SomeOutput`，并有一个方法 `DoSomething` 将 `SomeInput` 输入添加到它使用的逻辑块中。
+
+```c#
+public class MyObject : IDisposable {
+  public IMyLogicBlock Logic { get; }
+  public MyLogicBlock.IBinding Binding { get; }
+
+  public bool SawSomeOutput { get; private set; }
+
+  public MyObject(IMyLogicBlock logic) {
+    Logic = logic;
+    Binding = logic.Bind();
+
+    Binding.Handle<MyLogicBlock.Output.SomeOutput>(
+      (output) => SawSomeOutput = true
+    );
+  }
+
+  // Method we want to test
+  public void DoSomething() => Logic.Input(new MyLogicBlock.Input.SomeInput());
+
+  public void Dispose() {
+    Binding.Dispose();
+    GC.SuppressFinalize(this);
+  }
+}
+```
+
+要为 `MyObject` 编写单元测试，我们需要模拟它的依赖项，然后验证它是否以我们期望的方式与依赖项交互。在这种情况下，唯一的依赖项是逻辑块。我们可以像模拟其他对象一样模拟它。
+
+由于对象绑定到其构造函数中的逻辑块，我们需要以某种方式拦截该请求。我们可以利用每个逻辑块上存在的静态方法 `CreateFakeBinding()`，并设置我们的 mock 逻辑块，以便在被要求绑定时返回假绑定。这样，对象可以像往常一样注册绑定回调，而不知道它实际上在使用假绑定系统。
+
+```c#
+using Moq;
+using Shouldly;
+using Xunit;
+
+public class MyObjectTest {
+  [Fact]
+  public void DoSomethingDoesSomething() {
+    // Our unit test follows the AAA pattern: Arrange, Act, Assert.
+    // Or Setup, Execute, and Verify, if you prefer.
+
+    // Setup — make a fake binding and return that from our mock logic block
+    using var binding = MyLogicBlock.CreateFakeBinding();
+
+    var logic = new Mock<IMyLogicBlock>();
+    logic.Setup(logic => logic.Bind()).Returns(binding);
+    logic.Setup(logic => logic.Input(It.IsAny<MyLogicBlock.Input.SomeInput>()));
+
+    using var myObject = new MyObject(logic.Object);
+
+    // Execute — run the method we're testing
+    myObject.DoSomething();
+
+    // Verify — check that the mock object's stubbed methods were called
+    logic.VerifyAll();
+  }
+
+  // ...
+```
+
+最后，我们想测试绑定是否在逻辑块生成输出 `SomeOutput` 时被实际调用。为此，我们可以使用伪绑定的 `Output()` 方法模拟逻辑块产生的输出。
+
+> 💡 伪绑定还可以分别通过 `SetState()`、`Input()` 和 `AddError()` 方法模拟更改状态、添加输入和错误。
+
+```c#
+  // ...
+
+  [Fact]
+  public void HandlesSomeOutput() {
+    // Setup — make a fake binding and return that from our mock logic block
+    using var binding = MyLogicBlock.CreateFakeBinding();
+
+    var logic = new Mock<IMyLogicBlock>();
+    logic.Setup(logic => logic.Bind()).Returns(binding);
+
+    using var myObject = new MyObject(logic.Object);
+
+    // Execute — trigger an output from the fake binding!
+    binding.Output(new MyLogicBlock.Output.SomeOutput());
+
+    // Verify — verify object's callback was invoked by checking side effects
+    myObject.SawSomeOutput.ShouldBeTrue();
+  }
+}
+```
+
+#### 测试 LogicBlock 状态
+
+我们还可以测试我们的逻辑块状态是否正常工作。传统上，这将通过模拟给定给状态的逻辑块上下文并期望该状态对其调用某些方法来完成，然后验证该状态是否与上下文执行了正确的交互。
+
+不过，这需要大量的打字。幸运的是，LogicBlocks 为每个逻辑块状态提供了一个 `CreateFakeContext()` 方法。伪上下文允许我们查看状态添加了哪些输入、输出和错误，而无需在模拟上进行大量方法打桩（stubbing）。
+
+例如，假设我们想在 `MyLogicBlock` 上测试状态 `SomeState`。
+
+以下是 `SomeState` 的定义，供参考。当它被输入和退出时，它输出输出 `SomeOutput`。此外，当它接收到 `SomeInput` 输入时，它还会再次输出 `SomeOutput` 并转换到 `SomeOtherState`。
+
+```c#
+// ...
+public record SomeState : State, IGet<Input.SomeInput> {
+  public SomeState() {
+    OnEnter<SomeState>(
+      (previous) => Context.Output(new Output.SomeOutput())
+    );
+    OnExit<SomeState>(
+      (previous) => Context.Output(new Output.SomeOutput())
+    );
+  }
+
+  public IState On(Input.SomeInput input) {
+    Context.Output(new Output.SomeOutput());
+    return new SomeOtherState();
+  }
+}
+// ...
+```
+
+通过对状态本身调用 `Enter()` 和 `Exit()`，我们可以轻松地测试enter和exit方法。通过向我们的状态提供一个假上下文，我们可以验证它是否执行了正确的操作。
+
+```c#
+using Chickensoft.LogicBlocks.Tests.Fixtures;
+using Shouldly;
+using Xunit;
+
+public class SomeStateTest {
+  [Fact]
+  public void SomeStateEnters() {
+    var state = new MyLogicBlock.State.SomeState();
+    var context = state.CreateFakeContext();
+
+    state.Enter();
+
+    context.Outputs.ShouldBe(
+      new object[] { new MyLogicBlock.Output.SomeOutput() }
+    );
+  }
+
+  [Fact]
+  public void SomeStateExits() {
+    var state = new MyLogicBlock.State.SomeState();
+    var context = state.CreateFakeContext();
+
+    state.Exit();
+
+    context.Outputs.ShouldBe(
+      new object[] { new MyLogicBlock.Output.SomeOutput() }
+    );
+  }
+
+  // ...
+```
+
+我们检查了添加到伪上下文中的输出，以确保它们是正确的。我们也可以检查输入和错误。
+
+> 💡 如果您需要重置伪上下文并清除它记录的所有内容，则可以调用 `context.Reset()`。
+
+最后，我们可以通过对状态本身调用 `On()` 方法来测试输入处理程序。再次，我们可以使用伪上下文来验证状态是否添加了正确的输出。
+
+```c#
+  // ...
+
+  [Fact]
+  public void GoesToSomeOtherStateOnSomeInput() {
+    var state = new MyLogicBlock.State.SomeState();
+    var context = state.CreateFakeContext();
+
+    var nextState = state.On(new MyLogicBlock.Input.SomeInput());
+
+    nextState.ShouldBeOfType<MyLogicBlock.State.SomeOtherState>();
+
+    context.Outputs.ShouldBe(
+      new object[] { new MyLogicBlock.Output.SomeOutput() }
+    );
+  }
+}
+```
+
+#### 假绑定
+
+假绑定允许您模拟许多操作：
+
+```c#
+[Fact]
+public void MyTest() {
+  using var binding = MyLogicBlock.CreateFakeBinding();
+
+  var logic = new Mock<IMyLogicBlock>();
+  logic.Setup(logic => logic.Bind()).Returns(binding);
+
+  // ...
+
+  // Simulate a state change
+  binding.SetState(new MyLogicBlock.State.SomeState());
+
+  // Simulate an input
+  binding.Input(new MyLogicBlock.Input.SomeInput());
+
+  // Simulate an output
+  binding.Output(new MyLogicBlock.Output.SomeOutput());
+
+  // Simulate an error being added
+  binding.AddError(new InvalidOperationException("Oops!"));
+
+  // ...
+}
+```
+
+#### 假上下文
+
+假上下文允许您记录由测试状态触发的交互。
+
+```c#
+[Fact]
+public void MyTest() {
+  var state = new MyLogicBlock.State.SomeState();
+  var context = state.CreateFakeContext();
+
+  // ...
+
+  // Set blackboard dependency
+  context.Set<IMyDependency>(new Mock<IMyDependency>());
+
+  // Set multiple blackboard dependencies at once
+  context.Set(
+    new Dictionary<Type, object>() {
+      [typeof(IMyDependency)] = new Mock<IMyDependency>(),
+      [typeof(IMyOtherDependency)] = new Mock<IMyOtherDependency>()
+    }
+  );
+
+  // Check the inputs added by the state
+  context.Inputs.ShouldBe(
+    new object[] { new MyLogicBlock.Input.SomeInput() }
+  );
+
+  // Check the outputs added by the state
+  context.Outputs.ShouldBe(
+    new object[] { new MyLogicBlock.Output.SomeOutput() }
+  );
+
+  // Check the errors added by the state
+  context.Errors.ShouldBe(
+    new Exception[] { new InvalidOperationException("Oops!") }
+  );
+
+  // Reset the context, clearing all recorded interactions and dependencies
+  context.Reset();
+
+  // ...
+}
+```
+
+## 🖼 生成状态图
+
+LogicBlocks 生成器可以生成 UML 代码，这些代码可以用于可视化代码所表示的状态图。
+
+> 🪄 基于代码生成图表促进了代码优先的解决方案：您的代码不必维护单独的图表，而是充当状态机的真相来源。作为奖励，您的图表永远不会过时！
+
+有关安装 LogicBlocks 源生成器的说明，请参阅安装。
+
+要指示 LogicBlocks 生成器为代码创建 UML 状态图，请将 `[StateMachine]` 属性添加到 LogicBlock 的定义中：
+
+```c#
+[StateMachine]
+public class LightSwitch : LogicBlock<LightSwitch.Input, LightSwitch.State> {
+```
+
+> `[StateMachine]` 属性代码由源生成器自动注入。
+
+将为项目中具有 `[StateMachine]` 属性的每个逻辑块生成状态图。图代码放在 LogicBlock 的扩展名为 `.g.puml` 的源文件旁边。
+
+例如，这里是为上面提到的 `VendingMachine` 示例生成的 UML：
+
+```c#
+@startuml VendingMachine
+state "VendingMachine State" as State {
+  state Idle {
+    Idle : OnEnter → ClearTransactionTimeOutTimer
+    Idle : OnPaymentReceived → MakeChange
+  }
+  state TransactionActive {
+    state Started {
+      Started : OnEnter → TransactionStarted
+    }
+    state PaymentPending
+    TransactionActive : OnEnter → RestartTransactionTimeOutTimer
+    TransactionActive : OnPaymentReceived → MakeChange, TransactionCompleted
+    TransactionActive : OnTransactionTimedOut → MakeChange
+  }
+  state Vending {
+    Vending : OnEnter → BeginVending
+  }
+}
+
+Idle --> Idle : PaymentReceived
+Idle --> Idle : SelectionEntered
+Idle --> Started : SelectionEntered
+Started --> Idle : SelectionEntered
+Started --> Started : SelectionEntered
+TransactionActive --> Idle : TransactionTimedOut
+TransactionActive --> PaymentPending : PaymentReceived
+TransactionActive --> Vending : PaymentReceived
+Vending --> Idle : VendingCompleted
+
+[*] --> Idle
+@enduml
+```
+
+> 💡 为了举例，上面的代码片段被简化了。实际的生成器输出有点冗长，但它呈现的是相同的图表。正确识别状态需要额外的详细信息，以避免嵌套状态之间的命名冲突。
+>
+> 如果您想要更高级的外观，请查看 LogicBlocks 存储库中各个包中的各种 `*.puml` 文件。这些文件由 LogicBlocks Generator 从包含的示例和测试用例中生成，用于验证 LogicBlocks 是否按预期工作。每个 `*.puml` 文件旁边都有一个 LogicBlock 源文件，该文件具有 `[StateMachine]` 属性，用于通知生成器创建图表代码。检查源代码，并将其与图表代码进行比较，以查看生成器在引擎盖下做了什么。
+
+### 使用 PlantUML 查看图表
+
+您可以将生成的 UML 复制并粘贴到 PlantText 中，以在线生成图表。
+
+或者，您可以在本地安装 PlantUML 和/或使用 jebbs.PlantUML VSCode 扩展来呈现表示您的机器的 UML 状态图。
+
+安装步骤（适用于 macOS）：
+
+```shell
+brew install graphviz
+brew install plantuml
+
+# To start your own PlantUML server:
+java -jar /opt/homebrew/Cellar/plantuml/1.2023.9/libexec/plantuml.jar -picoweb
+# ^ May need to change path above to match the version you installed.
+# Try `brew info plantuml` to see where PlantUML is installed.
+```
+
+服务器运行后，您可以通过打开 VSCode 命令菜单并选择 “PlantUML: 预览当前图表”来预览图表。
+
+## 🐛 故障排除
+
+### 无法从具有未初始化上下文的逻辑块中获取值。
+
+自 4.x 版本以来，LogicBlocks 延迟初始化上下文。上下文在 OnEnter/Exit/Attach/Detach 方法之外的构造函数中不可用。
+
+错误：
+
+```c#
+public Active() {
+  var value = Get<int>();
+  OnEnter<Active>(
+    (previous) => Context.Output(new Output.ValueChanged(value));
+  );
+}
+```
+
+正确：
+
+```c#
+public Active() {
+  OnEnter<Active>(
+    (previous) => {
+      var value = Get<int>();
+      Context.Output(new Output.ValueChanged(value));
+    }
+  );
+}
+```
+
+## 📺 致谢
+
+从概念上讲，逻辑块汲取了许多灵感：
+
+### 📊 [状态图 Statecharts](https://statecharts.dev/)
+
+正如状态图所描述的，逻辑块输出实际上只是[“动作”](https://statecharts.dev/glossary/action.html)。
+
+输出提供了一种与逻辑块之外的世界通信的方式，而不会在逻辑块和正在听它说话的任何东西（如游戏引擎组件或视图）之间引入强耦合。
+
+逻辑块状态也可以使用普通的面向对象编程模式，如继承和组合，来重新创建状态图的嵌套或层次性质。
+
+### 🧊 [Bloc](https://bloclibrary.dev/#/)
+
+逻辑块大量借鉴了 bloc 提出的约定：特别是 `On<TInput>` 风格的输入处理程序、基于继承的状态、`AddError` 和 `OnError`。
+
+### 🎰 有限状态机。
+
+逻辑块 API 在很大程度上受到 Moore 和 Mealy 状态机的启发。
+
+根据转换定义逻辑是 Mealy 状态机的定义（见上文）。不幸的是，要求开发人员根据转换创建逻辑有点笨拙。通常，许多转换共享必须考虑在内的公共代码。忘记从每个相关转换调用共享代码会导致严重的逻辑错误。相反，逻辑块 API 包含在输入和退出时调用的自包含状态。然而，逻辑块确实提供了一种监视转换的方法，以便您可以在发生某些转换时产生输出，但它们不允许您在观察转换时更改状态。
+
+# GodotEnv
+
+https://github.com/chickensoft-games/GodotEnv
+
+GodotEnv 是一个命令行工具，可以轻松地在 Godot 版本之间切换并管理项目中的插件。
+
+GodotEnv 可以执行以下操作：
+
+- ✅ 在 Windows、macOS 和 Linux 上从命令行下载、提取和安装 Godot 3.0/4.0+ 版本（类似于 NVM、FVM、asdf 等工具）。
+- ✅ 通过更新符号链接切换 Godot 的活动版本。
+- ✅ 自动设置用户 `GODOT` 环境变量，该变量始终指向 Godot 的活动版本。
+- ✅ 使用易于理解的 `addons.json` 文件，从本地路径、远程 git 存储库或符号链接在 Godot 项目中安装插件。不再与 git 子模块斗争！只要在 `addons.json` 文件发生更改时运行 `godotenv addons install` 即可。
+- ✅ 在项目中自动创建和配置 `.gitignore`、`addons.json` 和 `addons/.editorconfig`，以便于管理插件。
+- ✅ 允许插件使用平面依赖关系图声明对其他插件的依赖关系。
+
+## 📦 安装
+
+GodotEnv 是一个 .NET 命令行工具，可在 Windows、macOS 和 Linux 上运行。
+
+```shell
+dotnet tool install --global Chickensoft.GodotEnv
+```
+
+GodotEnv 使用本地 git 安装和 shell 中提供的其他进程，因此请确保已正确安装 git 并配置了本地 shell 环境。
+
+> ⧉在 Windows 上，某些操作可能需要管理员权限，例如管理符号链接或编辑某些文件。在这种情况下，GodotEnv 应该提示您批准，某些操作会导致命令行窗口在消失前弹出一段时间——这是正常的。
+
+## 快速入门
+
+我们将在下面深入了解这些命令，但如果您想立即开始，可以将 `--help` 标志与任何命令一起使用以获取更多信息。
+
+```shell
+# Overall help
+godotenv --help
+
+# Help for entire categories of commands
+godotenv godot --help
+godotenv addons --help
+
+# Help for a specific godot management command
+godotenv godot install --help
+
+# etc...
+```
+
+## 🤖 Godot 版本管理
+
+GodotEnv 可以自动为您管理本地机器上的 Godot 版本。
+
+> 🙋‍♀️ 使用 GodotEnv 安装 Godot 最适合本地开发。如果您想出于 CI/CD 目的直接在 GitHub 操作运行程序上安装 Godot，请考虑使用 Chickensoft 的 [setup-godot](https://github.com/chickensoft-games/setup-godot) 操作——它在运行之间缓存 Godot 安装，安装 Godot 导出模板，也适用于 Windows、macOS 和 Ubuntu GitHub 运行程序。
+
+### 安装 Godot
+
+要开始使用 GodotEnv 管理 Godot 版本，您需要首先指示 GodotEnw 安装 Godot 的一个版本。
+
+```shell
+godotenv godot install 4.0.1
+# or a non-stable version:
+godotenv godot install 4.1.1-rc.1
+```
+
+版本应与 [GodotSharp nuget 包](https://www.nuget.org/packages/GodotSharp/)上显示的版本的格式相匹配。下载来自 [GitHub Release Builds](https://github.com/godotengine/godot-builds/releases)。
+
+默认情况下，GodotEnv 会安装 .NET 支持的 Godot 版本。
+
+如果你真的必须安装无聊的，非 .NET 版本的 Godot，您可以这样做😢.
+
+```shell
+godotenv godot install 4.0.1 --no-dotnet
+```
+
+安装 Godot 版本时，GodotEnv 会执行以下步骤：
+
+- 📦 下载 Godot 安装 zip 档案（如果尚未下载）。
+- 🤐 提取 Godot 安装 zip 存档。
+- 📂 通过更新符号链接激活新安装的版本。
+- 🏝 确保用户 `GODOT` 环境变量指向活动的 Godot 版本符号链接。
+
+### 列出 Godot 版本
+
+GodotEnv 可以向您显示已安装的 Godot 版本的列表。
+
+```shell
+godotenv godot list
+```
+
+根据您所安装的内容，可能会产生如下结果：
+
+```
+4.0.1
+4.0.1 *dotnet
+4.1.1-rc.1
+4.1.1-rc.1 *dotnet
+```
+
+### 列出可用的 Godot 版本
+
+GodotEnv 还支持显示可使用 `-r` 选项安装的远程 Godot 版本的列表。
+
+```shell
+godotenv godot list -r
+```
+
+### 使用不同的 Godot 版本
+
+您可以通过指示 GodotEnv 将符号链接更新为已安装的版本之一来更改 Godot 的活动版本。默认情况下，它只查找 .NET 支持的 Godot 版本。使用非 .NET 版本的 Godot，指定 `--no-dotnet`。
+
+```shell
+# uses dotnet version
+godotenv godot use 4.0.1
+
+# uses non-dotnet version
+godotenv godot use 4.0.1 --no-dotnet
+```
+
+### 卸载 Godot 版本
+
+卸载的工作方式与安装和切换版本的工作方式相同。
+
+```shell
+# uninstalls .NET version
+godotenv godot uninstall 4.0.1
+
+# uninstalls not-dotnet version
+godotenv godot uninstall 4.0.1 --no-dotnet
+```
+
+### 获取符号链接路径
+
+GodotEnv 可以提供指向符号链接的路径，该符号链接始终指向 Godot 的活动版本。
+
+```shell
+godotenv godot env path
+```
+
+### 获取活动 Godot 版本路径
+
+GodotEnv 将为您提供其使用的符号链接当前指向的 Godot 活动版本的路径。
+
+```shell
+godotenv godot env target
+```
+
+### 获取和设置 GODOT 环境变量
+
+您可以使用 GodotEnv 将 `GODOT` 用户环境变量设置为符号链接，该符号链接始终指向 Godot 的活动版本。
+
+```shell
+# Set the GODOT environment variable to the symlink that GodotEnv maintains.
+godotenv godot env setup
+
+# Print the value of the GODOT environment variable.
+godotenv godot env get
+```
+
+> 在 Windows 上，这会将 `GODOT` 环境变量添加到当前用户的环境变量配置中。
+>
+> 在 macOS 上，这会将 `GODOT` 环境变量添加到当前用户的默认 shell 配置文件中。如果用户的 shell 不兼容，则默认为 `zsh`。
+>
+> 在 Linux 上，这会将 `GODOT` 环境变量添加到当前用户的默认 shell 配置文件中。如果用户的 shell 不兼容，则默认为 `bash`。
+>
+> 在对任何系统上的环境变量进行更改后，请确保关闭任何打开的终端并打开一个新的终端，以确保更改被接受。如果在其他应用程序中没有发现更改，您可能必须注销并重新登录。幸运的是，由于环境变量指向指向活动 Godot 版本的符号链接，因此您只需执行一次！之后，您可以随意切换 Godot 版本，而不会有任何进一步的头痛。
+
+### 🧼 清除 Godot 安装程序下载缓存
+
+GodotEnv 将下载的 Godot 安装 zip 档案缓存在缓存文件夹中。您可以要求 GodotEnv 为您清除缓存文件夹。
+
+```shell
+godotenv cache clear
+```
+
+## 🔌 加载项管理
+
+GodotEnv 允许您安装 [Godot 插件](https://godotengine.org/asset-library/asset)。Godot 插件是可以复制到项目中的 Godot 资产和/或脚本的集合。[按照惯例](https://docs.godotengine.org/en/stable/tutorials/best_practices/project_organization.html#style-guide)，这些存储在与 Godot 项目相关的名为 `addons` 的文件夹中。查看 [Dialogue Manager](https://github.com/nathanhoad/godot_dialogue_manager) 插件，了解 Godot 插件本身的结构。
+
+除了从远程源复制插件外，GodotEnv 还允许您从本地 git 存储库或符号链接将插件安装到机器上的本地目录，以便您可以跨多个 Godot 项目开发插件。
+
+使用 GodotEnv 管理插件可以避免在使用 git 子模块或手动管理符号链接时出现的一些麻烦。
+
+> 此外，在项目中重新安装插件之前，GodotEnv 将检查对插件内容文件的意外修改，以防止覆盖您所做的更改。它通过将非符号链接的插件转换为自己的临时 git 存储库，并在卸载和重新安装之前检查更改来实现这一点。
+
+### 何时使用 Godot 加载项
+
+如果您使用 C#，您有两种共享代码的方式：Godot 插件和 nuget 包。每种方法都应用于不同的场景。
+
+- 🔌 **插件**允许在多个 Godot 项目中重用场景、脚本或任何其他 Godot 资产和文件。
+- 📦 **Nuget 包**只允许将 C# 代码绑定到一个库中，该库可以在多个 Godot 项目中使用。
+
+> 如果您只是在项目之间共享 C# 代码，则应该使用 nuget 包或在本地引用另一个 .csproj。如果您需要共享场景、资源或任何其他类型的文件，请使用 Godot 插件。
+
+#### 为什么要为 Godot 使用插件管理器？
+
+Godot 项目中的插件管理历来存在一些问题：
+
+- 如果您将一个插件复制并粘贴到多个项目中，然后在其中一个项目中修改该插件，则其他项目将不会得到您所做的任何更新。项目之间重复的代码会导致代码不同步，让开发人员感到沮丧，并忘记哪一个是最新的。
+- 如果你想在项目之间共享插件，你可能会想使用 git 子模块。不幸的是，在切换分支时，git 子模块可能非常麻烦，您必须注意您签出的是哪一个提交。众所周知，子模块使用起来并不友好，甚至在经验丰富的开发人员使用时也可能非常脆弱。
+- GodotEnv 允许插件声明对其他插件的依赖关系。虽然这不是一个常见的用例，但在解决平面依赖关系图中的插件时，它仍然会检查各种类型的冲突，并在检测到任何潜在问题时发出警告。
+
+使用 `addons.json` 文件，开发人员可以声明他们的项目需要哪些插件，然后忘记如何获得它们。每当 `addons.json` 文件在分支之间发生变化时，您只需通过运行 `godotenv addons install` 来重新安装这些插件，一切都会“正常工作”。此外，很容易看到哪些插件随着时间的推移和不同分支之间发生了变化——只需检查 `addons.josn` 文件的 git diff 即可。
+
+### 在项目中初始化 GodotEnv
+
+GodotEnv 需要告诉 git 忽略你的插件目录，这样它就可以管理插件了。此外，它将在插件目录中放置一个 `.editorconfig`，它将抑制 C# 代码分析警告，因为 C# 样式往往差异很大。
+
+```shell
+godotenv addons init
+```
+
+这将向你的 .gitignore 文件中添加如下内容：
+
+```shell
+# Ignore all addons since they are managed by GodotEnv:
+addons/*
+
+# Don't ignore the editorconfig file in the addons directory.
+!addons/.editorconfig
+```
+
+`addons init` 命令还将在您的 `addons` 目录中创建一个 `.editorconfig`，其中包含以下内容：
+
+```properties
+[*.cs]
+generated_code = true
+```
+
+最后，GodotEnv 将创建一个示例 `addons.jsonc` 文件，其中包含以下内容，让您开始学习：
+
+```json
+// Godot addons configuration file for use with the GodotEnv tool.
+// See https://github.com/chickensoft-games/GodotEnv for more info.
+// -------------------------------------------------------------------- //
+// Note: this is a JSONC file, so you can use comments!
+// If using Rider, see https://youtrack.jetbrains.com/issue/RIDER-41716
+// for any issues with JSONC.
+// -------------------------------------------------------------------- //
+{
+  "$schema": "https://chickensoft.games/schemas/addons.schema.json",
+  // "path": "addons", // default
+  // "cache": ".addons", // default
+  "addons": {
+    "imrp": { // name must match the folder name in the repository
+      "url": "https://github.com/MakovWait/improved_resource_picker",
+      // "source": "remote", // default
+      // "checkout": "main", // default
+      "subfolder": "addons/imrp"
+    }
+  }
+}
+```
+
+### 安装插件
+
+GodotEnv 将使用系统 shell 从符号链接、本地路径或远程 git url 安装插件。请确保您已经在 shell 环境中配置了 git 以使用任何所需的凭据，因为 git 将用于克隆本地和远程存储库。
+
+```shell
+godotenv addons install
+```
+
+当您在 GodotEnv 中运行插件安装命令时，它会**在 shell 的当前工作目录**中查找 `addons.json` 或 [`addons.jsonc`](https://code.visualstudio.com/docs/languages/json#_json-with-comments) 文件。插件文件告诉 GodotEnv 应该在项目中安装哪些插件。
+
+这里有一个示例插件文件，它安装了 3 个插件，每个插件来自不同的源（远程 git 存储库、本地 git 存储库和符号链接）。
+
+```json
+{
+  "path": "addons", // optional — this is the default
+  "cache": ".addons", // optional — this is the default
+  "addons": {
+    "godot_dialogue_manager": {
+      "url": "https://github.com/nathanhoad/godot_dialogue_manager.git",
+      "source": "remote", // optional — this is the default
+      "checkout": "main", // optional — this is the default
+      "subfolder": "addons/dialogue_manager" // optional — defaults to "/"
+    },
+    "my_local_addon_repo": {
+      "url": "../my_addons/my_local_addon_repo",
+      "source": "local"
+    },
+    "my_symlinked_addon": {
+      "url": "/drive/path/to/addon",
+      "source": "symlink"
+    }
+  }
+}
+```
+
+> ❗️ 上面 `addons` 字典中的每个键都必须是项目插件路径中已安装插件的目录名。也就是说，如果插件存储库在 `addons/my_addon` 中包含其插件内容，则插件文件中插件的密钥名称必须为 `my_addon`。
+
+### 本地插件
+
+如果您想从机器上的本地路径安装插件，则本地插件必须是 git 存储库。您可以将 `url` 指定为相对或绝对文件路径。
+
+```json
+{
+  "addons": {
+    "local_addon": {
+      "url": "../my_addons/local_addon",
+      "checkout": "main",
+      "subfolder": "/",
+      "source": "local"
+    },
+    "other_local_addon": {
+      "url": "/Users/me/my_addons/other_local_addon",
+      "source": "local"
+    },
+  }
+}
+```
+
+### 远程插件
+
+GodotEnv 可以从远程 git 存储库安装插件。以下是来自远程 git 存储库的插件的插件规范。url 可以是任何有效的 git 远程 url。
+
+```json
+{
+  "addons": {
+    "remote_addon": {
+      "url": "git@github.com:user/remote_addon.git",
+      "subfolder": "addons/remote_addon"
+    }
+  }
+}
+```
+
+默认情况下，GodotEnv 假设插件 `source` 是 `remote`，`checkout` 引用是 `main`，并且要安装的`子文件夹`是存储库的 root `/`。如果需要自定义这些字段中的任何一个，可以覆盖默认值：
+
+```json
+{
+  "addons": {
+    "remote_addon": {
+      "url": "git@github.com:user/remote_addon.git",
+      "source": "remote",
+      "checkout": "master",
+      "subfolder": "subfolder/inside/repo",
+    }
+  }
+}
+```
+
+### 符号链接插件
+
+最后，GodotEnv 可以使用符号链接“安装”插件。使用符号链接安装的插件不需要指向 git 存储库——相反，GodotEnv 将创建一个文件夹，使用符号链接“指向”文件系统上的另一个文件夹。
+
+```json
+  "addons": {
+    "my_symlink_addon": {
+      "url": "/Users/myself/Desktop/folder",
+      "source": "symlink"
+    },
+    "my_second_symlink_addon": {
+      "url": "../../some/other/folder",
+      "source": "symlink",
+      "subfolder": "some_subfolder"
+    }
+  }
+```
+
+> 注意：使用符号链接时会忽略 `checkout` 引用。
+
+每当符号链接的插件被修改时，这些更改都会立即出现在项目中，这与 git 存储库中包含的插件不同。此外，如果您更改游戏项目中的插件，它会更新符号链接所指向的插件源。
+
+> 使用符号链接是在一个或多个项目中包含仍在开发中的插件的好方法。
+
+### 插件配置
+
+GodotEnv 将本地和远程插件缓存在 `cache` 文件夹中，如上所述，使用 `addons.json` 文件中的缓存属性进行配置（相对于您的项目，默认值为 `.addons/`）。您可以安全地删除此文件夹，GodotEnv 将在下次安装插件时重新创建它。删除缓存会迫使 GodotEnv 在下次安装时重新下载或复制所有内容。
+
+> **重要**：请确保将 `.addons/cache` 文件夹添加到 `.gitignore` 文件中！
+
+GodotEnv 会将插件安装到 `addons.json` 文件中路径键指定的目录中（默认为 `addons/`）。
+
+应从源代码管理中省略加载项。如果您需要在处理 Godot 项目的同时处理一个插件，请使用 GodotEnv 符号链接该插件。通过从源代码管理中省略插件文件夹，您可以有效地将插件视为不可变的包，就像 NPM 对 JavaScript 所做的那样。
+
+只需在克隆项目后或在您的 `addons.json` 文件发生更改时运行 `godotenv addons install` 即可！
+
+### 插件的插件
+
+插件本身可以包含一个 `addons.json` 文件，该文件声明对其他插件的依赖关系。在插件解析过程中缓存插件时，GodotEnv 会检查它是否也包含一个 `addons.json` 文件。如果是，GodotEnv 将把它的依赖项添加到队列中，并继续进行插件解析。如果 GodotEnv 检测到潜在冲突，它将输出警告，解释当前配置可能出现的任何潜在陷阱。
+
+GodotEnv 使用了一个平面依赖图，这让人想起了 [bower](https://bower.io/) 等工具。一般来说，GodotEnv 会尽量宽容和乐于助人，尤其是当您试图在不兼容的配置中包含插件时。GodotEnv 将尽可能清楚地显示警告和错误，以帮助您解决可能出现的任何潜在冲突场景。
+
+## 贡献
+
+如果您想贡献，请查看 [`CONTRIBUTING.md`](https://github.com/chickensoft-games/GodotEnv/blob/main/CONTRIBUTING.md)！
+
+虽然插件安装逻辑经过了很好的测试，但 Godot 版本管理功能是新的，仍然需要测试。目前，GitHub 工作流对其进行端到端测试。随着时间的推移，我将添加更多的单元测试。
+
+# Chickensoft.GodotPackage
+
+https://github.com/chickensoft-games/GodotPackage
+
+一个 .NET模板，用于快速创建用于 Godot 4 的 C# nuget 包。
+
+## 🥚 入门
+
+该模板允许您轻松创建一个 nuget 包，用于 Godot 4 C# 项目。Microsoft 的 dotnet 工具允许您轻松创建、安装和使用模板。
+
+```shell
+# Install this template
+dotnet new --install Chickensoft.GodotPackage
+
+# Generate a new project based on this template
+dotnet new chickenpackage --name "MyPackageName" --param:author "My Name"
+
+# Use Godot to generate files needed to compile the package's test project.
+cd MyPackageName/MyPackageName.Tests/
+$GODOT --headless --build-solutions --quit
+dotnet build
+```
+
+## 💁 获取帮助
+
+*这个模板坏了吗？遇到晦涩难懂的 C# 构建问题？*我们很乐意在 Chickensoft Discord 服务器上为您提供帮助。
+
+## 🏝 环境设置
+
+为了使提供的调试配置和测试覆盖率正常工作，必须正确设置开发环境。Chickensoft 安装文档描述了如何按照 Chickensoft 的最佳实践设置 Godot 和 C# 开发环境。
+
+### VSCode 设置
+
+此模板在 `.vscode/settings.json` 中包含一些 Visual Studio 代码设置。这些设置有助于 Windows（Git-Bash、PowerShell、命令提示符）和 macOS（zsh）上的终端环境，并修复 Omnisharp 遇到的一些语法着色问题。您还可以在 Omnisharp 和 .NET Roslyn 分析器中找到启用编辑器配置支持的设置，以获得更愉快的编码体验。
+
+请仔细检查提供的 VSCode 设置是否与您的现有设置不冲突。
+
+### .NET 版本控制
+
+包含的 [`global.json`](https://github.com/chickensoft-games/GodotPackage/blob/main/global.json) 指定的版本 .NET SDK。它还指定了包含的测试项目应该使用的 `Godot.NET.Sdk` 版本（因为测试在实际的 Godot 游戏中运行，所以您可以使用完整的 Godot API 来验证您的包是否按预期工作）。
+
+## 🐞 调试
+
+您可以通过在 VSCode 中打开此存储库的根目录并选择其中一个启动配置：`Debug Tests` 或 `Debug Current Test`，调试在 `Chickensoft.GodotPackage.Tests/` 包中包含的测试项目。
+
+> 要使启动配置文件 `Debug Current Test` 正常工作，测试文件必须与其内部的测试类共享相同的名称。例如，名为 `PackageTest` 的测试类必须位于名为 `PackageTest.cs` 的测试文件中。
+
+启动配置文件将触发一个构建（不恢复包），然后发出指示 .NET 来运行 Godot 4（同时与 VSCode 通信以进行交互式调试）。
+
+> **重要**：您必须为上述启动配置设置 `GODOT` 环境变量。如果您正在使用 [GodotEnv](https://github.com/chickensoft-games/GodotEnv) 安装和管理 Godot 版本，那么您已经安装好了！有关更多信息，请参阅 Chickensoft 安装文档。
+
+## 👷 测试
+
+默认情况下，`Chickensoft.GodotPackage.Tests/` 中的一个测试项目是为您的包编写测试而创建的。[GoDotTest](https://github.com/chickensoft-games/go_dot_test) 已经包含并设置好了，让您可以专注于开发和测试。
+
+[GoDotTest](https://github.com/chickensoft-games/go_dot_test) 是 Godot 和 C# 的一个易于使用的测试框架，允许您从命令行运行测试、收集代码覆盖率以及在 VSCode 中调试测试。
+
+该项目被配置为允许从 VSCode 轻松运行和调试测试，或通过 CI/CD 工作流执行测试，而不必在最终版本构建中包括测试文件或测试依赖项。
+
+`Main.tscn` 和 `Main.cs` 场景和脚本文件是游戏的入口点。一般来说，除非你在做一些高度定制的事情，否则你可能不需要修改这些。如果游戏不是在测试模式下运行（或者是发布版本），它会立即将场景更改为 `game/Game.tscn`。一般来说，比起 `Main.tscn`，更喜欢编辑 `game/Game.tscn`。如果使用 `--run-tests` 命令行参数运行 Godot，则游戏将运行测试，而不是切换到位于 `game/Game.tscn` 的游戏场景。`.vscode/launch.json` 中提供的调试配置允许您轻松调试测试（或者仅调试当前打开的测试，前提是其文件名与其类名匹配）。
+
+有关更多示例，请参阅 `test/ExampleTest.cs` 和 [GoDotTest](https://github.com/chickensoft-games/go_dot_test) 自述文件。
+
+## 🚦 测试覆盖范围
+
+代码覆盖率要求首先安装一些 `dotnet` 全局工具。您应该从项目目录的根目录安装这些工具。
+
+```shell
+dotnet tool install --global coverlet.console
+dotnet tool update --global coverlet.console
+dotnet tool install --global dotnet-reportgenerator-globaltool
+dotnet tool update --global dotnet-reportgenerator-globaltool
+```
+
+> 在 Apple Silicon 计算机上运行全局工具的 `dotnet tool update` 通常是必要的，以确保工具安装正确。
+
+您可以通过在 `test/coverage.sh` 中运行 bash 脚本来收集代码覆盖率并生成覆盖率徽章（在 Windows 上，您可以使用 Git 附带的 Git Bash shell）。
+
+```shell
+# Must give coverage script permission to run the first time it is used.
+chmod +x test/.coverage.sh
+
+# Run code coverage:
+cd Chickensoft.GodotPackage.Tests
+./coverage.sh
+```
+
+您也可以通过 VSCode 运行测试覆盖率，方法是打开命令选项板并 `Tasks: Run Task`，然后选择 `coverage`。
+
+## 🏭 CI/CD
+
+此软件包包括各种 GitHub Actions 工作流，使您的软件包的开发和部署更加容易。
+
+### 🚥 测验
+
+对每个到存储库的推送或拉取请求都会运行测试。您可以在 [`.github/workflows/tests.yaml`](https://github.com/chickensoft-games/GodotPackage/blob/main/.github/workflows/tests.yaml) 中配置要在哪些平台上运行测试。
+
+默认情况下，测试使用 Godot 4 的最新测试版运行每个平台（macOS、Windows 和 Linux）。
+
+测试是通过从命令行运行在 `Chickensoft.GodotPackage.Tests` 中的 Godot 测试项目来执行的，并将相关参数传递给 Godot，以便 GoDotTest 可以发现并运行测试。
+
+### 🧑‍🏫 拼写检查
+
+对每个到存储库的推送或拉取请求都会进行拼写检查。拼写检查设置可以在 [`.github/workflows/Spellcheck.yaml`](https://github.com/chickensoft-games/GodotPackage/blob/main/.github/workflows/spellcheck.yaml) 中配置
+
+建议使用 VSCode 的代码拼写检查器插件来帮助您在提交拼写错误之前发现拼写错误。如果需要向字典中添加单词，可以将其添加到 `cspell.json` 文件中。
+
+您也可以通过将鼠标悬停在拼写错误的单词上并选择 `Quick Fix…` 来从 VSCode 向本地 `cspell.json` 文件添加单词。。。然后 `Add "{word}" to config: GodotPackage/cspell.json`。
+
+### 📦 发布
+
+当您准备好制作新版本时，可以手动调度 [`.github/workflows/release.yaml`](https://github.com/chickensoft-games/GodotPackage/blob/main/.github/workflows/publish.yaml) 中包含的工作流。一旦您为版本提升策略指定了 `major`、`minor` 或 `patch`，工作流将使用更新的版本构建您的包，并在 GitHub 和 nuget 上发布。
+
+如果附带的 [`.github/workflows/auto_release.yaml`](https://github.com/chickensoft-games/GodotPackage/blob/main/.github/workflows/auto_release.yaml) 检测到一个新的提交，它将触发发布工作流，该提交是来自 renvatebot 的例行依赖项更新。由于 Renovatebot 被配置为自动合并依赖项更新，当 Godot.NET.Sdk 的新版本已发布或您所依赖的其他软件包已更新时，您的包将自动发布到 Nuget。如果不希望出现这种行为，请从 [`renovae.json`](https://github.com/chickensoft-games/GodotPackage/blob/main/renovate.json) 中删除 `"automerge": true` 属性。
+
+> 要发布到 nuget，您需要在 GitHub 中配置一个名为 `NUGET_API_KEY` 的存储库或组织机密，其中包含您的Nuget API 密钥。请确保将 `NUGET_API_KEY` 设置为**密钥（secret）**（而不是环境变量）以确保其安全！
+
+### 🏚 Renovatebot
+
+此存储库包括一个用于 [Renovatebot](https://www.mend.io/free-developer-tools/renovate/) 的 [`renovate.json`](https://github.com/chickensoft-games/GodotPackage/blob/main/renovate.json) 配置。Renovatebot 可以自动打开和合并拉取请求，以帮助您在检测到新的依赖关系版本发布时保持依赖关系的最新状态。
+
+> 与 Dependabot 不同，Renovatebot 能够将所有依赖项更新合并为一个拉取请求，这是 Godot C# 存储库的必备功能，每个子项目都需要相同的 Godot.NET.Sdk 版本。如果在多个存储库中拆分依赖关系版本冲突，则 CI 中的构建将失败。
+
+将 Renovatebot 添加到存储库的最简单方法是[从 GitHub Marketplace 安装它](https://github.com/apps/renovate)。请注意，您必须授予它对您希望它监视的每个组织和存储库的访问权限。
+
+所包含的 `renovate.json` 包括一些配置选项，以限制 Renovatebot 打开拉取请求的频率，以及 regex 过滤掉一些版本不好的依赖项以防止无效的依赖项版本更新。
+
+如果您的项目设置为在合并拉取请求之前需要批准，并且您希望利用 Renovatebot 的自动合并功能，则可以安装 [Renovate Approve](https://github.com/apps/renovate-approve) 机器人程序来自动批准Renovate依赖关系PR。如果您需要两个批准，则可以安装相同的 [Renovate Approve 2](https://github.com/apps/renovate-approve-2) 机器人程序。有关详细信息，请参阅[此部分](https://stackoverflow.com/a/66575885)。
