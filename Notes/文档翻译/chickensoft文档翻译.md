@@ -6063,3 +6063,167 @@ cd Chickensoft.GodotPackage.Tests
 所包含的 `renovate.json` 包括一些配置选项，以限制 Renovatebot 打开拉取请求的频率，以及 regex 过滤掉一些版本不好的依赖项以防止无效的依赖项版本更新。
 
 如果您的项目设置为在合并拉取请求之前需要批准，并且您希望利用 Renovatebot 的自动合并功能，则可以安装 [Renovate Approve](https://github.com/apps/renovate-approve) 机器人程序来自动批准Renovate依赖关系PR。如果您需要两个批准，则可以安装相同的 [Renovate Approve 2](https://github.com/apps/renovate-approve-2) 机器人程序。有关详细信息，请参阅[此部分](https://stackoverflow.com/a/66575885)。
+
+# Chickensoft.GodotGame
+
+Godot 4 的 C# 游戏模板，具有调试启动配置、测试（本地和 CI/CD）、代码覆盖率、依赖项更新检查和拼写检查，开箱即用！
+
+## 🥚 入门
+
+这个模板允许您轻松地为 Godot 4 创建一个 C# 游戏。Microsoft 的 dotnet 工具允许您轻松创建、安装和使用模板。
+
+```shell
+# Install this template
+dotnet new install Chickensoft.GodotGame
+
+# Generate a new project based on this template
+dotnet new chickengame --name "MyGameName" --param:author "My Name"
+
+cd MyGameName
+dotnet build
+```
+
+## 💁 获取帮助
+
+*这个模板坏了吗？遇到晦涩难懂的 C# 构建问题？*我们很乐意在 Chickensoft Discord 服务器上为您提供帮助。
+
+## 🏝 环境设置
+
+为了使提供的调试配置和测试覆盖率正常工作，必须正确设置开发环境。Chickensoft 安装文档描述了如何使用 Chickensoft 的最佳实践建议来设置 Godot 和 C# 开发环境。
+
+### VSCode设置
+
+此模板在 `.vscode/settings.json` 中包含一些 Visual Studio 代码设置。这些设置有助于 Windows（Git Bash、PowerShell、命令提示符）和 macOS（zsh）上的终端环境，并修复 Omnisharp 遇到的一些语法着色问题。您还可以在 Omnisharp 和中找到启用编辑器配置支持的设置 .NET Roslyn 分析器，以获得更愉快的编码体验。
+
+> 请仔细检查提供的 VSCode 设置是否与您的现有设置不冲突。
+
+### .NET 版本控制
+
+包含的 `global.json` 指定游戏应该使用的 .NET SDK 和 `Godot.NET.Sdk` 的版本。每当 GodotSharp 的新版本发布时，使用 `global.json` 文件可以让 Renovatebot 为您的存储库提供自动的依赖项更新拉取请求。
+
+## 👷 测试
+
+`test/src/GameTest.cs` 中包含一个示例测试，演示如何使用 GoDotTest 和 godot 测试驱动程序为包编写测试。
+
+> GoDotTest 是 Godot 和 C# 的一个易于使用的测试框架，允许您从命令行运行测试、收集代码覆盖率以及在 VSCode 中调试测试。
+
+测试直接在游戏内部运行。`.csproj` 文件已经预配置为防止测试脚本和仅测试包依赖项包含在游戏的发布版本中！
+
+在 CI/CD 上，[mesa] 的软件图形驱动程序模拟 Godot 渲染到的虚拟图形设备，允许您在无头环境中运行视觉测试。
+
+## 🏁 应用程序入口点
+
+`Main.tscn` 和 `Main.cs` 场景和脚本文件是游戏的入口点。一般来说，除非你在做一些高度定制的事情，否则你可能不需要修改这些。
+
+如果游戏正在运行发布版本，`Main.cs` 文件将立即将场景更改为 `src/Game.tscn`。如果游戏在调试模式下运行，并且 GoDotTest 已收到正确的命令行参数以开始测试，则游戏将切换到测试场景，并将控制权交给 GoDotTest 以运行游戏的测试。
+
+一般来说，比起 `src/Main.tscn`，更喜欢编辑 `src/Game.tscn`。
+
+`.vscode/launch.json` 中提供的调试配置允许您轻松调试测试（或者仅调试当前打开的测试，前提是其文件名与其类名匹配）。
+
+## 🚦 测试覆盖范围
+
+代码覆盖率要求首先安装一些 `dotnet` 全局工具。您应该从项目目录的根目录安装这些工具。
+
+项目根目录中的 `nuget.config` 文件允许从 `coverlet` 夜间发行版安装正确版本的 `coverlet`。覆盖 coverlet 版本将是必需的，直到 coverlet 发布了一个稳定的版本并进行了修复，使其能够与 Godot 4 一起使用。
+
+```shell
+dotnet tool install --global coverlet.console
+dotnet tool update --global coverlet.console
+dotnet tool install --global dotnet-reportgenerator-globaltool
+dotnet tool update --global dotnet-reportgenerator-globaltool
+```
+
+> 在 Apple Silicon 计算机上运行全局工具的 `dotnet tool update` 通常是必要的，以确保工具安装正确。
+
+您可以通过运行 bash 脚本 `coverage.sh` 来收集代码覆盖率并生成覆盖率徽章（在 Windows 上，您可以使用 Git 附带的 Git Bash shell）。
+
+```shell
+# Must give coverage script permission to run the first time it is used.
+chmod +x ./coverage.sh
+
+# Run code coverage:
+./coverage.sh
+```
+
+您也可以通过 VSCode 运行测试覆盖率，方法是打开命令选项板并选择 `Tasks: Run Task`，然后选择 `coverage`。
+
+如果在 Windows 上你的 `coverlet` 找不到你的 .NET 运行时，您可以使用 PowerShell 脚本  `coverage.ps1` 。
+
+```shell
+.\coverage.ps1
+```
+
+## ⏯ 运行项目
+
+Visual Studio代码包含几个启动配置文件：
+
+- **🕹 调试游戏**
+
+  在调试模式下运行游戏，允许您设置断点和检查变量。
+
+- **🎭 调试当前场景**
+
+  调试游戏并加载与 VSCode 中主动选择的 C# 文件具有**相同名称和路径**的场景：例如，名为 `MyScene.tscn` 的场景必须与 `MyScene.cs` 位于同一目录中，并且在运行启动配置文件之前，您必须已选择 `MyScene.cs` 作为 VSCode 中的主动选项卡。
+
+  如果 GoDotTest 能够在同一位置找到具有相同名称的 `.tscn` 文件，它将在调试模式下运行游戏并加载场景。
+
+  > 当然，Chickensoft 建议以场景使用的 C# 脚本命名场景，并将它们保存在同一目录中，以便您可以利用此发布配置文件。
+  >
+  > ⚠️ 重命名脚本类很容易，但忘记重命名场景文件，反之亦然。当这种情况发生时，此启动配置文件将根据脚本的名称传入场景文件的*预期*名称，但 Godot 将无法找到具有该名称的场景，因为脚本名称和场景名称不相同。
+
+- **🧪 调试测试**
+
+  在调试模式下运行游戏，指定 GoDotTest 运行测试所需的命令行标志。调试工作与往常一样，允许您在游戏的 C# 测试文件中设置断点。
+
+- **🔬 调试当前测试**
+
+  调试游戏并加载与 VSCode 中主动选择的 C# 文件同名的测试类：例如，名为 `MyTest.cs` 的测试文件必须包含名为 `MyTest` 的测试类，并且在运行启动配置文件之前，您必须在 VSCode 中选择 `MyTest.cs` 作为主动选项卡。
+
+  > ⚠️ 重命名测试类很容易，但忘记重命名测试文件，反之亦然。当这种情况发生时，此启动配置文件将传入文件名，但 GoDotTest 将无法找到具有该名称的类，因为文件名和类名不相同。
+
+  请注意，在调试游戏之前，每个启动配置文件都会触发一个构建（请参阅 `./.vscode/tasks.json`）。
+
+  > ⚠️ **重要**：您必须为上述启动配置设置 `GODOT` 环境变量。如果您还没有这样做，请参阅 Chickensoft 设置文档。
+
+## 🏭 CI/CD
+
+此游戏包括各种GitHub Actions工作流以帮助开发。
+
+### 🚥 测验
+
+每次推送到存储库时，测试都直接在 GitHub runner 机器内部运行（使用 chickensoft games/setup-godot）。如果测试未能通过，工作流也将无法通过。
+
+您可以在 `.github/workflows/visual_tests.yaml` 中配置要在哪些模拟图形环境（`vulkan` 和/或 `opengl3`）上运行测试。
+
+目前，测试只能从 `ubuntu` 运行程序中运行。如果您知道如何在 macOS 和 Windows 上安装 mesa 和虚拟窗口管理器的工作流程，我们很乐意听取您的意见！
+
+测试是通过在 `Chickensoft.GodotGame` 中运行 Godot 测试项目来执行的，并将相关参数传递给 Godot，以便 GoDotTest 可以发现并运行测试。
+
+### 🧑‍🏫 拼写检查
+
+每次推送到存储库时都会进行拼写检查。拼写检查工作流设置可以在 `.github/workflows/spellcheck.yaml` 中配置。
+
+建议使用 VSCode 的代码拼写检查器插件来帮助您在提交拼写错误之前发现拼写错误。如果需要向字典中添加单词或忽略某个路径，可以编辑项目的 `cspell.json` 文件。
+
+您也可以通过将鼠标悬停在拼写错误的单词上并选择 `Quick Fix…` 然后 `Add "{word}" to config: cspell.json` 来从 VSCode 向本地 `cspell.json` 文件添加单词。
+
+### 🗂 版本更改
+
+`.github/workflows/version_change.yaml` 中包含的工作流可以手动调度以打开一个拉取请求，该请求将替换 `Chickensoft.GodotGame.csproj` 中的版本号，具有您在工作流输入中指定的版本。
+
+### 📦 发布到 Nuget
+
+当您准备好将包发布到 Nuget 时，可以手动调度 `.github/workflows/publish.yaml` 中包含的工作流。
+
+> 要发布到 nuget，您需要一个名为 `NUGET_API_KEY` 的存储库或组织机密，其中包含您的 Nuget API密钥。`NUGET_API_KEY` 必须是一个 GitHub 操作密钥才能保证其安全！
+
+### 🏚 Renovatebot
+
+此存储库包括一个用于 Renovatebot 的 `renovate.json` 配置。Renovatebot 可以在检测到新的依赖关系版本发布时自动打开拉取请求，帮助您保持依赖关系的最新状态。因为Godot的发布周期如此之快，如果你想继续使用最新版本的Godot，自动化依赖更新可以节省大量时间。
+
+> 与 Dependabot 不同，Renovatebot 能够将所有依赖项更新合并为一个拉取请求，这是 Godot C# 存储库的必备功能，每个子项目都需要相同的 Godot.NET.Sdk 版本。如果在多个存储库中拆分依赖关系版本冲突，则 CI 中的构建将失败。
+
+将 Renovatebot 添加到存储库的最简单方法是从 GitHub Marketplace 安装它。请注意，您必须授予它对您希望它监视的每个组织和存储库的访问权限。
+
+所包含的 `renovate.json` 包括一些配置选项，以限制 Renovatebot 打开拉取请求的频率，以及 regex 过滤掉一些版本不好的依赖项以防止无效的依赖项版本更新。
