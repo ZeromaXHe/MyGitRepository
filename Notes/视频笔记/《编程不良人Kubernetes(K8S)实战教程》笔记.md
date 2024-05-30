@@ -200,3 +200,448 @@ Kubernetes：
 
   集群层面日志机制负责将容器的日志数据保存到一个集中的日志存储中，这种集中日志存储提供搜索和浏览接口。
 
+# P8 组件和架构之架构详细&总结
+
+### 2 集群架构详细
+
+- **总结**
+  - Kubernetes 集群由多个节点组成，节点分为两类：一类是属于管理平面的主节点/控制节点（Master Node）；一类是属于运行平面的工作节点（Worker Node）。显然，复杂的工作肯定都交给控制节点去做了，工作节点负责提供稳定的操作接口和能力抽象即可。
+
+# P9 集群搭建之 minikube 集群
+
+### 3 集群搭建【重点】
+
+- **minikube**
+
+  只是一个 K8S 集群模拟器，只有一个节点的集群，只为测试用，master 和 worker 都在一起
+
+- **裸机安装**
+
+  至少需要两台机器（主节点、工作节点各一台），需要自己安装 Kubernetes 组件，配置会稍微麻烦点。
+
+  缺点：配置麻烦，缺少生态支持，例如负载均衡器、云存储。
+
+- **直接用云平台 Kubernetes**
+
+  可视化搭建，只需简单几步就可以创建好一个集群。
+
+  优点：安装简单、生态齐全，负责均衡器、存储等都给你配套好，简单操作就搞定
+
+- **k3s** k8s
+
+  安装简单，脚本自动完成。
+
+  优点：轻量级，配置要求低，安装简单，生态齐全。
+
+#### 3.1 minikube
+
+# P10 集群搭建之裸机安装集群（一）
+
+#### 3.2 裸机安装
+
+##### 0 环境准备
+
+- 节点数量：3 台虚拟机 centos7
+- 硬件配置：2G 或更多的 RAM，2 个 CPU 或更多的 CPU，硬盘至少 30G 以上
+- 网络要求：多个节点之间网络互通，每个节点能访问外网
+
+##### 1 集群规划
+
+- k8s-node1：10.15.0.5
+- k8s-node2：10.15.0.6
+- k8s-node3：10.15.0.7
+
+##### 2 设置主机名
+
+```shell
+$ hostnamectl set-hostname k8s-node1
+$ hostnamectl set-hostname k8s-node2
+$ hostnamectl set-hostname k8s-node3
+```
+
+##### 3 同步 hosts 文件
+
+> 如果 DNS 不支持主机名称解析，还需要在每台机器的 `/etc/hosts` 文件中添加主机名和 IP 的对应关系：
+>
+> ```shell
+> cat >> /etc/hosts << EOF
+> 10.15.0.5 k8s-node1
+> 10.15.0.6 k8s-node2
+> 10.15.0.7 k8s-node3
+> EOF
+> ```
+
+# P11 集群搭建之裸机安装集群（二）
+
+##### 4 关闭防火墙
+
+```shell
+systemctl stop firewalld && systemctl disable firewalld
+```
+
+##### 5 关闭 SELINUX
+
+> 注意：ARM 架构请勿执行，执行会出现 ip 无法获取问题！
+
+```shell
+setenforce 0 && sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+```
+
+##### 6 关闭 swap 分区
+
+```shell
+swapoff -a && sed -ri 's/.*swap.*/#&/' /etc/fstab
+```
+
+##### 7 同步时间
+
+```shell
+$ yum install ntpdate -y
+$ ntpdate time.windows.com
+```
+
+##### 8 安装 containerd
+
+```shell
+# 安装 yum-config-manager 相关依赖
+$ yum install -y yum-utils device-mapper-persistent-data lvm2
+# 添加 containerd yum 源
+$ yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+# 安装 containerd
+$ yum install -y containerd.io cri-tools
+# 配置 containerd
+$ cat > /etc/containerd/config.toml << EOF
+disabled_plugins = ["restart"]
+[plugins.linux]
+shim_debug = true
+[plugins.cri.registry.mirrors."docker.io"]
+endpoint = ["http://frz7i079.mirror.aliyuncs.com"]
+[plugins.cri]
+sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.2"
+EOF
+# 启动 containerd 服务 并 开机配置自启动
+$ systemctl enable containerd && systemctl start containerd && systemctl status containerd
+
+# 配置 containerd 配置
+$ cat > /etc/modules-load.d/containerd.conf << EOF
+overlay
+br_netfilter
+EOF
+
+# 配置 k8s 网络配置
+$ cat > /etc/sysctl.d/k8s.conf << EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+# 加载 overlay br_netfilter 模块
+$ modprobe overlay
+$ modprobe br_netfilter
+
+# 查看当前配置是否生效
+$ sysctl -p /etc/sysctl.d/k8s.conf
+```
+
+# P12 集群搭建之裸机安装集群（三）
+
+##### 9 添加源
+
+- 查看源
+
+  ```shell
+  $ yum repolist
+  ```
+
+- 添加源 x86
+
+  ```shell
+  $ cat << EOF > kubernetes.repo
+  [kubernetes]
+  name=Kubernetes
+  baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+  enabled=1
+  gpgcheck=0
+  repo_gpgcheck=0
+  gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirros.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+  EOF
+  $ mv kubernetes.repo /etc/yum.repos.d/
+  ```
+
+- 添加源 ARM
+
+  ```shell
+  $ cat << EOF > Kubernetes.repo
+  [kubernetes]
+  name=Kubernetes
+  baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-aarch64
+  enabled=1
+  gpgcheck=0
+  repo_gpgcheck=0
+  gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirros.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+  EOF
+  
+  $ mv kubernetes.repo /etc/yum.repos.d/
+  ```
+
+##### 10 安装 k8s
+
+```shell
+# 安装最新版本
+$ yum install -y kubelet kubeadm kubectl
+
+# 指定版本安装
+# yum install -y kubelet-1.26.0 kubectl-1.26.0 kubeadm-1.26.0
+
+# 启动 kubelet
+$ sudo systemctl enable kubelet && sude systemctl start kubelet && sudo systemctl status kubelet
+```
+
+##### 11 初始化集群
+
+- **注意：初始化 k8s 集群仅仅需要再在 master 节点进行集群初始化！**
+
+```shell
+kubeadm init \
+--apiserver-advertise-address=10.15.0.5 \
+--pod-network-cidr=10.244.0.0/16 \
+--image-repository registry.aliyuncs.com/google_containers
+```
+
+##### 12 配置集群网络
+
+> 创建配置：kube-flannel.yml，执行 kubectl apply -f kube-flannel.yml
+
+- **注意：只在主节点执行即可！**
+
+```yaml
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: kube-flannel
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: flannel
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - patch
+---
+kind: CLusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: flannel
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flannel
+subjects:
+- kind: ServiceAccount
+  name: flannel
+  namespace: kube-flannel
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flannel
+  namespace: kube-flannel
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-flannel
+  labels:
+    tier: node
+    app: flannel
+data:
+  cni-conf.json: |
+    {
+      "name": "cbr0",
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "flannel",
+          "delegate": {
+            "hairpinMode": true,
+            "isDefaultGateway": true
+          }
+        },
+        {
+          "type": "portmap",
+          "capabilities": {
+            "portMappings": true
+          }
+        }
+      ]
+    }
+  net-conf.json: |
+    {
+      "Network": "10.244.0.0/16",
+      "Backend": {
+        "Type": "vxlan"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds
+  namespace: kube-flannel
+  labels:
+    tier: node
+    app: flannel
+spec:
+  selector:
+    matchLabels:
+      app: flannel
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: flannel
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operators: In
+                values:
+                - linux
+      hostNetwork: true
+      priorityClassName: system-node-critical
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      serviceAccountName: flannel
+      initContainers:
+      - name: install-cni-plugin
+       #image: flannelcni/flannel-cni-plugin:v1.1.0 for ppc64le and mips64le (dockerhub limitations may apply)
+        image: docker.io/rancher/mirrored-flannelcni-flannel-cni-plugin:v1.1.0
+        command:
+        - cp
+        args:
+        - -f
+        - /flannel
+        - /opt/cni/bin/flannel
+        volumeMounts:
+        - name: cni-plugin
+          mountPath: /opt/cni/bin
+      - name: install-cni
+       #image: flannelcni/flannel:v0.20.2 for ppc64le and mips64le (dockerhub limitations may apply)
+        image: docker.io/rancher/mirrored-flannelcni-flannel:v0.20.2
+        command:
+        - cp
+        args:
+        - -f
+        - /etc/kube-flannel/cni-conf.json
+        - /etc/cni/net.d/10-flannel.conflist
+        volumeMounts:
+        - name: cni
+          mountPath: /etc/cni/net.d
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      containers:
+      - name: kube-flannel
+       #image: flannelcni/flannel:v0.20.2 for ppc64le and mips64le (dockerhub limitations may apply)
+        image: docker.io/rancher/mirrored-flannelcni-flannel:v0.20.2
+        command:
+        - /opt/bin/flanneld
+        args:
+        - --ip-masq
+        - --kube-subnet-mgr
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "50Mi"
+        securityContext:
+          privileged: false
+          capabilities:
+            add: ["NET_ADMIN", "NET_RAW"]
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: EVENT_QUEUE_DEPTH
+          value: "5000"
+        volumeMounts:
+        - name: run
+          mountPath: /run/flannel
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+        - name: xtables-lock
+          mountPath: /run/xtables.lock
+      volumes:
+      - name: run
+        hostPath:
+          path: /run/flannel
+      - name: cni-plugin
+        hostPath:
+          path: /opt/cni/bin
+      - name: cni
+        hostPath:
+          path: /etc/cni/net.d
+      - name: flannel-cfg
+        configMap:
+          name: kube-flannel-cfg
+      - name: xtables-lock
+        hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+```
+
+##### 13 查看集群状态
+
+```shell
+# 查看集群节点状态 全部为 Ready 代表集群搭建成功
+$ kubectl get nodes
+NAME		STATUS	ROLES			AGE	VERSION
+k8s-node1	Ready	control-plane	21h	v1.26.0
+k8s-node2	Ready	control-plane	21h	v1.26.0
+k8s-node3	Ready	control-plane	21h	v1.26.0
+
+# 查看集群系统 pod 运行情况，下面所有 pod 状态为 Runnning 代表集群可用
+$ kubectl get pod -A
+NAMESPACE		NAME						READY	STATUS	RESTARTS	AGE
+default			nginx						1/1		Running	0			21h
+kube-flannel	kube-flannel-ds-gtq49		1/1		Running	0			21h
+kube-flannel	kube-flannel-ds-qpdl6		1/1		Running	0			21h
+kube-flannel	kube-flannel-ds-ttxjb		1/1		Running	0			21h
+kube-system		coredns-5bbd96d687-p7q2x	1/1		Running	0			21h
+kube-system		coredns-5bbd96d687-rzcnz	1/1		Running	0			21h
+kube-system		etcd-k8s-node1				1/1		Running	0			21h
+kube-system		kube-apiserver-k8s-node1	1/1		Running	0			21h
+kube-system		kube-proxy-mtsbp			1/1		Running	0			21h
+kube-system		kube-proxy-v2jfs			1/1		Running	0			21h
+kube-system		kube-proxy-x6vhn			1/1		Running	0			21h
+kube-system		kube-scheduler-k8s-node1	1/1		Running	0			21h
+```
+
