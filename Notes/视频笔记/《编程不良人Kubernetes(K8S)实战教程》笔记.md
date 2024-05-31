@@ -645,3 +645,349 @@ kube-system		kube-proxy-x6vhn			1/1		Running	0			21h
 kube-system		kube-scheduler-k8s-node1	1/1		Running	0			21h
 ```
 
+# P13 第三章 Pod 与 Container 之 Pod 简介
+
+## 第三章 Pod & Container
+
+- 什么是 Pod
+- Pod 基本操作
+- Pod 的 Labels
+- Pod 的生命周期
+- Container 特性
+- Pod 的资源限制
+- Pod 中 Init 容器
+- 节点亲和性分配 Pod
+
+### 1 什么是 Pod
+
+> 摘取官网：https://kubernetes.io/zh-cn/docs/concepts/workloads/pods/#working-with-pods
+
+#### 1.1 简介
+
+Pod 是可以在 Kubernetes 中**创建和管理的、最小的可部署的计算单元**。**Pod**（就像在鲸鱼荚或者豌豆荚中）**是一组（一个或多个）容器**；这些容器共享存储、网络、以及怎样运行这些容器的声明。Pod 中的**内容总是并置（colocated）的并且一同调度，在共享的上下文中运行**。简言之如果用 Docker 的术语来描述，**Pod 类似于共享名字空间并共享文件系统卷的一组容器。**
+
+> **定义：Pod 就是用来管理一组（一个|多个）容器的集合 特点：共享网络 共享存储 共享上下文环境**
+
+#### 1.2 Pod 怎样管理多个容器？
+
+Pod 中的容器被自动安排到集群中的同一物理机或虚拟机上，并可以一起进行调度。容器之间可以共享资源和依赖、彼此通信、协调何时以及何种方式终止自身。例如，你可能有一个容器，为共享卷中的文件提供 Web 服务支持，以及一个单独的“边车（sidercar）”容器负责从远端更新这些文件。
+
+# P14 如何使用 Pod
+
+#### 1.3 如何使用 Pod？
+
+通常你不需要直接创建 Pod，甚至单实例 Pod。相反，你会使用诸如 Deployment 或 Job 这类工作负载资源来创建 Pod。如果 Pod 需要跟踪状态，可以考虑 StatefulSet 资源。
+
+Kubernetes 集群中的 Pod 主要有两种用法：
+
+- **运行单个容器的 Pod**。“每个 Pod 一个容器”模型是最常见的 Kubernetes 用例；在这种情况下，可以将 Pod 看作单个容器的包装器，并且 Kubernetes 直接管理 Pod，而不是容器。
+- **运行多个协同工作的容器的 Pod**。Pod 可能封装多个紧密耦合且需要共享资的共处容器组成的应用程序。这些位于同一位置的容器可能形成单个内聚的服务单元——一个容器将文件从共享卷提供给公众，而另一个单独的“边车”（sidecar）容器则刷新或更新这些文件。Pod 将这些容器和存储资源打包为一个可管理的实体。
+
+**说明：**
+
+- 将多个并置、同管的容器组织到一个 Pod 中是一种相对高级的使用场景。只有在一些场景中，容器之间紧密关联对称时你才应该使用这种模式
+- 每个 Pod 都旨在运行给定应用程序的单个实例。如果希望横向扩展应用程序（例如，运行多个实例以提供更多的资源），则应该使用多个 Pod，每个实例使用一个 Pod。在 Kubernetes 中，在通常被称为**副本（Replication）**。通常使用一种工作负载资源及其控制器来创建和管理一组 Pod 副本。
+
+# P15 Pod 的基本操作指令
+
+### 2 Pod 基本操作
+
+#### 2.1 查看 pod
+
+```shell
+# 查看默认命名空间的 pod
+$ kubectl get pods|pod|po
+
+# 查看所有命名空间的 pod
+$ kubectl get pods|pod -A
+$ kubectl get pods|pod|po -n 命名空间名称
+
+# 查看默认命名空间下 pod 的详细信息
+$ kubectl get pods -o wide
+
+# 查看所有命名空间下 pod 的详细信息
+$ kubectl get pods -o wide -A
+
+# 实时监控 pod 的状态
+$ kubectl get pod -w
+```
+
+# P16 创建 Pod 的两种方式
+
+#### 2.2 创建 pod
+
+pod: kuberctl run nginx(Pod 名称) --image=nginx:1.19
+
+container: docker run --name nginx nginx:1.19
+
+> 官网参考地址：https://kubernetes.io/zh-cn/docs/reference/kubernetes-api/workload-resources/pod-v1/
+
+```yaml
+# nginx-pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx: 1.19
+      ports:
+        - containerPort: 80
+```
+
+```shell
+# 使用 kubectl apply/create -f 创建 pod
+$ kubectl create -f nginx-pod.yml
+$ kubectl apply -f nginx-pod.yml
+```
+
+> **注意：create 仅仅是不存在时创建，如果已经存在则报错！apply 不存在创建，存在更新配置。推荐使用 apply！**
+
+#### 2.3 删除 pod
+
+```shell
+$ kubectl delete pod pod名称
+$ kubectl delete -f pod.yml
+```
+
+
+
+# P17 通过 IDEA 插件生成 Pod 模板
+
+# P18 Pod 相关进阶命令
+
+#### 2.4 进入 pod 中容器
+
+```shell
+# 注意：这种方式进入容器默认只会进入 pod 中第一个容器
+$ kubectl exec -it nginx(pod 名称) --(固定写死) bash(执行命令)
+# 注意：进入指定 pod 中指定容器
+$ kubectl exec -it pod名称 -c 容器名称 --(固定写死) bash(执行命令)
+```
+
+#### 2.5 查看 pod 日志
+
+```shell
+# 注意：查看 pod 中所有容器的日志 
+$ kubectl logs -f(可选，实时) nginx(pod 名称)
+# 注意：查看 pod 中指定容器的日志
+$ kubectl logs -f pod名称 -c 容器名称
+```
+
+#### 2.6 查看 pod 描述信息
+
+```shell
+$ kubectl describe pod nginx(pod 名称)
+```
+
+# P19 Pod 中运行多个容器
+
+### 3 Pod 运行多个容器
+
+#### 3.1 创建 pod
+
+```yaml
+# myapp-pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.19
+      ports:
+        - containerPort: 80
+      imagePullPolicy: IfNotPresent
+    - name: redis
+      image: redis:5.0.10
+      ports:
+        - containerPort: 6379
+      imagePullPolicy: IfNotPresent
+```
+
+```shell
+$ kubectl apply -f myapp-pod.yml
+```
+
+#### 3.2 查看指定容器日志
+
+```shell
+# 查看日志（默认只查看低一个容器日志，这里是展示 nginx 日志）
+$ kubectl logs -f myapp
+
+# 查看 pod 中指定容器的日志
+$ kuberctl logs -f myapp -c nginx(容器名称)
+$ kuberctl logs -f myapp -c redis(容器名称)
+```
+
+#### 3.3 进入容器
+
+```shell
+# 进入 pod 的容器（默认进入第一个容器内部，这里会进入 nginx 容器内部）
+$ kubectl exec -it myapp -- sh
+
+# 进入 pod 中指定容器内部
+$ kubectl exec -it myapp -c nginx -- sh
+$ kubectl exec -it myapp -c redis -- sh
+```
+
+# P20 Label 标签的概念及操作
+
+### 4 Pod 的 Labels（标签）
+
+**标签（Labels）**是附加到 Kubernetes 对象（比如 Pod）上的键值对。标签旨在用于指定对用户有意义且相关的对象的标识属性。标签可以在创建时附加到对象，随后可以随时添加和修改。每个对象都可以定义一组键（key）/值（value）标签，但是每个键（key）对于给定对象必须是唯一的。
+
+标签作用：就是用来给 k8s 中对象起别名，有了别名可以过滤和筛选
+
+#### 4.1 语法
+
+**标签由键值对组成**，其有效标签值：
+
+- 必须为 63 个字符或更少（可以为空）
+- 除非标签值为空，必须以字母数字字符（`[a-z0-9A-Z]`）开头和结尾
+- 包含破折号（`-`）、下划线（`_`）、点（`.`）和字母或数字
+
+#### 4.2 示例
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+  labels:
+    name: myapp # 创建时添加
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.21
+      imagePullPolicy: IfNotPresent
+    - name: redis
+      image: redis:5.0.10
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+```
+
+#### 4.3 标签基本操作
+
+```shell
+# 查看标签
+$ kubectl get pods --show-labels
+
+# kubectl label pod pod名称 标签键值对
+$ kubectl label pod myapp env=prod
+
+# 覆盖标签 --overwrite
+$ kubectl label --overwrite pod myapp env=test
+
+# 删除标签 -号代表删除标签
+$ kubectl label pod myapp env-
+
+# 根据标签筛选 env=test/env > = < |
+$ kubectl get po -l env=test
+$ kubectl get po -l env
+$ kubectl get po -l '!env' # 不包含的 pod
+$ kubectl get po -l 'env in (test,prod)' # 不包含的 pod
+$ kubectl get po -l 'env notin (test,prod)' # 选择含有指定值的 pod
+```
+
+# P21 Pod 的生命周期
+
+### 5 Pod 的生命周期
+
+> 摘自官网：https://kubernetes.io/zh-cn/docs/concepts/workloads/pods/pod-lifecycle/
+
+Pod 遵循预定义的生命周期，起始于 `Pending` 阶段，如果至少其中有一个主要容器正常启动，则进入 `Running`，之后取决于 Pod 中是否有容器以失败状态结束而进入 `Succeeded` 或者 `Failed` 阶段。与此同时 Pod 在其生命周期中只会被调度一次。一旦 Pod 被调度（分派）到某个节点，Pod 会一直在该节点运行，直到 Pod 停止或者被终止。
+
+#### 5.1 生命周期
+
+和一个个独立的应用容器一样，Pod 也被认为是相对临时性（而不是长期存在）的实体。Pod 会被创建、赋予一个唯一的 ID（UID），并被调度到节点，并在终止（根据重启策略）或删除之前一直运行在该节点。如果一个节点死掉了，调度到该节点的 Pod 也被计划在给定超时期限结束后删除。
+
+Pod 自身不具有自愈能力。如果 Pod 被调度到某节点而该节点之后失效，Pod 会被删除；类似地，Pod 无法在因节点资源耗尽或者节点维护而被驱逐期间继续存活。Kubernetes 使用一种高级抽象来管理这些相对而言可随时丢弃的 Pod 实例，称作控制器。
+
+任何给定的 Pod（由 UID 定义）从不会被“重新调度”（rescheduled）到不同的节点；相反，这一 Pod 可以被一个新的、几乎完全相同的 Pod 替换掉。如果需要，新 Pod 的名字可以不变，但是其 UID 会不同。
+
+如果某物声称其生命期与 Pod 相同，例如存储卷。这就意味着该对象在此 Pod（UID 亦相同）存在期间也一直存在。如果 Pod 因为任何原因被删除，甚至某完全相同的替代 Pod 被创建时，这个相关的对象（例如这里的卷）也会被删除并重建
+
+#### 5.2 pod 阶段
+
+Pod 阶段的数量和含义是严格定义的。除了本文档中列举的内容外，不应该再假定 Pod 有其他的 `phase` 值。
+
+| 取值                | 描述                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| `Pending`（悬决）   | Pod 已被 Kubernetes 系统接受，但有一个或者多个容器尚未创建亦为运行。此阶段包括等待 Pod 被调度的时间和通过网络下载镜像的时间。 |
+| `Running`（运行中） | Pod 已经绑定到了某个节点，Pod 中所有的容器都已被创建。至少有一个容器仍在运行，或者正处于启动或重启状态。 |
+| `Succeeded`（成功） | Pod 中的所有容器都已成功终止，并且不会再重启。               |
+| `Failed`（失败）    | Pod 中的所有容器都已终止，并且至少有一个容器是因为失败终止。也就是说，容器以非 0 状态退出或者被系统终止。 |
+| `Unknown`（未知）   | 因为某些原因无法取得 Pod 的状态。这种情况通常是因为与 Pod 所在主机通信失败。 |
+
+> **说明：**
+>
+> 1. 当一个 Pod 被删除时，执行一些 kubectl 命令会展示这个 Pod 的状态为 `Terminating`（终止）。这个 `Terminating` 状态并不是 Pod 阶段之一。Pod 被赋予一个可以体面终止的期限，默认为 30 秒。你可以使用 `--force` 参数来强制终止 Pod。
+> 2. 如果某节点死掉或者与集群中其他节点失联，Kubernetes 会实施一种策略，将失去的节点中运行的所有 Pod 的 `phase` 设置为 `Failed`。
+
+# P22 容器的生命周期
+
+### 6 Container 特性
+
+#### 6.1 容器生命周期
+
+Kubernetes 会跟踪 Pod 中每个容器的状态，就像它跟踪 Pod 总体上的阶段一样。你可以使用容器生命周期回调来在容器生命周期中的特定时间点触发事件。
+
+一旦调度器将 Pod 分派给某个节点，`kubelet` 就通过容器运行时开始为 Pod 创建容器。容器的状态有三种：`Waiting`（等待）、`Running`（运行中）和 `Terminated`（已终止）。
+
+要检查 Pod 中容器的状态，你可以使用 `kubectl describe pod <pod 名称>`。其输出中包含 Pod 中每个容器的状态。
+
+每种状态都有特定的含义：
+
+- `Waiting`（等待）
+
+  如果容器并不处在 `Running` 或 `Terminated` 状态之一，它就处在 `Waiting` 状态。处于 `Waiting` 状态的容器仍在运行它完成启动所需要的操作：例如，从某个容器镜像仓库拉取容器对象，或者向容器应用 Secret 数据等等。当你使用 `kubectl` 来查询包含 `Waiting` 状态的容器的 Pod 时，你也会看到一个 Reason 字段，其中给出了容器处于等待状态的原因。
+
+- `Running`（运行中）
+
+  `Running` 状态表明容器正在执行状态并且没有问题发生。如果配置了 `postStart` 回调，那么该回调已经执行且已完成。如果你使用 `kubectl` 来查询包含 `Running` 状态的容器的 Pod 时，你也会看到关于容器进入 `Running` 状态的信息。
+
+- `Terminated`（已终止）
+
+  处于 `Terminated` 状态的容器已经开始执行并且或者正常结束或者因为某些原因失败。如果你使用 `kubectl` 来查询包含 `Terminated` 状态的容器的 Pod 时，你会看到容器进入此状态的原因、退出代码以及容器执行期间的起止时间。
+
+  如果容器配置了 `preStop` 回调，则该回调会在容器进入 `Terminated` 状态之前执行。
+
+# P23 容器生命周期回调
+
+#### 6.2 容器生命周期回调
+
+类似于许多具有生命周期回调组件的编程语言框架，例如 Angular、Vue、Kubernetes 为容器提供了生命周期回调。回调使容器能够了解其管理生命周期中的事件，并在执行相应的生命周期回调时运行在处理程序中实现的代码。
+
+有两个回调暴露给容器：
+
+- `PostStart` 这个回调在容器被创建之后立即被执行。但是，不能保证回调会在容器入口点（ENTRYPOINT）之前执行。没有参数传递给处理程序。
+
+- `PreStop` 在容器因 API 请求或管理事件（诸如存活态探针、启动探针失败、资源抢占、资源竞争等）而被终止之前，此回合会被调用。如果容器已经处于已终止或者已完成状态，则对 preStop 回调的调用将失败。在用来停止容器的 TERM 信号被发出之前，回调必须执行结束。Pod 的终止宽限周期在 `PreStop` 回调被执行之前即开始计数，所以无论回调函数的执行结果如何，容器最终都会在 Pod 的终止宽限期内被终止。没有参数会被传递给处理程序。
+
+- **使用容器生命周期回调**
+
+  ```yaml
+  # nginx-pod.yml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nginx
+  spec:
+    containers:
+      - name: nginx
+        image: nginx:1.19
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo postStart >> /start.txt"]
+          preStop:
+            exec:
+              commands: ["/bin/sh", "-c", "echo postStop >> /stop.txt && sleep 5"]
+        ports:
+          - containerPort: 80
+  ```
+
+  
