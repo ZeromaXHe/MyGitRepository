@@ -1307,3 +1307,270 @@ spec:
   - 容器可无限制地使用内存。容器可以使用其所在节点所有的可用内存，进而可能导致该节点调用 OOM Killer。此外，如果发生 OOM Kill，没有资源限制的容器将被杀掉的可行性更大。
   - 运行的容器所在命名空间有默认的内存限制，那么该容器会被自动分配默认限制。
 
+# P31 容器的 CPU 资源限制
+
+##### 3 指定 CPU 请求和限制
+
+官网：https://kubernetes.io/zh-cn/docs/tasks/configure-pod-container/assign-cpu-resource/
+
+为容器指定 CPU 请求，请在容器资源清单中包含 `resources: requests` 字段。要指定 CPU 限制，请包含 `resources:limits`。
+
+```yaml
+# nginx-cpu-demo.yaml
+# CPU 资源以 CPU 单位度量。小数值是可以使用的。一个请求 0.5 CPU 的容器保证会获得请求 1 个 CPU 的容器的 CPU 的一半。你可以使用后缀 m 表示毫。例如 180m CPU、100 milliCPU 和 0.1 CPU 都相同。CPU 请求只能使用绝对数量，而不是相对数量。0.1 在单核、双核或 48 核计算机上的 CPU 数量值是一样的。
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-cpu-demo
+spec:
+  containers:
+  - name: nginx-cpu-demo
+    image: nginx:1.19
+    resources:
+      limits:
+        cpu: "1"
+      requests:
+        cpu: "0.5"
+```
+
+- 显示 pod 详细信息
+
+  ```shell
+  $ kubectl get pod nginx-cpu-demo --output=yaml
+  ```
+
+- 显示 pod 运行指标
+
+  ```shell
+  $ kubectl top pod nginx-cpu-demo
+  ```
+
+- **CPU 请求和限制的初衷**
+
+  通过配置你的集群中的容器的 CPU 请求和限制，你可以有效利用集群上的 CPU 资源。通过将 Pod CPU 请求保持在较低水平，可以使 Pod 更有机会被调度。通过使 CPU 限制大于 CPU 请求，你可以完成两件事：
+
+  - Pod 可能会有突发性的活动，它可以利用碰巧可用的 CPU 资源。
+  - Pod 在突发负载期间可以使用的 CPU 资源数量仍被限制为合理的数量。
+
+- **如果不指定 CPU 限制**
+
+  如果你没有为容器指定 CPU 限制，则会发生以下情况之一：
+
+  - 容器在可以使用的 CPU 资源上没有上限。因而可以使用所在节点上所有的可用 CPU 资源。
+  - 容器在具有默认 CPU 限制的名字空间中运行，系统会自动为容器设置默认限制。
+
+- **如果你设置了 CPU 限制但未设置 CPU 请求**
+
+  如果你为容器指定了 CPU 限制值但未为其设置 CPU 请求，Kubernetes 会自动为其设置与 CPU 限制相同的 CPU 请求值。类似的，如果容器设置了内存限制值但未设置内存请求值，Kubernetes 也会为其设置与内存限制值相同的内存请求。
+
+# P32 Pod 中的 init 容器
+
+### 7 Pod 中 init 容器
+
+Init 容器是一种特殊容器，在 Pod 内的应用容器启动之前运行。Init 容器可以包括一些应用镜像中不存在的使用工具和安装脚本。
+
+#### 7.1 init 容器特点
+
+init 容器与普通的容器非常像，除了如下几点：
+
+- 它们总是运行到完成。如果 Pod 的 Init 容器失败，kubelet 会不断地重启该 Init 容器直到该容器成功为止。然而，如果 Pod 对应的 `restartPolicy` 值为 “Never”，并且 Pod 的 Init 容器失败，则 Kubernetes 会将整个 Pod 状态设置为失败。
+- 每个都必须在下一个启动之前完成。
+- 同时 Init 容器不支持 `Lifecycle`、`LivenessProbe`、`readinessProbe` 和 `startupProbe`，因为它们必须在 Pod 就绪之前运行完成。
+- 如果为一个 Pod 指定了多个 Init 容器，这些容器会按顺序逐个运行。每个 Init 容器必须运行成功，下一个才能够运行。当所有的 Init 容器运行完成时，Kubernetes 才会为 Pod 初始化应用容器并像平常一样运行。
+- Init 容器支持应用容器的全部字段和特性，包括资源限制、数据卷和安全设置。然而，Init 容器对资源请求和限制的处理稍有不同。
+
+#### 7.2 使用 init 容器
+
+> 官网地址：https://kubernetes.io/zh-cn/docs/workloads/pods/init-containers/
+
+在 Pod 的规约中与用来描述应用容器的 `container` 数组平行的位置指定 Init 容器。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-demo
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo init-myservice is running! && sleep 5']
+  - name: init-mydb
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo init-mydb is running! && sleep 10']
+```
+
+- **查看启动详细**
+
+  ```shell
+  $ kubectl describe pod init-demo
+  
+  # 部分结果
+  # ……（省略）
+  ```
+
+# P33 指派 Pod 到指定节点定义和策略
+
+### 8 节点亲和性分配 Pod
+
+> 官方地址：http://kubernetes.p2hp.com/docs/concepts/scheduling-eviction/assign-pod-node.html
+
+你可以约束一个 Pod 以便**限制**其只能在特定的节点上运行，或优先在特定的节点上运行。有几种方法可以实现这点，推荐的方法都是用**标签选择算符来进行选择。**通常这样的约束不是必须的，因为调度器将自动进行合理的放置（比如，将 Pod 分散到节点上，而不是将 Pod 放置在可用资源不足的节点上等等）。但在某些情况下，你可能需要进一步控制 Pod 被部署到哪个节点。例如，确保 Pod 最终落在连接了 SSD 的机器上，或者将来自两个不同的服务且有大量通信的 Pods 被放置在同一个可用区。
+
+你可以使用下列方法中的任何一种来选择 Kubernetes 对特定 Pod 的调度：
+
+- 与节点标签匹配的 nodeSelector **推荐**
+- 亲和性与反亲和性
+- nodeName
+- Pod 拓扑分布约束
+
+> **定义：使用节点亲和性可以把 Kubernetes Pod 分配到特定节点。**
+
+# P34 使用节点标签调度 Pod
+
+#### 8.1 给节点添加标签
+
+- 列出集群中的节点及其标签：
+
+  ```shell
+  $ kubectl get nodes --show-labels
+  # 输出类似于此
+  # ……（省略）
+  ```
+
+- 选择一个节点，给它添加一个标签：
+
+  ```shell
+  kubectl label nodes k8s-node1(节点名称) disktype=ssd
+  ```
+
+- 验证你所选节点具有 `disktype=ssd` 标签：
+
+  ```shell
+  $ kubectl get nodes --show-labels
+  # 输出类似于此
+  # ……（省略）
+  ```
+
+#### 8.2 根据选择节点标签指派 pod 到指定节点 [nodeSelector]
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.19
+    imagePullPolicy: IfNotPresent
+  nodeSelector:
+    disktype: ssd # 选择节点为标签为 ssd 的节点
+```
+
+# P35 使用节点名称调度 Pod
+
+#### 8.3 根据节点名称指派 pod 到指定节点 [nodeName]
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  nodeName: worker1 # 调度 Pod 到特定的节点
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+```
+
+# P36 使用节点亲和性调度 Pod
+
+#### 8.4 根据 亲和性和反亲和性 指派 pod 到指定节点
+
+官网地址：http://kubernetes.p2hp.com/docs/concepts/scheduling-eviction/assign-pod-node.html
+
+**说明**
+
+`nodeSelector` 提供了一种最简单的方法来将 Pod 约束到具有特定标签的节点上。亲和性和反亲和性扩展了你可以定义的约束类型。使用亲和性与反亲和性的一些好处有：
+
+- 亲和性、反亲和性语言的表达能力更强。`nodeSelector` 只能选择拥有所有指定标签的节点。亲和性、反亲和性为你提供对选择逻辑的更强控制能力。
+- 你可以标明某规则是“软需求”或者“偏好”，这样调度器在无法找到匹配节点时仍然调度该 Pod。
+- 你可以使用节点上（或其他拓扑域中）运行的其他 Pod 的标签来实施调度约束，而不是只能使用节点本身的标签。这个能力让你能够定义规则允许哪些 Pod 可以被放置在一起。
+
+**亲和性功能由两种类型的亲和性组成：**
+
+- **节点亲和性**功能类似于 `nodeSelector` 字段，但它的表达能力更强，并且允许你指定软规则。
+- Pod 间亲和性/反亲和性允许你根据其他 Pod 的标签来约束 Pod。
+
+节点亲和性概念上类似于 `nodeSelector`，它使你可以根据节点上的标签来约束 Pod 可以调度到哪些节点上。节点亲和性有两种：
+
+- `requiredDuringSchedulingIgnoredDuringExecution`：调度器只有在规则被满足的时候才能执行调度。此功能类似于 `nodeSelector`，但其语法表达能力更强。
+- `preferredDuringSchedulingIgnoredDuringExecution`：调度器会尝试寻找满足对应规则的节点。如果找不到匹配的节点，调度器仍然会调度该 Pod。
+
+**注意：在上述类型中，`IgnoredDuringExecution` 意味着如果节点标签在 Kubernetes 调度 Pod 后发生了变更，Pod 仍将继续运行。**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-node-affinity
+spec:
+  affinity:
+    nodeAffinity:
+      # 节点必须包含一个键名为 ssd 的标签，并且该标签的取值必须为 fast 或 superfast。
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: ssd
+            operator: In
+            values:
+            - fast
+            - superfast
+  containers:
+  - name: nginx
+    image: nginx:1.19
+```
+
+**注意：你可以使用 `In`、`NotIn`、`Exists`、`DoesNotExist`、`Gt` 和 `Lt` 之一作为操作符。`NotIn` 和 `DoesNotExist`可用来实现节点反亲和性行为 。**
+
+#### 8.5 节点亲和性权重
+
+你可以为 `preferredDuringSchedulingIgnoredDuringExecution` 亲和性类型的每个实例设置 `weight` 字段，其取值范围是 1 到 100。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-node-affinity
+spec:
+  affinity:
+    nodeAffinity:
+      # 节点最好具有一个键名为 app 且取值为 fast 的标签。
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1 # 取值范围是 1 到 100
+        preference:
+          matchExpressions:
+          - key: ssd
+            operator: In
+            values:
+            - fast
+      - weight: 50
+        preference:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - demo
+  containers:
+  - name: nginx
+    image: nginx:1.19
+```
+
