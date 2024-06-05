@@ -1574,3 +1574,247 @@ spec:
     image: nginx:1.19
 ```
 
+# P37 使用 Pod 间亲和性调度 Pod
+
+#### 8.6 pod 间亲和性和反亲和性及权重
+
+与节点亲和性类似，Pod 的亲和性与反亲和性也有两种类型：
+
+- `requiredDuringSchedulingIgnoredDuringExecution`
+- `preferredDuringSchedulingIgnoredDuringExecution`
+
+例如，你可以使用 `requiredDuringSchedulingIgnoredDuringExecution` 亲和性来告诉调度器，将两个服务的 Pod 放到同一个云提供商可用区内，因为它们彼此之间通信非常频繁。类似地，你可以使用 `preferredDuringSchedulingIgnoredDuringExecution` 反亲和性来将同一服务的多个 Pod 分布到多个云提供商可用区中。
+
+要使用 Pod 间亲和性，可以使用 Pod 规约中的 `spec.affinity.podAffinity` 字段。对于 Pod 间反亲和性，可以使用 Pod 规约中的 `spec.affinity.podAntiAffinity` 字段。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  containers:
+    - name: redis
+      image: redis:5.0.10
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        # 更确切的说，调度器必须将 Pod 调度到具有 cpu 标签的节点上，并且集群中至少有一个位于该可用区的节点上运行着带有 app#nginx 标签的 Pod。
+        - topologyKey: cpu
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - nginx
+```
+
+- **pod 间亲和性权重**
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: redis
+    labels:
+      app: redis
+  spec:
+    containers:
+      - name: redis
+        image: redis:5.0.10
+        imagePullPolicy: IfNotPresent
+    restartPolicy: Always
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          # 更确切的说，调度器必须将 Pod 调度到具有 cpu 标签的节点上，并且集群中至少有一个位于该可用区的节点上运行着带有 app#nginx 标签的 Pod。
+          - podAffinityTerm:
+              topologyKey: cpu
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - nginx
+            weight: 1
+          - podAffinityTerm:
+              topologyKey: cpu
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - web
+            weight: 30
+  ```
+
+# P38 污点容忍度以及拓扑调度 Pod 总结
+
+#### 8.7 污点和容忍度
+
+参考：http://kubernetes.p2hp.com/docs/concepts/scheduling-eviction/taint-and-toleration.html
+
+#### 8.8 Pod 拓扑分布约束
+
+参考：http://kubernetes.p2hp.com/docs/concpets/scheduling-eviction/topology-spread-constraints/
+
+# P39 第四章 控制器以及本章内容
+
+## 第四章 Controller 控制器
+
+- 什么是 Controller 以及作用
+- 常见的 Controller 控制器
+- Controller 如何管理 Pod
+- Deployment 基本操作与应用
+- 通过控制器实现 Pod 升级回滚和弹性伸缩
+- StatefulSet 基本操作与应用
+- Daemonset 基本操作与应用
+- Job 基本操作与应用
+- Controller 无法解决问题
+
+# P40 什么是控制器以及常见的控制器
+
+### 1 Controller 控制器
+
+http://kubernetes.p2hp.com/docs/concepts/architecture/controller.html
+
+#### 1.1 什么是 Controller
+
+`Kubernetes 通常不会直接创建 Pod，而是通过 Controller 来管理 Pod 的。`**Controller 中定义了 Pod 的部署特性，比如有几个副本、在什么样的 Node 上运行等。**通俗的说可以认为 Controller 就是用来管理 Pod 一个对象。其核心作用可以通过一句话总结：`通过监控集群的公共状态，并致力于将当前状态转变为期望的状态。`
+
+**通俗定义：controller 可以管理 pod 让 pod 更具有运维能力**
+
+#### 1.2 常见的 Controller 控制器
+
+- `Deployment` 是最常用的 Controller。Deployment 可以管理 Pod 的多个副本，并确保 Pod 按照期望的状态运行。
+- `Daemonset` 用于每个 Node 最多只运行一个 Pod 副本的场景。正如其名称所揭示的，DaemonSet 通常用于运行 daemon。
+- `Statefulset` 能够保证 Pod 的每个副本在整个生命周期中名称是不变的，而其他 Controller 不提供这个功能。当某个 Pod 发生故障需要删除并重新启动时，Pod 的名称会发生变化，同时 StatefulSet 会保证副本按照固定的顺序启动、更新或者删除。
+- `Job` 用于运行结束就删除的应用，而其他 Controller 中的 Pod 通常是长期持续运行。
+
+# P41 控制器如何与 Pod 关联
+
+#### 1.3 Controller 如何管理 Pod
+
+`注意：Controller 通过 label 关联起来 Pods`
+
+# P42 Deployment 控制器简介与使用
+
+### 2 Deployment
+
+官方地址：http://kubernetes.p2hp.com/docs/concepts/workloads/controllers/deployment.html
+
+一个 Deployment 为 Pod 和 ReplicaSet 提供声明式的更新能力。
+
+你负责描述 Deployment 中的 **目标状态**，而 Deployment 控制器（Controller）以受控速率更改实际状态，使其变为期望状态。你可以定义 Deployment 以创建新的 ReplicaSet，或删除现有 Deployment，并通过新的 Deployment 收养其资源。
+
+#### 2.1 创建 Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+  spec:
+    containers:
+      - name: nginx
+        image: nginx:1.19
+        ports:
+          - containerPort: 80
+```
+
+# P43 Deployment 基本操作
+
+#### 2.2 查看 deployment
+
+```shell
+# 部署应用
+$ kubectl apply -f app.yaml
+# 查看 deployment
+$ kubectl get deployment
+# 查看 pod
+$ kubectl get pod -o wide
+# 查看 pod 详情
+$ kubectl describe pod pod-name
+# 查看 log
+$ kubectl logs pod-name
+# 进入 Pod 容器终端，-c container-name 可以指定进入哪个容器。
+$ kubectl exec -it pod-name -- bash
+# 输出到文件
+$ kubectl get deployment nginx-deployment -o yaml >> test.yaml
+```
+
+- `NAME` 列出了名字空间中 Deployment 的名称。
+- `READY` 显示应用程序的可用的”副本“数。显示的模式是”就绪个数/期望个数“。
+- `UP-TO-DATE` 显示为了达到期望状态已经更新的副本数。
+- `AVAILABLE` 显示应用可供用户使用的副本数。
+- `AGE` 显示应用程序运行的时间。
+
+> 请注意期望副本数是根据 `.spec.replicas` 字段设置 3。
+
+# P44 Deployment 动态扩缩
+
+#### 2.3 扩缩 deployment
+
+```shell
+# 查询副本
+$ kubectl get rs|replicaset
+# 伸缩扩展副本
+$ kubectl scale deployment nginx --replicas=5
+```
+
+# P45 Deployment 版本回退机制
+
+#### 2.4 回滚 deployment
+
+> **说明：**
+>
+> 仅当 Deployment Pod 模板（即 `.spec.template`）发生改变时，例如模板的标签或容器镜像被更新，才会触发 Deployment 上线。其他更新（如对 Deployment 执行扩缩容的操作）不会触发上线动作。
+
+```shell
+# 查看回滚状态
+$ kubectl rollout status [deployment nginx-deployment | deployment/nginx]
+# 查看历史
+$ kubectl rollout history deployment nginx-deployment
+# 查看某次历史的详细信息
+$ kubectl rollout history deployment/nginx-deployment --to-revision=2
+# 回到上个版本
+$ kubectl rollout undo deployment nginx-deployment
+# 回到指定版本
+$ kubectl rollout undo deployment nginx-deployment --to-revision=2
+# 重新部署
+$ kubectl rollout restart deployment nginx-deployment
+# 暂停运行，暂停后，对 deployment 的修改不会立刻生效，恢复后才应用设置
+$ kubectl rollout pause deployment nginx-deployment
+# 恢复
+$ kubectl rollout resume deployment nginx-deployment
+```
+
+# P46 删除 Deployment 控制器
+
+#### 2.5 删除 deployment
+
+```shell
+# 删除 Deployment
+$ kubectl delete deployment nginx-deployment
+$ kubectl delete -f nginx-deployment.yml
+# 删除全部资源
+$ kubectl delete all --all
+# 删除指定命名空间的资源
+$ kubectl delete all --all -n 命名空间的名称
+```
+
