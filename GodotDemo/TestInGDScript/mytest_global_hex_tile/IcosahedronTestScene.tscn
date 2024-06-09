@@ -1,0 +1,48 @@
+[gd_scene load_steps=8 format=3 uid="uid://1pki0fw6eg3v"]
+
+[ext_resource type="Script" path="res://mytest_global_hex_tile/IcosahedronMesh.gd" id="1_46qdd"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_tvmq0"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_dphp3"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_trf87"]
+sky_material = SubResource("ProceduralSkyMaterial_dphp3")
+
+[sub_resource type="Environment" id="Environment_4ynj1"]
+background_mode = 2
+sky = SubResource("Sky_trf87")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_5215e"]
+_surfaces = [{
+"aabb": AABB(-8.50651, -8.50651, -8.50651, 17.013, 17.013, 17.013),
+"attribute_data": PackedByteArray(0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+"format": 34359742487,
+"index_count": 60,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 2, 0, 1, 0, 3, 0, 2, 0, 3, 0, 4, 0, 5, 0, 2, 0, 4, 0, 0, 0, 2, 0, 5, 0, 0, 0, 5, 0, 6, 0, 6, 0, 5, 0, 7, 0, 5, 0, 4, 0, 7, 0, 7, 0, 4, 0, 8, 0, 7, 0, 8, 0, 9, 0, 7, 0, 9, 0, 6, 0, 6, 0, 9, 0, 10, 0, 10, 0, 9, 0, 11, 0, 10, 0, 11, 0, 1, 0, 10, 0, 1, 0, 0, 0, 6, 0, 10, 0, 0, 0, 11, 0, 3, 0, 1, 0, 8, 0, 3, 0, 11, 0, 4, 0, 3, 0, 8, 0, 11, 0, 9, 0, 8, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 12,
+"vertex_data": PackedByteArray(228, 59, 168, 64, 0, 0, 0, 0, 168, 26, 8, 65, 228, 59, 168, 192, 0, 0, 0, 0, 168, 26, 8, 65, 0, 0, 0, 0, 168, 26, 8, 65, 228, 59, 168, 64, 168, 26, 8, 193, 228, 59, 168, 64, 0, 0, 0, 0, 0, 0, 0, 0, 168, 26, 8, 65, 228, 59, 168, 192, 168, 26, 8, 65, 228, 59, 168, 64, 0, 0, 0, 0, 168, 26, 8, 65, 228, 59, 168, 192, 0, 0, 0, 0, 228, 59, 168, 64, 0, 0, 0, 0, 168, 26, 8, 193, 228, 59, 168, 192, 0, 0, 0, 0, 168, 26, 8, 193, 0, 0, 0, 0, 168, 26, 8, 193, 228, 59, 168, 192, 0, 0, 0, 0, 168, 26, 8, 193, 228, 59, 168, 64, 168, 26, 8, 193, 228, 59, 168, 192, 0, 0, 0, 0, 227, 176, 255, 127, 113, 88, 255, 159, 27, 79, 255, 127, 141, 167, 255, 159, 255, 127, 26, 207, 255, 63, 198, 179, 228, 48, 227, 176, 141, 103, 56, 172, 227, 176, 255, 255, 114, 24, 255, 159, 26, 207, 227, 176, 141, 103, 198, 211, 26, 207, 27, 79, 141, 103, 56, 172, 255, 255, 26, 207, 141, 167, 255, 159, 0, 0, 26, 207, 113, 88, 255, 159, 27, 79, 0, 0, 255, 63, 198, 179, 255, 127, 228, 48, 114, 24, 255, 159, 228, 48, 27, 79, 141, 103, 198, 211)
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_acohn"]
+albedo_texture = ExtResource("1_tvmq0")
+
+[node name="IcosahedronTestScene" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_4ynj1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="IsosahedronMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_5215e")
+surface_material_override/0 = SubResource("StandardMaterial3D_acohn")
+script = ExtResource("1_46qdd")
+edge_segment = 6
