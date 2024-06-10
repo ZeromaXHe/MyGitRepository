@@ -6,6 +6,8 @@ extends MeshInstance3D
 @export_range(1, 10000) var edge_segment: int = 1
 @export var regenerate: bool = false
 @export var render_hex: bool = true
+# true 分段时是采用球面旋转计算，false 时采用直线分段后映射到球面
+@export var segment_by_rotation: bool = false
 
 
 # Called when the node enters the scene tree for the first time.
@@ -287,13 +289,19 @@ func draw_face_index(vertices: PackedVector3Array, i1: int, i2: int, i3: int, vi
 
 func get_segment_vertices(from: Vector3, to: Vector3, segment: int) -> Array[Vector3]:
 	var result: Array[Vector3] = [from]
-	var angle: float = from.angle_to(to)
-	# 计算出每个分段的角度
-	var segment_angle: float = angle / segment
-	# 用叉积求出单位法向量（方向符合右手定则）
-	var normal_vec: Vector3 = from.cross(to).normalized()
-	for i in range(segment - 1):
-		result.append(from.rotated(normal_vec, (i + 1) * segment_angle))
+	if segment_by_rotation:
+		var angle: float = from.angle_to(to)
+		# 计算出每个分段的角度
+		var segment_angle: float = angle / segment
+		# 用叉积求出单位法向量（方向符合右手定则）
+		var normal_vec: Vector3 = from.cross(to).normalized()
+		for i in range(segment - 1):
+			result.append(from.rotated(normal_vec, (i + 1) * segment_angle))
+	else:
+		var diff: Vector3 = to - from
+		var segment_diff: Vector3 = diff / segment
+		for i in range(segment - 1):
+			result.append((from + (i + 1) * segment_diff).normalized() * radius)
 	result.append(to)
 	return result
 
