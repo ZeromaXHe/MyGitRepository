@@ -1,0 +1,39 @@
+[gd_scene load_steps=8 format=3 uid="uid://yy83ypc68l4h"]
+
+[sub_resource type="Gradient" id="Gradient_d5kno"]
+colors = PackedColorArray(0.556863, 0.556863, 0.556863, 0.690196, 0.517647, 0.517647, 0.517647, 0.0784314)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_6781m"]
+gradient = SubResource("Gradient_d5kno")
+
+[sub_resource type="Curve" id="Curve_xwj4d"]
+_data = [Vector2(0, 0.505494), 0.0, 0.0, 0, 0, Vector2(0.504505, 1), 0.0, 0.0, 0, 0, Vector2(0.752252, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_kobjw"]
+curve = SubResource("Curve_xwj4d")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_w1jgl"]
+direction = Vector3(0, 0, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.4
+gravity = Vector3(0, 0.1, 0.1)
+scale_max = 2.0
+scale_curve = SubResource("CurveTexture_kobjw")
+scale_over_velocity_min = 1.0
+scale_over_velocity_max = 2.0
+color_ramp = SubResource("GradientTexture1D_6781m")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ijmty"]
+transparency = 1
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="SphereMesh_4ruy0"]
+material = SubResource("StandardMaterial3D_ijmty")
+
+[node name="EngineSmokeEmitter" type="GPUParticles3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -1.31134e-07)
+amount = 800
+lifetime = 10.0
+process_material = SubResource("ParticleProcessMaterial_w1jgl")
+draw_pass_1 = SubResource("SphereMesh_4ruy0")

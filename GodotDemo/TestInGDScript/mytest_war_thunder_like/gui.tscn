@@ -1,0 +1,54 @@
+[gd_scene load_steps=3 format=3 uid="uid://c6kxqtytuo3nt"]
+
+[ext_resource type="Script" path="res://mytest_war_thunder_like/gui.gd" id="1_xxc47"]
+[ext_resource type="PackedScene" uid="uid://c4mdges72tc85" path="res://mytest_war_thunder_like/dog_fight_field.tscn" id="2_42s6e"]
+
+[node name="GUI" type="CanvasLayer"]
+script = ExtResource("1_xxc47")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(1152, 648)
+size_2d_override_stretch = true
+render_target_update_mode = 4
+
+[node name="DogFightField" parent="SubViewportContainer/SubViewport" instance=ExtResource("2_42s6e")]
+
+[node name="TopLeftGrid" type="GridContainer" parent="."]
+offset_right = 172.0
+offset_bottom = 277.0
+columns = 2
+
+[node name="ThrottleTitle" type="Label" parent="TopLeftGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "节流阀"
+
+[node name="ThrottleValue" type="RichTextLabel" parent="TopLeftGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "100%"
+
+[node name="SpeedTitle" type="Label" parent="TopLeftGrid"]
+layout_mode = 2
+text = "速度"
+
+[node name="SpeedValue" type="RichTextLabel" parent="TopLeftGrid"]
+layout_mode = 2
+text = "100 km/h"
+
+[node name="HeightTitle" type="Label" parent="TopLeftGrid"]
+layout_mode = 2
+text = "高度"
+
+[node name="HeightValue" type="RichTextLabel" parent="TopLeftGrid"]
+layout_mode = 2
+text = "1000 米"

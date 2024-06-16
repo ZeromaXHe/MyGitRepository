@@ -1,0 +1,120 @@
+[gd_scene load_steps=9 format=3 uid="uid://v7chwlvs02p2"]
+
+[ext_resource type="Script" path="res://mytest_war_thunder_like/air_plane.gd" id="1_wmwwh"]
+[ext_resource type="PackedScene" uid="uid://yy83ypc68l4h" path="res://mytest_war_thunder_like/engine_smoke_emitter.tscn" id="2_a2fty"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uagr5"]
+albedo_color = Color(0.5625, 0.5625, 0.5625, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2w1pu"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1nblh"]
+albedo_color = Color(0.262787, 0.754966, 0.851563, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_txglc"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o7jbu"]
+albedo_color = Color(0.560784, 0.560784, 0.560784, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k5s1g"]
+albedo_color = Color(0.560784, 0.560784, 0.560784, 1)
+
+[node name="AirPlane" type="Node3D"]
+script = ExtResource("1_wmwwh")
+
+[node name="Body" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+radius = 3.0
+height = 20.0
+material = SubResource("StandardMaterial3D_uagr5")
+
+[node name="Head" type="CSGSphere3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -10, 4.37114e-07)
+radius = 3.0
+material = SubResource("StandardMaterial3D_2w1pu")
+
+[node name="Cockpit" type="CSGSphere3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -9, -1)
+radius = 3.0
+material = SubResource("StandardMaterial3D_1nblh")
+
+[node name="LeftWing" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -2, 6.55671e-08)
+size = Vector3(11, 5, 1)
+material = SubResource("StandardMaterial3D_txglc")
+
+[node name="Engine" type="CSGCylinder3D" parent="Body/LeftWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 2.84217e-14)
+radius = 1.0
+height = 6.0
+material = SubResource("StandardMaterial3D_o7jbu")
+
+[node name="EngineSmokeEmitter" parent="Body/LeftWing/Engine" instance=ExtResource("2_a2fty")]
+
+[node name="AileronRoot" type="Node3D" parent="Body/LeftWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2, -8.74228e-08)
+
+[node name="Aileron" type="CSGBox3D" parent="Body/LeftWing/AileronRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1, -1.31134e-07)
+size = Vector3(6, 3, 1)
+material = SubResource("StandardMaterial3D_k5s1g")
+
+[node name="RightWing" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -2, 6.55671e-08)
+size = Vector3(11, 5, 1)
+material = SubResource("StandardMaterial3D_txglc")
+
+[node name="Engine" type="CSGCylinder3D" parent="Body/RightWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 2.84217e-14)
+radius = 1.0
+height = 6.0
+material = SubResource("StandardMaterial3D_k5s1g")
+
+[node name="EngineSmokeEmitter" parent="Body/RightWing/Engine" instance=ExtResource("2_a2fty")]
+
+[node name="AileronRoot" type="Node3D" parent="Body/RightWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 2, -8.74228e-08)
+
+[node name="Aileron" type="CSGBox3D" parent="Body/RightWing/AileronRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1, -1.31134e-07)
+size = Vector3(6, 3, 1)
+material = SubResource("StandardMaterial3D_k5s1g")
+
+[node name="LeftTail" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 9, -1)
+size = Vector3(6, 3, 1)
+material = SubResource("StandardMaterial3D_txglc")
+
+[node name="ElevatorRoot" type="Node3D" parent="Body/LeftTail"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1.78814e-07)
+
+[node name="Elevator" type="CSGBox3D" parent="Body/LeftTail/ElevatorRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.5, -2.38419e-07)
+size = Vector3(4, 2, 1)
+material = SubResource("StandardMaterial3D_k5s1g")
+
+[node name="RightTail" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 9, -1)
+size = Vector3(6, 3, 1)
+material = SubResource("StandardMaterial3D_txglc")
+
+[node name="ElevatorRoot" type="Node3D" parent="Body/RightTail"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1, 2.98023e-07)
+
+[node name="Elevator" type="CSGBox3D" parent="Body/RightTail/ElevatorRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.5, -3.57628e-07)
+size = Vector3(4, 2, 1)
+material = SubResource("StandardMaterial3D_k5s1g")
+
+[node name="VerticalTail" type="CSGBox3D" parent="Body"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 9, -5)
+size = Vector3(6, 3, 1)
+material = SubResource("StandardMaterial3D_txglc")
+
+[node name="RudderRoot" type="Node3D" parent="Body/VerticalTail"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1.78814e-07)
+
+[node name="Rudder" type="CSGBox3D" parent="Body/VerticalTail/RudderRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.5, -2.38419e-07)
+size = Vector3(4, 2, 1)
+material = SubResource("StandardMaterial3D_k5s1g")

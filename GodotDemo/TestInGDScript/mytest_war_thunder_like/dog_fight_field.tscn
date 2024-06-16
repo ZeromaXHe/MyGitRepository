@@ -1,0 +1,51 @@
+[gd_scene load_steps=10 format=3 uid="uid://c4mdges72tc85"]
+
+[ext_resource type="PackedScene" uid="uid://v7chwlvs02p2" path="res://mytest_war_thunder_like/air_plane.tscn" id="1_sswoj"]
+[ext_resource type="PackedScene" uid="uid://cc16761tg05ix" path="res://mytest_war_thunder_like/plane_controller.tscn" id="2_1tq4u"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_w4pjk"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_nne4b"]
+sky_material = SubResource("ProceduralSkyMaterial_w4pjk")
+
+[sub_resource type="Environment" id="Environment_1h6ey"]
+background_mode = 2
+sky = SubResource("Sky_nne4b")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="Gradient" id="Gradient_bivk7"]
+offsets = PackedFloat32Array(0, 0.481884, 0.514493, 0.67029, 0.699275, 0.90942, 0.938406)
+colors = PackedColorArray(0, 0.248413, 0.722656, 1, 0, 0.484375, 1, 1, 0.367188, 0.33189, 0.238098, 1, 0.712433, 0.792969, 0, 1, 0, 0.582031, 0.00909424, 1, 0.0249023, 0.199219, 0, 1, 0.425781, 0.425781, 0.425781, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_qa0pm"]
+noise_type = 3
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_g7mdc"]
+width = 1000
+height = 1000
+color_ramp = SubResource("Gradient_bivk7")
+noise = SubResource("FastNoiseLite_qa0pm")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_djkq5"]
+albedo_texture = SubResource("NoiseTexture2D_g7mdc")
+
+[node name="DogFightField" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1h6ey")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="AirPlane" parent="." instance=ExtResource("1_sswoj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 200, 0)
+
+[node name="PlaneController" parent="AirPlane" instance=ExtResource("2_1tq4u")]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+size = Vector3(1000, 1, 1000)
+material = SubResource("StandardMaterial3D_djkq5")
