@@ -4,6 +4,7 @@ apply plugin: "java-library"
 
 sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+[compileScala, compileTestScala]*.options*.encoding = 'UTF-8'
 
 // 必须注释掉 java 的路径，否则报错：
 // Entry indi/zeromax/mygdx/game/MyGdxGame.class is a duplicate but no duplicate handling strategy has been set.

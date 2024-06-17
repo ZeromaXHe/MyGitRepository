@@ -42,11 +42,14 @@ allprojects {
 }
 
 project(":desktop") {
+    // 引入 Scala
+    apply plugin: "scala"
     apply plugin: "java-library"
 
 
     dependencies {
         implementation project(":core")
+        implementation "org.scala-lang:scala3-library_3:$scalaVersion"
         api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-desktop"

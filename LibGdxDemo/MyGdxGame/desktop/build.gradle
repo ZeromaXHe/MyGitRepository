@@ -1,4 +1,8 @@
 sourceCompatibility = 1.8
+
+[compileScala, compileTestScala]*.options*.encoding = 'UTF-8'
+sourceSets.main.scala.srcDirs = [ "src/" ]
+
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = ["../assets"]
 
@@ -43,6 +47,14 @@ tasks.register('dist', Jar) {
     with jar
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = "utf-8"
+}
+
+// 避免 IDEA 控制台乱码
+tasks.withType(JavaExec) {
+    jvmArgs = ["-Dfile.encoding=UTF-8", "-Dsun.stdout.encoding=UTF-8", "-Dsun.stderr.encoding=UTF-8"]
+}
 
 dist.dependsOn classes
 
