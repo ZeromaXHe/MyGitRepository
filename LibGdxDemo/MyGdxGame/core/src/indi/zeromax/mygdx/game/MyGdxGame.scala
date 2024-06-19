@@ -1,18 +1,21 @@
 package indi.zeromax.mygdx.game
 
-import com.badlogic.gdx.{ApplicationAdapter, Gdx, Input}
-import com.badlogic.gdx.graphics.{OrthographicCamera, Texture}
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.{OrthographicCamera, Texture}
 import com.badlogic.gdx.math.{MathUtils, Rectangle, Vector3}
 import com.badlogic.gdx.utils.{Array, ScreenUtils, TimeUtils}
-import scala.jdk.CollectionConverters._
+import com.badlogic.gdx.{Gdx, Input, Screen}
+
+import scala.jdk.CollectionConverters.*
 
 /**
  * @author Zhu Xiaohe
  * @note
  * @since 2024-06-17 17:51
  */
-class MyGdxGame extends ApplicationAdapter {
+class MyGdxGame extends Screen {
+  private var game: Drop = _
+
   private var bucketImage: Texture = _
   private var dropImage: Texture = _
   private var batch: SpriteBatch = _
@@ -21,7 +24,10 @@ class MyGdxGame extends ApplicationAdapter {
   private var raindrops: Array[Rectangle] = _
   private var lastDropTime: Long = _
 
-  override def create(): Unit = {
+  def this(game: Drop) = {
+    this()
+    this.game = game
+
     // 为雨滴和桶加载图片，使用默认项目图片（256x256 像素）
     bucketImage = Texture("badlogic.jpg")
     dropImage = Texture("badlogic.jpg")
@@ -44,7 +50,7 @@ class MyGdxGame extends ApplicationAdapter {
 
   private def spawnRaindrop(): Unit = {
     val raindrop = Rectangle()
-    raindrop.x = MathUtils.random(0, 800-64)
+    raindrop.x = MathUtils.random(0, 800 - 64)
     raindrop.y = 480
     raindrop.width = 64
     raindrop.height = 64
@@ -52,7 +58,7 @@ class MyGdxGame extends ApplicationAdapter {
     lastDropTime = TimeUtils.nanoTime()
   }
 
-  override def render(): Unit = {
+  override def render(delta: Float): Unit = {
     // 使用暗蓝色清除屏幕
     // clear() 的入参代表红，绿，蓝和 alpha，范围 [0,1]，表示用来清理的颜色
     ScreenUtils.clear(0, 0, 0.2f, 1)
@@ -75,10 +81,10 @@ class MyGdxGame extends ApplicationAdapter {
       bucket.x = touchPos.x - 64 / 2
     }
     if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-      bucket.x -= 200 * Gdx.graphics.getDeltaTime
+      bucket.x -= 200 * delta
     }
     if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-      bucket.x += 200 * Gdx.graphics.getDeltaTime
+      bucket.x += 200 * delta
     }
     // 确保桶留在屏幕边界内
     bucket.x = MathUtils.clamp(bucket.x, 0f, 800f - 64f)
@@ -90,7 +96,7 @@ class MyGdxGame extends ApplicationAdapter {
     val iter = raindrops.iterator()
     while (iter.hasNext) {
       val raindrop = iter.next
-      raindrop.y -= 200 * Gdx.graphics.getDeltaTime
+      raindrop.y -= 200 * delta
       if (raindrop.y + 64 < 0 || raindrop.overlaps(bucket)) {
         // 暂时不知道这个在 Scala 里面 for 怎么翻译比较好，只好用 while 了
         iter.remove()
@@ -98,10 +104,21 @@ class MyGdxGame extends ApplicationAdapter {
     }
   }
 
+
   override def dispose(): Unit = {
     // dispose of all the native resources
     dropImage.dispose()
     bucketImage.dispose()
     batch.dispose()
   }
+
+  override def show(): Unit = {}
+
+  override def resize(width: Int, height: Int): Unit = {}
+
+  override def pause(): Unit = {}
+
+  override def resume(): Unit = {}
+
+  override def hide(): Unit = {}
 }

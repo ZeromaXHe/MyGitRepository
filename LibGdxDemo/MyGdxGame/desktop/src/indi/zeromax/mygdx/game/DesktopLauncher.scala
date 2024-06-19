@@ -13,6 +13,6 @@ object DesktopLauncher {
     config.setForegroundFPS(60)
     config.setTitle("MyGdxGame")
     config.setWindowedMode(256, 256)
-    new Lwjgl3Application(new MyGdxGame, config)
+    new Lwjgl3Application(new Drop, config)
   }
 }
