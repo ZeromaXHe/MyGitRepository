@@ -9,10 +9,11 @@ import com.badlogic.gdx.backends.lwjgl3.{Lwjgl3Application, Lwjgl3ApplicationCon
  */
 object DesktopLauncher {
   def main(arg: Array[String]): Unit = {
-    val config = new Lwjgl3ApplicationConfiguration
-    config.setForegroundFPS(60)
-    config.setTitle("MyGdxGame")
-    config.setWindowedMode(256, 256)
-    new Lwjgl3Application(new Drop, config)
+    val config = new Lwjgl3ApplicationConfiguration() {
+      setForegroundFPS(60)
+      setTitle("MyGdxGame")
+      setWindowedMode(256, 256)
+    }
+    new Lwjgl3Application(Drop(), config)
   }
 }

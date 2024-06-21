@@ -16,7 +16,7 @@ class Drop extends Game {
     batch = SpriteBatch()
     font = BitmapFont() // use libGDX's default Arial font
 
-    this.setScreen(new MainMenuScreen(this))
+    this.setScreen(MainMenuScreen(this))
   }
 
   override def render(): Unit = {

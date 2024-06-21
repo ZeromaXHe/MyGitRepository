@@ -11,15 +11,16 @@ import com.badlogic.gdx.utils.ScreenUtils
  * @since 2024/6/19 15:57
  */
 class MainMenuScreen extends Screen {
-  var game: Drop = null
+  var game: Drop = _
 
-  var camera: OrthographicCamera = null
+  var camera: OrthographicCamera = _
 
   def this(game: Drop) = {
     this()
     this.game = game
-    camera = OrthographicCamera()
-    camera.setToOrtho(false, 800, 480)
+    camera = new OrthographicCamera {
+      setToOrtho(false, 800, 480)
+    }
   }
 
   override def show(): Unit = {}
@@ -36,7 +37,7 @@ class MainMenuScreen extends Screen {
     game.batch.end()
 
     if (Gdx.input.isTouched) {
-      game.setScreen(new MyGdxGame(game))
+      game.setScreen(MyGdxGame(game))
       dispose()
     }
   }

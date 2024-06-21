@@ -32,30 +32,33 @@ class MyGdxGame extends Screen {
     bucketImage = Texture("badlogic.jpg")
     dropImage = Texture("badlogic.jpg")
     // 创建相机和 SpriteBatch
-    camera = OrthographicCamera()
-    camera.setToOrtho(false, 800f, 480f)
+    camera = new OrthographicCamera {
+      setToOrtho(false, 800f, 480f)
+    }
     batch = SpriteBatch()
     // 创建代表桶的 Rectangle
-    bucket = Rectangle()
-    // 使桶水平居中
-    bucket.x = 800 / 2 - 64 / 2
-    // 桶的左下角离屏幕下边缘 20 像素
-    bucket.y = 20
-    bucket.width = 64
-    bucket.height = 64
+    bucket = new Rectangle {
+      // 使桶水平居中
+      x = 800 / 2 - 64 / 2
+      // 桶的左下角离屏幕下边缘 20 像素
+      y = 20
+      width = 64
+      height = 64
+    }
     // 创建雨滴数组并生成第一滴雨水
     raindrops = Array[Rectangle]()
     spawnRaindrop()
   }
 
   private def spawnRaindrop(): Unit = {
-    val raindrop = Rectangle()
-    raindrop.x = MathUtils.random(0, 800 - 64)
-    raindrop.y = 480
-    raindrop.width = 64
-    raindrop.height = 64
+    val raindrop = new Rectangle {
+      x = MathUtils.random(0f, 800 - 64)
+      y = 480
+      width = 64
+      height = 64
+    }
     raindrops.add(raindrop)
-    lastDropTime = TimeUtils.nanoTime()
+    lastDropTime = TimeUtils.nanoTime
   }
 
   override def render(delta: Float): Unit = {
@@ -75,8 +78,9 @@ class MyGdxGame extends Screen {
     batch.end()
     // 处理用户输入
     if (Gdx.input.isTouched) {
-      val touchPos = Vector3()
-      touchPos.set(Gdx.input.getX.toFloat, Gdx.input.getY.toFloat, 0)
+      val touchPos = new Vector3 {
+        set(Gdx.input.getX.toFloat, Gdx.input.getY.toFloat, 0)
+      }
       camera.unproject(touchPos)
       bucket.x = touchPos.x - 64 / 2
     }
@@ -93,7 +97,7 @@ class MyGdxGame extends Screen {
       spawnRaindrop()
     }
     // 移动雨滴，删除任何低于屏幕下边缘或碰到桶的雨滴
-    val iter = raindrops.iterator()
+    val iter = raindrops.iterator
     while (iter.hasNext) {
       val raindrop = iter.next
       raindrop.y -= 200 * delta
