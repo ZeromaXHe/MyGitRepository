@@ -1,11 +1,11 @@
-package indi.zeromax.mygdx.game
+package indi.zeromax.mygdx.game.libgdx.simple
 
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.graphics.g2d.{BitmapFont, SpriteBatch}
 
 /**
  * @author Zhu Xiaohe
- * @note
+ * @note 教程：https://libgdx.com/wiki/start/simple-game-extended
  * @since 2024/6/19 16:02
  */
 class Drop extends Game {

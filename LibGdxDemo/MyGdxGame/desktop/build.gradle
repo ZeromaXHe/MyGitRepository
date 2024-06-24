@@ -3,7 +3,10 @@ sourceCompatibility = 1.8
 [compileScala, compileTestScala]*.options*.encoding = 'UTF-8'
 sourceSets.main.scala.srcDirs = [ "src/" ]
 
-sourceSets.main.java.srcDirs = [ "src/" ]
+// 必须注释掉 java 的路径，否则报错：
+// Entry indi/zeromax/mygdx/game/MyGdxGame.class is a duplicate but no duplicate handling strategy has been set.
+// 其实又好像无关，只是注掉也可以。真正解决问题的办法是按顺序：删除 core build -> 删除 desktop build -> core clean -> desktop clean -> run
+//sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = ["../assets"]
 
 project.ext.mainClassName = "indi.zeromax.mygdx.game.DesktopLauncher"

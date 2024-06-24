@@ -1,6 +1,8 @@
 package indi.zeromax.mygdx.game
 
 import com.badlogic.gdx.backends.lwjgl3.{Lwjgl3Application, Lwjgl3ApplicationConfiguration}
+import indi.zeromax.mygdx.game.colourtann.MyGdxGameColourtann2
+import indi.zeromax.mygdx.game.libgdx.simple.Drop
 
 /**
  * @author Zhu Xiaohe
@@ -14,6 +16,6 @@ object DesktopLauncher {
       setTitle("MyGdxGame")
       setWindowedMode(256, 256)
     }
-    new Lwjgl3Application(Drop(), config)
+    new Lwjgl3Application(new MyGdxGameColourtann2, config)
   }
 }

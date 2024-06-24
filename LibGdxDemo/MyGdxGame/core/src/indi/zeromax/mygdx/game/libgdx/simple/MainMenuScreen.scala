@@ -1,13 +1,13 @@
-package indi.zeromax.mygdx.game
+package indi.zeromax.mygdx.game.libgdx.simple
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Screen
+import com.badlogic.gdx.{Gdx, Screen}
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.utils.ScreenUtils
+import indi.zeromax.mygdx.game.libgdx.simple.Drop
 
 /**
  * @author Zhu Xiaohe
- * @note
+ * @note 教程：https://libgdx.com/wiki/start/simple-game-extended
  * @since 2024/6/19 15:57
  */
 class MainMenuScreen extends Screen {

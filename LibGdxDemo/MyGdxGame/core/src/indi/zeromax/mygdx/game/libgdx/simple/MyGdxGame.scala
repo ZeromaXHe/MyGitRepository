@@ -1,16 +1,17 @@
-package indi.zeromax.mygdx.game
+package indi.zeromax.mygdx.game.libgdx.simple
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.{OrthographicCamera, Texture}
 import com.badlogic.gdx.math.{MathUtils, Rectangle, Vector3}
 import com.badlogic.gdx.utils.{Array, ScreenUtils, TimeUtils}
 import com.badlogic.gdx.{Gdx, Input, Screen}
+import indi.zeromax.mygdx.game.libgdx.simple.Drop
 
 import scala.jdk.CollectionConverters.*
 
 /**
  * @author Zhu Xiaohe
- * @note
+ * @note 教程：https://libgdx.com/wiki/start/simple-game-extended
  * @since 2024-06-17 17:51
  */
 class MyGdxGame extends Screen {
