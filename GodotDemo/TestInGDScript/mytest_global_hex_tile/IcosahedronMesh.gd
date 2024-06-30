@@ -5,9 +5,13 @@ extends MeshInstance3D
 @export_range(1, 10000) var radius: float = 10
 @export_range(1, 10000) var edge_segment: int = 1
 @export var regenerate: bool = false
-@export var render_hex: bool = true
 # true 分段时是采用球面旋转计算，false 时采用直线分段后映射到球面
 @export var segment_by_rotation: bool = false
+@export_group("render")
+@export var render_hex: bool = true
+@export_subgroup("detail")
+@export var render_point: bool = true
+@export var render_edge: bool = true
 
 
 # Called when the node enters the scene tree for the first time.
@@ -114,6 +118,8 @@ func draw_vertices_view(vertices: PackedVector3Array) -> void:
 
 func draw_on_pos(pos: Vector3, i: int = -1, draw_sphere: bool = true, \
 				sphere_radius: float = radius / edge_segment / 40) -> void:
+	if not render_point:
+		return
 	#print("drawing on pos:", pos, " i:", i)
 	var ins := MeshInstance3D.new()
 	add_child(ins)
@@ -162,6 +168,8 @@ func draw_on_pos(pos: Vector3, i: int = -1, draw_sphere: bool = true, \
 
 
 func draw_line(from: Vector3, to: Vector3, cylinder_radius: float = radius / edge_segment / 60) -> void:
+	if not render_edge:
+		return
 	var ins := MeshInstance3D.new()
 	add_child(ins)
 	ins.position = (from + to) / 2

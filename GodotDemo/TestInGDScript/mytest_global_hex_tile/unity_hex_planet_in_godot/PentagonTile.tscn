@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://bduq4wrfvwnw0"]
+
+[ext_resource type="Script" path="res://mytest_global_hex_tile/unity_hex_planet_in_godot/PentagonTile.gd" id="1_dsliq"]
+[ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_jxie6"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_wm7ov"]
+_surfaces = [{
+"aabb": AABB(-0.809, -0.688, 0, 1.618, 1.53866, 1e-05),
+"attribute_data": PackedByteArray(0, 0, 0, 63, 0, 0, 128, 63, 160, 26, 79, 63, 0, 0, 0, 0, 0, 0, 128, 63, 63, 53, 30, 63, 129, 149, 67, 62, 0, 0, 0, 0, 0, 0, 0, 0, 63, 53, 30, 63),
+"format": 34359742487,
+"index_count": 9,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 0, 0, 3, 0, 1, 0, 0, 0, 4, 0, 3, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 5,
+"vertex_data": PackedByteArray(0, 0, 0, 0, 51, 196, 89, 63, 0, 0, 0, 0, 0, 0, 0, 191, 197, 32, 48, 191, 0, 0, 0, 0, 160, 26, 79, 191, 240, 167, 134, 62, 0, 0, 0, 0, 0, 0, 0, 63, 197, 32, 48, 191, 0, 0, 0, 0, 160, 26, 79, 63, 240, 167, 134, 62, 0, 0, 0, 0, 255, 127, 255, 127, 255, 127, 0, 128, 255, 127, 255, 127, 255, 127, 0, 128, 255, 127, 255, 127, 255, 127, 0, 128, 255, 127, 255, 127, 255, 127, 0, 128, 255, 127, 255, 127, 255, 127, 0, 128)
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c7bo3"]
+albedo_texture = ExtResource("1_jxie6")
+
+[node name="PentagonTile" type="MeshInstance3D"]
+mesh = SubResource("ArrayMesh_wm7ov")
+surface_material_override/0 = SubResource("StandardMaterial3D_c7bo3")
+script = ExtResource("1_dsliq")
