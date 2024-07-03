@@ -4,7 +4,7 @@ using Godot;
 
 namespace UnityHexPlanet
 {
-    public class HexPlanetManager: Node3D
+    public partial class HexPlanetManager: Node3D
     {
         public HexPlanet hexPlanet;
         private HexPlanet _prevHexPlanet;

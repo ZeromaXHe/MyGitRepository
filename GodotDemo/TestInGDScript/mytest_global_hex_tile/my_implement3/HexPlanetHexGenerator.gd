@@ -10,6 +10,7 @@ static func generate_planet_tiles_and_chunks(planet: HexPlanet) -> void:
 	var chunks = gen_hex_chunks(planet, tiles, chunk_origins)
 	planet.chunks = chunks
 	planet.tiles = tiles
+	#print("test-log|tiles: ", tiles, " chunks: ", chunks)
 
 
 static func gen_hex_tiles(planet: HexPlanet, sphere_verts: Array) -> Array:
@@ -119,6 +120,7 @@ static func gen_hex_chunks(planet: HexPlanet, tiles: Array, chunk_centers: Array
 				(tile.center - a.origin).length_squared() < \
 				(tile.center - b.origin).length_squared())
 		var best_chunk: HexChunk = chunks[0]
+		print("test-log|best_chunk.id: ", best_chunk.id, " tile.id: ", tile.id)
 		best_chunk.add_tile(tile.id)
 		tile.set_chunk(best_chunk.id)
 	return chunks

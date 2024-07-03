@@ -10,7 +10,7 @@ var tile_ids: Array = []
 var is_dirty: bool
 
 var planet: HexPlanet
-var tiles: Array
+var tiles: Array = [] # GDScript Array 不能为 null？离谱！
 
 
 func _init(id: int, planet: HexPlanet, origin: Vector3) -> void:
@@ -20,16 +20,17 @@ func _init(id: int, planet: HexPlanet, origin: Vector3) -> void:
 
 
 func add_tile(tile_id: int) -> void:
+	
 	tile_ids.append(tile_id)
 
 
-func on_chunk_tile_change(tile: HexTile) -> void:
+func _on_chunk_tile_changed(tile: HexTile) -> void:
 	chunk_changed.emit(tile)
 
 
 func get_tiles() -> Array:
-	if tiles == null:
-		tiles = []
+	print("test-log|id: ", id, " tiles: ", tiles, " tile_ids: ", tile_ids)
+	if tiles.size() < tile_ids.size():
 		for i in range(tile_ids.size()):
 			tiles.append(planet.get_tile(tile_ids[i]))
 	return tiles
@@ -37,15 +38,18 @@ func get_tiles() -> Array:
 
 func get_mesh() -> Mesh:
 	var tiles = get_tiles()
+	#print("test-log|tiles: ", tiles)
 	var vertices = []
 	var colors = []
 	var indices = []
 	for tile: HexTile in tiles:
 		tile.append_to_mesh(vertices, indices, colors)
+	#print("test-log|vertices: ", vertices, " indices: ", indices)
 	var surface_tool := SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for vertex in vertices:
 		surface_tool.add_vertex(vertex)
+		#surface_tool.set_uv(Vector2(randf_range(0, 1), randf_range(0, 1)))
 	for index in indices:
 		surface_tool.add_index(index)
 	surface_tool.generate_normals()
@@ -71,4 +75,4 @@ func make_dirty() -> void:
 func setup_events() -> void:
 	var tiles = get_tiles()
 	for tile: HexTile in tiles:
-		tile.tile_changed.connect(on_chunk_tile_change)
+		tile.tile_changed.connect(_on_chunk_tile_changed)
