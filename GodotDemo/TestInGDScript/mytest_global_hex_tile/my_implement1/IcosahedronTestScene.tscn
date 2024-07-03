@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://1pki0fw6eg3v"]
 
-[ext_resource type="Script" path="res://mytest_global_hex_tile/IcosahedronMesh.gd" id="1_46qdd"]
+[ext_resource type="Script" path="res://mytest_global_hex_tile/my_implement1/IcosahedronMesh.gd" id="1_46qdd"]
 [ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_tvmq0"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_dphp3"]

@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://chntlupcm847b"]
 
 [ext_resource type="Texture2D" uid="uid://d3ob1grofnkkc" path="res://icon.svg" id="1_2pmjm"]
-[ext_resource type="Script" path="res://mytest_global_hex_tile/unity_hex_planet_in_godot/HexagonTile.gd" id="1_n2id3"]
+[ext_resource type="Script" path="res://mytest_global_hex_tile/my_implement2/HexagonTile.gd" id="1_n2id3"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_48f0e"]
 _surfaces = [{
