@@ -4,9 +4,14 @@ extends RefCounted
 
 static func generate_planet_tiles_and_chunks(planet: HexPlanet) -> void:
 	var points = GeodesicPoints.gen_points(planet.subdivisions, planet.radius)
+	print("test-log|points: ", points)
 	var tiles = gen_hex_tiles(planet, points)
+	var tile_centers = tiles.map(func(t): return t.center)
+	print("test-log|tile_centers: ", tile_centers)
 	
 	var chunk_origins = GeodesicPoints.gen_points(planet.chunk_subdivisions, planet.radius)
+	print("test-log|chunk_origins: ", chunk_origins)
+	planet.draw_spheres(tile_centers, chunk_origins)
 	var chunks = gen_hex_chunks(planet, tiles, chunk_origins)
 	planet.chunks = chunks
 	planet.tiles = tiles
@@ -120,7 +125,9 @@ static func gen_hex_chunks(planet: HexPlanet, tiles: Array, chunk_centers: Array
 				(tile.center - a.origin).length_squared() < \
 				(tile.center - b.origin).length_squared())
 		var best_chunk: HexChunk = chunks[0]
-		print("test-log|best_chunk.id: ", best_chunk.id, " tile.id: ", tile.id)
+		print("test-log|best_chunk.id: ", best_chunk.id, " tile.id: ", tile.id, \
+			" tile.center:", tile.center, "\nchunks.id: ", chunks.map(func(chunk): return chunk.id), \
+			"\nchunks.origin: ", chunks.map(func(chunk): return chunk.origin))
 		best_chunk.add_tile(tile.id)
 		tile.set_chunk(best_chunk.id)
 	return chunks

@@ -33,6 +33,8 @@ script = ExtResource("2_sx6hr")
 [node name="PerlinTerrainGenerator" type="Node3D" parent="HexPlanet"]
 script = ExtResource("3_fl5jk")
 
+[node name="Test" type="Node3D" parent="HexPlanet"]
+
 [node name="HexChunkRenders" type="Node3D" parent="."]
 
 [node name="Camera3D" type="Camera3D" parent="."]

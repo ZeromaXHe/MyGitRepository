@@ -29,7 +29,7 @@ func _on_chunk_tile_changed(tile: HexTile) -> void:
 
 
 func get_tiles() -> Array:
-	print("test-log|id: ", id, " tiles: ", tiles, " tile_ids: ", tile_ids)
+	#print("test-log|id: ", id, " tiles: ", tiles, " tile_ids: ", tile_ids)
 	if tiles.size() < tile_ids.size():
 		for i in range(tile_ids.size()):
 			tiles.append(planet.get_tile(tile_ids[i]))
