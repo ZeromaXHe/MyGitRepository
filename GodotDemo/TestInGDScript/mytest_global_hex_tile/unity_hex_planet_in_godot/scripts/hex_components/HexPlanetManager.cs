@@ -4,42 +4,61 @@ using Godot;
 
 namespace UnityHexPlanet
 {
+    [Tool]
     public partial class HexPlanetManager: Node3D
     {
-        public HexPlanet hexPlanet;
+        [Export] private bool _regenerate = false;
+
+        public HexPlanet HexPlanet;
         private HexPlanet _prevHexPlanet;
+        private Node3D _hexChunkRenders;
+
+        public override void _Ready()
+        {
+            HexPlanet = GetNode<HexPlanet>("HexPlanet");
+            _hexChunkRenders = GetNode<Node3D>("HexChunkRenders");
+
+            UpdateRenderObjects();
+        }
+
+        public override void _Process(double delta)
+        {
+            if (_regenerate)
+            {
+                UpdateRenderObjects();
+                _regenerate = false;
+            }
+        }
 
         // Called when the whole sphere must be regenerated
         public void UpdateRenderObjects()
         {
-            // Delete all children
-            foreach (Node child in GetChildren())
+            // 删除所有子节点 Delete all children
+            foreach (Node child in _hexChunkRenders.GetChildren())
             {
                 child.QueueFree();
             }
 
-            if (hexPlanet == null)
+            if (HexPlanet == null)
             {
                 return;
             }
 
-            HexPlanetHexGenerator.GeneratePlanetTilesAndChunks(hexPlanet);
+            HexPlanetHexGenerator.GeneratePlanetTilesAndChunks(HexPlanet);
 
-            for (int i = 0; i < hexPlanet.chunks.Count; i++)
+            for (int i = 0; i < HexPlanet.Chunks.Count; i++)
             {
-                MeshInstance3D chunkGO = new MeshInstance3D();
+                HexChunkRenderer chunkGO = new HexChunkRenderer();
                 chunkGO.Name = "Chunk " + i;
-                AddChild(chunkGO);
-                
-                HexChunkRenderer hcr = new HexChunkRenderer();
-                
+                chunkGO.Position = Vector3.Zero;
                 // MeshFilter mf = chunkGO.AddComponent<MeshFilter>();
                 // MeshCollider mc = chunkGO.AddComponent<MeshCollider>();
                 //
                 // MeshRenderer mr = chunkGO.AddComponent<MeshRenderer>();
                 // mr.sharedMaterial = hexPlanet.chunkMaterial;
-                hcr.SetHexChunk(hexPlanet, i);
-                hcr.UpdateMesh();
+                chunkGO.SetHexChunk(HexPlanet, i);
+                chunkGO.UpdateMesh();
+                _hexChunkRenders.AddChild(chunkGO);
 
                 // Set layer
                 // int hexPlanetLayer = LayerMask.NameToLayer("HexPlanet");

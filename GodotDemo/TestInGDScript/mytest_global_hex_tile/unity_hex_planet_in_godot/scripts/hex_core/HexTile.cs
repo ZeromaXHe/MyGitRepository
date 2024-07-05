@@ -83,7 +83,7 @@ namespace UnityHexPlanet
 
         private Vector3 TransformPoint(Vector3 input, float height)
         {
-            return input * (1 + (height / Planet.radius));
+            return input * (1 + (height / Planet.Radius));
         }
 
         public void SetChunk(int chunkId)

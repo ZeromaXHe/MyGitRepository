@@ -3,6 +3,7 @@ extends RefCounted
 
 
 static func generate_planet_tiles_and_chunks(planet: HexPlanet) -> void:
+	planet.clear_spheres_and_lines()
 	var points = GeodesicPoints.gen_points(planet.subdivisions, planet.radius)
 	print("test-log|points: ", points)
 	var tiles = gen_hex_tiles(planet, points)
@@ -64,8 +65,11 @@ static func gen_hex_tiles(planet: HexPlanet, sphere_verts: Array) -> Array:
 		)
 		var hex_verts = []
 		for j in range(closest_verts.size()):
-			var lerp_j = unique_vert.lerp(closest_verts[j], 0.66666666)
-			var lerp_j_plus1 = unique_vert.lerp(closest_verts[(j + 1) % closest_verts.size()], 0.66666666)
+			var vert_j = closest_verts[j]
+			var vert_j_plus1 = closest_verts[(j + 1) % closest_verts.size()]
+			planet.draw_line(vert_j, vert_j_plus1)
+			var lerp_j = unique_vert.lerp(vert_j, 0.66666666)
+			var lerp_j_plus1 = unique_vert.lerp(vert_j_plus1, 0.66666666)
 			hex_verts.append(lerp_j.lerp(lerp_j_plus1, 0.5))
 		# 找到中间顶点
 		var center = Vector3.ZERO

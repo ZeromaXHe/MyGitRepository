@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Godot.Collections;
 
 namespace UnityHexPlanet
 {
@@ -8,13 +9,25 @@ namespace UnityHexPlanet
     {
         public static void GeneratePlanetTilesAndChunks(HexPlanet planet)
         {
-            List<Vector3> points = GeodesicPoints.GenPoints(planet.subdivisions, planet.radius);
-            List<HexTile> tiles = GenHexTiles(planet, ref points);
+            planet.ClearSpheresAndLines();
+            List<Vector3> points = GeodesicPoints.GenPoints(planet.Subdivisions, planet.Radius);
+            var pointsArr = new Array();
+            foreach (var p in points)
+            {
+                pointsArr.Add(p);
+            }
 
-            List<Vector3> chunkOrigins = GeodesicPoints.GenPoints(planet.chunkSubdivisions, planet.radius);
+            GD.Print("test-log|points: ", pointsArr);
+            List<HexTile> tiles = GenHexTiles(planet, ref points);
+            var tileCenters = tiles.Select(tile => tile.Center).ToList();
+            GD.Print("test-log|tile_centers: ", tileCenters.ToArray());
+
+            List<Vector3> chunkOrigins = GeodesicPoints.GenPoints(planet.ChunkSubdivisions, planet.Radius);
+            GD.Print("test-log|chunk_origins: ", chunkOrigins);
+            planet.DrawSpheres(tileCenters, chunkOrigins);
             List<HexChunk> chunks = GenHexChunks(planet, tiles, chunkOrigins);
-            planet.chunks = chunks;
-            planet.tiles = tiles;
+            planet.Chunks = chunks;
+            planet.Tiles = tiles;
         }
 
         private static List<HexChunk> GenHexChunks(HexPlanet planet, List<HexTile> tiles, List<Vector3> chunkCenters)
@@ -48,8 +61,8 @@ namespace UnityHexPlanet
 
             // Construct an oct tree out of all points that will be centers of hexes
             // 使用所有将成为六边形的中心的点，构建八叉树
-            OctTree<Vector3> vertOctTree = new OctTree<Vector3>(Vector3.One * (planet.radius * -1.1f),
-                Vector3.One * (planet.radius * 1.1f));
+            OctTree<Vector3> vertOctTree = new OctTree<Vector3>(Vector3.One * (planet.Radius * -1.1f),
+                Vector3.One * (planet.Radius * 1.1f));
             foreach (Vector3 v in uniqueVerts)
             {
                 vertOctTree.InsertPoint(v, v);
@@ -58,8 +71,8 @@ namespace UnityHexPlanet
             // Get the maximum distance between two neighbors
             // 两个相邻地块的最大距离
             float maxDistBetweenNeighbots = Mathf.Sqrt((from vert in uniqueVerts
-                orderby (vert - uniqueVerts[uniqueVerts.Count - 1]).LengthSquared()
-                select (vert - uniqueVerts[uniqueVerts.Count - 1]).LengthSquared()).Take(7).ToList()[6]) * 1.2f;
+                orderby (vert - uniqueVerts[^1]).LengthSquared()
+                select (vert - uniqueVerts[^1]).LengthSquared()).Take(7).ToList()[6]) * 1.2f;
 
             // Generate the tiles
             // 构建瓦片
@@ -90,8 +103,12 @@ namespace UnityHexPlanet
                 List<Vector3> hexVerts = new List<Vector3>();
                 for (int j = 0; j < closest.Count; j++)
                 {
-                    hexVerts.Add(uniqueVert.Lerp(closest[j], 0.66666666f)
-                        .Lerp(uniqueVert.Lerp(closest[(j + 1) % closest.Count], 0.66666666f), 0.5f));
+                    var vertJ = closest[j];
+                    var vertJPlus1 = closest[(j + 1) % closest.Count];
+                    planet.DrawLine(vertJ, vertJPlus1);
+                    var lerpJ = uniqueVert.Lerp(vertJ, 0.66666666f);
+                    var lerpJPlus1 = uniqueVert.Lerp(vertJPlus1, 0.66666666f);
+                    hexVerts.Add(lerpJ.Lerp(lerpJPlus1, 0.5f));
                 }
 
                 // Find center vertex
@@ -104,18 +121,20 @@ namespace UnityHexPlanet
 
                 center /= hexVerts.Count;
 
-                HexTile hexTile = planet.terrainGenerator.CreateHexTile(i, planet, center, hexVerts);
+                HexTile hexTile = planet.TerrainGenerator.CreateHexTile(i, planet, center, hexVerts);
                 hexTiles.Add(hexTile);
             }
 
+            // 使用将成为六边形中心的所有点作为 key，HexTile 作为 value，来构建一个 HexTile 八叉树
             // Construct an oct tree out of all points that will be centers of hexes
-            OctTree<HexTile> hexOctTree = new OctTree<HexTile>(Vector3.One * (planet.radius * -1.1f),
-                Vector3.One * (planet.radius * 1.1f));
+            OctTree<HexTile> hexOctTree = new OctTree<HexTile>(Vector3.One * (planet.Radius * -1.1f),
+                Vector3.One * (planet.Radius * 1.1f));
             foreach (HexTile h in hexTiles)
             {
                 hexOctTree.InsertPoint(h, h.Center);
             }
 
+            // 找到相邻地块
             // Find neighbors
             for (int i = 0; i < hexTiles.Count; i++)
             {
@@ -125,36 +144,43 @@ namespace UnityHexPlanet
                 var closest = (from tile in closestHexes
                     orderby (tile.Center - currentTile.Center).LengthSquared()
                     select tile).Take(7).ToList();
-                if ((closest[6].Center - currentTile.Center).Length() >
+                if (closest.Count < 7 || (closest[6].Center - currentTile.Center).Length() >
                     (closest[5].Center - currentTile.Center).Length() * 1.5)
                 {
-                    closest = closest.Take(6).ToList(); // Must be a pentagon
+                    closest = closest.Take(6).ToList(); // 一定是五边形 Must be a pentagon
                 }
 
+                // 排除自己，最近的瓦片
                 // Exclude self, closest tile
                 closest = closest.Skip(1).ToList();
 
+                // 根据顶点将瓦片排序
                 // Order the tiles based on the vertices
                 List<Vector3> verts = currentTile.Vertices;
                 List<HexTile> orderedNeighbors = new List<HexTile>();
 
                 for (int j = 0; j < verts.Count; j++)
                 {
-                    HexTile a = (from tile in closest
+                    var tiles = (from tile in closest
                         orderby -((verts[j] + verts[(j + 1) % verts.Count]) / 2).Normalized()
                             .Dot(tile.Center.Normalized())
-                        select tile).ToList()[0];
-                    orderedNeighbors.Add(a);
+                        select tile).ToList();
+                    if (tiles.Count > 0)
+                    {
+                        HexTile a = tiles[0];
+                        orderedNeighbors.Add(a);
+                    }
                 }
 
 
                 currentTile.AddNeighbors(orderedNeighbors);
             }
 
+            // 通过生成器启动每个瓦片
             // Run each tile through the generator
             foreach (HexTile tile in hexTiles)
             {
-                planet.terrainGenerator.AfterTileCreation(tile);
+                planet.TerrainGenerator.AfterTileCreation(tile);
             }
 
             return hexTiles;

@@ -5,7 +5,7 @@ using Godot;
 namespace UnityHexPlanet {
 
     [System.Serializable]
-    public class RandomTerrainGenerator : BaseTerrainGenerator
+    public partial class RandomTerrainGenerator : BaseTerrainGenerator
     {
 
         public float minHeight;

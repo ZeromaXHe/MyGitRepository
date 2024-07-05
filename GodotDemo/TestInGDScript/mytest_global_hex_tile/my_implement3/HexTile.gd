@@ -33,10 +33,10 @@ func append_to_mesh(mesh_verts: Array, mesh_indices: Array, mesh_colors: Array) 
 	for j in range(vertices.size()):
 		mesh_verts.append(transform_point(vertices[j], height))
 		mesh_colors.append(color)
-		# 这里注意 indices 顺序和 UnityHexPlanet 不一样，后两个顺序相反（因为渲染方向的原因）
+		
 		mesh_indices.append(base_index)
-		mesh_indices.append(base_index + (j + 1) % vertices.size() + 1)
 		mesh_indices.append(base_index + j + 1)
+		mesh_indices.append(base_index + (j + 1) % vertices.size() + 1)
 	
 	# 如果需要生成墙的话，生成
 	var neighbors = get_neighbors()
@@ -57,14 +57,13 @@ func append_to_mesh(mesh_verts: Array, mesh_indices: Array, mesh_colors: Array) 
 		mesh_colors.append(color)
 		mesh_colors.append(color)
 		
-		# 注意：这里也和 UnityHexPlanet 每三个后两个顺序相反
 		mesh_indices.append(base_index)
-		mesh_indices.append(base_index + 1)
 		mesh_indices.append(base_index + 2)
+		mesh_indices.append(base_index + 1)
 		
 		mesh_indices.append(base_index + 2)
-		mesh_indices.append(base_index + 1)
 		mesh_indices.append(base_index + 3)
+		mesh_indices.append(base_index + 1)
 
 
 func transform_point(input: Vector3, height: float) -> Vector3:

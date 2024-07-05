@@ -1,5 +1,5 @@
 @tool
-class_name HexPlanetManeger
+class_name HexPlanetManager
 extends Node3D
 
 

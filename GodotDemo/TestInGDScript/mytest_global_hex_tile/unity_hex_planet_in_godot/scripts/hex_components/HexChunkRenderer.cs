@@ -2,11 +2,11 @@ using Godot;
 
 namespace UnityHexPlanet
 {
-    public class HexChunkRenderer
+    public partial class HexChunkRenderer: MeshInstance3D
     {
-        public int _renderedChunkId;
-        [System.NonSerialized] private HexPlanet _planet;
-        [System.NonSerialized] private HexChunk _chunk;
+        public int RenderedChunkId;
+        private HexPlanet _planet;
+        private HexChunk _chunk;
 
         // private MeshRenderer _meshRenderer;
         // private MeshFilter _meshFilter;
@@ -16,7 +16,7 @@ namespace UnityHexPlanet
         {
             if (_chunk == null)
             {
-                _chunk = _planet.GetChunk(_renderedChunkId);
+                _chunk = _planet.GetChunk(RenderedChunkId);
             }
 
             return _chunk;
@@ -25,14 +25,15 @@ namespace UnityHexPlanet
         public void SetHexChunk(HexPlanet planet, int chunkId)
         {
             _planet = planet;
-            _renderedChunkId = chunkId;
+            RenderedChunkId = chunkId;
         }
 
         public void Start()
         {
             // _meshRenderer = GetComponent<MeshRenderer>();
             // _planet = GetComponentInParent<HexPlanetManager>().hexPlanet;
-            _planet.GetChunk(_renderedChunkId).OnChunkChange += OnChunkChange;
+            _planet = (GetTree().GetFirstNodeInGroup("HexPlanetManager") as HexPlanetManager).HexPlanet;
+            _planet.GetChunk(RenderedChunkId).OnChunkChange += OnChunkChange;
             UpdateMesh();
         }
 
@@ -69,6 +70,7 @@ namespace UnityHexPlanet
             // }
 
             Mesh newChunkMesh = GetHexChunk().GetMesh();
+            Mesh = newChunkMesh;
             // _meshFilter.mesh = newChunkMesh;
             // _meshCollider.sharedMesh = newChunkMesh;
         }

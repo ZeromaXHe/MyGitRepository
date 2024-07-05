@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=3 uid="uid://vj65iu666y6q"]
+
+[ext_resource type="Script" path="res://mytest_global_hex_tile/unity_hex_planet_in_godot/scripts/hex_components/HexPlanetManager.cs" id="1_vmo4u"]
+[ext_resource type="Script" path="res://mytest_global_hex_tile/unity_hex_planet_in_godot/scripts/hex_core/HexPlanet.cs" id="2_s6mjr"]
+[ext_resource type="Script" path="res://mytest_global_hex_tile/unity_hex_planet_in_godot/scripts/hex_core/terrain_generators/PerlinTerrainGenerator.cs" id="3_1awdf"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_xpy4y"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_fviir"]
+sky_material = SubResource("ProceduralSkyMaterial_xpy4y")
+
+[sub_resource type="Environment" id="Environment_trbsh"]
+background_mode = 2
+sky = SubResource("Sky_fviir")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="HexPlanetManager" type="Node3D" groups=["HexPlanetManager"]]
+script = ExtResource("1_vmo4u")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_trbsh")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="HexPlanet" type="Node3D" parent="."]
+script = ExtResource("2_s6mjr")
+Subdivisions = 1
+ChunkSubdivisions = 1
+
+[node name="PerlinTerrainGenerator" type="Node3D" parent="HexPlanet"]
+script = ExtResource("3_1awdf")
+
+[node name="Test" type="Node3D" parent="HexPlanet"]
+
+[node name="HexChunkRenders" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 500)

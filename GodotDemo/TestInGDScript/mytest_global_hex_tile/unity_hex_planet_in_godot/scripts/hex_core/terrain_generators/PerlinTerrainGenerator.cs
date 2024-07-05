@@ -4,8 +4,8 @@ using Godot;
 
 namespace UnityHexPlanet
 {
-    [System.Serializable]
-    public class PerlinTerrainGenerator : BaseTerrainGenerator
+    [Tool]
+    public partial class PerlinTerrainGenerator : BaseTerrainGenerator
     {
         [System.Serializable]
         public class ColorHeight
@@ -37,13 +37,13 @@ namespace UnityHexPlanet
                 newTile.Center.Normalized().Y, newTile.Center.Normalized().Z)) + MinHeight)) / 3.0f;
             newTile.Height = height;
 
-            for (int i = ColorHeights.Count - 1; i >= 0; i--)
-            {
-                if (height < ColorHeights[i].MaxHeight)
-                {
-                    newTile.Color = ColorHeights[i].Color;
-                }
-            }
+            // for (int i = ColorHeights.Count - 1; i >= 0; i--)
+            // {
+            //     if (height < ColorHeights[i].MaxHeight)
+            //     {
+            //         newTile.Color = ColorHeights[i].Color;
+            //     }
+            // }
         }
 
         private float GetNoise(float x, float y, float z)
