@@ -11,6 +11,7 @@ namespace UnityHexPlanet
 
         [Export(PropertyHint.Range, "0,7")] public int Subdivisions;
         [Export(PropertyHint.Range, "0,6")] public int ChunkSubdivisions;
+        [Export] private bool _debugPointLine = false;
 
         public Material ChunkMaterial;
 
@@ -46,6 +47,8 @@ namespace UnityHexPlanet
 
         public void DrawSpheres(List<Vector3> tileCenters, List<Vector3> chunkOrigins)
         {
+            if (!_debugPointLine) return;
+
             foreach (var tileCenter in tileCenters)
             {
                 DrawSphereOnPos(tileCenter, Colors.Green);
@@ -66,13 +69,15 @@ namespace UnityHexPlanet
             sphere.Radius = Radius / 40;
             sphere.Height = Radius / 20;
             ins.Mesh = sphere;
-            // var material = new StandardMaterial3D();
-            // material.AlbedoColor = color;
-            // ins.SetSurfaceOverrideMaterial(0, material);
+            var material = new StandardMaterial3D();
+            material.AlbedoColor = color;
+            ins.SetSurfaceOverrideMaterial(0, material);
         }
 
         public void DrawLine(Vector3 from, Vector3 to)
         {
+            if (!_debugPointLine) return;
+
             float cylinderRadius = Radius / 60;
             var ins = new MeshInstance3D();
             test.AddChild(ins);

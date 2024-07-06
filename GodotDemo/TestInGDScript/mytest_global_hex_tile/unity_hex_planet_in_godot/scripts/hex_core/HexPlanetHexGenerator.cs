@@ -20,7 +20,7 @@ namespace UnityHexPlanet
             GD.Print("test-log|points: ", pointsArr);
             List<HexTile> tiles = GenHexTiles(planet, ref points);
             var tileCenters = tiles.Select(tile => tile.Center).ToList();
-            GD.Print("test-log|tile_centers: ", tileCenters.ToArray());
+            GD.Print("test-log|tile_centers: ", tileCenters);
 
             List<Vector3> chunkOrigins = GeodesicPoints.GenPoints(planet.ChunkSubdivisions, planet.Radius);
             GD.Print("test-log|chunk_origins: ", chunkOrigins);
@@ -66,6 +66,7 @@ namespace UnityHexPlanet
             foreach (Vector3 v in uniqueVerts)
             {
                 vertOctTree.InsertPoint(v, v);
+                GD.Print("vertOctTree inserting ", v);
             }
 
             // Get the maximum distance between two neighbors
@@ -80,6 +81,7 @@ namespace UnityHexPlanet
             {
                 Vector3 uniqueVert = uniqueVerts[i];
                 List<Vector3> closestVerts = vertOctTree.GetPoints(uniqueVert, Vector3.One * maxDistBetweenNeighbots);
+                GD.Print("closestVerts.Count: ", closestVerts.Count, ", uniqueVert: ", uniqueVert);
                 var closest = (from vert in closestVerts
                     orderby (vert - uniqueVert).LengthSquared()
                     select vert).Take(7).ToList();
@@ -91,6 +93,7 @@ namespace UnityHexPlanet
 
                 // 排除掉自己
                 closest = closest.Skip(1).ToList();
+                GD.Print("closest.Count: ", closest.Count);
 
                 // Order the closest so an increase in index revolves them counter clockwise
                 // 按随索引增加，逆时针排序的顺序排列最近的点
@@ -119,6 +122,7 @@ namespace UnityHexPlanet
                     center += hexVerts[j];
                 }
 
+                GD.Print("hexVerts.Count: ", hexVerts.Count);
                 center /= hexVerts.Count;
 
                 HexTile hexTile = planet.TerrainGenerator.CreateHexTile(i, planet, center, hexVerts);

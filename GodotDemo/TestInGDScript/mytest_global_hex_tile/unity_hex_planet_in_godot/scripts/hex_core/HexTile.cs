@@ -45,8 +45,8 @@ namespace UnityHexPlanet
                 meshColors.Add(Color);
 
                 meshIndices.Add(baseIndex);
-                meshIndices.Add(baseIndex + j + 1);
                 meshIndices.Add(baseIndex + ((j + 1) % Vertices.Count) + 1);
+                meshIndices.Add(baseIndex + j + 1);
             }
 
             // Generate walls if needed
@@ -71,12 +71,12 @@ namespace UnityHexPlanet
                 meshColors.Add(Color);
 
                 meshIndices.Add(baseIndex);
-                meshIndices.Add(baseIndex + 2);
                 meshIndices.Add(baseIndex + 1);
+                meshIndices.Add(baseIndex + 2);
 
                 meshIndices.Add(baseIndex + 2);
-                meshIndices.Add(baseIndex + 3);
                 meshIndices.Add(baseIndex + 1);
+                meshIndices.Add(baseIndex + 3);
             }
         }
 

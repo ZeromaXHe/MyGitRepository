@@ -5,31 +5,52 @@ using System.Linq;
 
 public static class GeodesicPoints
 {
-    public static List<Vector3> GenPoints(int subdivides, float radius) {
+    public static List<Vector3> GenPoints(int subdivides, float radius)
+    {
         const float x = 0.525731112119133606f;
         const float z = 0.850650808352039932f;
 
-        var vertices = new List<Vector3>(new Vector3[] {
+        var vertices = new List<Vector3>(new Vector3[]
+        {
             new(-x, 0.0f, z), new(x, 0.0f, z), new(-x, 0.0f, -z), new(x, 0.0f, -z),
-            new(0.0f, z, x ), new(0.0f, z, -x), new(0.0f, -z, x), new(0.0f, -z, -x),
-            new(z, x, 0.0f ), new(-z, x, 0.0f), new(z, -x, 0.0f), new(-z, -x, 0.0f),
+            new(0.0f, z, x), new(0.0f, z, -x), new(0.0f, -z, x), new(0.0f, -z, -x),
+            new(z, x, 0.0f), new(-z, x, 0.0f), new(z, -x, 0.0f), new(-z, -x, 0.0f),
         });
 
-        var indices = new List<int>(new[] {
-            1,  4,  0,  4, 9, 0, 4,  5, 9, 8, 5,  4,  1, 8, 4,
-            1, 10,  8, 10, 3, 8, 8,  3, 5, 3, 2,  5,  3, 7, 2,
-            3, 10,  7, 10, 6, 7, 6, 11, 7, 6, 0, 11,  6, 1, 0,
-           10,  1,  6, 11, 0, 9, 2, 11, 9, 5, 2,  9, 11, 2, 7
+        // 这里顺序不影响，反正最后只输出 vertices
+        var indices = new List<int>(new[]
+        {
+            1, 4, 0,
+            4, 9, 0,
+            4, 5, 9,
+            8, 5, 4,
+            1, 8, 4,
+            1, 10, 8,
+            10, 3, 8,
+            8, 3, 5,
+            3, 2, 5,
+            3, 7, 2,
+            3, 10, 7,
+            10, 6, 7,
+            6, 11, 7,
+            6, 0, 11,
+            6, 1, 0,
+            10, 1, 6,
+            11, 0, 9,
+            2, 11, 9,
+            5, 2, 9,
+            11, 2, 7,
         });
 
         // Make sure there is a vertex per index
-        var flatVertices= new List<Vector3>();
+        var flatVertices = new List<Vector3>();
         var flatIndices = new List<int>();
         for (var i = 0; i < indices.Count; i++)
         {
             flatVertices.Add(vertices[indices[i]]);
             flatIndices.Add(i);
         }
+
         vertices = flatVertices;
         indices = flatIndices;
 
@@ -45,13 +66,13 @@ public static class GeodesicPoints
             vertices[i] *= radius;
         }
 
-        
-        return vertices.Distinct().ToList();;
+
+        return vertices.Distinct().ToList();
+        ;
     }
 
     private static void SubdivideSphere(ref List<Vector3> vertices, ref List<int> indices)
     {
-
         var newIndices = new List<int>();
 
         var triCount = indices.Count / 3;

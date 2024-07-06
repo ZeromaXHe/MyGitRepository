@@ -31,6 +31,7 @@ shadow_enabled = true
 script = ExtResource("2_s6mjr")
 Subdivisions = 1
 ChunkSubdivisions = 1
+_debugPointLine = true
 
 [node name="PerlinTerrainGenerator" type="Node3D" parent="HexPlanet"]
 script = ExtResource("3_1awdf")
