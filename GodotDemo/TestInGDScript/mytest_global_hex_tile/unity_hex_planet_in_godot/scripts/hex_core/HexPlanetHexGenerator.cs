@@ -11,13 +11,19 @@ namespace UnityHexPlanet
         {
             planet.ClearSpheresAndLines();
             List<Vector3> points = GeodesicPoints.GenPoints(planet.Subdivisions, planet.Radius);
+            GD.Print($"points.Count: {points.Count}");
             var pointsArr = new Array();
             foreach (var p in points)
             {
                 pointsArr.Add(p);
             }
 
-            GD.Print("test-log|points: ", pointsArr);
+            GD.Print("test-log|points: ", pointsArr, " points.Count: ", points.Count);
+            if (pointsArr.Count == 170)
+            {
+                GD.Print($"points[168]: {points[168]}, points[169]: {points[169]}, " +
+                         $"equals: {new GeodesicPoints.Vector3EqualityComparer().Equals(points[168], points[169])}");
+            }
             List<HexTile> tiles = GenHexTiles(planet, ref points);
             var tileCenters = tiles.Select(tile => tile.Center).ToList();
             GD.Print("test-log|tile_centers: ", tileCenters);
@@ -66,7 +72,7 @@ namespace UnityHexPlanet
             foreach (Vector3 v in uniqueVerts)
             {
                 vertOctTree.InsertPoint(v, v);
-                GD.Print("vertOctTree inserting ", v);
+                // GD.Print("vertOctTree inserting ", v);
             }
 
             // Get the maximum distance between two neighbors
@@ -93,14 +99,17 @@ namespace UnityHexPlanet
 
                 // 排除掉自己
                 closest = closest.Skip(1).ToList();
-                GD.Print("closest.Count: ", closest.Count);
+                GD.Print("closest.Count: ", closest.Count, " [", (closest[0] - uniqueVert).Length(), ", ",
+                    (closest[1] - uniqueVert).Length(), ", ", (closest[2] - uniqueVert).Length(), ", ",
+                    (closest[3] - uniqueVert).Length(), ", ", (closest[4] - uniqueVert).Length(), ", ",
+                    closest.Count == 6 ? (closest[5] - uniqueVert).Length() : null, "]");
 
                 // Order the closest so an increase in index revolves them counter clockwise
                 // 按随索引增加，逆时针排序的顺序排列最近的点
                 // BUG: This is a hack and might result in bugs
                 Vector3 angleAxis = Vector3.Up + (Vector3.One * 0.1f);
                 closest = (from vert in closest
-                    orderby -(vert - uniqueVert).SignedAngleTo(angleAxis, uniqueVert)
+                    orderby -((vert - uniqueVert).SignedAngleTo(angleAxis, uniqueVert))
                     select vert).ToList();
 
                 List<Vector3> hexVerts = new List<Vector3>();
@@ -122,8 +131,11 @@ namespace UnityHexPlanet
                     center += hexVerts[j];
                 }
 
-                GD.Print("hexVerts.Count: ", hexVerts.Count);
                 center /= hexVerts.Count;
+                GD.Print("center:", center, " hexVerts.Count: ", hexVerts.Count, " [", (hexVerts[0] - uniqueVert).Length(), ", ",
+                    (hexVerts[1] - uniqueVert).Length(), ", ", (hexVerts[2] - uniqueVert).Length(), ", ",
+                    (hexVerts[3] - uniqueVert).Length(), ", ", (hexVerts[4] - uniqueVert).Length(), ", ",
+                    hexVerts.Count == 6 ? (hexVerts[5] - uniqueVert).Length() : null, "]");
 
                 HexTile hexTile = planet.TerrainGenerator.CreateHexTile(i, planet, center, hexVerts);
                 hexTiles.Add(hexTile);

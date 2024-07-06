@@ -53,11 +53,13 @@ public static class GeodesicPoints
 
         vertices = flatVertices;
         indices = flatIndices;
+        GD.Print($"vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
 
         // Subdivide
         for (var i = 0; i < subdivides; i++)
         {
             SubdivideSphere(ref vertices, ref indices);
+            GD.Print($"i: {i} vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
         }
 
         // Scale
@@ -65,11 +67,25 @@ public static class GeodesicPoints
         {
             vertices[i] *= radius;
         }
-
-
-        return vertices.Distinct().ToList();
-        ;
+        GD.Print($"final vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
+        // 必须自定义去重逻辑，不然 2 重细分开始会破皮现象
+        return vertices.Distinct(new Vector3EqualityComparer()).ToList();
     }
+    
+    // C# 的比较器居然必须显式定义？不能 Lambda？
+    public class Vector3EqualityComparer : IEqualityComparer<Vector3>
+    {
+        public bool Equals(Vector3 a, Vector3 b)
+        {
+            
+            return a.DistanceTo(b) < 0.01;
+        }
+
+        // C# 这个 GetHashCode 的设计怎么这么脱裤子放屁……
+        // 如果 GetHashCode 不相等，就直接不判断 Equals 了！
+        public int GetHashCode(Vector3 vec) => 1;
+    }
+
 
     private static void SubdivideSphere(ref List<Vector3> vertices, ref List<int> indices)
     {
