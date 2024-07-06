@@ -64,14 +64,21 @@ namespace UnityHexPlanet
 
             var surfaceTool = new SurfaceTool();
             surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
+            foreach (var color in colors)
+            {
+                surfaceTool.SetColor(color);
+            }
             foreach (var vertex in vertices)
             {
-                surfaceTool.AddVertex(vertex);    
+                surfaceTool.AddVertex(vertex);
             }
             foreach (var index in indices)
             {
                 surfaceTool.AddIndex(index);                
             }
+            var material = new StandardMaterial3D();
+            material.VertexColorUseAsAlbedo = true;
+            surfaceTool.SetMaterial(material);
             // TODO: 颜色处理
             // surfaceTool.SetColors(colors);
             // surfaceTool.RecalculateNormals();

@@ -11,25 +11,25 @@ namespace UnityHexPlanet
         {
             planet.ClearSpheresAndLines();
             List<Vector3> points = GeodesicPoints.GenPoints(planet.Subdivisions, planet.Radius);
-            GD.Print($"points.Count: {points.Count}");
+            // GD.Print($"points.Count: {points.Count}");
             var pointsArr = new Array();
             foreach (var p in points)
             {
                 pointsArr.Add(p);
             }
 
-            GD.Print("test-log|points: ", pointsArr, " points.Count: ", points.Count);
-            if (pointsArr.Count == 170)
-            {
-                GD.Print($"points[168]: {points[168]}, points[169]: {points[169]}, " +
-                         $"equals: {new GeodesicPoints.Vector3EqualityComparer().Equals(points[168], points[169])}");
-            }
+            // GD.Print("test-log|points: ", pointsArr, " points.Count: ", points.Count);
+            // if (pointsArr.Count == 170)
+            // {
+            //     GD.Print($"points[168]: {points[168]}, points[169]: {points[169]}, " +
+            //              $"equals: {new GeodesicPoints.Vector3EqualityComparer().Equals(points[168], points[169])}");
+            // }
             List<HexTile> tiles = GenHexTiles(planet, ref points);
             var tileCenters = tiles.Select(tile => tile.Center).ToList();
-            GD.Print("test-log|tile_centers: ", tileCenters);
+            // GD.Print("test-log|tile_centers: ", tileCenters);
 
             List<Vector3> chunkOrigins = GeodesicPoints.GenPoints(planet.ChunkSubdivisions, planet.Radius);
-            GD.Print("test-log|chunk_origins: ", chunkOrigins);
+            // GD.Print("test-log|chunk_origins: ", chunkOrigins);
             planet.DrawSpheres(tileCenters, chunkOrigins);
             List<HexChunk> chunks = GenHexChunks(planet, tiles, chunkOrigins);
             planet.Chunks = chunks;
@@ -87,7 +87,7 @@ namespace UnityHexPlanet
             {
                 Vector3 uniqueVert = uniqueVerts[i];
                 List<Vector3> closestVerts = vertOctTree.GetPoints(uniqueVert, Vector3.One * maxDistBetweenNeighbots);
-                GD.Print("closestVerts.Count: ", closestVerts.Count, ", uniqueVert: ", uniqueVert);
+                // GD.Print("closestVerts.Count: ", closestVerts.Count, ", uniqueVert: ", uniqueVert);
                 var closest = (from vert in closestVerts
                     orderby (vert - uniqueVert).LengthSquared()
                     select vert).Take(7).ToList();
@@ -99,10 +99,10 @@ namespace UnityHexPlanet
 
                 // 排除掉自己
                 closest = closest.Skip(1).ToList();
-                GD.Print("closest.Count: ", closest.Count, " [", (closest[0] - uniqueVert).Length(), ", ",
-                    (closest[1] - uniqueVert).Length(), ", ", (closest[2] - uniqueVert).Length(), ", ",
-                    (closest[3] - uniqueVert).Length(), ", ", (closest[4] - uniqueVert).Length(), ", ",
-                    closest.Count == 6 ? (closest[5] - uniqueVert).Length() : null, "]");
+                // GD.Print("closest.Count: ", closest.Count, " [", (closest[0] - uniqueVert).Length(), ", ",
+                //     (closest[1] - uniqueVert).Length(), ", ", (closest[2] - uniqueVert).Length(), ", ",
+                //     (closest[3] - uniqueVert).Length(), ", ", (closest[4] - uniqueVert).Length(), ", ",
+                //     closest.Count == 6 ? (closest[5] - uniqueVert).Length() : null, "]");
 
                 // Order the closest so an increase in index revolves them counter clockwise
                 // 按随索引增加，逆时针排序的顺序排列最近的点
@@ -132,10 +132,10 @@ namespace UnityHexPlanet
                 }
 
                 center /= hexVerts.Count;
-                GD.Print("center:", center, " hexVerts.Count: ", hexVerts.Count, " [", (hexVerts[0] - uniqueVert).Length(), ", ",
-                    (hexVerts[1] - uniqueVert).Length(), ", ", (hexVerts[2] - uniqueVert).Length(), ", ",
-                    (hexVerts[3] - uniqueVert).Length(), ", ", (hexVerts[4] - uniqueVert).Length(), ", ",
-                    hexVerts.Count == 6 ? (hexVerts[5] - uniqueVert).Length() : null, "]");
+                // GD.Print("center:", center, " hexVerts.Count: ", hexVerts.Count, " [", (hexVerts[0] - uniqueVert).Length(), ", ",
+                //     (hexVerts[1] - uniqueVert).Length(), ", ", (hexVerts[2] - uniqueVert).Length(), ", ",
+                //     (hexVerts[3] - uniqueVert).Length(), ", ", (hexVerts[4] - uniqueVert).Length(), ", ",
+                //     hexVerts.Count == 6 ? (hexVerts[5] - uniqueVert).Length() : null, "]");
 
                 HexTile hexTile = planet.TerrainGenerator.CreateHexTile(i, planet, center, hexVerts);
                 hexTiles.Add(hexTile);

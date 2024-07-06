@@ -85,6 +85,7 @@ namespace UnityHexPlanet
             var diff = to - from;
             if (diff.X != 0)
             {
+                // bug：现在看的方向好像部分会报错？
                 ins.LookAt(new Vector3(-diff.Y, diff.X, 0), diff);
             }
             else
@@ -97,9 +98,10 @@ namespace UnityHexPlanet
             cylinder.BottomRadius = cylinderRadius;
             cylinder.Height = from.DistanceTo(to);
             cylinder.RadialSegments = 6;
-            // var material = new StandardMaterial3D();
-            // material.AlbedoColor = Colors.White;
-            // ins.SetSurfaceOverrideMaterial(0, material);
+
+            var material = new StandardMaterial3D();
+            material.AlbedoColor = Colors.White;
+            ins.SetSurfaceOverrideMaterial(0, material);
             ins.Mesh = cylinder;
         }
 

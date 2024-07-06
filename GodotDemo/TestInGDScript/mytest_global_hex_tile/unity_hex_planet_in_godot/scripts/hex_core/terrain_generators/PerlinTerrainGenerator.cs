@@ -12,16 +12,29 @@ namespace UnityHexPlanet
         {
             public Color Color;
             public float MaxHeight;
+
+            public ColorHeight(Color color, float maxHeight)
+            {
+                Color = color;
+                MaxHeight = maxHeight;
+            }
         }
 
         [Export(PropertyHint.Range, "1, 8")] public int Octaves = 1;
         [Export(PropertyHint.Range, "0, 1")] public float Persistence = 0.5f;
         [Export(PropertyHint.Range, "1, 10")] public float Lacunarity = 2;
+        [Export] public float MinHeight = 0.0f;
+        [Export] public float MaxHeight = 10.0f;
+        [Export] public float NoiseScaling = 100.0f;
 
-        public float MinHeight;
-        public float MaxHeight;
-        public float NoiseScaling;
-        public List<ColorHeight> ColorHeights;
+        public List<ColorHeight> ColorHeights = new()
+        {
+            new (Colors.Blue, 0.0f),
+            new (Colors.Green, 4.0f),
+            new (Colors.YellowGreen, 4.0f),
+            new (Colors.Yellow, 7.0f),
+            new (Colors.White, 10.0f),
+        };
 
         private static FastNoiseLite _perlinNoise;
 
@@ -37,13 +50,15 @@ namespace UnityHexPlanet
                 newTile.Center.Normalized().Y, newTile.Center.Normalized().Z)) + MinHeight)) / 3.0f;
             newTile.Height = height;
 
-            // for (int i = ColorHeights.Count - 1; i >= 0; i--)
-            // {
-            //     if (height < ColorHeights[i].MaxHeight)
-            //     {
-            //         newTile.Color = ColorHeights[i].Color;
-            //     }
-            // }
+            for (int i = ColorHeights.Count - 1; i >= 0; i--)
+            {
+                if (height < ColorHeights[i].MaxHeight)
+                {
+                    newTile.Color = ColorHeights[i].Color;
+                }
+            }
+            
+            GD.Print($"newTile.id: {newTile.Id}, height: {newTile.Height}, color: {newTile.Color}");
         }
 
         private float GetNoise(float x, float y, float z)
