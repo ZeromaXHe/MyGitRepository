@@ -6,16 +6,28 @@ extends BaseTerrainGenerator
 class ColorHeight:
 	var color: Color
 	var max_height: float
+	
+	func _init(color: Color, max_height: float) -> void:
+		self.color = color
+		self.max_height = max_height
 
 
 @export_range(1, 8) var octaves: int = 1
 @export_range(0, 1) var persistence: float = 0.5
 @export_range(1, 10) var lacunarity: float = 2
 
-var min_height: float
-var max_height: float
-var noise_scaling: float
-var color_heights: Array
+@export var min_height: float = 0.0
+@export var max_height: float = 10.0
+@export var noise_scaling: float = 100.0
+
+var color_heights: Array = [
+	ColorHeight.new(Color.BLUE, 0.0),
+	ColorHeight.new(Color.GREEN, 2.0),
+	ColorHeight.new(Color.LIGHT_GREEN, 4.0),
+	ColorHeight.new(Color.YELLOW, 6.0),
+	ColorHeight.new(Color.YELLOW_GREEN, 8.0),
+	ColorHeight.new(Color.WHITE, 10.0),
+	]
 
 static var perlin_noise: FastNoiseLite = FastNoiseLite.new()
 
@@ -31,11 +43,11 @@ func after_tile_creation(new_tile: HexTile) -> void:
 
 func get_noise(x: float, y: float, z: float) -> float:
 	var value: float = 0.0
-	var scale: float = noise_scaling
+	var n_scale: float = noise_scaling
 	var effect = 1.0
 	for i in range(octaves):
-		value += effect * perlin_noise_3d(scale * x, scale * y, scale * z)
-		scale *= lacunarity
+		value += effect * perlin_noise_3d(n_scale * x, n_scale * y, n_scale * z)
+		n_scale *= lacunarity
 		effect *= 1 - persistence
 	return value
 

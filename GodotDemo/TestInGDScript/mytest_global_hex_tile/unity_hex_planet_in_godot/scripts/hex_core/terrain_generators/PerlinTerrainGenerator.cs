@@ -30,9 +30,10 @@ namespace UnityHexPlanet
         public List<ColorHeight> ColorHeights = new()
         {
             new (Colors.Blue, 0.0f),
-            new (Colors.Green, 4.0f),
-            new (Colors.YellowGreen, 4.0f),
-            new (Colors.Yellow, 7.0f),
+            new (Colors.Green, 2.0f),
+            new (Colors.LightGreen, 4.0f),
+            new (Colors.Yellow, 6.0f),
+            new (Colors.YellowGreen, 8.0f),
             new (Colors.White, 10.0f),
         };
 

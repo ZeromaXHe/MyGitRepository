@@ -47,11 +47,16 @@ func get_mesh() -> Mesh:
 	#print("test-log|vertices: ", vertices, " indices: ", indices)
 	var surface_tool := SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for color in colors:
+		surface_tool.set_color(color)
 	for vertex in vertices:
 		surface_tool.add_vertex(vertex)
 		#surface_tool.set_uv(Vector2(randf_range(0, 1), randf_range(0, 1)))
 	for index in indices:
 		surface_tool.add_index(index)
+	var material = StandardMaterial3D.new();
+	material.vertex_color_use_as_albedo = true;
+	surface_tool.set_material(material);
 	surface_tool.generate_normals()
 	return surface_tool.commit()
 

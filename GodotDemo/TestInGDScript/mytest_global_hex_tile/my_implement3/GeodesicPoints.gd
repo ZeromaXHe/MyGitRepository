@@ -53,17 +53,32 @@ static func gen_points(subdivides: int, radius: float) -> Array:
 	
 	vertices = flatVertices
 	indices = flatIndices
+	#print("vertices.size: ", vertices.size(), ", indices.size: ", indices.size())
 	# 细分
 	for i in range(subdivides):
 		indices = subdivide_sphere(vertices, indices)
+		#print("i: ", i, ", vertices.size: ", vertices.size(), ", indices.size: ", indices.size())
 	# 缩放
 	for i in range(vertices.size()):
 		vertices[i] *= radius
 	# 去重
-	var vertices_distinct = {}
-	for v in vertices:
-		vertices_distinct[v] = true
-	return vertices_distinct.keys()
+	return distinct(vertices)
+
+
+# TODO: 写个 Utils 类
+static func distinct(vertices: Array) -> Array:
+	var result = []
+	for i in range(vertices.size() - 1):
+		var no_close_vert: bool = true
+		for j in range(i + 1, vertices.size()):
+			if (vertices[i] as Vector3).distance_to(vertices[j]) < 0.001:
+				no_close_vert = false
+				break
+		if no_close_vert:
+			result.append(vertices[i])
+	result.append(vertices.back())
+	#print("distinct result.size: ", result.size())
+	return result
 
 
 static func subdivide_sphere(vertices: Array, indices: Array) -> Array:

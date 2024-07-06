@@ -5,8 +5,8 @@ extends Node3D
 
 @export_range(0, 7) var subdivisions: int = 1
 @export_range(0, 6) var chunk_subdivisions: int = 1
-
 @export_range(1, 10000) var radius: float = 100
+@export var debug_point_line: bool = false
 
 var tiles: Array
 var chunks: Array
@@ -30,7 +30,9 @@ func clear_spheres_and_lines() -> void:
 
 
 func draw_spheres(tile_centers: Array, chunk_origins: Array) -> void:
-	print("drawing_spheres tile_centers: ", tile_centers, ", chunk_origins: ", chunk_origins)
+	if not debug_point_line:
+		return
+	#print("drawing_spheres tile_centers: ", tile_centers, ", chunk_origins: ", chunk_origins)
 	for tc in tile_centers:
 		draw_sphere_on_pos(tc, Color.GREEN)
 	for co in chunk_origins:
@@ -51,6 +53,8 @@ func draw_sphere_on_pos(pos: Vector3, color: Color) -> void:
 
 
 func draw_line(from: Vector3, to: Vector3, cylinder_radius: float = radius / 60) -> void:
+	if not debug_point_line:
+		return
 	var ins := MeshInstance3D.new()
 	test.add_child(ins)
 	ins.position = (from + to) / 2

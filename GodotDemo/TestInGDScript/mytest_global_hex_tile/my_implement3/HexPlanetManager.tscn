@@ -17,7 +17,7 @@ sky = SubResource("Sky_v4wnq")
 tonemap_mode = 2
 glow_enabled = true
 
-[node name="HexPlanetManager" type="Node3D" groups=["HexPlanetManager"]]
+[node name="HexPlanetManager2" type="Node3D" groups=["HexPlanetManager"]]
 script = ExtResource("1_q47rl")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -29,9 +29,12 @@ shadow_enabled = true
 
 [node name="HexPlanet" type="Node3D" parent="."]
 script = ExtResource("2_sx6hr")
+subdivisions = 2
+chunk_subdivisions = 2
 
 [node name="PerlinTerrainGenerator" type="Node3D" parent="HexPlanet"]
 script = ExtResource("3_fl5jk")
+max_height = 50.0
 
 [node name="Test" type="Node3D" parent="HexPlanet"]
 
@@ -39,3 +42,4 @@ script = ExtResource("3_fl5jk")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 500)
+current = true

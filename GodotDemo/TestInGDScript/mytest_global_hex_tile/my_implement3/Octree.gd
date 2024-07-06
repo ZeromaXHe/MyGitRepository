@@ -15,6 +15,7 @@ var points: Dictionary = {}
 var depth: int = 0
 var split: bool = false
 
+# 现在命名是按 Unity 版的叫法，实际 Godot 里面 front 和 back 和命名是反的
 # 后下左 back bottom left
 var bblOctree: Octree
 # 前下左 front bottom left
@@ -44,21 +45,22 @@ func _init(back_bottom_left: Vector3, front_top_right: Vector3, depth: int = 0) 
 
 func do_split() -> void:
 	split = true
+	# 现在命名是按 Unity 版的叫法，实际 Godot 里面 front 和 back 和命名是反的
 	bblOctree = Octree.new(back_bottom_left, center, depth + 1)
-	fblOctree = Octree.new(back_bottom_left + Vector3.FORWARD * size.z / 2, \
-		center + Vector3.FORWARD * size.z / 2, depth + 1)
+	fblOctree = Octree.new(back_bottom_left + Vector3.BACK * size.z / 2, \
+		center + Vector3.BACK * size.z / 2, depth + 1)
 	btlOctree = Octree.new(back_bottom_left + Vector3.UP * size.y / 2, \
 		center + Vector3.UP * size.y / 2, depth + 1)
-	ftlOctree = Octree.new(back_bottom_left + Vector3.UP * size.y / 2, \
-		center + Vector3.RIGHT * size.x / 2, depth + 1)
+	ftlOctree = Octree.new(back_bottom_left + Vector3.UP * size.y / 2 + Vector3.BACK * size.z / 2, \
+		center + Vector3.UP * size.x / 2 + Vector3.BACK * size.z / 2, depth + 1)
 	bbrOctree = Octree.new(back_bottom_left + Vector3.RIGHT * size.x / 2, \
 		center + Vector3.RIGHT * size.x / 2, depth + 1)
-	fbrOctree = Octree.new(back_bottom_left + Vector3.FORWARD * size.z / 2 + Vector3.RIGHT * size.x / 2, \
-		center + Vector3.FORWARD * size.z / 2 + Vector3.RIGHT * size.x / 2, depth + 1)
-	btrOctree = Octree.new(back_bottom_left + Vector3.UP * size.y / 2, \
+	fbrOctree = Octree.new(back_bottom_left + Vector3.BACK * size.z / 2 + Vector3.RIGHT * size.x / 2, \
+		center + Vector3.BACK * size.z / 2 + Vector3.RIGHT * size.x / 2, depth + 1)
+	btrOctree = Octree.new(back_bottom_left + Vector3.UP * size.y / 2 + Vector3.RIGHT * size.x / 2, \
 		center + Vector3.UP * size.y / 2 + Vector3.RIGHT * size.x / 2, depth + 1)
-	ftrOctree = Octree.new(back_bottom_left + Vector3.UP * size.y / 2 + Vector3.FORWARD * size.z / 2 \
-		+ Vector3.RIGHT * size.x / 2, center + Vector3.UP * size.y / 2 + Vector3.FORWARD * size.z / 2 \
+	ftrOctree = Octree.new(back_bottom_left + Vector3.UP * size.y / 2 + Vector3.BACK * size.z / 2 \
+		+ Vector3.RIGHT * size.x / 2, center + Vector3.UP * size.y / 2 + Vector3.BACK * size.z / 2 \
 		+ Vector3.RIGHT * size.x / 2, depth + 1)
 	
 	for p_key in points:
@@ -70,25 +72,25 @@ func do_split() -> void:
 func insert_point_internally(key, pos: Vector3) -> void:
 	if pos.x > center.x: # 右
 		if pos.y > center.y: # 上
-			if pos.z > center.z: # 前
+			if pos.z > center.z: # 前 (这里 Unity 和 Godot 是反的， 是 Godot 的 Back，Unity 的 Front
 				ftrOctree.insert_point(key, pos)
-			else: # 后
+			else: # 后 （这里 Unity 和 Godot 是反的， 是 Godot 的 Front，Unity 的 Back）
 				btrOctree.insert_point(key, pos)
 		else: # 下
-			if pos.z > center.z: # 前
+			if pos.z > center.z: # 前 (这里 Unity 和 Godot 是反的， 是 Godot 的 Back，Unity 的 Front)
 				fbrOctree.insert_point(key, pos)
-			else: # 后
+			else: # 后 （这里 Unity 和 Godot 是反的， 是 Godot 的 Front，Unity 的 Back）
 				bbrOctree.insert_point(key, pos)
 	else: # 左
 		if pos.y > center.y: # 上
-			if pos.z > center.z: # 前
+			if pos.z > center.z: # 前 (这里 Unity 和 Godot 是反的， 是 Godot 的 Back，Unity 的 Front
 				ftlOctree.insert_point(key, pos)
-			else: # 后
+			else: # 后 （这里 Unity 和 Godot 是反的， 是 Godot 的 Front，Unity 的 Back）
 				btlOctree.insert_point(key, pos)
 		else: # 下
-			if pos.z > center.z: # 前
+			if pos.z > center.z: # 前 (这里 Unity 和 Godot 是反的， 是 Godot 的 Back，Unity 的 Front
 				fblOctree.insert_point(key, pos)
-			else: # 后
+			else: # 后 （这里 Unity 和 Godot 是反的， 是 Godot 的 Front，Unity 的 Back）
 				bblOctree.insert_point(key, pos)
 
 

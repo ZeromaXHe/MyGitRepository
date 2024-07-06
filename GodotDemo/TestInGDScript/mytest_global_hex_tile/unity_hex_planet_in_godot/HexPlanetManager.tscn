@@ -34,6 +34,7 @@ ChunkSubdivisions = 2
 
 [node name="PerlinTerrainGenerator" type="Node3D" parent="HexPlanet"]
 script = ExtResource("3_1awdf")
+MaxHeight = 50.0
 
 [node name="Test" type="Node3D" parent="HexPlanet"]
 

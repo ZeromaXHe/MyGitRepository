@@ -13,7 +13,7 @@ var height: float
 
 var planet: HexPlanet
 var color: Color
-# 相邻的 HexTile
+# 相邻的 HexTile（Godot Array 默认不是 null 而是 [] 坑人啊！）
 var neighbors: Array
 
 
@@ -35,11 +35,12 @@ func append_to_mesh(mesh_verts: Array, mesh_indices: Array, mesh_colors: Array) 
 		mesh_colors.append(color)
 		
 		mesh_indices.append(base_index)
-		mesh_indices.append(base_index + j + 1)
 		mesh_indices.append(base_index + (j + 1) % vertices.size() + 1)
+		mesh_indices.append(base_index + j + 1)
 	
 	# 如果需要生成墙的话，生成
 	var neighbors = get_neighbors()
+	print("neighbors: ", neighbors)
 	for j in range(neighbors.size()):
 		var this_height = height
 		var other_height = neighbors[j].height
@@ -49,7 +50,7 @@ func append_to_mesh(mesh_verts: Array, mesh_indices: Array, mesh_colors: Array) 
 		# 添加栅栏
 		mesh_verts.append(transform_point(vertices[(j + 1) % vertices.size()], other_height))
 		mesh_verts.append(transform_point(vertices[j], other_height))
-		mesh_verts.append(transform_point(vertices[(j + 1) % vertices.size()], other_height))
+		mesh_verts.append(transform_point(vertices[(j + 1) % vertices.size()], this_height))
 		mesh_verts.append(transform_point(vertices[j], this_height))
 		
 		mesh_colors.append(color)
@@ -58,12 +59,12 @@ func append_to_mesh(mesh_verts: Array, mesh_indices: Array, mesh_colors: Array) 
 		mesh_colors.append(color)
 		
 		mesh_indices.append(base_index)
-		mesh_indices.append(base_index + 2)
 		mesh_indices.append(base_index + 1)
+		mesh_indices.append(base_index + 2)
 		
 		mesh_indices.append(base_index + 2)
-		mesh_indices.append(base_index + 3)
 		mesh_indices.append(base_index + 1)
+		mesh_indices.append(base_index + 3)
 
 
 func transform_point(input: Vector3, height: float) -> Vector3:
@@ -75,6 +76,7 @@ func set_chunk(chunk_id: int) -> void:
 
 
 func add_neighbors(nbrs: Array) -> void:
+	#print("tile id: ", id, " adding neighbors: ", nbrs.map(func(n): return n.id))
 	for nbr in nbrs:
 		neighbor_ids.append(nbr.id)
 
@@ -85,7 +87,8 @@ func set_height(new_height: float) -> void:
 
 
 func get_neighbors() -> Array:
-	if neighbors != null:
+	# Godot Array 默认不是 null 而是 [] 坑人啊！
+	if neighbors.size() == neighbor_ids.size():
 		return neighbors
 	neighbors = []
 	for nid in neighbor_ids:
