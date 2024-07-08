@@ -29,7 +29,7 @@ shadow_enabled = true
 
 [node name="HexPlanet" type="Node3D" parent="."]
 script = ExtResource("2_sx6hr")
-subdivisions = 2
+subdivisions = 4
 chunk_subdivisions = 2
 
 [node name="PerlinTerrainGenerator" type="Node3D" parent="HexPlanet"]
