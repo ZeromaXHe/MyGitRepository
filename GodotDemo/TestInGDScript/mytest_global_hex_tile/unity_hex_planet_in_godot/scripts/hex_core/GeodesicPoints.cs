@@ -53,13 +53,13 @@ public static class GeodesicPoints
 
         vertices = flatVertices;
         indices = flatIndices;
-        GD.Print($"vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
+        // GD.Print($"vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
 
         // Subdivide
         for (var i = 0; i < subdivides; i++)
         {
             SubdivideSphere(ref vertices, ref indices);
-            GD.Print($"i: {i} vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
+            // GD.Print($"i: {i} vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
         }
 
         // Scale
@@ -67,7 +67,7 @@ public static class GeodesicPoints
         {
             vertices[i] *= radius;
         }
-        GD.Print($"final vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
+        // GD.Print($"final vertices.Count: {vertices.Count}, indices.Count: {indices.Count}");
         // 必须自定义去重逻辑，不然 2 重细分开始会破皮现象
         return vertices.Distinct(new Vector3EqualityComparer()).ToList();
     }
@@ -77,8 +77,7 @@ public static class GeodesicPoints
     {
         public bool Equals(Vector3 a, Vector3 b)
         {
-            
-            return a.DistanceTo(b) < 0.01;
+            return a.IsEqualApprox(b);
         }
 
         // C# 这个 GetHashCode 的设计怎么这么脱裤子放屁……

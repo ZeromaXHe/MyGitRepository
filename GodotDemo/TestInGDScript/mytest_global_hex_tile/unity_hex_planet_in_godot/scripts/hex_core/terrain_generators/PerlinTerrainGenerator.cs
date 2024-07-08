@@ -59,7 +59,7 @@ namespace UnityHexPlanet
                 }
             }
             
-            GD.Print($"newTile.id: {newTile.Id}, height: {newTile.Height}, color: {newTile.Color}");
+            // GD.Print($"newTile.id: {newTile.Id}, height: {newTile.Height}, color: {newTile.Color}");
         }
 
         private float GetNoise(float x, float y, float z)

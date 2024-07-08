@@ -174,7 +174,7 @@ static func gen_hex_tiles(planet: HexPlanet, sphere_verts: Array) -> Array:
 		Vector3.ONE * planet.radius * 1.1)
 	for h: HexTile in hex_tiles:
 		hex_octree.insert_point(h, h.center)
-		print("inserting point h: ", h, ", h.center: ", h.center)
+		#print("inserting point h: ", h, ", h.center: ", h.center)
 	# 找到相邻地块
 	for i in range(hex_tiles.size()):
 		var current_tile: HexTile = hex_tiles[i]
@@ -188,11 +188,11 @@ static func gen_hex_tiles(planet: HexPlanet, sphere_verts: Array) -> Array:
 			closest_hexes.pop_back() # 一定是五边形
 		# 排除自己，最近的瓦片
 		closest_hexes.pop_front()
-		print("i: ", i, ", closest_hexes: ", \
-			closest_hexes.map(func(a): return (a.center - tile_for_static_sort.center).length_squared()))
+		#print("i: ", i, ", closest_hexes: ", \
+			#closest_hexes.map(func(a): return (a.center - tile_for_static_sort.center).length_squared()))
 		# 根据顶点将瓦片排序
 		var verts = current_tile.vertices
-		print("verts: ", verts)
+		#print("verts: ", verts)
 		var ordered_neighbors = []
 		for j in range(verts.size()):
 			vec_for_static_sort = -((verts[j] as Vector3 + verts[(j + 1) % verts.size()] as Vector3) / 2).normalized()

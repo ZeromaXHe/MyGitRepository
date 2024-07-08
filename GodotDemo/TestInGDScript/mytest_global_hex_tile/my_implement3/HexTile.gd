@@ -40,7 +40,7 @@ func append_to_mesh(mesh_verts: Array, mesh_indices: Array, mesh_colors: Array) 
 	
 	# 如果需要生成墙的话，生成
 	var neighbors = get_neighbors()
-	print("neighbors: ", neighbors)
+	#print("neighbors: ", neighbors)
 	for j in range(neighbors.size()):
 		var this_height = height
 		var other_height = neighbors[j].height

@@ -28,7 +28,7 @@ namespace UnityHexPlanet
             RenderedChunkId = chunkId;
         }
 
-        public void Start()
+        public override void _Ready()
         {
             // _meshRenderer = GetComponent<MeshRenderer>();
             // _planet = GetComponentInParent<HexPlanetManager>().hexPlanet;
@@ -37,7 +37,7 @@ namespace UnityHexPlanet
             UpdateMesh();
         }
 
-        public void Update()
+        public override void _Process(double delta)
         {
             // if (Application.isPlaying)
             // {

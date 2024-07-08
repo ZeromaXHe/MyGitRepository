@@ -71,7 +71,7 @@ static func distinct(vertices: Array) -> Array:
 	for i in range(vertices.size() - 1):
 		var no_close_vert: bool = true
 		for j in range(i + 1, vertices.size()):
-			if (vertices[i] as Vector3).distance_to(vertices[j]) < 0.001:
+			if (vertices[i] as Vector3).is_equal_approx(vertices[j]):
 				no_close_vert = false
 				break
 		if no_close_vert:
