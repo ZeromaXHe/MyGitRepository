@@ -3,7 +3,7 @@ using System;
 
 public partial class CameraOrbit : Camera3D
 {
-    [Export] public float OrbitSpeed = 10;
+    [Export] public float OrbitSpeed = 100;
     [Export] public float OrbitRadius = 200;
     [Export] public float Smoothness = 1;
     [Export] public Marker3D Origin;
@@ -35,12 +35,12 @@ public partial class CameraOrbit : Camera3D
             OrbitRadius += 1f;
         }
 
-        _offset += (ToLocal(Vector3.Right) * xMove * (float)delta * OrbitSpeed) +
-                   (ToLocal(Vector3.Up) * yMove * (float)delta * OrbitSpeed);
+        _offset += Basis.X * xMove * (float)delta * OrbitSpeed +
+                   Basis.Y * yMove * (float)delta * OrbitSpeed;
         _offset = _offset.Normalized() * OrbitRadius;
         _target = Origin.Position + _offset;
         Position = Position.Lerp(_target, (float)delta / Smoothness);
-        LookAt(Origin.Position, Vector3.Up);
+        LookAt(Origin.Position, Basis.Y);
         
 
         if (yMove != 0.0 || xMove != 0.0)
