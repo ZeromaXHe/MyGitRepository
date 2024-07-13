@@ -1,0 +1,96 @@
+[gd_scene load_steps=12 format=3 uid="uid://bgigka36uc2gg"]
+
+[ext_resource type="Script" path="res://hi_xiaohu/highlight_rim/highlight_rim.gd" id="1_f7mxn"]
+[ext_resource type="Material" uid="uid://2kkgsc5ftp27" path="res://hi_xiaohu/highlight_rim/need_smooth_outline.tres" id="2_ac1rr"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_fxo8c"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_htcjt"]
+sky_material = SubResource("ProceduralSkyMaterial_fxo8c")
+
+[sub_resource type="Environment" id="Environment_xoaln"]
+background_mode = 2
+sky = SubResource("Sky_htcjt")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_qo47t"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_e7v5l"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_b8vsd"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1jpha"]
+shading_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_56v7o"]
+_surfaces = [{
+"aabb": AABB(-0.528867, -0.528867, -0.528867, 1.05773, 1.05774, 1.05774),
+"attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 171, 170, 42, 63, 0, 0, 0, 0, 171, 170, 170, 62, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 171, 170, 42, 63, 0, 0, 0, 63, 171, 170, 170, 62, 0, 0, 0, 63, 0, 0, 128, 63, 0, 0, 0, 63, 171, 170, 170, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 171, 170, 42, 63, 0, 0, 0, 0, 171, 170, 170, 62, 0, 0, 0, 63, 171, 170, 170, 62, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 128, 63, 171, 170, 42, 63, 0, 0, 0, 63, 171, 170, 170, 62, 0, 0, 128, 63, 171, 170, 170, 62, 0, 0, 0, 63, 171, 170, 42, 63, 0, 0, 0, 63, 171, 170, 42, 63, 0, 0, 0, 63, 0, 0, 128, 63, 0, 0, 0, 63, 171, 170, 170, 62, 0, 0, 128, 63, 171, 170, 42, 63, 0, 0, 128, 63, 171, 170, 42, 63, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 128, 63),
+"format": 34359742487,
+"index_count": 36,
+"index_data": PackedByteArray(0, 0, 4, 0, 2, 0, 2, 0, 4, 0, 6, 0, 1, 0, 5, 0, 3, 0, 3, 0, 5, 0, 7, 0, 8, 0, 12, 0, 10, 0, 10, 0, 12, 0, 14, 0, 9, 0, 13, 0, 11, 0, 11, 0, 13, 0, 15, 0, 16, 0, 20, 0, 18, 0, 18, 0, 20, 0, 22, 0, 17, 0, 21, 0, 19, 0, 19, 0, 21, 0, 23, 0),
+"material": SubResource("StandardMaterial3D_1jpha"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray(220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 63, 220, 99, 7, 191, 220, 99, 7, 191, 255, 127, 255, 127, 255, 255, 255, 191, 255, 255, 255, 255, 0, 0, 255, 191, 255, 127, 255, 127, 255, 255, 255, 191, 255, 255, 255, 255, 0, 0, 255, 191, 255, 127, 255, 127, 255, 255, 255, 191, 255, 255, 255, 255, 0, 0, 255, 191, 255, 127, 255, 127, 255, 255, 255, 191, 255, 255, 255, 255, 0, 0, 255, 191, 255, 255, 0, 128, 255, 255, 255, 255, 0, 0, 0, 128, 255, 127, 255, 191, 255, 255, 0, 128, 255, 255, 255, 255, 0, 0, 0, 128, 255, 127, 255, 191, 255, 255, 0, 128, 255, 255, 255, 255, 0, 0, 0, 128, 255, 127, 255, 191, 255, 255, 0, 128, 255, 255, 255, 255, 0, 0, 0, 128, 255, 127, 255, 191, 0, 128, 255, 255, 0, 0, 255, 191, 0, 128, 0, 0, 255, 255, 255, 191, 0, 128, 255, 255, 0, 0, 255, 191, 0, 128, 0, 0, 255, 255, 255, 191, 0, 128, 255, 255, 0, 0, 255, 191, 0, 128, 0, 0, 255, 255, 255, 191, 0, 128, 255, 255, 0, 0, 255, 191, 0, 128, 0, 0, 255, 255, 255, 191)
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_n5f4w"]
+
+[node name="HighlightRim" type="Node3D"]
+script = ExtResource("1_f7mxn")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_xoaln")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="NeedSmoothExample" type="Node3D" parent="."]
+
+[node name="CSGSphere3D" type="CSGSphere3D" parent="NeedSmoothExample"]
+material = ExtResource("2_ac1rr")
+
+[node name="SphereStaticBody" type="StaticBody3D" parent="NeedSmoothExample/CSGSphere3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NeedSmoothExample/CSGSphere3D/SphereStaticBody"]
+shape = SubResource("SphereShape3D_qo47t")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="NeedSmoothExample"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+material = ExtResource("2_ac1rr")
+
+[node name="BoxStaticBody" type="StaticBody3D" parent="NeedSmoothExample/CSGBox3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NeedSmoothExample/CSGBox3D/BoxStaticBody"]
+shape = SubResource("BoxShape3D_e7v5l")
+
+[node name="OutlineMeshExample" type="Node3D" parent="."]
+
+[node name="Box" type="MeshInstance3D" parent="OutlineMeshExample"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 2)
+mesh = SubResource("BoxMesh_b8vsd")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="OutlineMeshExample/Box"]
+visible = false
+mesh = SubResource("ArrayMesh_56v7o")
+
+[node name="Box2StaticBody" type="StaticBody3D" parent="OutlineMeshExample/Box"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="OutlineMeshExample/Box/Box2StaticBody"]
+shape = SubResource("BoxShape3D_n5f4w")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.617064, -0.377266, 0.690581, 0, 0.877583, 0.479425, -0.786913, -0.295836, 0.541525, 4.38159, 3.04185, 3.43586)
+
+[connection signal="mouse_entered" from="NeedSmoothExample/CSGSphere3D/SphereStaticBody" to="." method="_on_sphere_static_body_mouse_entered"]
+[connection signal="mouse_exited" from="NeedSmoothExample/CSGSphere3D/SphereStaticBody" to="." method="_on_sphere_static_body_mouse_exited"]
+[connection signal="mouse_entered" from="NeedSmoothExample/CSGBox3D/BoxStaticBody" to="." method="_on_box_static_body_mouse_entered"]
+[connection signal="mouse_exited" from="NeedSmoothExample/CSGBox3D/BoxStaticBody" to="." method="_on_box_static_body_mouse_exited"]
+[connection signal="mouse_entered" from="OutlineMeshExample/Box/Box2StaticBody" to="." method="_on_box_2_static_body_mouse_entered"]
+[connection signal="mouse_exited" from="OutlineMeshExample/Box/Box2StaticBody" to="." method="_on_box_2_static_body_mouse_exited"]

@@ -1,0 +1,128 @@
+[gd_scene load_steps=13 format=3 uid="uid://jpg7pehcwh63"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3wvue"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_4fsc6"]
+sky_material = SubResource("ProceduralSkyMaterial_3wvue")
+
+[sub_resource type="Environment" id="Environment_cg87k"]
+background_mode = 2
+sky = SubResource("Sky_4fsc6")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6dfiq"]
+albedo_color = Color(0.454902, 0.588235, 0.67451, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_76hu6"]
+noise_type = 0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_3p2vb"]
+noise = SubResource("FastNoiseLite_76hu6")
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_q520v"]
+noise = SubResource("FastNoiseLite_76hu6")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1mo4e"]
+transparency = 1
+albedo_color = Color(0.0901961, 0.333333, 0.494118, 0.529412)
+roughness = 0.0
+normal_enabled = true
+normal_scale = 0.03
+normal_texture = SubResource("NoiseTexture2D_3p2vb")
+refraction_enabled = true
+refraction_texture = SubResource("NoiseTexture2D_q520v")
+proximity_fade_enabled = true
+proximity_fade_distance = 0.5
+distance_fade_mode = 1
+distance_fade_max_distance = 1.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1kfrg"]
+material = SubResource("StandardMaterial3D_1mo4e")
+size = Vector2(4, 4)
+
+[sub_resource type="Animation" id="Animation_7837v"]
+resource_name = "water"
+length = 5.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Water:mesh:material:uv1_offset")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(1, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_2asu4"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Water:mesh:material:uv1_offset")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_5c7ly"]
+_data = {
+"RESET": SubResource("Animation_2asu4"),
+"water": SubResource("Animation_7837v")
+}
+
+[node name="Water3d" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_cg87k")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+size = Vector3(4, 2, 4)
+material = SubResource("StandardMaterial3D_6dfiq")
+
+[node name="CSGSphere3D" type="CSGSphere3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+operation = 2
+radius = 2.0
+material = SubResource("StandardMaterial3D_6dfiq")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("PlaneMesh_1kfrg")
+
+[node name="Items" type="Node3D" parent="."]
+
+[node name="Box1" type="CSGBox3D" parent="Items"]
+transform = Transform3D(0.707107, 0.353553, -0.612372, -0.707107, 0.353553, -0.612372, 0, 0.866025, 0.5, -1, 0, 0)
+
+[node name="Box2" type="CSGBox3D" parent="Items"]
+transform = Transform3D(0.965926, -0.12941, 0.224144, 0.258819, 0.482963, -0.836516, 0, 0.866025, 0.5, 1, 0, 0)
+
+[node name="Box3" type="CSGBox3D" parent="Items"]
+transform = Transform3D(-1.07966e-08, 0.866025, 0.5, 0.965926, 0.129409, -0.224144, -0.258819, 0.482963, -0.836516, 0, 0, -1)
+
+[node name="Box4" type="CSGBox3D" parent="Items"]
+transform = Transform3D(-0.601316, 0.798636, 0.0244795, -0.675485, -0.524479, 0.518306, 0.426777, 0.29513, 0.854845, 0, 0, 1)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.846677, -0.370996, 0.381444, 0, 0.716856, 0.697221, -0.532107, -0.590322, 0.606946, 1.8166, 3.32047, 2.89054)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_5c7ly")
+}
+autoplay = "water"
