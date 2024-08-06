@@ -58,6 +58,8 @@ git commit
   - **Civ6Copy**: 仿《文明6》项目
   - **GodotProjects**: 俯视角射击游戏项目
   - **TestInGDScript**: GDScript 测试项目
+    - **mytest_global_hex_tile**: 球体六边形地块项目
+    - **mytest_war_thunder_like**: 仿战争雷霆项目
   - **Winline**: Win Line 小游戏项目
 - **MySpringTuling**：图灵《手写Spring底层原理源码》笔记和代码
 - **Notes**: 一些笔记文件
