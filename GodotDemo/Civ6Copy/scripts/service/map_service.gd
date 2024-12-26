@@ -1,5 +1,7 @@
 class_name MapService
 
+# 存档路径（目前为了开源代码里面可以自带一个存档，修改为了 res:// 路径，正常最好是 user://）
+const save_path = "res://saves/map.save"
 
 static var size := MapSizeTable.Enum.DUAL
 static var type := MapTypeTable.Enum.BLANK
@@ -82,7 +84,7 @@ static func get_border_tile_size_vec() -> Vector2i:
 static func save_map() -> void:
 	var json_string: String = JSON.stringify(get_persistance_dict())
 	print("save | json_string:", json_string)
-	var save_map: FileAccess = FileAccess.open("user://map.save", FileAccess.WRITE)
+	var save_map: FileAccess = FileAccess.open(save_path, FileAccess.WRITE)
 	save_map.store_line(json_string)
 
 
@@ -149,10 +151,10 @@ static func serialize_border_tile_info() -> String:
 static func load_from_save() -> bool:
 	GlobalScript.record_time()
 	GlobalScript.load_info = "读取地图存档..."
-	if not FileAccess.file_exists("user://map.save"):
-		printerr("load_from_save | Error! We don't have a save to load.")
+	if not FileAccess.file_exists(save_path):
+		printerr("load_from_save | 错误 Error! 没有存档可供加载。We don't have a save to load.")
 		return false
-	var save_map: FileAccess = FileAccess.open("user://map.save", FileAccess.READ)
+	var save_map: FileAccess = FileAccess.open(save_path, FileAccess.READ)
 	while save_map.get_position() < save_map.get_length():
 		# 目前正常情况只有一行
 		var json_string: String = save_map.get_line()

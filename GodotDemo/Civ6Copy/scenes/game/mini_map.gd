@@ -42,6 +42,10 @@ func get_view_line() -> Line2D:
 
 func paint_player_sight() -> void:
 	var player: PlayerDO = PlayerService.get_current_player()
+	if player == null:
+		# 无玩家说明是地图编辑器里的小地图，直接全部显示
+		return
+	# 热座模式下的小地图逻辑
 	var size_vec: Vector2i = MapService.get_map_tile_size_vec()
 	for i in range(size_vec.x):
 		for j in range(size_vec.y):
