@@ -10,8 +10,8 @@
 material = ExtResource("2_x5xie")
 size = Vector3(50, 0.5, 50)
 
-[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_oahyi"]
-data = PackedVector3Array(-10, 0.25, 10, 10, 0.25, 10, -10, -0.25, 10, 10, 0.25, 10, 10, -0.25, 10, -10, -0.25, 10, 10, 0.25, -10, -10, 0.25, -10, 10, -0.25, -10, -10, 0.25, -10, -10, -0.25, -10, 10, -0.25, -10, 10, 0.25, 10, 10, 0.25, -10, 10, -0.25, 10, 10, 0.25, -10, 10, -0.25, -10, 10, -0.25, 10, -10, 0.25, -10, -10, 0.25, 10, -10, -0.25, -10, -10, 0.25, 10, -10, -0.25, 10, -10, -0.25, -10, 10, 0.25, 10, -10, 0.25, 10, 10, 0.25, -10, -10, 0.25, 10, -10, 0.25, -10, 10, 0.25, -10, -10, -0.25, 10, 10, -0.25, 10, -10, -0.25, -10, 10, -0.25, 10, 10, -0.25, -10, -10, -0.25, -10)
+[sub_resource type="BoxShape3D" id="BoxShape3D_c52sq"]
+size = Vector3(50, 0.5, 50)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0racc"]
 render_priority = 0
@@ -99,7 +99,7 @@ metadata/_edit_group_ = true
 [node name="StaticBody3D" type="StaticBody3D" parent="Floor"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_oahyi")
+shape = SubResource("BoxShape3D_c52sq")
 
 [node name="Box" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1, -5)
