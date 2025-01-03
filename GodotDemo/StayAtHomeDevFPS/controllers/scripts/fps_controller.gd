@@ -69,6 +69,7 @@ func _update_camera(delta):
 
 
 func _ready():
+	Global.player = self
 	# Get mouse input
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# 设置默认速度
@@ -78,8 +79,8 @@ func _ready():
 
 
 func _physics_process(delta):
-	Global.debug.add_property("MovementSpeed", _speed, 1)
-	Global.debug.add_property("MouseRotation", _mouse_rotation, 2)
+	Global.debug.add_property("MovementSpeed", _speed, 2)
+	Global.debug.add_property("MouseRotation", _mouse_rotation, 3)
 	# Update camera movement based on mouse movement
 	_update_camera(delta)
 	
