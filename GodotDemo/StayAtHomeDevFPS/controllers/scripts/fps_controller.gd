@@ -78,6 +78,8 @@ func _ready():
 
 
 func _physics_process(delta):
+	Global.debug.add_property("MovementSpeed", _speed, 1)
+	Global.debug.add_property("MouseRotation", _mouse_rotation, 2)
 	# Update camera movement based on mouse movement
 	_update_camera(delta)
 	
