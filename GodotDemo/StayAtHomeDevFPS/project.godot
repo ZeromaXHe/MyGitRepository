@@ -19,6 +19,17 @@ config/icon="res://icon.svg"
 
 window/size/always_on_top=true
 
+[file_customization]
+
+folder_colors={
+"res://controllers/": "red",
+"res://environment/": "blue",
+"res://levels/": "green",
+"res://materials/": "pink",
+"res://shaders/": "purple",
+"res://textures/": "gray"
+}
+
 [input]
 
 move_forward={
