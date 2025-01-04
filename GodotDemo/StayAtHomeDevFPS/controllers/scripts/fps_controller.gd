@@ -21,8 +21,8 @@ var _current_rotation: float
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 func _unhandled_input(event: InputEvent) -> void:
-	
-	_mouse_input = event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
+	_mouse_input = event is InputEventMouseMotion \
+		and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
 	if _mouse_input:
 		_rotation_input = -event.relative.x * MOUSE_SENSITIVITY
 		_tilt_input = -event.relative.y * MOUSE_SENSITIVITY
