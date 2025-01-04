@@ -30,6 +30,9 @@ var idle_sway_adjustment
 var idle_sway_rotation_strength
 var weapon_bob_amount := Vector2.ZERO
 
+var raycast_test = preload("res://assets/scenes/raycast_test.tscn")
+
+
 func _ready() -> void:
 	if owner != null && owner != self: #好像 GDScript 就不会阻塞自己……
 		await owner.ready
@@ -112,3 +115,24 @@ func get_sway_noise() -> float:
 		player_position = Global.player.global_position
 	var noise_location: float = sway_noise.noise.get_noise_2d(player_position.x, player_position.y)
 	return noise_location
+
+
+func attack() -> void:
+	var camera = Global.player.CAMERA_CONTROLLER
+	var space_state = camera.get_world_3d().direct_space_state
+	var screen_center = get_viewport().size / 2
+	var origin = camera.project_ray_origin(screen_center)
+	var end = origin + camera.project_ray_normal(screen_center) * 1000
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	query.collide_with_bodies = true
+	var result = space_state.intersect_ray(query)
+	if result:
+		test_raycast(result.get("position"))
+
+
+func test_raycast(position: Vector3) -> void:
+	var instance = raycast_test.instantiate()
+	get_tree().root.add_child(instance)
+	instance.global_position = position
+	await get_tree().create_timer(3).timeout
+	instance.queue_free()
