@@ -1,14 +1,74 @@
-[gd_scene load_steps=7 format=3 uid="uid://b7triiviww8ks"]
+[gd_scene load_steps=18 format=3 uid="uid://b7triiviww8ks"]
 
 [ext_resource type="ArrayMesh" uid="uid://t38voxb71024" path="res://meshes/weapons/crowbar/mesh_crowbar.res" id="1_f6rso"]
 [ext_resource type="Script" path="res://meshes/weapons/init_weapon.gd" id="1_ka4lb"]
 [ext_resource type="Resource" uid="uid://t4n81xfuf5l1" path="res://meshes/weapons/crowbar/crowbar.tres" id="2_6fhif"]
 [ext_resource type="Script" path="res://scripts/weapon_recoil_physical.gd" id="3_akxqo"]
+[ext_resource type="Shader" path="res://shaders/weapon.gdshader" id="4_eb268"]
+[ext_resource type="Texture2D" uid="uid://daeeu6bv24gti" path="res://meshes/weapons/crowbar/crowbar_0.jpg" id="5_5hjkr"]
+[ext_resource type="Script" path="res://scripts/muzzle_flash.gd" id="5_152nn"]
+[ext_resource type="Texture2D" uid="uid://ddgij1weskn2b" path="res://meshes/weapons/crowbar/crowbar_1.png" id="6_uhnl0"]
+[ext_resource type="Texture2D" uid="uid://c8cn3ayarue2j" path="res://meshes/weapons/crowbar/crowbar_2.png" id="7_nbs3j"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_epob0"]
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_vuumx"]
 noise = SubResource("FastNoiseLite_epob0")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6ygkw"]
+render_priority = 0
+shader = ExtResource("4_eb268")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/point_size = 1.0
+shader_parameter/roughness = 1.0
+shader_parameter/metallic_texture_channel = null
+shader_parameter/specular = 0.5
+shader_parameter/metallic = 1.0
+shader_parameter/normal_scale = 1.0
+shader_parameter/ao_texture_channel = null
+shader_parameter/ao_light_affect = null
+shader_parameter/uv1_scale = Vector3(1, 1, 1)
+shader_parameter/uv1_offset = null
+shader_parameter/uv2_scale = Vector3(1, 1, 1)
+shader_parameter/uv2_offset = null
+shader_parameter/fov = 77.0
+shader_parameter/texture_albedo = ExtResource("5_5hjkr")
+shader_parameter/texture_metallic = ExtResource("6_uhnl0")
+shader_parameter/texture_roughness = ExtResource("6_uhnl0")
+shader_parameter/texture_normal = ExtResource("7_nbs3j")
+shader_parameter/texture_ambient_occlusion = ExtResource("6_uhnl0")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7fbca"]
+angle_min = -73.0
+angle_max = 73.0
+direction = Vector3(0, 0, 1)
+initial_velocity_min = 0.05
+initial_velocity_max = 0.2
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="Gradient" id="Gradient_f4wpp"]
+colors = PackedColorArray(0.847059, 0.643137, 0.227451, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_np7eq"]
+gradient = SubResource("Gradient_f4wpp")
+fill = 2
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_21was"]
+transparency = 1
+albedo_texture = SubResource("GradientTexture2D_np7eq")
+roughness = 0.0
+emission_enabled = true
+emission_energy_multiplier = 16.0
+emission_texture = SubResource("GradientTexture2D_np7eq")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_tsjcx"]
+material = SubResource("StandardMaterial3D_21was")
+size = Vector2(0.05, 0.05)
 
 [node name="Weapon" type="Node3D"]
 transform = Transform3D(-0.992541, 0.12189, 0.0024289, 0.00451701, 0.0168577, 0.999848, 0.12183, 0.992401, -0.0172825, 0.13, -0.165, -0.22)
@@ -25,6 +85,7 @@ weapon = NodePath("..")
 
 [node name="WeaponMesh" type="MeshInstance3D" parent="RecoilPosition"]
 unique_name_in_owner = true
+material_override = SubResource("ShaderMaterial_6ygkw")
 cast_shadow = 0
 mesh = ExtResource("1_f6rso")
 skeleton = NodePath("../..")
@@ -34,3 +95,24 @@ unique_name_in_owner = true
 cast_shadow = 3
 mesh = ExtResource("1_f6rso")
 skeleton = NodePath("../..")
+
+[node name="MuzzleFlash" type="Node3D" parent="." node_paths=PackedStringArray("weapon", "light", "emitter")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00255631, -0.0769851, 0.180875)
+script = ExtResource("5_152nn")
+weapon = NodePath("..")
+light = NodePath("OmniLight3D")
+emitter = NodePath("GPUParticles3D")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="MuzzleFlash"]
+visible = false
+light_color = Color(0.980392, 0.823529, 0.396078, 1)
+light_energy = 3.01
+omni_range = 6.223
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="MuzzleFlash"]
+emitting = false
+lifetime = 0.05
+one_shot = true
+explosiveness = 0.93
+process_material = SubResource("ParticleProcessMaterial_7fbca")
+draw_pass_1 = SubResource("QuadMesh_tsjcx")
