@@ -493,7 +493,8 @@ enable_shadows = true
 [node name="WeaponRig" type="Node3D" parent="CameraController/Camera3D"]
 
 [node name="Weapon" parent="CameraController/Camera3D/WeaponRig" instance=ExtResource("4_45si3")]
-transform = Transform3D(-0.992541, 0.12189, 0.0024289, 0.00451701, 0.0168577, 0.999848, 0.12183, 0.992401, -0.0172825, 0.13, -0.165, -0.22)
+transform = Transform3D(-0.992401, 0.122957, 0.00472151, 0.00884456, 0.0330084, 0.999416, 0.122729, 0.991863, -0.033845, 0.133019, -0.16455, -0.22)
+reset = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
