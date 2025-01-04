@@ -1,4 +1,4 @@
 extends Node
 
 var debug
-var player
+var player: Player

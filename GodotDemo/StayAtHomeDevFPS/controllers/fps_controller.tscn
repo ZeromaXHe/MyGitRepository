@@ -230,7 +230,6 @@ _data = {
 
 [node name="FPSController" type="CharacterBody3D" node_paths=PackedStringArray("CAMERA_CONTROLLER", "ANIMATION_PLAYER", "CROUCH_SHAPE_CAST")]
 script = ExtResource("1_pgc1p")
-TOGGLE_CROUCH = false
 MOUSE_SENSITIVITY = 0.25
 CAMERA_CONTROLLER = NodePath("CameraController/Camera3D")
 ANIMATION_PLAYER = NodePath("AnimationPlayer")
@@ -323,16 +322,11 @@ layout_mode = 2
 script = ExtResource("6_7l5ab")
 CURRENT_STATE = NodePath("IdlePlayerState")
 
-[node name="IdlePlayerState" type="Node" parent="PlayerStateMachine" node_paths=PackedStringArray("ANIMATION")]
+[node name="IdlePlayerState" type="Node" parent="PlayerStateMachine"]
 script = ExtResource("7_ohk63")
-ANIMATION = NodePath("../../AnimationPlayer")
 
-[node name="WalkingPlayerState" type="Node" parent="PlayerStateMachine" node_paths=PackedStringArray("ANIMATION")]
+[node name="WalkingPlayerState" type="Node" parent="PlayerStateMachine"]
 script = ExtResource("8_dqhup")
-ANIMATION = NodePath("../../AnimationPlayer")
 
-[node name="SprintingPlayerState" type="Node" parent="PlayerStateMachine" node_paths=PackedStringArray("ANIMATION")]
+[node name="SprintingPlayerState" type="Node" parent="PlayerStateMachine"]
 script = ExtResource("9_sa7hj")
-ANIMATION = NodePath("../../AnimationPlayer")
-
-[connection signal="animation_started" from="AnimationPlayer" to="." method="_on_animation_player_animation_started"]

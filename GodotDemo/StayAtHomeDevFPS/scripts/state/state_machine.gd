@@ -12,6 +12,7 @@ func _ready() -> void:
 			child.transition.connect(on_child_transition)
 		else:
 			push_warning("状态机包含不兼容子节点")
+	await owner.ready
 	CURRENT_STATE.enter()
 
 

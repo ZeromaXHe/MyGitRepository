@@ -1,3 +1,4 @@
+class_name Player
 extends CharacterBody3D
 
 @export var SPEED_DEFAULT: float = 5.0
@@ -5,9 +6,7 @@ extends CharacterBody3D
 @export var SPEED_CROUCH: float = 2.0
 @export var ACCELERATION: float = 0.1
 @export var DECELERATION: float = 0.25
-@export var TOGGLE_CROUCH: bool = true
 @export var JUMP_VELOCITY : float = 4.5
-@export_range(5, 10, 0.1) var CROUCH_SPEED: float = 7.0
 @export var MOUSE_SENSITIVITY : float = 0.5
 @export var TILT_LOWER_LIMIT := deg_to_rad(-90.0)
 @export var TILT_UPPER_LIMIT := deg_to_rad(90.0)
@@ -37,23 +36,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _input(event):
-	
 	if event.is_action_pressed("exit"):
 		get_tree().quit()
-	if event.is_action_pressed("crouch") and is_on_floor():
-		toggle_crouch()
-	if event.is_action_pressed("crouch") and !_is_crouching \
-			and is_on_floor() and !TOGGLE_CROUCH:
-		crouching(true)
-	if event.is_action_released("crouch") and !TOGGLE_CROUCH:
-		if !CROUCH_SHAPE_CAST.is_colliding():
-			crouching(false)
-		else:
-			uncrouch_check()
 
 
 func _update_camera(delta):
-	
 	# Rotates camera using euler rotation
 	_mouse_rotation.x += _tilt_input * delta
 	_mouse_rotation.x = clamp(_mouse_rotation.x, TILT_LOWER_LIMIT, TILT_UPPER_LIMIT)
@@ -86,63 +73,24 @@ func _physics_process(delta):
 	Global.debug.add_property("MouseRotation", _mouse_rotation, 3)
 	# Update camera movement based on mouse movement
 	_update_camera(delta)
-	
-	# Add the gravity.
-	if not is_on_floor():
-		velocity.y -= gravity * delta
 
-	# Handle Jump.
-	if Input.is_action_just_pressed("jump") and is_on_floor() and !_is_crouching:
-		velocity.y = JUMP_VELOCITY
 
-	# Get the input direction and handle the movement/deceleration.
-	# As good practice, you should replace UI actions with custom gameplay actions.
+func update_gravity(delta) -> void:
+	velocity.y -= gravity * delta
+
+
+func update_input(speed: float, acceleration: float, deceleration: float) -> void:
 	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
 	
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	
 	if direction:
-		velocity.x = lerp(velocity.x, direction.x * _speed, ACCELERATION)
-		velocity.z = lerp(velocity.z, direction.z * _speed, ACCELERATION)
+		velocity.x = lerp(velocity.x, direction.x * speed, acceleration)
+		velocity.z = lerp(velocity.z, direction.z * speed, acceleration)
 	else:
-		velocity.x = move_toward(velocity.x, 0, DECELERATION)
-		velocity.z = move_toward(velocity.z, 0, DECELERATION)
+		velocity.x = move_toward(velocity.x, 0, deceleration)
+		velocity.z = move_toward(velocity.z, 0, deceleration)
 
+
+func update_velocity() -> void:
 	move_and_slide()
-
-
-func toggle_crouch():
-	if _is_crouching and !CROUCH_SHAPE_CAST.is_colliding():
-		crouching(false)
-	elif !_is_crouching:
-		crouching(true)
-
-
-func uncrouch_check():
-	if !CROUCH_SHAPE_CAST.is_colliding():
-		crouching(false)
-	else:
-		await get_tree().create_timer(0.1).timeout
-		uncrouch_check()
-
-
-func crouching (state: bool):
-	if state:
-		ANIMATION_PLAYER.play("Crouch", 0, CROUCH_SPEED)
-		set_movement_speed("crouching")
-	else:
-		ANIMATION_PLAYER.play("Crouch", 0, -CROUCH_SPEED, true)
-		set_movement_speed("default")
-
-
-func set_movement_speed(state: String):
-	match state:
-		"default":
-			_speed = SPEED_DEFAULT
-		"crouching":
-			_speed = SPEED_CROUCH
-
-
-func _on_animation_player_animation_started(anim_name: StringName) -> void:
-	if anim_name == "Crouch":
-		_is_crouching = !_is_crouching
