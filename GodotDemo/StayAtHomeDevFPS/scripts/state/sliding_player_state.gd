@@ -12,7 +12,7 @@ extends PlayerMovementState
 func enter(previous_state) -> void:
 	set_tilt(PLAYER._current_rotation)
 	# PlayerStateMachine/SlidingPlayerState:SPEED
-	print(ANIMATION.get_animation("Sliding").track_get_path(5))
+	#print(ANIMATION.get_animation("Sliding").track_get_path(5))
 	ANIMATION.get_animation("Sliding") \
 		.track_set_key_value(5, 0, PLAYER.velocity.length())
 	ANIMATION.speed_scale = 1.0
@@ -31,7 +31,7 @@ func set_tilt(player_rotation) -> void:
 	if tilt.z == 0.0:
 		tilt.z = 0.05
 	# CameraController:rotation
-	print(ANIMATION.get_animation("Sliding").track_get_path(3))
+	#print(ANIMATION.get_animation("Sliding").track_get_path(3))
 	ANIMATION.get_animation("Sliding").track_set_key_value(3, 1, tilt)
 	ANIMATION.get_animation("Sliding").track_set_key_value(3, 2, tilt)
 

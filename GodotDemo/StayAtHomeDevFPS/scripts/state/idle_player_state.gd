@@ -7,6 +7,8 @@ extends PlayerMovementState
 
 
 func enter(previous_state) -> void:
+	if ANIMATION.is_playing() and ANIMATION.current_animation == "JumpEnd":
+		await ANIMATION.animation_finished
 	ANIMATION.pause()
 
 
@@ -18,3 +20,5 @@ func update(delta):
 		transition.emit("CrouchingPlayerState")
 	if PLAYER.velocity.length() > 0.0 and PLAYER.is_on_floor():
 		transition.emit("WalkingPlayerState")
+	if Input.is_action_just_pressed("jump") and PLAYER.is_on_floor():
+		transition.emit("JumpingPlayerState")
