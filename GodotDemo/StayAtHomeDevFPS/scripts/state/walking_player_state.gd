@@ -6,7 +6,7 @@ extends PlayerMovementState
 @export var DECELERATION: float = 0.25
 @export var TOP_ANIM_SPEED: float = 2.2
 
-func enter() -> void:
+func enter(previous_state) -> void:
 	ANIMATION.play("Walking", -1.0, 1.0)
 
 

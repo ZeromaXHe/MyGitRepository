@@ -8,9 +8,19 @@ extends PlayerMovementState
 
 @onready var CROUCH_SHAPE_CAST: ShapeCast3D = %ShapeCast3D
 
+var RELEASED: bool = false
 
-func enter() -> void:
-	ANIMATION.play("Crouching", -1.0, CROUCH_SPEED)
+func enter(previous_state) -> void:
+	ANIMATION.speed_scale = 1.0
+	if previous_state.name != "SlidingPlayerState":
+		ANIMATION.play("Crouching", -1.0, CROUCH_SPEED)
+	else:
+		ANIMATION.current_animation = "Crouching"
+		ANIMATION.seek(1.0, true)
+
+
+func exit() -> void:
+	RELEASED = false
 
 
 func update(delta):
@@ -19,14 +29,17 @@ func update(delta):
 	PLAYER.update_velocity()
 	if Input.is_action_just_released("crouch"):
 		uncrouch()
+	elif !Input.is_action_pressed("crouch") and !RELEASED:
+		RELEASED = true
+		uncrouch()
 
 
 func uncrouch():
-	if !CROUCH_SHAPE_CAST.is_colliding() and !Input.is_action_pressed("crouch"):
+	if !CROUCH_SHAPE_CAST.is_colliding():
 		ANIMATION.play("Crouching", -1.0, -CROUCH_SPEED * 1.5, true)
 		if ANIMATION.is_playing():
 			await ANIMATION.animation_finished
 		transition.emit("IdlePlayerState")
-	elif CROUCH_SHAPE_CAST.is_colliding():
+	else:
 		await get_tree().create_timer(0.1).timeout
 		uncrouch()

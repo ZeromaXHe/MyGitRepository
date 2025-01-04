@@ -1,12 +1,6 @@
 class_name Player
 extends CharacterBody3D
 
-@export var SPEED_DEFAULT: float = 5.0
-@export var SPEED_SPRINTING: float = 7.0
-@export var SPEED_CROUCH: float = 2.0
-@export var ACCELERATION: float = 0.1
-@export var DECELERATION: float = 0.25
-@export var JUMP_VELOCITY : float = 4.5
 @export var MOUSE_SENSITIVITY : float = 0.5
 @export var TILT_LOWER_LIMIT := deg_to_rad(-90.0)
 @export var TILT_UPPER_LIMIT := deg_to_rad(90.0)
@@ -14,7 +8,6 @@ extends CharacterBody3D
 @export var ANIMATION_PLAYER: AnimationPlayer
 @export var CROUCH_SHAPE_CAST: ShapeCast3D
 
-var _speed: float
 var _mouse_input : bool = false
 var _rotation_input : float
 var _tilt_input : float
@@ -22,7 +15,7 @@ var _mouse_rotation : Vector3
 var _player_rotation : Vector3
 var _camera_rotation : Vector3
 
-var _is_crouching: bool = false
+var _current_rotation: float
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -41,6 +34,7 @@ func _input(event):
 
 
 func _update_camera(delta):
+	_current_rotation = _rotation_input
 	# Rotates camera using euler rotation
 	_mouse_rotation.x += _tilt_input * delta
 	_mouse_rotation.x = clamp(_mouse_rotation.x, TILT_LOWER_LIMIT, TILT_UPPER_LIMIT)
@@ -62,14 +56,12 @@ func _ready():
 	Global.player = self
 	# Get mouse input
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	# 设置默认速度
-	_speed = SPEED_DEFAULT
 	# 将 CharacterBody3D 根节点设置为蹲下检查 ShapeCast 的碰撞例外
 	CROUCH_SHAPE_CAST.add_exception($".")
 
 
 func _physics_process(delta):
-	Global.debug.add_property("MovementSpeed", _speed, 2)
+	Global.debug.add_property("MovementSpeed", velocity.length(), 2)
 	Global.debug.add_property("MouseRotation", _mouse_rotation, 3)
 	# Update camera movement based on mouse movement
 	_update_camera(delta)
