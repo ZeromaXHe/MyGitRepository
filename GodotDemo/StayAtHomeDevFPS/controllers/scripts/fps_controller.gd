@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
 @export var SPEED_DEFAULT: float = 5.0
+@export var SPEED_SPRINTING: float = 7.0
 @export var SPEED_CROUCH: float = 2.0
 @export var ACCELERATION: float = 0.1
 @export var DECELERATION: float = 0.25
