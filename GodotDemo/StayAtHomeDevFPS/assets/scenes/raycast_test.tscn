@@ -1,13 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://btcn2o68lsuav"]
+[gd_scene load_steps=2 format=3 uid="uid://btcn2o68lsuav"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yu0wt"]
-shading_mode = 0
-albedo_color = Color(1, 0, 0, 1)
+[ext_resource type="Texture2D" uid="uid://bwv6aau0e548o" path="res://textures/bullet_hole.png" id="1_3ko11"]
 
-[sub_resource type="SphereMesh" id="SphereMesh_nf06k"]
-material = SubResource("StandardMaterial3D_yu0wt")
-radius = 0.1
-height = 0.2
-
-[node name="RaycastTest" type="MeshInstance3D"]
-mesh = SubResource("SphereMesh_nf06k")
+[node name="Decal" type="Decal"]
+size = Vector3(0.1, 0.1, 0.1)
+texture_albedo = ExtResource("1_3ko11")

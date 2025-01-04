@@ -127,12 +127,18 @@ func attack() -> void:
 	query.collide_with_bodies = true
 	var result = space_state.intersect_ray(query)
 	if result:
-		test_raycast(result.get("position"))
+		bullet_hole(result.get("position"), result.get("normal"))
 
 
-func test_raycast(position: Vector3) -> void:
-	var instance = raycast_test.instantiate()
+func bullet_hole(position: Vector3, normal: Vector3) -> void:
+	var instance: Decal = raycast_test.instantiate()
 	get_tree().root.add_child(instance)
 	instance.global_position = position
-	await get_tree().create_timer(3).timeout
+	if normal != Vector3.UP and normal != Vector3.DOWN:
+		instance.look_at(instance.global_transform.origin + normal, Vector3.UP)
+		instance.rotate_object_local(Vector3(1, 0, 0), 90)
+	await get_tree().create_timer(2).timeout
+	var fade = get_tree().create_tween()
+	fade.tween_property(instance, "modulate:a", 0, 1.5)
+	await get_tree().create_timer(1.5).timeout
 	instance.queue_free()
