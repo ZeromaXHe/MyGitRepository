@@ -7,6 +7,7 @@ extends CharacterBody3D
 @export var CAMERA_CONTROLLER : Camera3D
 @export var ANIMATION_PLAYER: AnimationPlayer
 @export var CROUCH_SHAPE_CAST: ShapeCast3D
+@export var WEAPON_CONTROLLER: WeaponController
 
 var _mouse_input : bool = false
 var _rotation_input : float

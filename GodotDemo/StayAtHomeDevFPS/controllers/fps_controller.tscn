@@ -466,12 +466,13 @@ _data = {
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_nk8xw"]
 
-[node name="FPSController" type="CharacterBody3D" node_paths=PackedStringArray("CAMERA_CONTROLLER", "ANIMATION_PLAYER", "CROUCH_SHAPE_CAST")]
+[node name="FPSController" type="CharacterBody3D" node_paths=PackedStringArray("CAMERA_CONTROLLER", "ANIMATION_PLAYER", "CROUCH_SHAPE_CAST", "WEAPON_CONTROLLER")]
 script = ExtResource("1_pgc1p")
 MOUSE_SENSITIVITY = 0.25
 CAMERA_CONTROLLER = NodePath("CameraController/Camera3D")
 ANIMATION_PLAYER = NodePath("AnimationPlayer")
 CROUCH_SHAPE_CAST = NodePath("ShapeCast3D")
+WEAPON_CONTROLLER = NodePath("CameraController/Camera3D/WeaponRig/Weapon")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -494,7 +495,6 @@ enable_shadows = true
 
 [node name="Weapon" parent="CameraController/Camera3D/WeaponRig" instance=ExtResource("4_45si3")]
 transform = Transform3D(-0.992401, 0.122957, 0.00472151, 0.00884456, 0.0330084, 0.999416, 0.122729, 0.991863, -0.033845, 0.133019, -0.16455, -0.22)
-reset = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

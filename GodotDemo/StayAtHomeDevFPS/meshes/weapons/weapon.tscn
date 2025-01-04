@@ -10,7 +10,7 @@
 noise = SubResource("FastNoiseLite_epob0")
 
 [node name="Weapon" type="Node3D"]
-transform = Transform3D(-0.991327, 0.131417, 0.000560939, 0.00111991, 0.00417956, 0.999991, 0.131413, 0.991319, -0.00429049, 0.127826, -0.163418, -0.22)
+transform = Transform3D(-0.990665, 0.136302, 0.00205819, 0.00426972, 0.0159348, 0.999864, 0.136251, 0.99054, -0.016368, 0.130177, -0.162146, -0.22)
 script = ExtResource("1_ka4lb")
 WEAPON_TYPE = ExtResource("2_6fhif")
 sway_noise = SubResource("NoiseTexture2D_vuumx")
