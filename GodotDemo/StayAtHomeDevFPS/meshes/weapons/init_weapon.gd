@@ -2,6 +2,8 @@
 class_name WeaponController
 extends Node3D
 
+signal weapon_fired
+
 @export var WEAPON_TYPE: Weapons:
 	set(value):
 		WEAPON_TYPE = value
@@ -118,6 +120,7 @@ func get_sway_noise() -> float:
 
 
 func attack() -> void:
+	weapon_fired.emit()
 	var camera = Global.player.CAMERA_CONTROLLER
 	var space_state = camera.get_world_3d().direct_space_state
 	var screen_center = get_viewport().size / 2
