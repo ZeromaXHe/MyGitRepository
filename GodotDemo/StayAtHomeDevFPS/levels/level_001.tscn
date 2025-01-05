@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=40 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
@@ -127,6 +127,25 @@ data = PackedVector3Array(-1, 1.5, 0.05, 1, 1.5, 0.05, -1, -1.5, 0.05, 1, 1.5, 0
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_273kf"]
 height = 3.0
 radius = 2.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_quc4o"]
+size = Vector3(2, 3, 0.1)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_rig3g"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vvtjq"]
+albedo_color = Color(0.996078, 0.796078, 0.227451, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_8r1b6"]
+material = SubResource("StandardMaterial3D_vvtjq")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qh67r"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xv1kx"]
+albedo_color = Color(0.996078, 0.796078, 0.227451, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hg8dy"]
+material = SubResource("StandardMaterial3D_xv1kx")
 
 [node name="Node3D" type="Node3D"]
 
@@ -331,39 +350,41 @@ script = ExtResource("6_r1tag")
 mesh = NodePath("../RotateDoor2")
 context = "Open Manual Rotating Door"
 
-[node name="RotateDoorWall3" type="CSGBox3D" parent="."]
+[node name="PhysicsDoorWall" type="CSGBox3D" parent="."]
 transform = Transform3D(-0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.5, 5, 1.5, 8)
 use_collision = true
 size = Vector3(5, 4, 0.2)
 material = ExtResource("2_x5xie")
 
-[node name="RotateDoorway3" type="CSGBox3D" parent="RotateDoorWall3"]
+[node name="PhysicsDoorway" type="CSGBox3D" parent="PhysicsDoorWall"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
 operation = 2
 size = Vector3(2, 3.1, 1)
 
-[node name="AnimatableBody3D" type="AnimatableBody3D" parent="RotateDoorWall3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+[node name="RigidBody3D" type="RigidBody3D" parent="PhysicsDoorWall"]
 
-[node name="RotateDoor3" type="MeshInstance3D" parent="RotateDoorWall3/AnimatableBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+[node name="PhysicsDoor" type="MeshInstance3D" parent="PhysicsDoorWall/RigidBody3D"]
 mesh = SubResource("BoxMesh_sfve7")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RotateDoorWall3/AnimatableBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
-shape = SubResource("ConcavePolygonShape3D_b3dgp")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsDoorWall/RigidBody3D"]
+shape = SubResource("BoxShape3D_quc4o")
 
-[node name="DoorComponent" type="Area3D" parent="RotateDoorWall3/AnimatableBody3D"]
+[node name="DoorComponent" type="Area3D" parent="PhysicsDoorWall/RigidBody3D"]
 script = ExtResource("7_gd2wl")
-door_type = 1
+door_type = 2
 forward_direction = 2
 door_size = Vector3(2, 3, 0.1)
-door_operation = 1
+physics_force = 10.0
 
-[node name="InteractionComponent" type="Node" parent="RotateDoorWall3/AnimatableBody3D" node_paths=PackedStringArray("mesh")]
+[node name="InteractionComponent" type="Node" parent="PhysicsDoorWall/RigidBody3D" node_paths=PackedStringArray("mesh")]
 script = ExtResource("6_r1tag")
-mesh = NodePath("../RotateDoor3")
-context = "Auto Close Door"
+mesh = NodePath("../PhysicsDoor")
+context = "Hinge Door"
+
+[node name="HingeJoint3D" type="HingeJoint3D" parent="PhysicsDoorWall"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 1, 0, 0)
+node_a = NodePath("../RigidBody3D")
+angular_limit/enable = true
 
 [node name="RotateDoorWall4" type="CSGBox3D" parent="."]
 transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, -3, 1.5, 14)
@@ -398,3 +419,22 @@ door_operation = 1
 script = ExtResource("6_r1tag")
 mesh = NodePath("../RotateDoor4")
 context = "Auto Close Door"
+
+[node name="RigidBall" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 2.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.03063)
+shape = SubResource("SphereShape3D_rig3g")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBall"]
+mesh = SubResource("SphereMesh_8r1b6")
+
+[node name="RigidCube" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 3, -2.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidCube"]
+shape = SubResource("BoxShape3D_qh67r")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidCube"]
+mesh = SubResource("BoxMesh_hg8dy")

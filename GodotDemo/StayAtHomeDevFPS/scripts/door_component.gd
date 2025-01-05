@@ -1,7 +1,7 @@
 class_name DoorComponent
 extends Area3D
 
-enum DoorType {SLIDING, ROTATING}
+enum DoorType {SLIDING, ROTATING, PHYSICS}
 enum ForwardDirection {X, Y, Z}
 enum DoorStatus {OPEN, CLOSED}
 enum DoorOperation {MANUAL, CLOSE_AUTOMATICALLY, OPEN_CLOSE_AUTOMATICALLY}
@@ -13,6 +13,7 @@ enum DoorOperation {MANUAL, CLOSE_AUTOMATICALLY, OPEN_CLOSE_AUTOMATICALLY}
 @export var rotation_axis := Vector3.UP
 @export var rotation_amount : float = 90.0
 @export var door_size: Vector3
+@export var physics_force: float = 30.0
 @export_group("关门设置")
 @export var door_operation: DoorOperation
 @export var close_time: float = 2.0
@@ -41,7 +42,8 @@ func _ready() -> void:
 func connect_parent() -> void:
 	#print("door interacted signal connecting: ", parent.has_user_signal("interacted"))
 	if door_operation == DoorOperation.MANUAL \
-			or door_operation == DoorOperation.CLOSE_AUTOMATICALLY:
+			or door_operation == DoorOperation.CLOSE_AUTOMATICALLY \
+			or door_type == DoorType.PHYSICS:
 		parent.connect("interacted", check_door)
 
 
@@ -74,11 +76,16 @@ func check_door() -> void:
 	#print("check_door forward:", forward_direction, ", door_direction: ", door_direction, \
 		#", door_position: ", door_position, ", player_position: ", player_position, \
 		#", door_dot: ", door_dot)
-	match door_status:
-		DoorStatus.CLOSED:
-			open_door()
-		DoorStatus.OPEN:
-			close_door()
+	if door_type == DoorType.PHYSICS:
+		#print("physics door check")
+		var door = parent as RigidBody3D
+		door.apply_impulse(door_direction * physics_force * rotation_adjustment)
+	else:
+		match door_status:
+			DoorStatus.CLOSED:
+				open_door()
+			DoorStatus.OPEN:
+				close_door()
 
 
 func open_door() -> void:
