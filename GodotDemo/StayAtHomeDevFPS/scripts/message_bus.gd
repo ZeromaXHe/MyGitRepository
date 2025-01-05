@@ -1,0 +1,4 @@
+extends Node
+
+signal interaction_focused
+signal interaction_unfocused

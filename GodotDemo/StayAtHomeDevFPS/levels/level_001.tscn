@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=31 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://ivvpsi314b34" path="res://textures/grid.jpg" id="3_yfwkt"]
 [ext_resource type="PackedScene" uid="uid://c3ffql15mo0aj" path="res://controllers/fps_controller.tscn" id="4_liofc"]
 [ext_resource type="Script" path="res://scripts/interaction_component.gd" id="6_r1tag"]
+[ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gd0ev"]
 material = ExtResource("2_x5xie")
@@ -110,6 +111,16 @@ albedo_color = Color(0.305882, 0.321569, 0.352941, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_rpq4s"]
 material = SubResource("StandardMaterial3D_8aakf")
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rnrob"]
+albedo_color = Color(0.913725, 0.678431, 0.141176, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sfve7"]
+material = SubResource("StandardMaterial3D_rnrob")
+size = Vector3(2, 3, 0.1)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_ewj0r"]
+data = PackedVector3Array(-1, 1, 0.05, 1, 1, 0.05, -1, -1, 0.05, 1, 1, 0.05, 1, -1, 0.05, -1, -1, 0.05, 1, 1, -0.05, -1, 1, -0.05, 1, -1, -0.05, -1, 1, -0.05, -1, -1, -0.05, 1, -1, -0.05, 1, 1, 0.05, 1, 1, -0.05, 1, -1, 0.05, 1, 1, -0.05, 1, -1, -0.05, 1, -1, 0.05, -1, 1, -0.05, -1, 1, 0.05, -1, -1, -0.05, -1, 1, 0.05, -1, -1, 0.05, -1, -1, -0.05, 1, 1, 0.05, -1, 1, 0.05, 1, 1, -0.05, -1, 1, 0.05, -1, 1, -0.05, 1, 1, -0.05, -1, -1, 0.05, 1, -1, 0.05, -1, -1, -0.05, 1, -1, 0.05, 1, -1, -0.05, -1, -1, -0.05)
+
 [node name="Node3D" type="Node3D"]
 
 [node name="WorldEnvironment" parent="." instance=ExtResource("1_db21n")]
@@ -193,6 +204,7 @@ mesh = SubResource("CylinderMesh_pcxj0")
 [node name="InteractionComponent" type="Node" parent="InteractableCylinder" node_paths=PackedStringArray("mesh")]
 script = ExtResource("6_r1tag")
 mesh = NodePath("../Cylinder")
+context = "This is a cylinder"
 
 [node name="InteractableBox" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -3)
@@ -206,3 +218,32 @@ mesh = SubResource("BoxMesh_rpq4s")
 [node name="InteractionComponent" type="Node" parent="InteractableBox" node_paths=PackedStringArray("mesh")]
 script = ExtResource("6_r1tag")
 mesh = NodePath("../Box")
+context = "This is a box"
+
+[node name="DoorWall" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 7)
+use_collision = true
+size = Vector3(5, 4, 0.2)
+
+[node name="Doorway" type="CSGBox3D" parent="DoorWall"]
+operation = 2
+size = Vector3(2, 3, 1)
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="DoorWall"]
+
+[node name="Door" type="MeshInstance3D" parent="DoorWall/AnimatableBody3D"]
+mesh = SubResource("BoxMesh_sfve7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorWall/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("ConcavePolygonShape3D_ewj0r")
+
+[node name="DoorComponent" type="Node" parent="DoorWall/AnimatableBody3D"]
+script = ExtResource("7_gd2wl")
+direction = Vector3(0, -1, 0)
+door_size = Vector3(2, 3, 0.1)
+
+[node name="InteractionComponent" type="Node" parent="DoorWall/AnimatableBody3D" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../Door")
+context = "Open Door"
