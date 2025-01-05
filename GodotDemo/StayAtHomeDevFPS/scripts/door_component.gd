@@ -1,19 +1,20 @@
 class_name DoorComponent
-extends Node
+extends Area3D
 
 enum DoorType {SLIDING, ROTATING}
 enum ForwardDirection {X, Y, Z}
 enum DoorStatus {OPEN, CLOSED}
+enum DoorOperation {MANUAL, CLOSE_AUTOMATICALLY, OPEN_CLOSE_AUTOMATICALLY}
 
 @export_group("门设置")
 @export var door_type: DoorType
 @export var forward_direction: ForwardDirection
 @export var movement_direction: Vector3
-@export var rotation := Vector3.UP
+@export var rotation_axis := Vector3.UP
 @export var rotation_amount : float = 90.0
 @export var door_size: Vector3
 @export_group("关门设置")
-@export var close_automatically: bool = true
+@export var door_operation: DoorOperation
 @export var close_time: float = 2.0
 @export_group("Tween 设置")
 @export var speed: float = 0.5
@@ -33,11 +34,25 @@ func _ready() -> void:
 	orig_pos = parent.position
 	orig_rot = parent.rotation
 	parent.ready.connect(connect_parent)
+	body_entered.connect(on_trigger)
+	body_exited.connect(off_trigger)
 
 
 func connect_parent() -> void:
 	#print("door interacted signal connecting: ", parent.has_user_signal("interacted"))
-	parent.connect("interacted", check_door)
+	if door_operation == DoorOperation.MANUAL \
+			or door_operation == DoorOperation.CLOSE_AUTOMATICALLY:
+		parent.connect("interacted", check_door)
+
+
+func on_trigger(body: Node3D) -> void:
+	if body is Player and door_operation == DoorOperation.OPEN_CLOSE_AUTOMATICALLY:
+		check_door()
+
+
+func off_trigger(body: Node3D) -> void:
+	if body is Player and door_operation == DoorOperation.OPEN_CLOSE_AUTOMATICALLY:
+		check_door()
 
 
 func check_door() -> void:
@@ -78,10 +93,10 @@ func open_door() -> void:
 				.set_ease(easing)
 		DoorType.ROTATING:
 			tween.tween_property(parent, "rotation", \
-				orig_rot + (rotation * rotation_adjustment * deg_to_rad(rotation_amount)), speed) \
+				orig_rot + (rotation_axis * rotation_adjustment * deg_to_rad(rotation_amount)), speed) \
 				.set_trans(transition) \
 				.set_ease(easing)
-	if close_automatically:
+	if door_operation == DoorOperation.CLOSE_AUTOMATICALLY:
 		tween.tween_interval(close_time)
 		tween.tween_callback(close_door)
 
