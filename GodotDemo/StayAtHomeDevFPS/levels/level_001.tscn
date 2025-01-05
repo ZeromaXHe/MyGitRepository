@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=32 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
@@ -118,8 +118,11 @@ albedo_color = Color(0.913725, 0.678431, 0.141176, 1)
 material = SubResource("StandardMaterial3D_rnrob")
 size = Vector3(2, 3, 0.1)
 
-[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_ewj0r"]
-data = PackedVector3Array(-1, 1, 0.05, 1, 1, 0.05, -1, -1, 0.05, 1, 1, 0.05, 1, -1, 0.05, -1, -1, 0.05, 1, 1, -0.05, -1, 1, -0.05, 1, -1, -0.05, -1, 1, -0.05, -1, -1, -0.05, 1, -1, -0.05, 1, 1, 0.05, 1, 1, -0.05, 1, -1, 0.05, 1, 1, -0.05, 1, -1, -0.05, 1, -1, 0.05, -1, 1, -0.05, -1, 1, 0.05, -1, -1, -0.05, -1, 1, 0.05, -1, -1, 0.05, -1, -1, -0.05, 1, 1, 0.05, -1, 1, 0.05, 1, 1, -0.05, -1, 1, 0.05, -1, 1, -0.05, 1, 1, -0.05, -1, -1, 0.05, 1, -1, 0.05, -1, -1, -0.05, 1, -1, 0.05, 1, -1, -0.05, -1, -1, -0.05)
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_2kto4"]
+data = PackedVector3Array(-1, 1.5, 0.05, 1, 1.5, 0.05, -1, -1.5, 0.05, 1, 1.5, 0.05, 1, -1.5, 0.05, -1, -1.5, 0.05, 1, 1.5, -0.05, -1, 1.5, -0.05, 1, -1.5, -0.05, -1, 1.5, -0.05, -1, -1.5, -0.05, 1, -1.5, -0.05, 1, 1.5, 0.05, 1, 1.5, -0.05, 1, -1.5, 0.05, 1, 1.5, -0.05, 1, -1.5, -0.05, 1, -1.5, 0.05, -1, 1.5, -0.05, -1, 1.5, 0.05, -1, -1.5, -0.05, -1, 1.5, 0.05, -1, -1.5, 0.05, -1, -1.5, -0.05, 1, 1.5, 0.05, -1, 1.5, 0.05, 1, 1.5, -0.05, -1, 1.5, 0.05, -1, 1.5, -0.05, 1, 1.5, -0.05, -1, -1.5, 0.05, 1, -1.5, 0.05, -1, -1.5, -0.05, 1, -1.5, 0.05, 1, -1.5, -0.05, -1, -1.5, -0.05)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_b3dgp"]
+data = PackedVector3Array(-1, 1.5, 0.05, 1, 1.5, 0.05, -1, -1.5, 0.05, 1, 1.5, 0.05, 1, -1.5, 0.05, -1, -1.5, 0.05, 1, 1.5, -0.05, -1, 1.5, -0.05, 1, -1.5, -0.05, -1, 1.5, -0.05, -1, -1.5, -0.05, 1, -1.5, -0.05, 1, 1.5, 0.05, 1, 1.5, -0.05, 1, -1.5, 0.05, 1, 1.5, -0.05, 1, -1.5, -0.05, 1, -1.5, 0.05, -1, 1.5, -0.05, -1, 1.5, 0.05, -1, -1.5, -0.05, -1, 1.5, 0.05, -1, -1.5, 0.05, -1, -1.5, -0.05, 1, 1.5, 0.05, -1, 1.5, 0.05, 1, 1.5, -0.05, -1, 1.5, 0.05, -1, 1.5, -0.05, 1, 1.5, -0.05, -1, -1.5, 0.05, 1, -1.5, 0.05, -1, -1.5, -0.05, 1, -1.5, 0.05, 1, -1.5, -0.05, -1, -1.5, -0.05)
 
 [node name="Node3D" type="Node3D"]
 
@@ -224,10 +227,12 @@ context = "This is a box"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 7)
 use_collision = true
 size = Vector3(5, 4, 0.2)
+material = ExtResource("2_x5xie")
 
 [node name="Doorway" type="CSGBox3D" parent="DoorWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
 operation = 2
-size = Vector3(2, 3, 1)
+size = Vector3(2, 3.1, 1)
 
 [node name="AnimatableBody3D" type="AnimatableBody3D" parent="DoorWall"]
 
@@ -235,15 +240,149 @@ size = Vector3(2, 3, 1)
 mesh = SubResource("BoxMesh_sfve7")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DoorWall/AnimatableBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-shape = SubResource("ConcavePolygonShape3D_ewj0r")
+shape = SubResource("ConcavePolygonShape3D_2kto4")
 
 [node name="DoorComponent" type="Node" parent="DoorWall/AnimatableBody3D"]
 script = ExtResource("7_gd2wl")
-direction = Vector3(0, -1, 0)
-door_size = Vector3(2, 3, 0.1)
+forward_direction = 2
+movement_direction = Vector3(0, -1, 0)
+door_size = Vector3(2, 3.1, 0.1)
 
 [node name="InteractionComponent" type="Node" parent="DoorWall/AnimatableBody3D" node_paths=PackedStringArray("mesh")]
 script = ExtResource("6_r1tag")
 mesh = NodePath("../Door")
-context = "Open Door"
+context = "Open Sliding Door"
+
+[node name="RotateDoorWall" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 10)
+use_collision = true
+size = Vector3(5, 4, 0.2)
+material = ExtResource("2_x5xie")
+
+[node name="RotateDoorway" type="CSGBox3D" parent="RotateDoorWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+operation = 2
+size = Vector3(2, 3.1, 1)
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="RotateDoorWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="RotateDoor" type="MeshInstance3D" parent="RotateDoorWall/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+mesh = SubResource("BoxMesh_sfve7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RotateDoorWall/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+shape = SubResource("ConcavePolygonShape3D_b3dgp")
+
+[node name="DoorComponent" type="Node" parent="RotateDoorWall/AnimatableBody3D"]
+script = ExtResource("7_gd2wl")
+door_type = 1
+forward_direction = 2
+door_size = Vector3(2, 3, 0.1)
+
+[node name="InteractionComponent" type="Node" parent="RotateDoorWall/AnimatableBody3D" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../RotateDoor")
+context = "Open Rotating Door"
+
+[node name="RotateDoorWall2" type="CSGBox3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -5, 1.5, 8)
+use_collision = true
+size = Vector3(5, 4, 0.2)
+material = ExtResource("2_x5xie")
+
+[node name="RotateDoorway2" type="CSGBox3D" parent="RotateDoorWall2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+operation = 2
+size = Vector3(2, 3.1, 1)
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="RotateDoorWall2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="RotateDoor2" type="MeshInstance3D" parent="RotateDoorWall2/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+mesh = SubResource("BoxMesh_sfve7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RotateDoorWall2/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+shape = SubResource("ConcavePolygonShape3D_b3dgp")
+
+[node name="DoorComponent" type="Node" parent="RotateDoorWall2/AnimatableBody3D"]
+script = ExtResource("7_gd2wl")
+door_type = 1
+forward_direction = 2
+door_size = Vector3(2, 3, 0.1)
+
+[node name="InteractionComponent" type="Node" parent="RotateDoorWall2/AnimatableBody3D" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../RotateDoor2")
+context = "Open Rotating Door"
+
+[node name="RotateDoorWall3" type="CSGBox3D" parent="."]
+transform = Transform3D(-0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.5, 5, 1.5, 8)
+use_collision = true
+size = Vector3(5, 4, 0.2)
+material = ExtResource("2_x5xie")
+
+[node name="RotateDoorway3" type="CSGBox3D" parent="RotateDoorWall3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+operation = 2
+size = Vector3(2, 3.1, 1)
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="RotateDoorWall3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="RotateDoor3" type="MeshInstance3D" parent="RotateDoorWall3/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+mesh = SubResource("BoxMesh_sfve7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RotateDoorWall3/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+shape = SubResource("ConcavePolygonShape3D_b3dgp")
+
+[node name="DoorComponent" type="Node" parent="RotateDoorWall3/AnimatableBody3D"]
+script = ExtResource("7_gd2wl")
+door_type = 1
+forward_direction = 2
+door_size = Vector3(2, 3, 0.1)
+close_automatically = false
+
+[node name="InteractionComponent" type="Node" parent="RotateDoorWall3/AnimatableBody3D" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../RotateDoor3")
+context = "Open Rotating Door"
+
+[node name="RotateDoorWall4" type="CSGBox3D" parent="."]
+transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, -3, 1.5, 14)
+use_collision = true
+size = Vector3(5, 4, 0.2)
+material = ExtResource("2_x5xie")
+
+[node name="RotateDoorway4" type="CSGBox3D" parent="RotateDoorWall4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+operation = 2
+size = Vector3(2, 3.1, 1)
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="RotateDoorWall4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="RotateDoor4" type="MeshInstance3D" parent="RotateDoorWall4/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+mesh = SubResource("BoxMesh_sfve7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RotateDoorWall4/AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+shape = SubResource("ConcavePolygonShape3D_b3dgp")
+
+[node name="DoorComponent" type="Node" parent="RotateDoorWall4/AnimatableBody3D"]
+script = ExtResource("7_gd2wl")
+door_type = 1
+forward_direction = 2
+door_size = Vector3(2, 3, 0.1)
+close_automatically = false
+
+[node name="InteractionComponent" type="Node" parent="RotateDoorWall4/AnimatableBody3D" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../RotateDoor4")
+context = "Open Rotating Door"
