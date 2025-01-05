@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://c3ffql15mo0aj"]
+[gd_scene load_steps=30 format=3 uid="uid://c3ffql15mo0aj"]
 
 [ext_resource type="Script" path="res://controllers/scripts/fps_controller.gd" id="1_pgc1p"]
 [ext_resource type="Material" uid="uid://b4gwd5h7ixvct" path="res://materials/player.tres" id="2_gldw4"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://b7triiviww8ks" path="res://meshes/weapons/weapon.tscn" id="4_45si3"]
 [ext_resource type="Theme" uid="uid://c0i4y7i57cc5u" path="res://ui/themes/debug.tres" id="4_jydcv"]
 [ext_resource type="Script" path="res://scripts/debug.gd" id="5_eoghu"]
+[ext_resource type="Script" path="res://controllers/scripts/interaction_ray_cast.gd" id="5_o28xh"]
 [ext_resource type="Script" path="res://scripts/state/state_machine.gd" id="6_7l5ab"]
 [ext_resource type="Script" path="res://scripts/state/idle_player_state.gd" id="7_ohk63"]
 [ext_resource type="Script" path="res://scripts/context_component.gd" id="8_70gph"]
@@ -505,6 +506,11 @@ enable_shadows = true
 
 [node name="Weapon" parent="CameraController/Recoil/Camera3D/WeaponRig" instance=ExtResource("4_45si3")]
 transform = Transform3D(-0.992541, 0.12189, 0.0024289, 0.00451701, 0.0168577, 0.999848, 0.12183, 0.992401, -0.0172825, 0.13, -0.165, -0.22)
+
+[node name="InteractionRayCast" type="RayCast3D" parent="CameraController/Recoil/Camera3D"]
+target_position = Vector3(0, 0, -2)
+debug_shape_custom_color = Color(0.00392157, 0.996078, 0, 1)
+script = ExtResource("5_o28xh")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

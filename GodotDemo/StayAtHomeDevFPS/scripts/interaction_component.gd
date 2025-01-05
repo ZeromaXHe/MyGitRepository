@@ -1,6 +1,8 @@
 class_name InteractionComponent
 extends Node
 
+signal player_interacted(object: RigidBody3D)
+
 @export var mesh: MeshInstance3D
 @export var context: String
 @export var override_icon: bool
@@ -31,7 +33,7 @@ func not_in_range() -> void:
 
 
 func on_interact() -> void:
-	print(parent.name)
+	player_interacted.emit(parent)
 
 
 func connect_parent() -> void:

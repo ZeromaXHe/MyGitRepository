@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=41 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://c3ffql15mo0aj" path="res://controllers/fps_controller.tscn" id="4_liofc"]
 [ext_resource type="Script" path="res://scripts/interaction_component.gd" id="6_r1tag"]
 [ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
+[ext_resource type="Script" path="res://scripts/pick_up_component.gd" id="8_ik0pe"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gd0ev"]
 material = ExtResource("2_x5xie")
@@ -424,11 +425,19 @@ context = "Auto Close Door"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 2.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBall"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.03063)
 shape = SubResource("SphereShape3D_rig3g")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBall"]
 mesh = SubResource("SphereMesh_8r1b6")
+
+[node name="InteractionComponent" type="Node" parent="RigidBall" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../MeshInstance3D")
+context = "Pick Up the Ball"
+
+[node name="PickUpComponent" type="Node" parent="RigidBall/InteractionComponent"]
+script = ExtResource("8_ik0pe")
+pickup_distance = Vector3(0, 0, -2)
 
 [node name="RigidCube" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 3, -2.5)
@@ -438,3 +447,12 @@ shape = SubResource("BoxShape3D_qh67r")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="RigidCube"]
 mesh = SubResource("BoxMesh_hg8dy")
+
+[node name="InteractionComponent" type="Node" parent="RigidCube" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../MeshInstance3D")
+context = "Pick Up the Cube"
+
+[node name="PickUpComponent" type="Node" parent="RigidCube/InteractionComponent"]
+script = ExtResource("8_ik0pe")
+pickup_distance = Vector3(0, 0, -2)
