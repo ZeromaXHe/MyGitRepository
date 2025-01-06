@@ -1,10 +1,11 @@
-[gd_scene load_steps=41 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=43 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
 [ext_resource type="Shader" path="res://shaders/grid.gdshader" id="3_60min"]
 [ext_resource type="Texture2D" uid="uid://ivvpsi314b34" path="res://textures/grid.jpg" id="3_yfwkt"]
 [ext_resource type="PackedScene" uid="uid://c3ffql15mo0aj" path="res://controllers/fps_controller.tscn" id="4_liofc"]
+[ext_resource type="PackedScene" uid="uid://du8k8mrf5fv0m" path="res://controllers/fps_controller_by_majikayo.tscn" id="5_bdi1x"]
 [ext_resource type="Script" path="res://scripts/interaction_component.gd" id="6_r1tag"]
 [ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
 [ext_resource type="Script" path="res://scripts/pick_up_component.gd" id="8_ik0pe"]
@@ -148,6 +149,13 @@ albedo_color = Color(0.996078, 0.796078, 0.227451, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_hg8dy"]
 material = SubResource("StandardMaterial3D_xv1kx")
 
+[sub_resource type="Curve3D" id="Curve3D_k6j2d"]
+_data = {
+"points": PackedVector3Array(0, 8.74368, 0.683226, 0, -8.74368, -0.683226, 0, 0, 0, 0, -0.454873, 5.40794, 0, 0.454873, -5.40794, 0, -10.9675, -9.7807),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
 [node name="Node3D" type="Node3D"]
 
 [node name="WorldEnvironment" parent="." instance=ExtResource("1_db21n")]
@@ -186,7 +194,12 @@ metadata/_edit_group_ = true
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_j6kcl")
 
+[node name="FPSControllerByMajikayo" parent="." instance=ExtResource("5_bdi1x")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -1, 2, -5)
+
 [node name="CharacterBody3D" parent="." instance=ExtResource("4_liofc")]
+process_mode = 4
+visible = false
 
 [node name="HighPlatform" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2, 3)
@@ -456,3 +469,22 @@ context = "Pick Up the Cube"
 [node name="PickUpComponent" type="Node" parent="RigidCube/InteractionComponent"]
 script = ExtResource("8_ik0pe")
 pickup_distance = Vector3(0, 0, -2)
+
+[node name="Path3D" type="Path3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, -25)
+curve = SubResource("Curve3D_k6j2d")
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Path3D"]
+use_collision = true
+polygon = PackedVector2Array(0, 0, 0.5, 1, 1, 0)
+mode = 2
+path_node = NodePath("..")
+path_interval_type = 0
+path_interval = 1.0
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = true
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+material = SubResource("ShaderMaterial_3khhp")

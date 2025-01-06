@@ -23,17 +23,18 @@ var _current_rotation: float
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
+
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED) # mouse_mode = 居然也可以写成 set_mouse_mode() !
+	if event.is_action_pressed("exit"): # ui_cancel
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
 	_mouse_input = event is InputEventMouseMotion \
 		and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
 	if _mouse_input:
 		_rotation_input = -event.relative.x * MOUSE_SENSITIVITY
 		_tilt_input = -event.relative.y * MOUSE_SENSITIVITY
-
-
-func _input(event):
-	if event.is_action_pressed("exit"):
-		get_tree().quit()
 
 
 func _update_camera(delta):
@@ -61,6 +62,10 @@ func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# 将 CharacterBody3D 根节点设置为蹲下检查 ShapeCast 的碰撞例外
 	CROUCH_SHAPE_CAST.add_exception($".")
+	
+	for child: VisualInstance3D in %WorldModel.find_children("*", "VisualInstance3D"):
+		child.set_layer_mask_value(1, false)
+		child.set_layer_mask_value(2, true)
 
 
 func _physics_process(delta):

@@ -1,9 +1,11 @@
-[gd_scene load_steps=30 format=3 uid="uid://c3ffql15mo0aj"]
+[gd_scene load_steps=32 format=3 uid="uid://c3ffql15mo0aj"]
 
 [ext_resource type="Script" path="res://controllers/scripts/fps_controller.gd" id="1_pgc1p"]
 [ext_resource type="Material" uid="uid://b4gwd5h7ixvct" path="res://materials/player.tres" id="2_gldw4"]
 [ext_resource type="Script" path="res://scripts/weapon_recoil.gd" id="3_cdibx"]
+[ext_resource type="PackedScene" uid="uid://cdp4s5g3gijqj" path="res://meshes/decorations/disguise-glasses.glb" id="3_qpeef"]
 [ext_resource type="Script" path="res://scripts/reticule.gd" id="3_ufe08"]
+[ext_resource type="PackedScene" uid="uid://r3i7m0g4dxmo" path="res://meshes/decorations/hair.glb" id="4_4r5bt"]
 [ext_resource type="PackedScene" uid="uid://b7triiviww8ks" path="res://meshes/weapons/weapon.tscn" id="4_45si3"]
 [ext_resource type="Theme" uid="uid://c0i4y7i57cc5u" path="res://ui/themes/debug.tres" id="4_jydcv"]
 [ext_resource type="Script" path="res://scripts/debug.gd" id="5_eoghu"]
@@ -30,7 +32,7 @@ step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("CollisionShape3D:shape:height")
+tracks/0/path = NodePath("WorldModel:shape:height")
 tracks/0/interp = 2
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -42,7 +44,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("CollisionShape3D:position")
+tracks/1/path = NodePath("WorldModel:position")
 tracks/1/interp = 2
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -66,7 +68,7 @@ tracks/2/keys = {
 tracks/3/type = "value"
 tracks/3/imported = false
 tracks/3/enabled = true
-tracks/3/path = NodePath("CollisionShape3D/PlaceholderMesh:mesh:height")
+tracks/3/path = NodePath("WorldModel/PlaceholderMesh:mesh:height")
 tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = {
@@ -137,7 +139,7 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("CollisionShape3D:shape:height")
+tracks/0/path = NodePath("WorldModel:shape:height")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -149,7 +151,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("CollisionShape3D:position")
+tracks/1/path = NodePath("WorldModel:position")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -173,7 +175,7 @@ tracks/2/keys = {
 tracks/3/type = "value"
 tracks/3/imported = false
 tracks/3/enabled = true
-tracks/3/path = NodePath("CollisionShape3D/PlaceholderMesh:mesh:height")
+tracks/3/path = NodePath("WorldModel/PlaceholderMesh:mesh:height")
 tracks/3/interp = 1
 tracks/3/loop_wrap = true
 tracks/3/keys = {
@@ -293,7 +295,7 @@ step = 0.5
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("CollisionShape3D:shape:height")
+tracks/0/path = NodePath("WorldModel:shape:height")
 tracks/0/interp = 2
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -305,7 +307,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("CollisionShape3D:position")
+tracks/1/path = NodePath("WorldModel:position")
 tracks/1/interp = 2
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -391,7 +393,7 @@ tracks/7/keys = {
 tracks/8/type = "value"
 tracks/8/imported = false
 tracks/8/enabled = true
-tracks/8/path = NodePath("CollisionShape3D/PlaceholderMesh:mesh:height")
+tracks/8/path = NodePath("WorldModel/PlaceholderMesh:mesh:height")
 tracks/8/interp = 2
 tracks/8/loop_wrap = true
 tracks/8/keys = {
@@ -478,13 +480,19 @@ ANIMATION_PLAYER = NodePath("AnimationPlayer")
 CROUCH_SHAPE_CAST = NodePath("ShapeCast3D")
 WEAPON_CONTROLLER = NodePath("CameraController/Recoil/Camera3D/WeaponRig/Weapon")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="WorldModel" type="CollisionShape3D" parent="."]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_u6tj1")
 
-[node name="PlaceholderMesh" type="MeshInstance3D" parent="CollisionShape3D"]
-visible = false
+[node name="PlaceholderMesh" type="MeshInstance3D" parent="WorldModel"]
 mesh = SubResource("CapsuleMesh_6tv51")
+
+[node name="disguise-glasses" parent="WorldModel" instance=ExtResource("3_qpeef")]
+transform = Transform3D(-2, 0, -3.01992e-07, 0, 2, 0, 3.01992e-07, 0, -2, 0, 0.438797, -0.0723078)
+
+[node name="hair" parent="WorldModel" instance=ExtResource("4_4r5bt")]
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0.875, 0)
 
 [node name="CameraController" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
@@ -497,6 +505,7 @@ speed = 4.0
 weapon = NodePath("Camera3D/WeaponRig/Weapon")
 
 [node name="Camera3D" type="Camera3D" parent="CameraController/Recoil"]
+cull_mask = 1048573
 
 [node name="ReflectionProbe" type="ReflectionProbe" parent="CameraController/Recoil/Camera3D"]
 update_mode = 1
