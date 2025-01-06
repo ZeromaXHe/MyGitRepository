@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=54 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
 [ext_resource type="Script" path="res://scripts/pick_up_component.gd" id="8_ik0pe"]
 [ext_resource type="PackedScene" path="res://utils/CSGStairMaker3D.tscn" id="10_0hogi"]
+[ext_resource type="PackedScene" uid="uid://ca0wevg1lb4rx" path="res://utils/WaterMaker3D/WaterMaker3D.tscn" id="11_iqhhq"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gd0ev"]
 material = ExtResource("2_x5xie")
@@ -173,6 +174,66 @@ shader_parameter/uv2_scale = Vector3(1, 1, 1)
 shader_parameter/uv2_offset = Vector3(0, 0, 0)
 shader_parameter/texture_albedo = ExtResource("3_yfwkt")
 shader_parameter/texture_roughness = ExtResource("3_yfwkt")
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_c5b02"]
+resource_local_to_scene = true
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_kqp1e"]
+resource_local_to_scene = true
+seamless = true
+as_normal_map = true
+noise = SubResource("FastNoiseLite_c5b02")
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_038ml"]
+resource_local_to_scene = true
+seamless = true
+as_normal_map = true
+noise = SubResource("FastNoiseLite_c5b02")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kw8vj"]
+resource_local_to_scene = true
+transparency = 1
+cull_mode = 2
+depth_draw_mode = 1
+albedo_color = Color(0.309804, 0.541176, 0.866667, 0.388235)
+roughness = 0.0
+normal_enabled = true
+normal_texture = SubResource("NoiseTexture2D_kqp1e")
+refraction_enabled = true
+refraction_texture = SubResource("NoiseTexture2D_038ml")
+uv1_scale = Vector3(0.04, 0.04, 0.04)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_rguvv"]
+resource_local_to_scene = true
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_1vpb6"]
+resource_local_to_scene = true
+seamless = true
+as_normal_map = true
+noise = SubResource("FastNoiseLite_rguvv")
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_0bp3r"]
+resource_local_to_scene = true
+seamless = true
+as_normal_map = true
+noise = SubResource("FastNoiseLite_rguvv")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wpogd"]
+resource_local_to_scene = true
+transparency = 1
+cull_mode = 2
+depth_draw_mode = 1
+albedo_color = Color(0.309804, 0.840564, 0.866667, 0.388235)
+roughness = 0.0
+normal_enabled = true
+normal_texture = SubResource("NoiseTexture2D_1vpb6")
+refraction_enabled = true
+refraction_texture = SubResource("NoiseTexture2D_0bp3r")
+uv1_scale = Vector3(0.04, 0.04, 0.04)
+uv1_triplanar = true
+uv1_world_triplanar = true
 
 [node name="Node3D" type="Node3D"]
 
@@ -566,3 +627,62 @@ billboard = 1
 text = "试试跳蹲上台阶
 （空格 + C）"
 font_size = 100
+
+[node name="WaterPool" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, -100)
+
+[node name="Rim" type="CSGBox3D" parent="WaterPool"]
+use_collision = true
+size = Vector3(40, 40, 70)
+material = ExtResource("2_x5xie")
+
+[node name="Pool" type="CSGBox3D" parent="WaterPool/Rim"]
+operation = 2
+size = Vector3(30, 38, 60)
+
+[node name="Entry1" type="CSGBox3D" parent="WaterPool/Rim"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 19.5, 17)
+operation = 2
+size = Vector3(30, 1, 26)
+
+[node name="Entry2" type="CSGBox3D" parent="WaterPool/Rim"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 19.5, -17)
+operation = 2
+size = Vector3(30, 1, 26)
+
+[node name="WaterMaker3D" parent="WaterPool" instance=ExtResource("11_iqhhq")]
+size = Vector3(31, 39, 61)
+material = SubResource("StandardMaterial3D_kw8vj")
+
+[node name="WaterBridge" parent="." instance=ExtResource("11_iqhhq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 10, -80)
+size = Vector3(30, 100, 30)
+material = SubResource("StandardMaterial3D_wpogd")
+water_color = Color(0.309804, 0.840564, 0.866667, 0.388235)
+fog_color = Color(0, 0.294118, 0.294118, 0.784314)
+
+[node name="SurfPath" type="Path3D" parent="WaterBridge"]
+transform = Transform3D(-2.59808, 0, -1.5, 0, 3, 0, 1.5, 0, -2.59808, 0, 21.3959, 15)
+curve = SubResource("Curve3D_k6j2d")
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="WaterBridge/SurfPath"]
+use_collision = true
+polygon = PackedVector2Array(0, 0, 0.5, 1, 1, 0)
+mode = 2
+path_node = NodePath("..")
+path_interval_type = 0
+path_interval = 1.0
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = true
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+material = SubResource("ShaderMaterial_3khhp")
+
+[node name="Label3D" type="Label3D" parent="WaterBridge/SurfPath"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -2)
+billboard = 1
+text = "来这里玩冲浪
+（Surf，只按 A/D 贴墙就能滑）"
+font_size = 64

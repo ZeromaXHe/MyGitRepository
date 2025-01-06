@@ -23,6 +23,8 @@ var headbob_time := 0.0
 @export var air_accel := 800.0 # 空中加速度
 @export var air_move_speed := 500.0
 
+@export var swim_up_speed := 10.0
+
 var wish_dir := Vector3.ZERO
 var cam_aligned_wish_dir := Vector3.ZERO
 
@@ -128,13 +130,34 @@ func snap_up_stairs_check(delta) -> bool:
 		%StairsAheadRayCast3D.global_position = down_check_result.get_collision_point() \
 			+ Vector3(0, MAX_STEP_HEIGHT, 0) + expected_move_motion.normalized() * 0.1
 		%StairsAheadRayCast3D.force_raycast_update()
-		if %StairsAheadRayCast3D.is_colliding() and not is_surface_too_steep(%StairsAheadRayCast3D.get_collision_normal()):
+		if %StairsAheadRayCast3D.is_colliding() \
+				and not is_surface_too_steep(%StairsAheadRayCast3D.get_collision_normal()):
 			save_camera_pos_for_smoothing()
 			self.global_position = step_pos_with_clearance.origin + down_check_result.get_travel()
 			apply_floor_snap()
 			_snapped_to_stairs_last_frame = true
 			return true
 	return false
+
+
+# 当玩家在水里时返回 true，这种情况下不要运行正常的空中/地面物理
+func handle_water_physics(delta) -> bool:
+	if get_tree().get_nodes_in_group("water_area") \
+			.all(func(area): return !area.overlaps_body(self)):
+		return false
+	
+	if not is_on_floor():
+		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * 0.1 * delta
+	
+	self.velocity += cam_aligned_wish_dir * get_move_speed() * delta
+	
+	if Input.is_action_pressed("jump"):
+		self.velocity.y += swim_up_speed * delta
+	
+	# 水中速度阻尼
+	self.velocity = self.velocity.lerp(Vector3.ZERO, 2 * delta)
+	
+	return true
 
 
 @onready var _original_capsule_height = $CollisionShape3D.shape.height
@@ -214,13 +237,14 @@ func _physics_process(delta: float) -> void:
 	handle_crouch(delta)
 	
 	if not handle_noclip(delta):
-		if is_on_floor() or _snapped_to_stairs_last_frame:
-			if Input.is_action_just_pressed("jump") \
-					or (auto_bhop and Input.is_action_pressed("jump")):
-				self.velocity.y = jump_velocity
-			handle_ground_physics(delta)
-		else:
-			handle_air_physics(delta)
+		if not handle_water_physics(delta):
+			if is_on_floor() or _snapped_to_stairs_last_frame:
+				if Input.is_action_just_pressed("jump") \
+						or (auto_bhop and Input.is_action_pressed("jump")):
+					self.velocity.y = jump_velocity
+				handle_ground_physics(delta)
+			else:
+				handle_air_physics(delta)
 		
 		if not snap_up_stairs_check(delta):
 			# 因为 snap_up_stairs_check 手动移动 body，不要调用 move_and_slide
