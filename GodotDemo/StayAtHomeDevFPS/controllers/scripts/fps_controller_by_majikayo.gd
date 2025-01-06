@@ -91,6 +91,29 @@ func slide_camera_smooth_back_to_origin(delta):
 		_saved_camera_global_pos = null # 停止平滑相机
 
 
+func push_away_rigid_bodies():
+	for i in get_slide_collision_count(): # 居然可以直接 for，不用 range？！
+		var c := get_slide_collision(i)
+		if !c.get_collider() is RigidBody3D:
+			continue
+		var rb = c.get_collider() as RigidBody3D
+		var push_dir = -c.get_normal()
+		# 物体速度需要在推动方向上提高到匹配玩家的速度大小
+		var velocity_diff_in_push_dir = self.velocity.dot(push_dir) \
+			- rb.linear_velocity.dot(push_dir)
+		# 仅仅计算朝向远离角色的推动方向的速度
+		velocity_diff_in_push_dir = max(0., velocity_diff_in_push_dir)
+		# 比我们质量更大的物体应该更难推动。但推动速度比我们自己还快不合理
+		const MY_APPROX_MASS_KG = 80.0
+		var mass_ratio = min(1., MY_APPROX_MASS_KG / rb.mass)
+		# 别从下方或上方推物体
+		push_dir.y = 0
+		# 5.0 是个魔法数字，根据你需要调整
+		var push_force = mass_ratio * 5.0
+		rb.apply_impulse(push_dir * velocity_diff_in_push_dir * push_force,
+			c.get_position() - rb.global_position)
+
+
 func snap_down_to_stairs_check() -> void:
 	var did_snap := false
 	var floor_below: bool = %StairsBelowRayCast3D.is_colliding() \
@@ -249,6 +272,7 @@ func _physics_process(delta: float) -> void:
 		if not snap_up_stairs_check(delta):
 			# 因为 snap_up_stairs_check 手动移动 body，不要调用 move_and_slide
 			# 这将运行正常，因为我们通过 body_test_motion 确保了它不与除它移动上的台阶外的任何物体碰撞
+			push_away_rigid_bodies() # 在 move_and_slide() 前调用
 			move_and_slide()
 			snap_down_to_stairs_check()
 	

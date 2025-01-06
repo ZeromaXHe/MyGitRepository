@@ -9,6 +9,7 @@
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_rv6a4"]
 
 [node name="FPSControllerByMajikayo" type="CharacterBody3D"]
+platform_floor_layers = 4294967292
 script = ExtResource("1_1hehx")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

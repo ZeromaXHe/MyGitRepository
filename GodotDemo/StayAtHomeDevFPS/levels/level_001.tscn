@@ -1,4 +1,4 @@
-[gd_scene load_steps=54 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=63 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
@@ -135,6 +135,10 @@ radius = 2.0
 [sub_resource type="BoxShape3D" id="BoxShape3D_quc4o"]
 size = Vector3(2, 3, 0.1)
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_l83jn"]
+friction = 0.8
+bounce = 0.9
+
 [sub_resource type="SphereShape3D" id="SphereShape3D_rig3g"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vvtjq"]
@@ -234,6 +238,34 @@ refraction_texture = SubResource("NoiseTexture2D_0bp3r")
 uv1_scale = Vector3(0.04, 0.04, 0.04)
 uv1_triplanar = true
 uv1_world_triplanar = true
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_sieh4"]
+friction = 0.02
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_s2fd4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mmtci"]
+transparency = 1
+albedo_color = Color(0.533333, 0.823529, 0.831373, 0.458824)
+
+[sub_resource type="BoxMesh" id="BoxMesh_a87k5"]
+material = SubResource("StandardMaterial3D_mmtci")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_u2slf"]
+radius = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_jhohe"]
+material = SubResource("StandardMaterial3D_vvtjq")
+radius = 2.0
+height = 4.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_nmiyf"]
+radius = 1.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_akmpa"]
+material = SubResource("StandardMaterial3D_vvtjq")
+radius = 1.0
+height = 2.0
 
 [node name="Node3D" type="Node3D"]
 
@@ -515,6 +547,7 @@ context = "Auto Close Door"
 
 [node name="RigidBall" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 2.5)
+physics_material_override = SubResource("PhysicsMaterial_l83jn")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBall"]
 shape = SubResource("SphereShape3D_rig3g")
@@ -686,3 +719,57 @@ billboard = 1
 text = "来这里玩冲浪
 （Surf，只按 A/D 贴墙就能滑）"
 font_size = 64
+
+[node name="iceyMass" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, -7)
+mass = 100.0
+physics_material_override = SubResource("PhysicsMaterial_sieh4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="iceyMass"]
+shape = SubResource("BoxShape3D_s2fd4")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="iceyMass"]
+mesh = SubResource("BoxMesh_a87k5")
+
+[node name="Label3D" type="Label3D" parent="iceyMass"]
+text = "100 kg"
+
+[node name="RigidBall2" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.5, -12)
+mass = 100.0
+physics_material_override = SubResource("PhysicsMaterial_l83jn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBall2"]
+shape = SubResource("SphereShape3D_u2slf")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBall2"]
+mesh = SubResource("SphereMesh_jhohe")
+
+[node name="InteractionComponent" type="Node" parent="RigidBall2" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../MeshInstance3D")
+context = "Pick Up the Ball"
+
+[node name="PickUpComponent" type="Node" parent="RigidBall2/InteractionComponent"]
+script = ExtResource("8_ik0pe")
+pickup_distance = Vector3(0, 0, -4)
+
+[node name="RigidBall3" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -12)
+mass = 50.0
+physics_material_override = SubResource("PhysicsMaterial_l83jn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBall3"]
+shape = SubResource("SphereShape3D_nmiyf")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBall3"]
+mesh = SubResource("SphereMesh_akmpa")
+
+[node name="InteractionComponent" type="Node" parent="RigidBall3" node_paths=PackedStringArray("mesh")]
+script = ExtResource("6_r1tag")
+mesh = NodePath("../MeshInstance3D")
+context = "Pick Up the Ball"
+
+[node name="PickUpComponent" type="Node" parent="RigidBall3/InteractionComponent"]
+script = ExtResource("8_ik0pe")
+pickup_distance = Vector3(0, 0, -2)
