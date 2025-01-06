@@ -26,6 +26,11 @@ var headbob_time := 0.0
 var wish_dir := Vector3.ZERO
 var cam_aligned_wish_dir := Vector3.ZERO
 
+const CROUCH_TRANSLATE = 0.7
+const CROUCH_JUMP_ADD = CROUCH_TRANSLATE * 0.9 # 乘以 0.9 是因为类起源引擎的摄像机在空中蹲伏时抖动，作为好提示
+
+var is_crouched := false
+
 var noclip_speed_mult := 3.0
 var noclip := false
 
@@ -132,6 +137,35 @@ func snap_up_stairs_check(delta) -> bool:
 	return false
 
 
+@onready var _original_capsule_height = $CollisionShape3D.shape.height
+
+func handle_crouch(delta) -> void:
+	var was_crouched_last_frame = is_crouched
+	if Input.is_action_pressed("crouch"):
+		is_crouched = true
+	elif is_crouched and not self.test_move(self.transform, Vector3(0, CROUCH_TRANSLATE, 0)):
+		is_crouched = false
+	
+	# 允许蹲伏来抬高跳跃
+	var translate_y_if_possible := 0.0
+	if was_crouched_last_frame != is_crouched and not is_on_floor() \
+			and not _snapped_to_stairs_last_frame:
+		translate_y_if_possible = \
+			CROUCH_JUMP_ADD if is_crouched else -CROUCH_JUMP_ADD
+	# 确保玩家蹲跳时不要卡在地板/天花板
+	if translate_y_if_possible != 0.0:
+		var result = KinematicCollision3D.new()
+		self.test_move(self.transform, Vector3(0, translate_y_if_possible, 0), result)
+		self.position.y += result.get_travel().y
+		%Head.position.y -= result.get_travel().y
+		%Head.position.y = clampf(%Head.position.y, -CROUCH_TRANSLATE, 0)
+	
+	%Head.position.y = move_toward(%Head.position.y, -CROUCH_TRANSLATE if is_crouched else 0, 7.0 * delta)
+	$CollisionShape3D.shape.height = _original_capsule_height \
+		- CROUCH_TRANSLATE if is_crouched else _original_capsule_height
+	$CollisionShape3D.position.y = $CollisionShape3D.shape.height / 2
+
+
 func handle_noclip(delta) -> bool:
 	if Input.is_action_just_pressed("_noclip") and OS.has_feature("debug"):
 		noclip = !noclip
@@ -176,6 +210,8 @@ func _physics_process(delta: float) -> void:
 	# 取决于你想让角色面对的方向，你可能需要对 input_dir 取反
 	wish_dir = self.global_transform.basis * Vector3(input_dir.x, 0., input_dir.y)
 	cam_aligned_wish_dir = %Camera3D.global_transform.basis * Vector3(input_dir.x, 0., input_dir.y)
+	
+	handle_crouch(delta)
 	
 	if not handle_noclip(delta):
 		if is_on_floor() or _snapped_to_stairs_last_frame:
@@ -277,6 +313,8 @@ func handle_ground_physics(delta) -> void:
 
 
 func get_move_speed() -> float:
+	if is_crouched:
+		return walk_speed * 0.8
 	return sprint_speed if Input.is_action_pressed("sprint") else walk_speed
 
 

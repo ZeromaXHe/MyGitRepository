@@ -152,7 +152,7 @@ material = SubResource("StandardMaterial3D_xv1kx")
 
 [sub_resource type="Curve3D" id="Curve3D_k6j2d"]
 _data = {
-"points": PackedVector3Array(0, 8.74368, 0.683226, 0, -8.74368, -0.683226, 0, 0, 0, 0, -0.454873, 5.40794, 0, 0.454873, -5.40794, 0, -10.9675, -9.7807),
+"points": PackedVector3Array(0, 8.74368, 0.683226, 0, -8.74368, -0.683226, 0, 0, 0, 0, -2.42807, 3.94561, 0, 2.42807, -3.94561, 0, -9.53653, -9.2298),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -507,23 +507,62 @@ path_u_distance = 1.0
 path_joined = false
 material = SubResource("ShaderMaterial_3khhp")
 
-[node name="CSGStairMaker3D" parent="." instance=ExtResource("10_0hogi")]
+[node name="Label3D" type="Label3D" parent="SurfPath"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+billboard = 1
+text = "来这里玩冲浪
+（Surf，只按 A/D 贴墙就能滑）"
+font_size = 64
+
+[node name="WalkTestStair" parent="." instance=ExtResource("10_0hogi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.5, -7)
 use_collision = true
 size = Vector3(6, 5, 5)
 material = SubResource("ShaderMaterial_62u37")
 num_stairs = 10
 
-[node name="CSGStairMaker3D2" parent="." instance=ExtResource("10_0hogi")]
+[node name="Label3D" type="Label3D" parent="WalkTestStair"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, 0)
+billboard = 1
+text = "可以正常走上台阶"
+font_size = 100
+
+[node name="MayNotWalkStair" parent="." instance=ExtResource("10_0hogi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.5, -13)
 use_collision = true
 size = Vector3(5, 5, 5)
 material = SubResource("ShaderMaterial_0racc")
 num_stairs = 10
 
-[node name="CSGStairMaker3D3" parent="." instance=ExtResource("10_0hogi")]
+[node name="Label3D" type="Label3D" parent="MayNotWalkStair"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, 0)
+billboard = 1
+text = "正面走有时会卡住"
+font_size = 100
+
+[node name="CanNotWalkStair" parent="." instance=ExtResource("10_0hogi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.5, -19)
 use_collision = true
 size = Vector3(4, 5, 5)
 material = SubResource("ShaderMaterial_mr65q")
 num_stairs = 10
+
+[node name="Label3D" type="Label3D" parent="CanNotWalkStair"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, 0)
+billboard = 1
+text = "不能走上去的陡台阶"
+font_size = 100
+
+[node name="CrouchJumpStair" parent="." instance=ExtResource("10_0hogi")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -12, 5, -7)
+use_collision = true
+size = Vector3(10, 10, 5)
+material = SubResource("ShaderMaterial_3khhp")
+num_stairs = 5
+
+[node name="Label3D" type="Label3D" parent="CrouchJumpStair"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 0)
+billboard = 1
+text = "试试跳蹲上台阶
+（空格 + C）"
+font_size = 100
