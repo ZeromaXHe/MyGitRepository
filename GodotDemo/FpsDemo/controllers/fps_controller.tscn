@@ -510,6 +510,7 @@ enable_shadows = true
 [node name="WeaponRig" type="Node3D" parent="CameraController/Recoil/Camera3D"]
 
 [node name="Weapon" parent="CameraController/Recoil/Camera3D/WeaponRig" instance=ExtResource("4_45si3")]
+transform = Transform3D(-0.992541, 0.12189, 0.0024289, 0.00451701, 0.0168577, 0.999848, 0.12183, 0.992401, -0.0172825, 0.13, -0.165, -0.22)
 
 [node name="InteractionRayCast" type="RayCast3D" parent="CameraController/Recoil/Camera3D"]
 target_position = Vector3(0, 0, -2)

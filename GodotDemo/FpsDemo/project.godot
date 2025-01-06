@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="StayAtHomeDevFPS"
+config/name="FpsDemo"
 run/main_scene="res://levels/level_001.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"

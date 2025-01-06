@@ -13,7 +13,7 @@
 [ext_resource type="Script" path="res://scripts/interaction_component.gd" id="6_r1tag"]
 [ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
 [ext_resource type="Script" path="res://scripts/pick_up_component.gd" id="8_ik0pe"]
-[ext_resource type="PackedScene" path="res://utils/CSGStairMaker3D.tscn" id="10_0hogi"]
+[ext_resource type="PackedScene" uid="uid://bak8ltrhbmlv5" path="res://utils/CSGStairMaker3D.tscn" id="10_0hogi"]
 [ext_resource type="PackedScene" uid="uid://ca0wevg1lb4rx" path="res://utils/WaterMaker3D/WaterMaker3D.tscn" id="11_iqhhq"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gd0ev"]
