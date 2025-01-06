@@ -1,16 +1,18 @@
-[gd_scene load_steps=6 format=3 uid="uid://du8k8mrf5fv0m"]
+[gd_scene load_steps=7 format=3 uid="uid://du8k8mrf5fv0m"]
 
 [ext_resource type="Script" path="res://controllers/scripts/fps_controller_by_majikayo.gd" id="1_1hehx"]
 [ext_resource type="PackedScene" uid="uid://cdp4s5g3gijqj" path="res://meshes/decorations/disguise-glasses.glb" id="1_2r1gh"]
 [ext_resource type="PackedScene" path="res://meshes/decorations/wiggly_hair.tscn" id="2_anfa5"]
+[ext_resource type="Script" path="res://controllers/scripts/interaction_ray_cast.gd" id="4_ygiri"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nga15"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_rv6a4"]
 
-[node name="FPSControllerByMajikayo" type="CharacterBody3D"]
+[node name="FPSControllerByMajikayo" type="CharacterBody3D" node_paths=PackedStringArray("CAMERA_CONTROLLER")]
 platform_floor_layers = 4294967292
 script = ExtResource("1_1hehx")
+CAMERA_CONTROLLER = NodePath("HeadOriginalPosition/Head/CameraSmooth/Camera3D")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -42,6 +44,15 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 cull_mask = 1048573
 current = true
+
+[node name="InteractionRayCast" type="RayCast3D" parent="HeadOriginalPosition/Head/CameraSmooth/Camera3D"]
+target_position = Vector3(0, 0, -2)
+debug_shape_custom_color = Color(0.00392157, 0.996078, 0, 1)
+script = ExtResource("4_ygiri")
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="HeadOriginalPosition/Head/CameraSmooth/Camera3D"]
+update_mode = 1
+enable_shadows = true
 
 [node name="StairsAheadRayCast3D" type="RayCast3D" parent="."]
 unique_name_in_owner = true

@@ -48,12 +48,12 @@ func connect_parent() -> void:
 
 
 func on_trigger(body: Node3D) -> void:
-	if body is Player and door_operation == DoorOperation.OPEN_CLOSE_AUTOMATICALLY:
+	if body is CharacterBody3D and door_operation == DoorOperation.OPEN_CLOSE_AUTOMATICALLY:
 		check_door()
 
 
 func off_trigger(body: Node3D) -> void:
-	if body is Player and door_operation == DoorOperation.OPEN_CLOSE_AUTOMATICALLY:
+	if body is CharacterBody3D and door_operation == DoorOperation.OPEN_CLOSE_AUTOMATICALLY:
 		check_door()
 
 

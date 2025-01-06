@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+@export var CAMERA_CONTROLLER: Camera3D
+
 @export var look_sensitivity: float = 0.006
 @export var controller_look_sensitivity := 0.05
 
@@ -42,6 +44,7 @@ var _last_frame_was_on_floor = -INF
 
 
 func _ready() -> void:
+	Global.player = self
 	for child: VisualInstance3D in %WorldModel.find_children("*", "VisualInstance3D"):
 		child.set_layer_mask_value(1, false)
 		child.set_layer_mask_value(2, true)

@@ -1,10 +1,14 @@
-[gd_scene load_steps=63 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=69 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
+[ext_resource type="Script" path="res://scripts/reticule.gd" id="2_1e1u0"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
 [ext_resource type="Shader" path="res://shaders/grid.gdshader" id="3_60min"]
+[ext_resource type="Theme" uid="uid://c0i4y7i57cc5u" path="res://ui/themes/debug.tres" id="3_wlxsm"]
 [ext_resource type="Texture2D" uid="uid://ivvpsi314b34" path="res://textures/grid.jpg" id="3_yfwkt"]
+[ext_resource type="Script" path="res://scripts/debug.gd" id="4_joyvd"]
 [ext_resource type="PackedScene" uid="uid://c3ffql15mo0aj" path="res://controllers/fps_controller.tscn" id="4_liofc"]
+[ext_resource type="Script" path="res://scripts/context_component.gd" id="5_1etww"]
 [ext_resource type="PackedScene" uid="uid://du8k8mrf5fv0m" path="res://controllers/fps_controller_by_majikayo.tscn" id="5_bdi1x"]
 [ext_resource type="Script" path="res://scripts/interaction_component.gd" id="6_r1tag"]
 [ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
@@ -141,8 +145,18 @@ bounce = 0.9
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_rig3g"]
 
+[sub_resource type="Gradient" id="Gradient_ri5y1"]
+offsets = PackedFloat32Array(0, 0.4, 0.6, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_lcgql"]
+gradient = SubResource("Gradient_ri5y1")
+fill_from = Vector2(0.489474, 1)
+fill_to = Vector2(0.494737, 0)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vvtjq"]
 albedo_color = Color(0.996078, 0.796078, 0.227451, 1)
+albedo_texture = SubResource("GradientTexture2D_lcgql")
 
 [sub_resource type="SphereMesh" id="SphereMesh_8r1b6"]
 material = SubResource("StandardMaterial3D_vvtjq")
@@ -271,6 +285,89 @@ height = 2.0
 
 [node name="WorldEnvironment" parent="." instance=ExtResource("1_db21n")]
 
+[node name="UserInterface" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Reticule" type="CenterContainer" parent="UserInterface" node_paths=PackedStringArray("RETICULE_LINES", "PLAYER_CONTROLLER")]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_1e1u0")
+RETICULE_LINES = [NodePath("Top"), NodePath("Right"), NodePath("Bottom"), NodePath("Left")]
+PLAYER_CONTROLLER = NodePath("../../FPSControllerByMajikayo")
+RETICULE_DISTANCE = 10.0
+
+[node name="Top" type="Line2D" parent="UserInterface/Reticule"]
+points = PackedVector2Array(0, -5, 0, -15)
+width = 2.0
+
+[node name="Right" type="Line2D" parent="UserInterface/Reticule"]
+points = PackedVector2Array(5, 0, 15, 0)
+width = 2.0
+
+[node name="Bottom" type="Line2D" parent="UserInterface/Reticule"]
+points = PackedVector2Array(0, 5, 0, 15)
+width = 2.0
+
+[node name="Left" type="Line2D" parent="UserInterface/Reticule"]
+points = PackedVector2Array(-5, 0, -15, 0)
+width = 2.0
+
+[node name="DebugPanel" type="PanelContainer" parent="UserInterface"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 210.0
+offset_bottom = 50.0
+theme = ExtResource("3_wlxsm")
+script = ExtResource("4_joyvd")
+
+[node name="MarginContainer" type="MarginContainer" parent="UserInterface/DebugPanel"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UserInterface/DebugPanel/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ContextComponent" type="CenterContainer" parent="UserInterface" node_paths=PackedStringArray("icon", "context")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_1etww")
+icon = NodePath("HBoxContainer/Icon")
+context = NodePath("HBoxContainer/Context")
+default_icon = "[E]"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UserInterface/ContextComponent"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="UserInterface/ContextComponent/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "[E]"
+vertical_alignment = 2
+
+[node name="Context" type="Label" parent="UserInterface/ContextComponent/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Open Box"
+
 [node name="Floor" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 mesh = SubResource("BoxMesh_gd0ev")
@@ -305,12 +402,12 @@ metadata/_edit_group_ = true
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_j6kcl")
 
-[node name="FPSControllerByMajikayo" parent="." instance=ExtResource("5_bdi1x")]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -1, 2, -5)
-
 [node name="CharacterBody3D" parent="." instance=ExtResource("4_liofc")]
 process_mode = 4
 visible = false
+
+[node name="FPSControllerByMajikayo" parent="." instance=ExtResource("5_bdi1x")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -1, 2, -5)
 
 [node name="HighPlatform" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2, 3)
@@ -734,42 +831,42 @@ mesh = SubResource("BoxMesh_a87k5")
 [node name="Label3D" type="Label3D" parent="iceyMass"]
 text = "100 kg"
 
-[node name="RigidBall2" type="RigidBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.5, -12)
+[node name="BigRigidBall" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2, -12)
 mass = 100.0
 physics_material_override = SubResource("PhysicsMaterial_l83jn")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBall2"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BigRigidBall"]
 shape = SubResource("SphereShape3D_u2slf")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBall2"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BigRigidBall"]
 mesh = SubResource("SphereMesh_jhohe")
 
-[node name="InteractionComponent" type="Node" parent="RigidBall2" node_paths=PackedStringArray("mesh")]
+[node name="InteractionComponent" type="Node" parent="BigRigidBall" node_paths=PackedStringArray("mesh")]
 script = ExtResource("6_r1tag")
 mesh = NodePath("../MeshInstance3D")
 context = "Pick Up the Ball"
 
-[node name="PickUpComponent" type="Node" parent="RigidBall2/InteractionComponent"]
+[node name="PickUpComponent" type="Node" parent="BigRigidBall/InteractionComponent"]
 script = ExtResource("8_ik0pe")
 pickup_distance = Vector3(0, 0, -4)
 
-[node name="RigidBall3" type="RigidBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -12)
+[node name="MidRigidBall" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 5, -12)
 mass = 50.0
 physics_material_override = SubResource("PhysicsMaterial_l83jn")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBall3"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MidRigidBall"]
 shape = SubResource("SphereShape3D_nmiyf")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBall3"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="MidRigidBall"]
 mesh = SubResource("SphereMesh_akmpa")
 
-[node name="InteractionComponent" type="Node" parent="RigidBall3" node_paths=PackedStringArray("mesh")]
+[node name="InteractionComponent" type="Node" parent="MidRigidBall" node_paths=PackedStringArray("mesh")]
 script = ExtResource("6_r1tag")
 mesh = NodePath("../MeshInstance3D")
 context = "Pick Up the Ball"
 
-[node name="PickUpComponent" type="Node" parent="RigidBall3/InteractionComponent"]
+[node name="PickUpComponent" type="Node" parent="MidRigidBall/InteractionComponent"]
 script = ExtResource("8_ik0pe")
-pickup_distance = Vector3(0, 0, -2)
+pickup_distance = Vector3(0, 0, -3)

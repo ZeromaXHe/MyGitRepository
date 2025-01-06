@@ -1,18 +1,14 @@
-[gd_scene load_steps=32 format=3 uid="uid://c3ffql15mo0aj"]
+[gd_scene load_steps=28 format=3 uid="uid://c3ffql15mo0aj"]
 
 [ext_resource type="Script" path="res://controllers/scripts/fps_controller.gd" id="1_pgc1p"]
 [ext_resource type="Material" uid="uid://b4gwd5h7ixvct" path="res://materials/player.tres" id="2_gldw4"]
 [ext_resource type="Script" path="res://scripts/weapon_recoil.gd" id="3_cdibx"]
 [ext_resource type="PackedScene" uid="uid://cdp4s5g3gijqj" path="res://meshes/decorations/disguise-glasses.glb" id="3_qpeef"]
-[ext_resource type="Script" path="res://scripts/reticule.gd" id="3_ufe08"]
 [ext_resource type="PackedScene" uid="uid://r3i7m0g4dxmo" path="res://meshes/decorations/hair.glb" id="4_4r5bt"]
 [ext_resource type="PackedScene" uid="uid://b7triiviww8ks" path="res://meshes/weapons/weapon.tscn" id="4_45si3"]
-[ext_resource type="Theme" uid="uid://c0i4y7i57cc5u" path="res://ui/themes/debug.tres" id="4_jydcv"]
-[ext_resource type="Script" path="res://scripts/debug.gd" id="5_eoghu"]
 [ext_resource type="Script" path="res://controllers/scripts/interaction_ray_cast.gd" id="5_o28xh"]
 [ext_resource type="Script" path="res://scripts/state/state_machine.gd" id="6_7l5ab"]
 [ext_resource type="Script" path="res://scripts/state/idle_player_state.gd" id="7_ohk63"]
-[ext_resource type="Script" path="res://scripts/context_component.gd" id="8_70gph"]
 [ext_resource type="Script" path="res://scripts/state/walking_player_state.gd" id="8_dqhup"]
 [ext_resource type="Script" path="res://scripts/state/sprinting_player_state.gd" id="9_sa7hj"]
 [ext_resource type="Script" path="res://scripts/state/crouching_player_state.gd" id="10_w3xrn"]
@@ -514,7 +510,6 @@ enable_shadows = true
 [node name="WeaponRig" type="Node3D" parent="CameraController/Recoil/Camera3D"]
 
 [node name="Weapon" parent="CameraController/Recoil/Camera3D/WeaponRig" instance=ExtResource("4_45si3")]
-transform = Transform3D(-0.992541, 0.12189, 0.0024289, 0.00451701, 0.0168577, 0.999848, 0.12183, 0.992401, -0.0172825, 0.13, -0.165, -0.22)
 
 [node name="InteractionRayCast" type="RayCast3D" parent="CameraController/Recoil/Camera3D"]
 target_position = Vector3(0, 0, -2)
@@ -533,89 +528,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 shape = SubResource("SphereShape3D_nk8xw")
 target_position = Vector3(0, 0.5, 0)
 debug_shape_custom_color = Color(0.0117647, 0.992157, 0.00784314, 1)
-
-[node name="UserInterface" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
-
-[node name="Reticule" type="CenterContainer" parent="UserInterface" node_paths=PackedStringArray("RETICULE_LINES", "PLAYER_CONTROLLER")]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("3_ufe08")
-RETICULE_LINES = [NodePath("Top"), NodePath("Right"), NodePath("Bottom"), NodePath("Left")]
-PLAYER_CONTROLLER = NodePath("../..")
-RETICULE_DISTANCE = 10.0
-
-[node name="Top" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(0, -5, 0, -15)
-width = 2.0
-
-[node name="Right" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(5, 0, 15, 0)
-width = 2.0
-
-[node name="Bottom" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(0, 5, 0, 15)
-width = 2.0
-
-[node name="Left" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(-5, 0, -15, 0)
-width = 2.0
-
-[node name="DebugPanel" type="PanelContainer" parent="UserInterface"]
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 210.0
-offset_bottom = 50.0
-theme = ExtResource("4_jydcv")
-script = ExtResource("5_eoghu")
-
-[node name="MarginContainer" type="MarginContainer" parent="UserInterface/DebugPanel"]
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="UserInterface/DebugPanel/MarginContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="ContextComponent" type="CenterContainer" parent="UserInterface" node_paths=PackedStringArray("icon", "context")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("8_70gph")
-icon = NodePath("HBoxContainer/Icon")
-context = NodePath("HBoxContainer/Context")
-default_icon = "[E]"
-
-[node name="HBoxContainer" type="HBoxContainer" parent="UserInterface/ContextComponent"]
-custom_minimum_size = Vector2(0, 150)
-layout_mode = 2
-
-[node name="Icon" type="Label" parent="UserInterface/ContextComponent/HBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 8
-text = "[E]"
-vertical_alignment = 2
-
-[node name="Context" type="Label" parent="UserInterface/ContextComponent/HBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 8
-text = "Open Box"
 
 [node name="PlayerStateMachine" type="Node" parent="." node_paths=PackedStringArray("CURRENT_STATE")]
 script = ExtResource("6_7l5ab")
