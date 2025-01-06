@@ -1,12 +1,14 @@
 # FPS Godot Basic Setup
 
+**此部分来自 StayAtHomeDev 的 README** https://github.com/StayAtHomeDev-Git/FPS-Godot-Basic-Setup
+
 ![alt text](https://github.com/StayAtHomeDev-Git/FPS-Godot-Basic-Setup/blob/main/readme_img.png)
 
 These are the project files for the first episode of my "FPS Godot Engine Project" video tutorial series.
 
 That video series can be found here:
 
-# Installation
+## Installation
 
 Version: Godot Engine 4.1
 
@@ -16,7 +18,7 @@ Version: Godot Engine 4.1
 
 The project comes with all the source code from the tutorial video and any test levels or resources (materials, nodes, etc).
 
-# License Agreement
+## License Agreement
 
 Copyright (c) 2023 StayAtHomeDev, LLC
 
@@ -26,8 +28,31 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# Sponsors
+## Sponsors
 
 Thanks to all the sponsors of this project!
 
 Geekeh
+
+
+
+# SimpleFPSController
+
+**此部分来自 Majikayo Games 的 README** https://github.com/majikayogames/SimpleFPSController
+
+This is a first person character controller which implements mechanics found in popular games such as Quake and Counter-Strike: Source.
+
+I have a YouTube playlist of tutorials that were created alongside this character controller which you can reference if you're curious how any part of it works, or want to learn about using Godot for 3D games:
+https://www.youtube.com/playlist?list=PLbuK0gG93AsHID1DDD1nt4YHcdOmJvWW1
+
+## License
+
+This character controller is available under the CC0 license.
+
+## Support
+
+If you find the character controller/tutorials helpful and would like to support me, consider becoming a patron or buying me a coffee!
+
+[![Patreon](https://img.shields.io/badge/Patreon-Support%20Me-orange)](https://www.patreon.com/MajikayoGames)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20Me%20a%20Coffee-blue)](https://ko-fi.com/majikayogames)
+

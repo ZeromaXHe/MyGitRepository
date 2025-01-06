@@ -29,6 +29,10 @@ var cam_aligned_wish_dir := Vector3.ZERO
 var noclip_speed_mult := 3.0
 var noclip := false
 
+const MAX_STEP_HEIGHT = 0.5
+var _snapped_to_stairs_last_frame := false
+var _last_frame_was_on_floor = -INF
+
 
 func _ready() -> void:
 	for child: VisualInstance3D in %WorldModel.find_children("*", "VisualInstance3D"):
@@ -59,6 +63,73 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	handle_controller_look_input(delta)
+
+
+var _saved_camera_global_pos = null
+
+func save_camera_pos_for_smoothing():
+	if _saved_camera_global_pos == null:
+		_saved_camera_global_pos = %CameraSmooth.global_position
+
+
+func slide_camera_smooth_back_to_origin(delta):
+	if _saved_camera_global_pos == null:
+		return
+	%CameraSmooth.global_position.y = _saved_camera_global_pos.y
+	%CameraSmooth.position.y = clampf(%CameraSmooth.position.y, -0.7, 0.7) # clamp 防止被传送
+	var move_amount = max(self.velocity.length() * delta, walk_speed / 2 * delta)
+	%CameraSmooth.position.y = move_toward(%CameraSmooth.position.y, 0.0, move_amount)
+	_saved_camera_global_pos = %CameraSmooth.global_position
+	if %CameraSmooth.position.y == 0:
+		_saved_camera_global_pos = null # 停止平滑相机
+
+
+func snap_down_to_stairs_check() -> void:
+	var did_snap := false
+	var floor_below: bool = %StairsBelowRayCast3D.is_colliding() \
+		and not is_surface_too_steep(%StairsBelowRayCast3D.get_collision_normal())
+	var was_on_floor_last_frame = Engine.get_physics_frames() - _last_frame_was_on_floor == 1
+	if not is_on_floor() and velocity.y <= 0 \
+			and (was_on_floor_last_frame or _snapped_to_stairs_last_frame) and floor_below:
+		var body_test_result = PhysicsTestMotionResult3D.new()
+		if run_body_test_motion(self.global_transform, Vector3(0, -MAX_STEP_HEIGHT, 0), body_test_result):
+			save_camera_pos_for_smoothing()
+			var translate_y = body_test_result.get_travel().y
+			self.position.y += translate_y
+			apply_floor_snap()
+			did_snap = true
+	_snapped_to_stairs_last_frame = did_snap
+
+
+func snap_up_stairs_check(delta) -> bool:
+	if not is_on_floor() and not _snapped_to_stairs_last_frame:
+		return false
+	var expected_move_motion = self.velocity * Vector3(1, 0, 1) * delta
+	var step_pos_with_clearance = self.global_transform.translated(expected_move_motion + Vector3(0, MAX_STEP_HEIGHT * 2, 0))
+	# 运行一个稍微高于我们期待移动到的，朝向地板的位置的 body_test_motion 
+	# 我们给了一些上方的净空区域来确保玩家有足够的空间
+	# 如果它碰到一个 step <= MAX_STEP_HEIGHT，我们可以传送玩家到台阶上
+	# 同时进行他本打算进行的向前移动
+	var down_check_result = PhysicsTestMotionResult3D.new()
+	if run_body_test_motion(step_pos_with_clearance, Vector3(0, -MAX_STEP_HEIGHT * 2, 0), down_check_result) \
+			and (down_check_result.get_collider() is StaticBody3D or down_check_result.get_collider() is CSGShape3D):
+		var step_height = ((step_pos_with_clearance.origin + down_check_result.get_travel()) - self.global_position).y
+		# 注意我放入了 step_height <= 0.01，因为我注意到它防止了一些物理抖动
+		# 0.02 会变得试验（trial）和错误。太大并且有时卡在台阶上。太小则会在跑上天花板时抖动
+		# 无论如何，普通角色控制器（jolt 以及默认）看上去能够处理 0.1 的台阶
+		if step_height > MAX_STEP_HEIGHT or step_height <= 0.01 \
+				or (down_check_result.get_collision_point() - self.global_position).y > MAX_STEP_HEIGHT:
+			return false
+		%StairsAheadRayCast3D.global_position = down_check_result.get_collision_point() \
+			+ Vector3(0, MAX_STEP_HEIGHT, 0) + expected_move_motion.normalized() * 0.1
+		%StairsAheadRayCast3D.force_raycast_update()
+		if %StairsAheadRayCast3D.is_colliding() and not is_surface_too_steep(%StairsAheadRayCast3D.get_collision_normal()):
+			save_camera_pos_for_smoothing()
+			self.global_position = step_pos_with_clearance.origin + down_check_result.get_travel()
+			apply_floor_snap()
+			_snapped_to_stairs_last_frame = true
+			return true
+	return false
 
 
 func handle_noclip(delta) -> bool:
@@ -96,6 +167,9 @@ func handle_controller_look_input(delta):
 
 
 func _physics_process(delta: float) -> void:
+	if is_on_floor():
+		_last_frame_was_on_floor = Engine.get_physics_frames()
+	
 	var input_dir = \
 		Input.get_vector("move_left", "move_right", "move_forward", "move_backward") \
 			.normalized()
@@ -104,7 +178,7 @@ func _physics_process(delta: float) -> void:
 	cam_aligned_wish_dir = %Camera3D.global_transform.basis * Vector3(input_dir.x, 0., input_dir.y)
 	
 	if not handle_noclip(delta):
-		if is_on_floor():
+		if is_on_floor() or _snapped_to_stairs_last_frame:
 			if Input.is_action_just_pressed("jump") \
 					or (auto_bhop and Input.is_action_pressed("jump")):
 				self.velocity.y = jump_velocity
@@ -112,7 +186,13 @@ func _physics_process(delta: float) -> void:
 		else:
 			handle_air_physics(delta)
 		
-		move_and_slide()
+		if not snap_up_stairs_check(delta):
+			# 因为 snap_up_stairs_check 手动移动 body，不要调用 move_and_slide
+			# 这将运行正常，因为我们通过 body_test_motion 确保了它不与除它移动上的台阶外的任何物体碰撞
+			move_and_slide()
+			snap_down_to_stairs_check()
+	
+	slide_camera_smooth_back_to_origin(delta)
 
 
 func clip_velocity(normal: Vector3, overbounce: float, delta: float) -> void:
@@ -135,8 +215,16 @@ func clip_velocity(normal: Vector3, overbounce: float, delta: float) -> void:
 
 
 func is_surface_too_steep(normal: Vector3) -> bool:
-	var max_slope_ang_dot = Vector3.UP.rotated(Vector3.RIGHT, self.floor_max_angle).dot(Vector3.UP)
-	return normal.dot(Vector3.UP) < max_slope_ang_dot
+	return normal.angle_to(Vector3.UP) > self.floor_max_angle
+
+
+func run_body_test_motion(from: Transform3D, motion: Vector3, result = null) -> bool:
+	if not result:
+		result = PhysicsTestMotionResult3D.new()
+	var params = PhysicsTestMotionParameters3D.new()
+	params.from = from
+	params.motion = motion
+	return PhysicsServer3D.body_test_motion(self.get_rid(), params, result)
 
 
 func handle_air_physics(delta) -> void:

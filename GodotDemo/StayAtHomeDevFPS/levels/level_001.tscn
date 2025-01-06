@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=3 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=45 format=3 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/interaction_component.gd" id="6_r1tag"]
 [ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
 [ext_resource type="Script" path="res://scripts/pick_up_component.gd" id="8_ik0pe"]
+[ext_resource type="PackedScene" path="res://utils/CSGStairMaker3D.tscn" id="10_0hogi"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gd0ev"]
 material = ExtResource("2_x5xie")
@@ -155,6 +156,23 @@ _data = {
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mr65q"]
+render_priority = 0
+shader = ExtResource("3_60min")
+shader_parameter/albedo = Color(1, 0.0078125, 0.0078125, 1)
+shader_parameter/point_size = 1.0
+shader_parameter/roughness = 0.5
+shader_parameter/metallic_texture_channel = Vector4(1, 0, 0, 0)
+shader_parameter/specular = 0.5
+shader_parameter/metallic = 0.0
+shader_parameter/uv1_blend_sharpness = 1.0
+shader_parameter/uv1_scale = Vector3(0.5, 0.5, 0.5)
+shader_parameter/uv1_offset = Vector3(0.5, 0.5, 0.5)
+shader_parameter/uv2_scale = Vector3(1, 1, 1)
+shader_parameter/uv2_offset = Vector3(0, 0, 0)
+shader_parameter/texture_albedo = ExtResource("3_yfwkt")
+shader_parameter/texture_roughness = ExtResource("3_yfwkt")
 
 [node name="Node3D" type="Node3D"]
 
@@ -470,11 +488,11 @@ context = "Pick Up the Cube"
 script = ExtResource("8_ik0pe")
 pickup_distance = Vector3(0, 0, -2)
 
-[node name="Path3D" type="Path3D" parent="."]
+[node name="SurfPath" type="Path3D" parent="."]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, -25)
 curve = SubResource("Curve3D_k6j2d")
 
-[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Path3D"]
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="SurfPath"]
 use_collision = true
 polygon = PackedVector2Array(0, 0, 0.5, 1, 1, 0)
 mode = 2
@@ -488,3 +506,24 @@ path_continuous_u = true
 path_u_distance = 1.0
 path_joined = false
 material = SubResource("ShaderMaterial_3khhp")
+
+[node name="CSGStairMaker3D" parent="." instance=ExtResource("10_0hogi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.5, -7)
+use_collision = true
+size = Vector3(6, 5, 5)
+material = SubResource("ShaderMaterial_62u37")
+num_stairs = 10
+
+[node name="CSGStairMaker3D2" parent="." instance=ExtResource("10_0hogi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.5, -13)
+use_collision = true
+size = Vector3(5, 5, 5)
+material = SubResource("ShaderMaterial_0racc")
+num_stairs = 10
+
+[node name="CSGStairMaker3D3" parent="." instance=ExtResource("10_0hogi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.5, -19)
+use_collision = true
+size = Vector3(4, 5, 5)
+material = SubResource("ShaderMaterial_mr65q")
+num_stairs = 10
