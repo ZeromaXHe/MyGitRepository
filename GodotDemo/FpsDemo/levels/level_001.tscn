@@ -1,4 +1,4 @@
-[gd_scene load_steps=89 format=4 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=98 format=4 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
 [ext_resource type="Script" path="res://scripts/reticule.gd" id="2_1e1u0"]
@@ -16,6 +16,8 @@
 [ext_resource type="PackedScene" uid="uid://bak8ltrhbmlv5" path="res://utils/CSGStairMaker3D.tscn" id="10_0hogi"]
 [ext_resource type="PackedScene" uid="uid://ca0wevg1lb4rx" path="res://utils/WaterMaker3D/WaterMaker3D.tscn" id="11_iqhhq"]
 [ext_resource type="Script" path="res://controllers/scripts/majikayo/interactable_component.gd" id="16_5uo3l"]
+[ext_resource type="PackedScene" uid="uid://cdp4s5g3gijqj" path="res://meshes/decorations/disguise-glasses.glb" id="17_bneh5"]
+[ext_resource type="PackedScene" uid="uid://7dm87wp0hyjg" path="res://meshes/decorations/wiggly_hair.tscn" id="18_5sc8o"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gd0ev"]
 material = ExtResource("2_x5xie")
@@ -462,6 +464,46 @@ _data = {
 cull_mode = 1
 shading_mode = 0
 albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wg56g"]
+bounce = 1.0
+
+[sub_resource type="GDScript" id="GDScript_stlew"]
+script/source = "extends RigidBody3D
+
+@export var hp: int = 300
+
+var max_hp: int
+var material: StandardMaterial3D
+
+func _ready() -> void:
+	$Label3D.text = \"HP: \" + str(hp) + \" / \" + str(max_hp)
+	max_hp = hp
+	material = $MeshInstance3D.mesh.material as StandardMaterial3D
+
+
+func take_damage(amount: int):
+	hp -= amount
+	$Label3D.text = \"HP: \" + str(hp) + \" / \" + str(max_hp)
+	var hp_percent = float(hp) / max_hp
+	material.albedo_color = Color(1, hp_percent, hp_percent)
+	if hp <= 0:
+		self.queue_free()
+"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_lvob0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tvirb"]
+albedo_color = Color(0.851563, 0.851563, 0.851563, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_a8n81"]
+material = SubResource("StandardMaterial3D_tvirb")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_43x3c"]
+albedo_color = Color(0.851563, 0.851563, 0.851563, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_q2tva"]
+material = SubResource("StandardMaterial3D_43x3c")
 
 [node name="Node3D" type="Node3D"]
 
@@ -1400,6 +1442,55 @@ radius = 0.6
 height = 0.45
 sides = 9
 material = SubResource("StandardMaterial3D_dotlj")
+
+[node name="SwagTarget" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 5, 3)
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_wg56g")
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, -1, 0)
+script = SubResource("GDScript_stlew")
+hp = 50
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SwagTarget"]
+shape = SubResource("CapsuleShape3D_lvob0")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SwagTarget"]
+mesh = SubResource("CapsuleMesh_a8n81")
+
+[node name="disguise-glasses" parent="SwagTarget/MeshInstance3D" instance=ExtResource("17_bneh5")]
+transform = Transform3D(-2, 0, -1.74846e-07, 0, 2, 0, 1.74846e-07, 0, -2, 4.23356e-08, 0, -0.119333)
+
+[node name="WigglyHair" parent="SwagTarget/MeshInstance3D" instance=ExtResource("18_5sc8o")]
+
+[node name="Label3D" type="Label3D" parent="SwagTarget"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1.8, 0)
+text = "HP: 1000"
+font_size = 64
+
+[node name="SwagTarget2" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 0)
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_wg56g")
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, -1, 0)
+script = SubResource("GDScript_stlew")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SwagTarget2"]
+shape = SubResource("CapsuleShape3D_lvob0")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SwagTarget2"]
+mesh = SubResource("CapsuleMesh_q2tva")
+
+[node name="disguise-glasses" parent="SwagTarget2/MeshInstance3D" instance=ExtResource("17_bneh5")]
+transform = Transform3D(-2, 0, -1.74846e-07, 0, 2, 0, 1.74846e-07, 0, -2, 4.23356e-08, 0, -0.119333)
+
+[node name="WigglyHair" parent="SwagTarget2/MeshInstance3D" instance=ExtResource("18_5sc8o")]
+
+[node name="Label3D" type="Label3D" parent="SwagTarget2"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1.8, 0)
+text = "HP: 1000"
+font_size = 64
 
 [connection signal="interacted" from="ButtonDoorWall/AnimatableBody3D/InteractableComponent" to="ButtonDoorWall/AnimatableBody3D" method="toggle_open"]
 [connection signal="interacted" from="ButtonDoorWall/StaticBody3D/InteractableComponent" to="ButtonDoorWall/AnimatableBody3D" method="toggle_open"]

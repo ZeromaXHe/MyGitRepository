@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=7 format=3 uid="uid://clr3jxms1mmet"]
+
+[ext_resource type="AudioStream" uid="uid://dku7yns6ke5ee" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-276959__gfl7__pistol-reload-sound.mp3" id="1_0aeyw"]
+[ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/weapon_resource.gd" id="1_w567b"]
+[ext_resource type="PackedScene" uid="uid://bolbpv50nk5vr" path="res://controllers/scripts/majikayo/weapon_manager/deagle/deagle - viewmodel.glb" id="2_ksqhc"]
+[ext_resource type="PackedScene" uid="uid://cnjmui6sguihe" path="res://controllers/scripts/majikayo/weapon_manager/deagle/deagle.glb" id="3_13ucl"]
+[ext_resource type="AudioStream" uid="uid://c4lnuemccd3m8" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-371041__morganpurkis__single-gunshot-3.wav" id="3_yvege"]
+[ext_resource type="AudioStream" uid="uid://bil0vvb14drhx" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-377145__nioczkus__pistol-draw-unholster.wav" id="4_2yph3"]
+
+[resource]
+script = ExtResource("1_w567b")
+view_model = ExtResource("2_ksqhc")
+world_model = ExtResource("3_13ucl")
+view_model_pos = Vector3(0.13, -0.325, 0.306)
+view_model_rot = Vector3(0, -3.142, 0)
+view_model_scale = Vector3(1, 1, 1)
+world_model_pos = Vector3(-0.062, 0.317, 0.043)
+world_model_rot = Vector3(0.044, 2.225, 1.447)
+world_model_scale = Vector3(0.147, 0.147, 0.147)
+view_idle_anim = "Idle"
+view_equip_anim = "Unholster"
+view_shoot_anim = "Shoot"
+view_reload_anim = "Reload"
+shoot_sound = ExtResource("3_yvege")
+reload_sound = ExtResource("1_0aeyw")
+unholster_sound = ExtResource("4_2yph3")
+damage = 10
+current_ammo = 7.0
+magazine_capacity = 7.0
+reserve_ammo = 999.0
+max_reserve_ammo = 999.0
+auto_fire = false
+max_fire_rate_ms = 50

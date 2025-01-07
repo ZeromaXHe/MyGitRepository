@@ -52,13 +52,27 @@ const MAX_STEP_HEIGHT = 0.5
 var _snapped_to_stairs_last_frame := false
 var _last_frame_was_on_floor = -INF
 
+const VIEW_MODEL_LAYER = 9
+const WORLD_MODEL_LAYER = 2
+
 
 func _ready() -> void:
 	Global.player = self
-	for child: VisualInstance3D in %WorldModel.find_children("*", "VisualInstance3D"):
-		child.set_layer_mask_value(1, false)
-		child.set_layer_mask_value(2, true)
+	update_view_and_world_model_masks()
 	update_camera()
+
+
+func update_view_and_world_model_masks():
+	for child: VisualInstance3D in %WorldModel.find_children("*", "VisualInstance3D", true, false):
+		child.set_layer_mask_value(1, false)
+		child.set_layer_mask_value(WORLD_MODEL_LAYER, true)
+	for child: VisualInstance3D in %ViewModel.find_children("*", "VisualInstance3D", true, false):
+		child.set_layer_mask_value(1, false)
+		child.set_layer_mask_value(VIEW_MODEL_LAYER, true)
+		if child is GeometryInstance3D:
+			child.cast_shadow = false
+	%Camera3D.set_cull_mask_value(WORLD_MODEL_LAYER, false)
+	%ThirdPersonCamera3D.set_cull_mask_value(VIEW_MODEL_LAYER, false)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -68,6 +82,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
 	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		# 我自己加的切换视角按键（教程没有）
+		if Input.is_action_just_pressed("change_view"):
+			match camera_style:
+				CameraStyle.THIRD_PERSON_FREE_LOOK:
+					camera_style = CameraStyle.FIRST_PERSON
+				CameraStyle.FIRST_PERSON:
+					camera_style = CameraStyle.THIRD_PERSON_VERTICAL_LOOK
+				CameraStyle.THIRD_PERSON_VERTICAL_LOOK:
+					camera_style = CameraStyle.THIRD_PERSON_FREE_LOOK
+		
 		if event is InputEventMouseMotion:
 			if camera_style == CameraStyle.THIRD_PERSON_FREE_LOOK:
 				# 在自由视角模式下，旋转摄像机轨道，而不是玩家
