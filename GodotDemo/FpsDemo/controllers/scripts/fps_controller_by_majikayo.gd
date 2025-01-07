@@ -73,6 +73,23 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	handle_controller_look_input(delta)
+	var c = get_interactable_component_at_shapecast()
+	if c:
+		c.hover_cursor(self)
+		if Input.is_action_just_pressed("interact"):
+			c.interact_with()
+
+
+func get_interactable_component_at_shapecast() -> InteractableComponent:
+	for i in %InteractShapeCast3D.get_collision_count():
+		# 允许和玩家碰撞
+		if i > 0 and %InteractShapeCast3D.get_collider(0) != $".":
+			return null
+		var c = (%InteractShapeCast3D.get_collider(i) as Node) \
+			.get_node_or_null("InteractableComponent")
+		if c is InteractableComponent:
+			return c
+	return null
 
 
 var _saved_camera_global_pos = null

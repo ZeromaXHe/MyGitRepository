@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://du8k8mrf5fv0m"]
+[gd_scene load_steps=8 format=3 uid="uid://du8k8mrf5fv0m"]
 
 [ext_resource type="Script" path="res://controllers/scripts/fps_controller_by_majikayo.gd" id="1_1hehx"]
 [ext_resource type="PackedScene" uid="uid://cdp4s5g3gijqj" path="res://meshes/decorations/disguise-glasses.glb" id="1_2r1gh"]
@@ -8,6 +8,9 @@
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nga15"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_rv6a4"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_n7gnd"]
+radius = 0.25
 
 [node name="FPSControllerByMajikayo" type="CharacterBody3D" node_paths=PackedStringArray("CAMERA_CONTROLLER")]
 platform_floor_layers = 4294967292
@@ -53,6 +56,13 @@ script = ExtResource("4_ygiri")
 [node name="ReflectionProbe" type="ReflectionProbe" parent="HeadOriginalPosition/Head/CameraSmooth/Camera3D"]
 update_mode = 1
 enable_shadows = true
+
+[node name="InteractShapeCast3D" type="ShapeCast3D" parent="HeadOriginalPosition/Head/CameraSmooth/Camera3D"]
+unique_name_in_owner = true
+shape = SubResource("SphereShape3D_n7gnd")
+target_position = Vector3(0, 0, -1.85)
+max_results = 2
+collide_with_areas = true
 
 [node name="StairsAheadRayCast3D" type="RayCast3D" parent="."]
 unique_name_in_owner = true
