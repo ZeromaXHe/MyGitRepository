@@ -26,6 +26,7 @@ var headbob_time := 0.0
 @export var air_move_speed := 500.0
 
 @export var swim_up_speed := 10.0
+@export var climb_speed := 7.0
 
 var wish_dir := Vector3.ZERO
 var cam_aligned_wish_dir := Vector3.ZERO
@@ -183,6 +184,83 @@ func snap_up_stairs_check(delta) -> bool:
 	return false
 
 
+var _cur_ladder_climbing: Area3D = null
+
+func handle_ladder_physics(delta) -> bool:
+	# 保持跟踪是否已经在梯子上。如果之前不是已经在梯子上，检查是否和梯子 area3d 重合
+	var was_climbing_ladder := _cur_ladder_climbing and _cur_ladder_climbing.overlaps_body(self)
+	if not was_climbing_ladder:
+		_cur_ladder_climbing = null
+		for ladder: Area3D in get_tree().get_nodes_in_group("ladder_area3d"):
+			if ladder.overlaps_body(self):
+				_cur_ladder_climbing = ladder
+	if _cur_ladder_climbing == null:
+		return false
+	# 设置变量。这里大多数将取决于玩家的相对梯子的位置/速度/输入
+	var ladder_gtransform: Transform3D = _cur_ladder_climbing.global_transform
+	var pos_rel_to_ladder := ladder_gtransform.affine_inverse() * self.global_position
+	
+	var forward_move := Input.get_action_strength("move_forward")\
+		- Input.get_action_strength("move_backward")
+	var side_move := Input.get_action_strength("move_right") \
+		- Input.get_action_strength("move_left")
+	var ladder_forward_move = ladder_gtransform.affine_inverse().basis \
+		* %Camera3D.global_transform.basis * Vector3(0, 0, -forward_move)
+	var ladder_side_move = ladder_gtransform.affine_inverse().basis \
+		* %Camera3D.global_transform.basis * Vector3(side_move, 0, 0)
+	# Strafe 速度很简单。只需要取相对于梯子的 x 分量
+	var ladder_strafe_vel: float = climb_speed * (ladder_side_move.x + ladder_forward_move.x)
+	# 对于攀爬速度，有一些事情需要考虑：
+	# 如果直接 strafing into 梯子，向上，如果 strafing away，向下
+	var ladder_climb_vel: float = climb_speed * -ladder_side_move.z
+	# 当按下向前 & 面向梯子，玩家很可能想向上爬，反之则向下
+	# 所以我们将向我们面朝方向来为上下检测偏置 45 度方向（上/下）
+	var cam_forward_amount: float = %Camera3D.basis.z.dot(_cur_ladder_climbing.basis.z)
+	var up_wish := Vector3.UP.rotated(Vector3.RIGHT, deg_to_rad(-45 * cam_forward_amount)) \
+		.dot(ladder_forward_move)
+	ladder_climb_vel += climb_speed * up_wish
+	
+	# 仅仅在向梯子移动时开始攀爬 & 当爬下梯子时防止卡在梯子顶部
+	# 尽量尝试在爬梯子时匹配玩家意图
+	var should_dismount = false
+	if not was_climbing_ladder:
+		var mounting_from_top = pos_rel_to_ladder.y > _cur_ladder_climbing.get_node("TopOfLadder").position.y
+		if mounting_from_top:
+			# 他们应该在尝试达到梯子顶部，或尝试离开梯子
+			if ladder_climb_vel > 0:
+				should_dismount = true
+		else:
+			# 如果不是爬上顶部，他们也可以坠落或在地面
+			# 在这种情况下，仅在有意识地向梯子移动时爬
+			if (ladder_gtransform.affine_inverse().basis * wish_dir).z >= 0:
+				should_dismount = true
+		# 仅仅在梯子非常近时爬。帮助我们更简单地脱离顶部 & 防止相机抖动
+		if abs(pos_rel_to_ladder.z) > 0.1:
+			should_dismount = true
+	# 让玩家在地面可以走出
+	if is_on_floor() and ladder_climb_vel <= 0:
+		should_dismount = true
+	
+	if should_dismount:
+		_cur_ladder_climbing = null
+		return false
+	
+	# 允许在梯子中间跳离
+	if was_climbing_ladder and Input.is_action_just_pressed("jump"):
+		self.velocity = _cur_ladder_climbing.global_transform.basis.z * jump_velocity * 1.5
+		_cur_ladder_climbing = null
+		return false
+	
+	self.velocity = ladder_gtransform.basis * Vector3(ladder_strafe_vel, ladder_climb_vel, 0)
+	#self.velocity = self.velocity.limit_length(climb_speed) # 不建议取消梯子加速
+	# Snap 玩家到梯子上
+	pos_rel_to_ladder.z = 0
+	self.global_position = ladder_gtransform * pos_rel_to_ladder
+	
+	move_and_slide()
+	return true
+
+
 # 当玩家在水里时返回 true，这种情况下不要运行正常的空中/地面物理
 func handle_water_physics(delta) -> bool:
 	if get_tree().get_nodes_in_group("water_area") \
@@ -279,7 +357,7 @@ func _physics_process(delta: float) -> void:
 	
 	handle_crouch(delta)
 	
-	if not handle_noclip(delta):
+	if not handle_noclip(delta) and not handle_ladder_physics(delta):
 		if not handle_water_physics(delta):
 			if is_on_floor() or _snapped_to_stairs_last_frame:
 				if Input.is_action_just_pressed("jump") \
