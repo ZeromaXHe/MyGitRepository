@@ -108,6 +108,33 @@ func update_camera():
 	get_active_camera().current = true
 
 
+@onready var animation_tree: AnimationTree = $WorldModel/DesertDroidContainer/AnimationTree
+@onready var state_machine_playback: AnimationNodeStateMachinePlayback = \
+	$WorldModel/DesertDroidContainer/AnimationTree.get("parameters/playback")
+
+func update_animations():
+	if noclip or (not is_on_floor() and not _snapped_to_stairs_last_frame):
+		if is_crouched:
+			state_machine_playback.travel("MidJumpCrouch")
+		else:
+			state_machine_playback.travel("MidJump")
+		return
+	
+	var rel_vel = self.global_basis.inverse() * ((self.velocity * Vector3(1, 0, 1)) / get_move_speed())
+	var rel_vel_xz = Vector2(rel_vel.x, -rel_vel.z)
+	
+	if is_crouched:
+		state_machine_playback.travel("CrouchBlendSpace2D")
+		animation_tree.set("parameters/CrouchBlendSpace2D/blend_position", rel_vel_xz)
+	elif Input.is_action_pressed("sprint"):
+		state_machine_playback.travel("RunBlendSpace2D")
+		animation_tree.set("parameters/RunBlendSpace2D/blend_position", rel_vel_xz)
+	else:
+		state_machine_playback.travel("WalkBlendSpace2D")
+		animation_tree.set("parameters/WalkBlendSpace2D/blend_position", rel_vel_xz)
+		
+
+
 func _process(delta: float) -> void:
 	handle_controller_look_input(delta)
 	var c = get_interactable_component_at_shapecast()
@@ -124,6 +151,8 @@ func _process(delta: float) -> void:
 			max(0.1, abs(add_rotation_y / TAU))) - self.global_rotation.y
 		self.rotation.y += rot_towards
 		%ThirdPersonCamYaw.rotation.y -= rot_towards
+	
+	update_animations()
 
 
 func get_interactable_component_at_shapecast() -> InteractableComponent:
@@ -354,12 +383,6 @@ func handle_crouch(delta) -> void:
 		- CROUCH_TRANSLATE if is_crouched else _original_capsule_height
 	$CollisionShape3D.shape.height = shape_height
 	$CollisionShape3D.position.y = $CollisionShape3D.shape.height / 2
-	# 自行添加的处理网格视觉高度逻辑（教程没讲）
-	var mesh = %WorldModel.get_node("MeshInstance3D").mesh as CapsuleMesh
-	mesh.height = shape_height
-	%WorldModel.position.y = shape_height / 2
-	%WorldModel.get_node("disguise-glasses").position.y = shape_height / 8
-	%WorldModel.get_node("WigglyHair").position.y = shape_height / 8 * 3
 
 
 func handle_noclip(delta) -> bool:
