@@ -26,6 +26,7 @@ func update_weapon_model() -> void:
 			current_weapon_view_model.position = current_weapon.view_model_pos
 			current_weapon_view_model.rotation = current_weapon.view_model_rot
 			current_weapon_view_model.scale = current_weapon.view_model_scale
+			apply_clip_and_fov_shader_to_view_model(current_weapon_view_model)
 			if get_view_model_anim_player():
 				get_view_model_anim_player().current_animation_changed.connect(current_anim_changed)
 		if world_model_container and current_weapon.world_model:
@@ -37,6 +38,47 @@ func update_weapon_model() -> void:
 		current_weapon.is_equipped = true
 		if player.has_method("update_view_and_world_model_masks"):
 			player.update_view_and_world_model_masks()
+
+@onready var clip_shader = preload("res://shaders/majikayo/weapon_clip_and_fov_shader.gdshader")
+
+# 在任何节点调用这个函数来应用 weapon_clip_and_fov_shader.gdshader 到其中的所有网格
+func apply_clip_and_fov_shader_to_view_model(node3d: Node3D, fov_or_negative_for_unchanged = -1.0):
+	var all_mesh_instances = node3d.find_children("*", "MeshInstance3D")
+	if node3d is MeshInstance3D:
+		all_mesh_instances.push_back(node3d)
+	for mesh_instance: MeshInstance3D in all_mesh_instances:
+		var mesh = mesh_instance.mesh
+		# 关闭视图模型的阴影投射非常重要，否则会导致两方面都出问题：
+		# 视图模型一旦 unclipped 会投射阴影在它自身上， & 投射到世界也将看上去奇怪
+		mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for surface_idx in mesh.get_surface_count(): # 注意：又是这种直接不需要 range 的语法
+			var surf_mat = mesh.surface_get_material(surface_idx)
+			if not surf_mat is BaseMaterial3D:
+				continue
+			var base_mat = surf_mat as BaseMaterial3D
+			var weapon_shader_material := ShaderMaterial.new()
+			weapon_shader_material.shader = clip_shader
+			weapon_shader_material.set_shader_parameter("texture_albedo",
+				base_mat.albedo_texture)
+			weapon_shader_material.set_shader_parameter("texture_metallic",
+				base_mat.metallic_texture)
+			weapon_shader_material.set_shader_parameter("texture_roughness",
+				base_mat.roughness_texture)
+			weapon_shader_material.set_shader_parameter("texture_normal",
+				base_mat.normal_texture)
+			weapon_shader_material.set_shader_parameter("albedo", base_mat.albedo_color)
+			weapon_shader_material.set_shader_parameter("metallic", base_mat.metallic)
+			weapon_shader_material.set_shader_parameter("specular", base_mat.metallic_specular)
+			weapon_shader_material.set_shader_parameter("roughness", base_mat.roughness)
+			weapon_shader_material.set_shader_parameter("viewmodel_fov",
+				fov_or_negative_for_unchanged)
+			var tex_channels = {
+				0: Vector4(1., 0., 0., 0.), 1: Vector4(0., 1., 0., 0.),
+				2: Vector4(0., 0., 1., 0.), 3: Vector4(1., 0., 0., 1.), 4: Vector4.ZERO
+			}
+			weapon_shader_material.set_shader_parameter("metallic_texture_channel",
+				tex_channels[base_mat.metallic_texture_channel])
+			mesh.surface_set_material(surface_idx, weapon_shader_material)
 
 
 func play_sound(sound: AudioStream):

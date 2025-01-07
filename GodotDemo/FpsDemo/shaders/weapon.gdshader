@@ -38,6 +38,7 @@ void vertex() {
 
 	POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX.xyz, 1.0);
 	POSITION.z = 0.1; // mix(POSITION.z, 0, 0.99); // 这里不知道为啥没法用原教程的代码
+	// Majikayo 的视频解释了这里为啥没用的原因， 4.3 反转了 Z buffer
 }
 
 void fragment() {
