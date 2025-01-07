@@ -28,6 +28,15 @@ var headbob_time := 0.0
 @export var swim_up_speed := 10.0
 @export var climb_speed := 7.0
 
+# 相机选项
+enum CameraStyle {
+	FIRST_PERSON, THIRD_PERSON_VERTICAL_LOOK, THIRD_PERSON_FREE_LOOK
+}
+@export var camera_style : CameraStyle = CameraStyle.FIRST_PERSON:
+	set(v):
+		camera_style = v
+		update_camera()
+
 var wish_dir := Vector3.ZERO
 var cam_aligned_wish_dir := Vector3.ZERO
 
@@ -49,6 +58,7 @@ func _ready() -> void:
 	for child: VisualInstance3D in %WorldModel.find_children("*", "VisualInstance3D"):
 		child.set_layer_mask_value(1, false)
 		child.set_layer_mask_value(2, true)
+	update_camera()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -59,9 +69,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	
 	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		if event is InputEventMouseMotion:
-			rotate_y(-event.relative.x * look_sensitivity)
+			if camera_style == CameraStyle.THIRD_PERSON_FREE_LOOK:
+				# 在自由视角模式下，旋转摄像机轨道，而不是玩家
+				%ThirdPersonCamYaw.rotate_y(-event.relative.x * look_sensitivity)
+			else:
+				%ThirdPersonCamYaw.rotation.y = 0
+				rotate_y(-event.relative.x * look_sensitivity)
+			# 第一人称上下看
 			%Camera3D.rotate_x(-event.relative.y * look_sensitivity)
 			%Camera3D.rotation.x = clamp(%Camera3D.rotation.x, deg_to_rad(-90), deg_to_rad(90))
+			# 第三人称上下看
+			%ThirdPersonCamPitch.rotate_x(-event.relative.y * look_sensitivity)
+			%ThirdPersonCamPitch.rotation.x = \
+				clamp(%ThirdPersonCamPitch.rotation.x, deg_to_rad(-90), deg_to_rad(90))
 	
 	# 滚轮调整 noclip 速度乘数
 	if event is InputEventMouseButton and event.is_pressed():
@@ -72,6 +92,22 @@ func _unhandled_input(event: InputEvent) -> void:
 			noclip_speed_mult = max(0.1, noclip_speed_mult * 0.9)
 
 
+func get_active_camera() -> Camera3D:
+	if camera_style == CameraStyle.FIRST_PERSON:
+		return %Camera3D
+	else:
+		return %ThirdPersonCamera3D
+
+
+func update_camera():
+	if not is_inside_tree():
+		return
+	var cameras = [%Camera3D, %ThirdPersonCamera3D]
+	if not cameras.any(func(c: Camera3D): return c.current):
+		return # 如果没有当前相机，则不要更新相机，可能是在 cutscene cam 或其他的
+	get_active_camera().current = true
+
+
 func _process(delta: float) -> void:
 	handle_controller_look_input(delta)
 	var c = get_interactable_component_at_shapecast()
@@ -79,6 +115,15 @@ func _process(delta: float) -> void:
 		c.hover_cursor(self)
 		if Input.is_action_just_pressed("interact"):
 			c.interact_with()
+	if camera_style == CameraStyle.THIRD_PERSON_FREE_LOOK and wish_dir.length():
+		# 如果在自由视角模式，摄像机决定移动方向，而不是角色的方向。所以根据速度修改角色方向
+		var add_rotation_y = (-self.global_transform.basis.z) \
+			.signed_angle_to(wish_dir.normalized(), Vector3.UP)
+		var rot_towards = lerp_angle(self.global_rotation.y,
+			self.global_rotation.y + add_rotation_y,
+			max(0.1, abs(add_rotation_y / TAU))) - self.global_rotation.y
+		self.rotation.y += rot_towards
+		%ThirdPersonCamYaw.rotation.y -= rot_towards
 
 
 func get_interactable_component_at_shapecast() -> InteractableComponent:
@@ -205,9 +250,9 @@ func handle_ladder_physics(delta) -> bool:
 	var side_move := Input.get_action_strength("move_right") \
 		- Input.get_action_strength("move_left")
 	var ladder_forward_move = ladder_gtransform.affine_inverse().basis \
-		* %Camera3D.global_transform.basis * Vector3(0, 0, -forward_move)
+		* get_active_camera().global_transform.basis * Vector3(0, 0, -forward_move)
 	var ladder_side_move = ladder_gtransform.affine_inverse().basis \
-		* %Camera3D.global_transform.basis * Vector3(side_move, 0, 0)
+		* get_active_camera().global_transform.basis * Vector3(side_move, 0, 0)
 	# Strafe 速度很简单。只需要取相对于梯子的 x 分量
 	var ladder_strafe_vel: float = climb_speed * (ladder_side_move.x + ladder_forward_move.x)
 	# 对于攀爬速度，有一些事情需要考虑：
@@ -305,9 +350,16 @@ func handle_crouch(delta) -> void:
 		%Head.position.y = clampf(%Head.position.y, -CROUCH_TRANSLATE, 0)
 	
 	%Head.position.y = move_toward(%Head.position.y, -CROUCH_TRANSLATE if is_crouched else 0, 7.0 * delta)
-	$CollisionShape3D.shape.height = _original_capsule_height \
+	var shape_height = _original_capsule_height \
 		- CROUCH_TRANSLATE if is_crouched else _original_capsule_height
+	$CollisionShape3D.shape.height = shape_height
 	$CollisionShape3D.position.y = $CollisionShape3D.shape.height / 2
+	# 自行添加的处理网格视觉高度逻辑（教程没讲）
+	var mesh = %WorldModel.get_node("MeshInstance3D").mesh as CapsuleMesh
+	mesh.height = shape_height
+	%WorldModel.position.y = shape_height / 2
+	%WorldModel.get_node("disguise-glasses").position.y = shape_height / 8
+	%WorldModel.get_node("WigglyHair").position.y = shape_height / 8 * 3
 
 
 func handle_noclip(delta) -> bool:
@@ -339,21 +391,30 @@ func handle_controller_look_input(delta):
 	else:
 		_cur_controller_look = _cur_controller_look.lerp(target_look, 5.0 * delta)
 	
-	rotate_y(-_cur_controller_look.x * controller_look_sensitivity) # 左右转
+	if camera_style == CameraStyle.THIRD_PERSON_VERTICAL_LOOK \
+			or camera_style == CameraStyle.FIRST_PERSON:
+		rotate_y(-_cur_controller_look.x * controller_look_sensitivity) # 左右转
+	else:
+		%ThirdPersonCamYaw.rotate_y(-_cur_controller_look.x * controller_look_sensitivity) # 左右转
 	%Camera3D.rotate_x(_cur_controller_look.y * controller_look_sensitivity) # 上下看
 	%Camera3D.rotation.x = clamp(%Camera3D.rotation.x, deg_to_rad(-90), deg_to_rad(90)) # 钳制上下旋转
+	%ThirdPersonCamPitch.rotation.x = %Camera3D.rotation.x
 
 
 func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		_last_frame_was_on_floor = Engine.get_physics_frames()
 	
+	update_camera()
+	
 	var input_dir = \
 		Input.get_vector("move_left", "move_right", "move_forward", "move_backward") \
 			.normalized()
 	# 取决于你想让角色面对的方向，你可能需要对 input_dir 取反
 	wish_dir = self.global_transform.basis * Vector3(input_dir.x, 0., input_dir.y)
-	cam_aligned_wish_dir = %Camera3D.global_transform.basis * Vector3(input_dir.x, 0., input_dir.y)
+	cam_aligned_wish_dir = get_active_camera().global_transform.basis * Vector3(input_dir.x, 0., input_dir.y)
+	if camera_style == CameraStyle.THIRD_PERSON_FREE_LOOK:
+		wish_dir = %ThirdPersonCamYaw.global_transform.basis * Vector3(input_dir.x, 0., input_dir.y)
 	
 	handle_crouch(delta)
 	
