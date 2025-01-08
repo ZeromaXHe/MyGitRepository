@@ -1,0 +1,62 @@
+[gd_scene load_steps=7 format=3 uid="uid://i521hedvnenb"]
+
+[sub_resource type="GDScript" id="GDScript_dfq07"]
+script/source = "extends Node3D
+
+@export var target_pos := Vector3.ZERO
+@export var speed = 75.0 # m/s
+@export var tracer_length = 1
+
+const MAX_LIFETIME_MS = 5000
+
+@onready var spawn_time := Time.get_ticks_msec()
+
+
+func _process(delta: float) -> void:
+	var diff = target_pos - self.global_position
+	var add = diff.normalized() * speed * delta
+	add = add.limit_length(diff.length())
+	self.global_position += add
+	if (target_pos - self.global_position).length() <= tracer_length \\
+			or Time.get_ticks_msec() - spawn_time > MAX_LIFETIME_MS:
+		self.queue_free()
+"
+
+[sub_resource type="Gradient" id="Gradient_fbc8f"]
+offsets = PackedFloat32Array(0, 0.119048, 0.857143, 1)
+colors = PackedColorArray(1, 1, 0.172549, 0, 1, 1, 0.431373, 1, 0.823529, 0.447059, 0, 1, 0.823529, 0.447059, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_2foqq"]
+gradient = SubResource("Gradient_fbc8f")
+height = 256
+fill_from = Vector2(0.5, 1)
+fill_to = Vector2(0.5, 0)
+metadata/_snap_enabled = true
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_7htrm"]
+gradient = SubResource("Gradient_fbc8f")
+height = 256
+fill_from = Vector2(0.5, 1)
+fill_to = Vector2(0.5, 0)
+metadata/_snap_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_atucg"]
+transparency = 1
+cull_mode = 2
+albedo_texture = SubResource("GradientTexture2D_2foqq")
+emission_enabled = true
+emission_texture = SubResource("GradientTexture2D_7htrm")
+
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_xix6d"]
+material = SubResource("StandardMaterial3D_atucg")
+size = 0.013
+sections = 2
+section_length = 0.5
+section_segments = 1
+
+[node name="BulletTracer" type="Node3D"]
+script = SubResource("GDScript_dfq07")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -0.5)
+mesh = SubResource("RibbonTrailMesh_xix6d")

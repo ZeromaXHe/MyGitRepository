@@ -1,8 +1,11 @@
-[gd_scene load_steps=2 format=3 uid="uid://lk7246wbt6on"]
+[gd_scene load_steps=3 format=3 uid="uid://lk7246wbt6on"]
 
 [ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/weapon_manager.gd" id="1_0ybpq"]
+[ext_resource type="PackedScene" uid="uid://ct0t8bmfjwvob" path="res://controllers/scripts/majikayo/weapon_manager/muzzle_flash/muzzle_flash.tscn" id="2_n0yws"]
 
 [node name="WeaponManager" type="Node3D"]
 script = ExtResource("1_0ybpq")
 
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+
+[node name="ViewMuzzleFlash" parent="." instance=ExtResource("2_n0yws")]

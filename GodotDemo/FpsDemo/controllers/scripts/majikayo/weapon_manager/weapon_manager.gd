@@ -14,6 +14,8 @@ extends Node3D
 var current_weapon_view_model: Node3D
 var current_weapon_world_model: Node3D
 
+var current_weapon_view_model_muzzle: Node3D
+
 @onready var audio_stream_player: AudioStreamPlayer3D = $AudioStreamPlayer3D
 
 
@@ -38,6 +40,9 @@ func update_weapon_model() -> void:
 		current_weapon.is_equipped = true
 		if player.has_method("update_view_and_world_model_masks"):
 			player.update_view_and_world_model_masks()
+	current_weapon_view_model_muzzle = view_model_container.find_child("Muzzle", true, false) \
+		if current_weapon_view_model else null
+
 
 @onready var clip_shader = preload("res://shaders/majikayo/weapon_clip_and_fov_shader.gdshader")
 
@@ -143,6 +148,27 @@ func get_anim() -> String:
 	return anim_player.current_animation
 
 
+func show_muzzle_flash():
+	$ViewMuzzleFlash.emitting = true
+
+
+@onready var bullet_tracer_scene: PackedScene = \
+	preload("res://controllers/scripts/majikayo/weapon_manager/muzzle_flash/bullet_tracer.tscn")
+
+func make_bullet_trail(target_pos: Vector3):
+	if current_weapon_view_model_muzzle == null:
+		return
+	var muzzle = current_weapon_view_model_muzzle
+	var bullet_dir = (target_pos - muzzle.global_position).normalized()
+	var start_pos = muzzle.global_position + bullet_dir * 0.25
+	if (target_pos - start_pos).length() > 3.0:
+		var bullet_tracer = bullet_tracer_scene.instantiate()
+		player.add_sibling(bullet_tracer)
+		bullet_tracer.global_position = start_pos
+		bullet_tracer.target_pos = target_pos
+		bullet_tracer.look_at(target_pos)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if current_weapon and is_inside_tree():
 		if event.is_action_pressed("attack") and allow_shoot:
@@ -161,3 +187,5 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if current_weapon:
 		current_weapon.on_process(delta)
+	if current_weapon_view_model_muzzle:
+		$ViewMuzzleFlash.global_position = current_weapon_view_model_muzzle.global_position
