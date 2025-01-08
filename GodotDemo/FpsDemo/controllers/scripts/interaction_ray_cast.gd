@@ -20,8 +20,8 @@ func interact() -> void:
 func interact_cast() -> void:
 	var current_cast_result = get_collider()
 	if current_cast_result != interact_cast_result:
-		if interact_cast_result and interact_cast_result.has_user_signal("unfocused"):
+		if interact_cast_result != null and interact_cast_result.has_user_signal("unfocused"):
 			interact_cast_result.emit_signal("unfocused")
 		interact_cast_result = current_cast_result
-		if interact_cast_result and interact_cast_result.has_user_signal("focused"):
+		if interact_cast_result != null and interact_cast_result.has_user_signal("focused"):
 			interact_cast_result.emit_signal("focused")

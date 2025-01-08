@@ -1,6 +1,12 @@
 class_name WeaponResource
 extends Resource
 
+@export var name: String
+@export var icon: Texture2D
+
+@export_range(1, 9) var slot: int = 1
+@export_range(1, 10) var slot_priority: int = 1
+
 # 用于第一人称视角，持枪的时候。将包含手部模型
 @export var view_model: PackedScene
 # 用于武器在玩家手上或地面上

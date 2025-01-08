@@ -1,14 +1,10 @@
-[gd_scene load_steps=98 format=4 uid="uid://b1yleqbb8tc7x"]
+[gd_scene load_steps=94 format=4 uid="uid://b1yleqbb8tc7x"]
 
 [ext_resource type="PackedScene" uid="uid://btv0a42cgxt8g" path="res://levels/WE_test.tscn" id="1_db21n"]
-[ext_resource type="Script" path="res://scripts/reticule.gd" id="2_1e1u0"]
 [ext_resource type="Material" uid="uid://cn1gsy15bkaff" path="res://materials/grid.tres" id="2_x5xie"]
 [ext_resource type="Shader" path="res://shaders/grid.gdshader" id="3_60min"]
-[ext_resource type="Theme" uid="uid://c0i4y7i57cc5u" path="res://ui/themes/debug.tres" id="3_wlxsm"]
 [ext_resource type="Texture2D" uid="uid://ivvpsi314b34" path="res://textures/grid.jpg" id="3_yfwkt"]
-[ext_resource type="Script" path="res://scripts/debug.gd" id="4_joyvd"]
 [ext_resource type="PackedScene" uid="uid://c3ffql15mo0aj" path="res://controllers/fps_controller.tscn" id="4_liofc"]
-[ext_resource type="Script" path="res://scripts/context_component.gd" id="5_1etww"]
 [ext_resource type="PackedScene" uid="uid://du8k8mrf5fv0m" path="res://controllers/fps_controller_by_majikayo.tscn" id="5_bdi1x"]
 [ext_resource type="Script" path="res://scripts/interaction_component.gd" id="6_r1tag"]
 [ext_resource type="Script" path="res://scripts/door_component.gd" id="7_gd2wl"]
@@ -512,89 +508,6 @@ material = SubResource("StandardMaterial3D_43x3c")
 [node name="Node3D" type="Node3D"]
 
 [node name="WorldEnvironment" parent="." instance=ExtResource("1_db21n")]
-
-[node name="UserInterface" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
-
-[node name="Reticule" type="CenterContainer" parent="UserInterface" node_paths=PackedStringArray("RETICULE_LINES", "PLAYER_CONTROLLER")]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_1e1u0")
-RETICULE_LINES = [NodePath("Top"), NodePath("Right"), NodePath("Bottom"), NodePath("Left")]
-PLAYER_CONTROLLER = NodePath("../../FPSControllerByMajikayo")
-RETICULE_DISTANCE = 10.0
-
-[node name="Top" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(0, -5, 0, -15)
-width = 2.0
-
-[node name="Right" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(5, 0, 15, 0)
-width = 2.0
-
-[node name="Bottom" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(0, 5, 0, 15)
-width = 2.0
-
-[node name="Left" type="Line2D" parent="UserInterface/Reticule"]
-points = PackedVector2Array(-5, 0, -15, 0)
-width = 2.0
-
-[node name="DebugPanel" type="PanelContainer" parent="UserInterface"]
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 210.0
-offset_bottom = 50.0
-theme = ExtResource("3_wlxsm")
-script = ExtResource("4_joyvd")
-
-[node name="MarginContainer" type="MarginContainer" parent="UserInterface/DebugPanel"]
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="UserInterface/DebugPanel/MarginContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="ContextComponent" type="CenterContainer" parent="UserInterface" node_paths=PackedStringArray("icon", "context")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("5_1etww")
-icon = NodePath("HBoxContainer/Icon")
-context = NodePath("HBoxContainer/Context")
-default_icon = "[E]"
-
-[node name="HBoxContainer" type="HBoxContainer" parent="UserInterface/ContextComponent"]
-custom_minimum_size = Vector2(0, 150)
-layout_mode = 2
-
-[node name="Icon" type="Label" parent="UserInterface/ContextComponent/HBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 8
-text = "[E]"
-vertical_alignment = 2
-
-[node name="Context" type="Label" parent="UserInterface/ContextComponent/HBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 8
-text = "Open Box"
 
 [node name="Floor" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)

@@ -1,5 +1,6 @@
-[gd_resource type="Resource" script_class="WeaponResource" load_steps=13 format=4 uid="uid://ck3j0t74klptl"]
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=14 format=4 uid="uid://ck3j0t74klptl"]
 
+[ext_resource type="Texture2D" uid="uid://btdbttjolttdt" path="res://controllers/scripts/majikayo/weapon_manager/p90/p90-icon.PNG" id="1_043rs"]
 [ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/weapon_resource.gd" id="1_msla3"]
 [ext_resource type="AudioStream" uid="uid://bwruynfkdl2o5" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-415912__okieactor__heathers-gunshot-effect2.wav" id="2_blxd2"]
 [ext_resource type="AudioStream" uid="uid://bil0vvb14drhx" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-377145__nioczkus__pistol-draw-unholster.wav" id="3_768r3"]
@@ -157,6 +158,8 @@ _bundled = {
 
 [resource]
 script = ExtResource("1_msla3")
+name = "P90"
+icon = ExtResource("1_043rs")
 view_model = ExtResource("4_h6t1o")
 world_model = SubResource("PackedScene_paeua")
 view_model_pos = Vector3(0.5, -0.435, -0.485)

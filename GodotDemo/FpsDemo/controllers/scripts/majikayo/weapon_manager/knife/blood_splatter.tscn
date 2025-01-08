@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://0ms7pmvyc2ph"]
+[gd_scene load_steps=19 format=3 uid="uid://0ms7pmvyc2ph"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sp0y8"]
 angle_min = 1.07288e-05
@@ -124,7 +124,7 @@ void fragment() {
 
 }
 "
-graph_offset = Vector2(-421.864, -23.0959)
+graph_offset = Vector2(-691.735, 18.9737)
 nodes/vertex/2/node = SubResource("VisualShaderNodeBillboard_bm7tk")
 nodes/vertex/2/position = Vector2(-80, 400)
 nodes/vertex/connections = PackedInt32Array(2, 0, 0, 10)
@@ -154,12 +154,23 @@ shader = SubResource("VisualShader_c7tje")
 material = SubResource("ShaderMaterial_gx5sr")
 size = Vector2(0.4, 0.4)
 
+[sub_resource type="GDScript" id="GDScript_ig35h"]
+script/source = "extends GPUParticles3D
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	# 不能按教程里面把 finished() 直接绑定 queue_free()，否则编辑器里打开场景会卡死。
+	if not Engine.is_editor_hint():
+		self.finished.connect(queue_free)
+"
+
 [node name="BloodSplatterGPUParticles3D" type="GPUParticles3D"]
 emitting = false
 one_shot = true
 explosiveness = 0.91
 process_material = SubResource("ParticleProcessMaterial_sp0y8")
 draw_pass_1 = SubResource("QuadMesh_inx4f")
+script = SubResource("GDScript_ig35h")
 
-[connection signal="finished" from="." to="." method="queue_free"]
 [connection signal="ready" from="." to="." method="set_emitting" binds= [true]]

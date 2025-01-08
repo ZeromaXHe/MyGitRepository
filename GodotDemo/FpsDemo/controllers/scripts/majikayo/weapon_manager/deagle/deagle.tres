@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="WeaponResource" load_steps=8 format=3 uid="uid://clr3jxms1mmet"]
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=9 format=3 uid="uid://clr3jxms1mmet"]
 
 [ext_resource type="AudioStream" uid="uid://dku7yns6ke5ee" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-276959__gfl7__pistol-reload-sound.mp3" id="1_0aeyw"]
+[ext_resource type="Texture2D" uid="uid://byx3g64arxdqp" path="res://controllers/scripts/majikayo/weapon_manager/deagle/deagle-icon.PNG" id="1_iwwy3"]
 [ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/weapon_resource.gd" id="1_w567b"]
 [ext_resource type="PackedScene" uid="uid://bolbpv50nk5vr" path="res://controllers/scripts/majikayo/weapon_manager/deagle/deagle - viewmodel.glb" id="2_ksqhc"]
 [ext_resource type="PackedScene" uid="uid://cnjmui6sguihe" path="res://controllers/scripts/majikayo/weapon_manager/deagle/deagle.glb" id="3_13ucl"]
@@ -15,6 +16,10 @@ point_count = 1
 
 [resource]
 script = ExtResource("1_w567b")
+name = "Deagle"
+icon = ExtResource("1_iwwy3")
+slot = 2
+slot_priority = 1
 view_model = ExtResource("2_ksqhc")
 world_model = ExtResource("3_13ucl")
 view_model_pos = Vector3(0.13, -0.325, 0.306)

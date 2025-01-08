@@ -28,6 +28,13 @@ var headbob_time := 0.0
 @export var swim_up_speed := 10.0
 @export var climb_speed := 7.0
 
+@export var health = 100.0
+@export var max_health = 100.0
+
+func take_damage(damage: float):
+	health -= damage
+
+
 # 相机选项
 enum CameraStyle {
 	FIRST_PERSON, THIRD_PERSON_VERTICAL_LOOK, THIRD_PERSON_FREE_LOOK
@@ -184,7 +191,6 @@ func update_animations():
 	else:
 		state_machine_playback.travel("WalkBlendSpace2D")
 		animation_tree.set("parameters/WalkBlendSpace2D/blend_position", rel_vel_xz)
-		
 
 
 func _process(delta: float) -> void:

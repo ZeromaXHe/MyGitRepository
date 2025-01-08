@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="ProjectileWeaponResource" load_steps=14 format=4 uid="uid://qniwm7j8akdl"]
+[gd_resource type="Resource" script_class="ProjectileWeaponResource" load_steps=15 format=4 uid="uid://qniwm7j8akdl"]
 
 [ext_resource type="PackedScene" uid="uid://bnk76bb1a5k8p" path="res://controllers/scripts/majikayo/weapon_manager/grenade/grenade_projectile.tscn" id="1_a1aot"]
+[ext_resource type="Texture2D" uid="uid://bcy42gt5onauv" path="res://controllers/scripts/majikayo/weapon_manager/grenade/grenade-icon.PNG" id="1_p3y0h"]
 [ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/projectile_weapon_resource.gd" id="2_28y3p"]
 [ext_resource type="PackedScene" uid="uid://cejkf8arqym4y" path="res://controllers/scripts/majikayo/weapon_manager/grenade/grenade.glb" id="3_vfewg"]
 
@@ -142,6 +143,10 @@ projectile = ExtResource("1_a1aot")
 projectile_relative_velocity = Vector3(0, 0, -15)
 projectile_relative_spawn_pos = Vector3(0, 0, -2)
 projectile_relative_spawn_rotation = Vector3(0, 0, 0)
+name = "Grenade"
+icon = ExtResource("1_p3y0h")
+slot = 4
+slot_priority = 2
 view_model = ExtResource("3_vfewg")
 world_model = SubResource("PackedScene_lkbof")
 view_model_pos = Vector3(0.55, -0.538, -0.906)

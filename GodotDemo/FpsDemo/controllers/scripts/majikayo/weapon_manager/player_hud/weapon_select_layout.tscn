@@ -1,0 +1,74 @@
+[gd_scene load_steps=6 format=3 uid="uid://t761v52jaut7"]
+
+[ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/player_hud/weapon_select_layout.gd" id="1_g8f4f"]
+[ext_resource type="Texture2D" uid="uid://byx3g64arxdqp" path="res://controllers/scripts/majikayo/weapon_manager/deagle/deagle-icon.PNG" id="1_mona1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kvhct"]
+bg_color = Color(0, 0, 0, 0.172549)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_vq5vv"]
+font_size = 28
+font_color = Color(0.439216, 0.803922, 1, 1)
+outline_size = 2
+outline_color = Color(0.439216, 0.803922, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_p80ny"]
+font_size = 13
+font_color = Color(0.439216, 0.803922, 1, 1)
+
+[node name="WeaponSelectLayout" type="MarginContainer"]
+script = ExtResource("1_g8f4f")
+
+[node name="SizedBackgroundPanel" type="Panel" parent="."]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_kvhct")
+
+[node name="SlotNumber" type="Label" parent="SizedBackgroundPanel"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 7.0
+offset_top = 4.0
+offset_right = 47.0
+offset_bottom = 43.0
+text = "1"
+label_settings = SubResource("LabelSettings_vq5vv")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="IconMargin" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_right = 14
+
+[node name="WeaponIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/MarginContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(133, 0)
+layout_mode = 2
+texture = ExtResource("1_mona1")
+expand_mode = 5
+stretch_mode = 4
+
+[node name="WeaponName" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Deagle"
+label_settings = SubResource("LabelSettings_p80ny")
+horizontal_alignment = 1
