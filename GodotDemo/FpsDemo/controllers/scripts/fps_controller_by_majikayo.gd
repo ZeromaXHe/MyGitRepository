@@ -271,13 +271,17 @@ func push_away_rigid_bodies():
 
 func snap_down_to_stairs_check() -> void:
 	var did_snap := false
+	# 和教程里略微不一样
+	# 因为在 move_and_slide 之后调用，_last_frame_was_on_floor 应该仍然是当前帧。
+	# 在 move_and_slide 离开楼梯顶部后，在地面上应该为 false。更新 raycast 以防止它还没 ready
+	%StairsBelowRayCast3D.force_raycast_update()
 	var floor_below: bool = %StairsBelowRayCast3D.is_colliding() \
 		and not is_surface_too_steep(%StairsBelowRayCast3D.get_collision_normal())
-	var was_on_floor_last_frame = Engine.get_physics_frames() - _last_frame_was_on_floor == 1
+	var was_on_floor_last_frame = Engine.get_physics_frames() == _last_frame_was_on_floor
 	if not is_on_floor() and velocity.y <= 0 \
 			and (was_on_floor_last_frame or _snapped_to_stairs_last_frame) and floor_below:
-		var body_test_result = PhysicsTestMotionResult3D.new()
-		if run_body_test_motion(self.global_transform, Vector3(0, -MAX_STEP_HEIGHT, 0), body_test_result):
+		var body_test_result = KinematicCollision3D.new()
+		if self.test_move(self.global_transform, Vector3(0, -MAX_STEP_HEIGHT, 0), body_test_result):
 			save_camera_pos_for_smoothing()
 			var translate_y = body_test_result.get_travel().y
 			self.position.y += translate_y
@@ -289,23 +293,27 @@ func snap_down_to_stairs_check() -> void:
 func snap_up_stairs_check(delta) -> bool:
 	if not is_on_floor() and not _snapped_to_stairs_last_frame:
 		return false
+	# 如果尝试跳跃时不 snap 楼梯，不移动时也不需要检查前方楼梯
+	if self.velocity.y > 0 or (self.velocity * Vector3(1, 0, 1)).length() == 0:
+		return false
 	var expected_move_motion = self.velocity * Vector3(1, 0, 1) * delta
-	var step_pos_with_clearance = self.global_transform.translated(expected_move_motion + Vector3(0, MAX_STEP_HEIGHT * 2, 0))
+	var step_pos_with_clearance = self.global_transform.translated(
+		expected_move_motion + Vector3(0, MAX_STEP_HEIGHT * 2, 0))
 	# 运行一个稍微高于我们期待移动到的，朝向地板的位置的 body_test_motion 
 	# 我们给了一些上方的净空区域来确保玩家有足够的空间
 	# 如果它碰到一个 step <= MAX_STEP_HEIGHT，我们可以传送玩家到台阶上
 	# 同时进行他本打算进行的向前移动
-	var down_check_result = PhysicsTestMotionResult3D.new()
-	if run_body_test_motion(step_pos_with_clearance, Vector3(0, -MAX_STEP_HEIGHT * 2, 0), down_check_result) \
-			and (down_check_result.get_collider() is StaticBody3D or down_check_result.get_collider() is CSGShape3D):
+	var down_check_result = KinematicCollision3D.new()
+	if self.test_move(step_pos_with_clearance, Vector3(0, -MAX_STEP_HEIGHT * 2, 0), down_check_result) \
+			and (down_check_result.get_collider().is_class("StaticBody3D") or down_check_result.get_collider().is_class("CSGShape3D")):
 		var step_height = ((step_pos_with_clearance.origin + down_check_result.get_travel()) - self.global_position).y
 		# 注意我放入了 step_height <= 0.01，因为我注意到它防止了一些物理抖动
 		# 0.02 会变得试验（trial）和错误。太大并且有时卡在台阶上。太小则会在跑上天花板时抖动
 		# 无论如何，普通角色控制器（jolt 以及默认）看上去能够处理 0.1 的台阶
 		if step_height > MAX_STEP_HEIGHT or step_height <= 0.01 \
-				or (down_check_result.get_collision_point() - self.global_position).y > MAX_STEP_HEIGHT:
+				or (down_check_result.get_position() - self.global_position).y > MAX_STEP_HEIGHT:
 			return false
-		%StairsAheadRayCast3D.global_position = down_check_result.get_collision_point() \
+		%StairsAheadRayCast3D.global_position = down_check_result.get_position() \
 			+ Vector3(0, MAX_STEP_HEIGHT, 0) + expected_move_motion.normalized() * 0.1
 		%StairsAheadRayCast3D.force_raycast_update()
 		if %StairsAheadRayCast3D.is_colliding() \
@@ -542,15 +550,6 @@ func clip_velocity(normal: Vector3, overbounce: float, delta: float) -> void:
 
 func is_surface_too_steep(normal: Vector3) -> bool:
 	return normal.angle_to(Vector3.UP) > self.floor_max_angle
-
-
-func run_body_test_motion(from: Transform3D, motion: Vector3, result = null) -> bool:
-	if not result:
-		result = PhysicsTestMotionResult3D.new()
-	var params = PhysicsTestMotionParameters3D.new()
-	params.from = from
-	params.motion = motion
-	return PhysicsServer3D.body_test_motion(self.get_rid(), params, result)
 
 
 func handle_air_physics(delta) -> void:
