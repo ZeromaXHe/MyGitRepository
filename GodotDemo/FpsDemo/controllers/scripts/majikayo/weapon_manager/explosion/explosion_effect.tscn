@@ -1,0 +1,242 @@
+[gd_scene load_steps=26 format=3 uid="uid://b3kco86vgiis1"]
+
+[ext_resource type="Texture2D" uid="uid://cvvws48ng7ywb" path="res://controllers/scripts/majikayo/weapon_manager/explosion/kenney-black-smoke-texture-cc0.png" id="1_qbgoy"]
+[ext_resource type="AudioStream" uid="uid://dhuwx76ibjvq" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-737321__modusmogulus__pipe-bomb.wav" id="2_cwhwd"]
+[ext_resource type="Texture2D" uid="uid://dqh5pvub1y3xu" path="res://controllers/scripts/majikayo/weapon_manager/muzzle_flash/kenney-white-smoke-texture-cc0.png" id="3_6blks"]
+
+[sub_resource type="GDScript" id="GDScript_7o65x"]
+script/source = "extends Node3D
+
+@export var explosion_force = 15.0
+@export var max_explosion_dist = 3.5
+@export var explosion_damage = 10
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	$AnimationPlayer.play(\"fade_out_decal\")
+	$SmokeGPUParticles3D.emitting = true
+	$FireGPUParticles3D.emitting = true
+	$AudioStreamPlayer3D.play()
+	
+	# 等待两个物理帧，使 Area3D 更新 body list
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	push_away_objects()
+	
+	var timer := get_tree().create_timer(5.0)
+	timer.timeout.connect(self.queue_free)
+
+
+func push_away_objects():
+	for body in $Area3D.get_overlapping_bodies():
+		var body_pos = body.global_position
+		var force_div = 1.0
+		if body is CharacterBody3D:
+			body_pos.y += 1.0
+			force_div = 4.0 # CharacterBodies 没有质量
+		elif body is RigidBody3D:
+			force_div = max(0.01, body.mass)
+		var force_dir = self.global_position.direction_to(body_pos)
+		var body_dist = (body_pos - self.global_position).length()
+		var explosion_vector = lerp(0.0, explosion_force, \\
+			1.0 - clampf((body_dist / max_explosion_dist), 0.0, 1.0)) \\
+			/ force_div * force_dir
+		if body is RigidBody3D:
+			body.apply_impulse(explosion_vector * explosion_force)
+		elif body is CharacterBody3D:
+			body.velocity += explosion_vector * explosion_force
+		
+		if body.has_method(\"take_damage\"):
+			body.take_damage(explosion_damage)
+"
+
+[sub_resource type="Curve" id="Curve_n2q4v"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.5, 0.2), 0.909126, 0.909126, 0, 0, Vector2(0.7, 0.6), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+metadata/_snap_enabled = true
+
+[sub_resource type="CurveTexture" id="CurveTexture_cprjm"]
+curve = SubResource("Curve_n2q4v")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_cycr8"]
+particle_flag_rotate_y = true
+angle_min = 1.07288e-05
+angle_max = 360.0
+spread = 180.0
+initial_velocity_min = 0.5
+initial_velocity_max = 1.5
+angular_velocity_min = 8.99998
+angular_velocity_max = 11.0
+gravity = Vector3(0, 0, 0)
+linear_accel_min = -0.100002
+linear_accel_max = 0.199998
+alpha_curve = SubResource("CurveTexture_cprjm")
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_rbef4"]
+frequency = 0.0042
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_84f4u"]
+in_3d_space = true
+as_normal_map = true
+bump_strength = 2.7
+noise = SubResource("FastNoiseLite_rbef4")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4fted"]
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+albedo_texture = ExtResource("3_6blks")
+normal_enabled = true
+normal_scale = 16.0
+normal_texture = SubResource("NoiseTexture2D_84f4u")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_iccm6"]
+material = SubResource("StandardMaterial3D_4fted")
+size = Vector2(4, 4)
+
+[sub_resource type="Curve" id="Curve_gmfo4"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.4, 0.8), -0.954012, -0.954012, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+metadata/_snap_enabled = true
+
+[sub_resource type="CurveTexture" id="CurveTexture_3iy8t"]
+curve = SubResource("Curve_gmfo4")
+
+[sub_resource type="Gradient" id="Gradient_vwoek"]
+offsets = PackedFloat32Array(0, 0.378378)
+colors = PackedColorArray(1, 1, 0, 1, 1, 0.1875, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_w0jiq"]
+gradient = SubResource("Gradient_vwoek")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_b7a56"]
+particle_flag_rotate_y = true
+angle_min = 1.07288e-05
+angle_max = 360.0
+spread = 180.0
+initial_velocity_min = 0.35
+initial_velocity_max = 0.75
+angular_velocity_min = 8.99998
+angular_velocity_max = 11.0
+gravity = Vector3(0, 0, 0)
+linear_accel_min = -0.100002
+linear_accel_max = 0.199998
+color_ramp = SubResource("GradientTexture1D_w0jiq")
+alpha_curve = SubResource("CurveTexture_3iy8t")
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_vkf6n"]
+load_path = "res://.godot/imported/kenney-white-smoke-texture-cc0.png-5d4c206d99b7e8c218c4b7372e2a1cc3.s3tc.ctex"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_s3gd1"]
+frequency = 0.0042
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_pk784"]
+in_3d_space = true
+as_normal_map = true
+bump_strength = 2.7
+noise = SubResource("FastNoiseLite_s3gd1")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yc8lj"]
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("CompressedTexture2D_vkf6n")
+normal_enabled = true
+normal_scale = 3.7
+normal_texture = SubResource("NoiseTexture2D_pk784")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_15ow3"]
+material = SubResource("StandardMaterial3D_yc8lj")
+size = Vector2(2, 2)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_c6aqx"]
+radius = 3.5
+
+[sub_resource type="Animation" id="Animation_kk4bk"]
+resource_name = "fade_out_decal"
+length = 5.0
+step = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Decal:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 3.5, 5),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_ts4ah"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Decal:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_vcayj"]
+_data = {
+"RESET": SubResource("Animation_ts4ah"),
+"fade_out_decal": SubResource("Animation_kk4bk")
+}
+
+[node name="ExplosionEffect" type="Node3D"]
+script = SubResource("GDScript_7o65x")
+
+[node name="Decal" type="Decal" parent="."]
+size = Vector3(2, 0.1, 2)
+texture_albedo = ExtResource("1_qbgoy")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_cwhwd")
+
+[node name="SmokeGPUParticles3D" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 32
+lifetime = 2.3
+one_shot = true
+speed_scale = 2.0
+explosiveness = 1.0
+randomness = 1.0
+process_material = SubResource("ParticleProcessMaterial_cycr8")
+draw_pass_1 = SubResource("QuadMesh_iccm6")
+
+[node name="FireGPUParticles3D" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 12
+lifetime = 0.5
+one_shot = true
+speed_scale = 1.35
+explosiveness = 1.0
+randomness = 1.0
+process_material = SubResource("ParticleProcessMaterial_b7a56")
+draw_pass_1 = SubResource("QuadMesh_15ow3")
+
+[node name="Area3D" type="Area3D" parent="."]
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("SphereShape3D_c6aqx")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_vcayj")
+}

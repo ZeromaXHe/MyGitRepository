@@ -1,0 +1,189 @@
+[gd_scene load_steps=22 format=3 uid="uid://b4vp8g0ifoaa3"]
+
+[ext_resource type="PackedScene" uid="uid://bwyw6hehrtwom" path="res://controllers/scripts/majikayo/weapon_manager/rpg/missile.glb" id="1_jbfov"]
+
+[sub_resource type="GDScript" id="GDScript_h2n7q"]
+script/source = "extends RigidBody3D
+
+var timer = 0.0
+var explosion_effect_scene: PackedScene = \\
+	preload(\"res://controllers/scripts/majikayo/weapon_manager/explosion/explosion_effect.tscn\")
+
+func explode_projectile(normal = Vector3.UP, position = self.global_position, collider_obj = null):
+	var explosion_effect = explosion_effect_scene.instantiate()
+	add_sibling(explosion_effect)
+	explosion_effect.global_transform = Transform3D(Basis(Quaternion(Vector3.UP, normal)), position)
+	self.queue_free()
+
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	if state.get_contact_count() > 0:
+		explode_projectile(state.get_contact_local_normal(0), state.get_contact_local_position(0),
+			state.get_contact_collider_object(0))
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	timer += delta
+	# 不能这样修改旋转，会导致刚体物理失效悬停在半空
+	#self.rotate_z(3 * TAU * delta) # 每秒转三圈
+	#self.rotate_x(randf_range(-PI / 12, PI / 12) * delta)
+	#self.rotate_y(randf_range(-PI / 12, PI / 12) * delta)
+	if timer > 10:
+		explode_projectile()
+
+
+# 教程没有，我加的逻辑
+func _physics_process(delta: float) -> void:
+	# 让 RPG 火箭有膛线自旋效果
+	self.apply_torque(self.linear_velocity)
+	# 在火箭尾部施加随机作用力，使得弹道有一定随机性。力乘以 timer，使得飞的越久越不稳定
+	self.apply_force(Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * timer * linear_velocity.length(),
+		Vector3.BACK * 0.6)
+"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xjy6u"]
+radius = 0.372806
+height = 1.23153
+
+[sub_resource type="Curve" id="Curve_als36"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.5, 0.2), 0.909126, 0.909126, 0, 0, Vector2(0.7, 0.6), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+metadata/_snap_enabled = true
+
+[sub_resource type="CurveTexture" id="CurveTexture_kbjlh"]
+curve = SubResource("Curve_als36")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_jfpnk"]
+particle_flag_rotate_y = true
+angle_min = 1.07288e-05
+angle_max = 360.0
+direction = Vector3(0, 0, 1)
+spread = 5.0
+initial_velocity_min = 0.5
+initial_velocity_max = 1.5
+angular_velocity_min = 8.99998
+angular_velocity_max = 11.0
+gravity = Vector3(0, 0, 0)
+linear_accel_min = -0.100002
+linear_accel_max = 0.199998
+alpha_curve = SubResource("CurveTexture_kbjlh")
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_bsn1r"]
+load_path = "res://.godot/imported/kenney-white-smoke-texture-cc0.png-5d4c206d99b7e8c218c4b7372e2a1cc3.s3tc.ctex"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_lwqy4"]
+frequency = 0.0042
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_8y1ef"]
+in_3d_space = true
+as_normal_map = true
+bump_strength = 2.7
+noise = SubResource("FastNoiseLite_lwqy4")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ivjxj"]
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+albedo_texture = SubResource("CompressedTexture2D_bsn1r")
+normal_enabled = true
+normal_scale = 16.0
+normal_texture = SubResource("NoiseTexture2D_8y1ef")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_r8xci"]
+material = SubResource("StandardMaterial3D_ivjxj")
+
+[sub_resource type="Curve" id="Curve_xiodq"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.4, 0.8), -0.954012, -0.954012, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+metadata/_snap_enabled = true
+
+[sub_resource type="CurveTexture" id="CurveTexture_balfm"]
+curve = SubResource("Curve_xiodq")
+
+[sub_resource type="Gradient" id="Gradient_6liha"]
+offsets = PackedFloat32Array(0, 0.378378)
+colors = PackedColorArray(1, 1, 0, 1, 1, 0.1875, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_4n8k1"]
+gradient = SubResource("Gradient_6liha")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_cpl3i"]
+particle_flag_rotate_y = true
+angle_min = 1.07288e-05
+angle_max = 360.0
+direction = Vector3(0, 0, 1)
+spread = 15.0
+initial_velocity_min = 0.35
+initial_velocity_max = 0.75
+angular_velocity_min = 8.99998
+angular_velocity_max = 11.0
+gravity = Vector3(0, 0, 0)
+linear_accel_min = -0.100002
+linear_accel_max = 0.199998
+color_ramp = SubResource("GradientTexture1D_4n8k1")
+alpha_curve = SubResource("CurveTexture_balfm")
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_fhyip"]
+load_path = "res://.godot/imported/kenney-white-smoke-texture-cc0.png-5d4c206d99b7e8c218c4b7372e2a1cc3.s3tc.ctex"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_o23e0"]
+frequency = 0.0042
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_56i0n"]
+in_3d_space = true
+as_normal_map = true
+bump_strength = 2.7
+noise = SubResource("FastNoiseLite_o23e0")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fjbb2"]
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("CompressedTexture2D_fhyip")
+normal_enabled = true
+normal_scale = 3.7
+normal_texture = SubResource("NoiseTexture2D_56i0n")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_uhc3o"]
+material = SubResource("StandardMaterial3D_fjbb2")
+size = Vector2(0.3, 0.3)
+
+[node name="Rocket" type="RigidBody3D"]
+gravity_scale = 0.0
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 1
+script = SubResource("GDScript_h2n7q")
+
+[node name="missile" parent="." instance=ExtResource("1_jbfov")]
+transform = Transform3D(-1.12775e-08, 0, 0.258, 0, 0.258, 0, -0.258, 0, -1.12775e-08, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_xjy6u")
+
+[node name="SmokeGPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.490371)
+amount = 32
+lifetime = 2.3
+speed_scale = 2.0
+randomness = 1.0
+process_material = SubResource("ParticleProcessMaterial_jfpnk")
+draw_pass_1 = SubResource("QuadMesh_r8xci")
+
+[node name="FireGPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.606594)
+amount = 12
+lifetime = 0.5
+speed_scale = 1.35
+randomness = 1.0
+process_material = SubResource("ParticleProcessMaterial_cpl3i")
+draw_pass_1 = SubResource("QuadMesh_uhc3o")
