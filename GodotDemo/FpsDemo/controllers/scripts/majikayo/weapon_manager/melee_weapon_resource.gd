@@ -10,6 +10,7 @@ var blood_splatter_scene = \
 	preload("res://controllers/scripts/majikayo/weapon_manager/knife/blood_splatter.tscn")
 
 func fire_shot():
+	weapon_manager.trigger_weapon_shoot_world_anim()
 	weapon_manager.play_anim(view_shoot_anim)
 	weapon_manager.queue_anim(view_idle_anim)
 	

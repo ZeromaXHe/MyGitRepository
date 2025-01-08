@@ -575,6 +575,7 @@ grow_vertical = 2
 mouse_filter = 1
 
 [node name="Reticule" type="CenterContainer" parent="UserInterface" node_paths=PackedStringArray("RETICULE_LINES", "PLAYER_CONTROLLER")]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5

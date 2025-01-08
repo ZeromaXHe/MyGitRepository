@@ -16,6 +16,8 @@ extends Node3D
 @export var player: CharacterBody3D
 @export var bullet_raycast: RayCast3D
 
+@export var animation_tree: AnimationTree
+
 @export var view_model_container: Node3D
 @export var world_model_container: BoneAttachment3D
 
@@ -111,12 +113,41 @@ func stop_sounds():
 	audio_stream_player.stop()
 
 
+func update_weapon_hold_anims():
+	animation_tree.set("parameters/WeaponHoldBlend2/blend_amount", 1.0 if current_weapon else 0.0)
+	match current_weapon.hold_style:
+		WeaponResource.CharacterHoldStyle.BAZOOKA:
+			animation_tree.hold_type = "Bazooka"
+		WeaponResource.CharacterHoldStyle.SMG:
+			animation_tree.hold_type = "SMG"
+		WeaponResource.CharacterHoldStyle.KNIFE:
+			animation_tree.hold_type = "Knife"
+		WeaponResource.CharacterHoldStyle.PISTOL:
+			animation_tree.hold_type = "Pistol"
+		WeaponResource.CharacterHoldStyle.GRENADE:
+			animation_tree.hold_type = "Grenade"
+
+
+func trigger_weapon_shoot_world_anim():
+	if not animation_tree:
+		return
+	var state_machine_playback: AnimationNodeStateMachinePlayback = \
+		animation_tree.get("parameters/WeaponHoldStateMachine/playback")
+	var weapon = state_machine_playback.get_current_node()
+	var stand_state = "Crouched" if player.is_crouched else "Standing"
+	var cur_playback: AnimationNodeStateMachinePlayback = \
+		animation_tree.get("parameters/WeaponHoldStateMachine/" + weapon + "/" + stand_state + "/playback")
+	if cur_playback:
+		cur_playback.start("Shoot")
+
+
 var last_played_anim: String = ""
 var current_anim_finished_callback
 var current_anim_cancelled_callback
 
 func get_view_model_anim_player() -> AnimationPlayer:
 	return current_weapon_view_model.get_node_or_null("AnimationPlayer")
+
 
 func play_anim(name: String, finished_callback = null, cancelled_callback = null):
 	var anim_player: AnimationPlayer = get_view_model_anim_player()
@@ -221,6 +252,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	update_weapon_hold_anims()
 	if current_weapon:
 		current_weapon.on_process(delta)
 	if current_weapon_view_model_muzzle:

@@ -37,9 +37,9 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	# 让 RPG 火箭有膛线自旋效果
 	self.apply_torque(self.linear_velocity)
-	# 在火箭尾部施加随机作用力，使得弹道有一定随机性。力乘以 timer，使得飞的越久越不稳定
-	self.apply_force(Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * timer * linear_velocity.length(),
-		Vector3.BACK * 0.6)
+	# 在火箭尾部施加随机作用力，使得弹道有一定随机性。力乘以 min(timer, 3)，使得飞的越久越不稳定
+	self.apply_force(Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) \\
+		* min(timer, 3) * linear_velocity.length(), Vector3.BACK * 0.6)
 "
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xjy6u"]
