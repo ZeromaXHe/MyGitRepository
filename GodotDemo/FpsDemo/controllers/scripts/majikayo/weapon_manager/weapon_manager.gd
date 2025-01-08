@@ -126,7 +126,8 @@ func play_anim(name: String, finished_callback = null, cancelled_callback = null
 func queue_anim(name: String):
 	var anim_player: AnimationPlayer = get_view_model_anim_player()
 	if not anim_player or not anim_player.has_animation(name):
-		printerr("武器动画 [", name, "] 不存在")
+		if name != "":
+			printerr("武器动画 [", name, "] 不存在")
 		return
 	anim_player.queue(name)
 
@@ -169,6 +170,27 @@ func make_bullet_trail(target_pos: Vector3):
 		bullet_tracer.look_at(target_pos)
 
 
+var heat: float = 0.0
+
+func apply_recoil():
+	var spray_recoil := Vector2.ZERO
+	var spray_pat: Curve2D = current_weapon.spray_pattern
+	if spray_pat:
+		# 我自己加的逻辑，让连续泼水的时候重复后半段弹道而不是重新开始（教程里没有）
+		var idx = int(heat)
+		if idx >= spray_pat.point_count:
+			idx = spray_pat.point_count / 2 + idx % (spray_pat.point_count / 2)
+		spray_recoil = current_weapon.spray_pattern.get_point_position(idx) * 0.0002
+	var random_recoil := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 0.01
+	var recoil = spray_recoil + random_recoil
+	player.add_recoil(-recoil.y, -recoil.x)
+	heat += 1.0
+
+
+func get_current_recoil():
+	return player.get_current_recoil() if player.has_method("get_current_recoil") else Vector2.ZERO
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if current_weapon and is_inside_tree():
 		if event.is_action_pressed("attack") and allow_shoot:
@@ -189,3 +211,4 @@ func _process(delta: float) -> void:
 		current_weapon.on_process(delta)
 	if current_weapon_view_model_muzzle:
 		$ViewMuzzleFlash.global_position = current_weapon_view_model_muzzle.global_position
+	heat = max(0.0, heat - delta * 10.0)

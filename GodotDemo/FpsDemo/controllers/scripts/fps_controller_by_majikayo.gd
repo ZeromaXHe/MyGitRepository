@@ -132,6 +132,34 @@ func update_camera():
 	get_active_camera().current = true
 
 
+var target_recoil := Vector2.ZERO
+var current_recoil := Vector2.ZERO
+const RECOIL_APPLY_SPEED: float = 10.0
+const RECOIL_RECOVER_SPEED: float = 7.0
+
+func add_recoil(pitch: float, yaw: float) -> void:
+	target_recoil.x += pitch
+	target_recoil.y += yaw
+
+
+func get_current_recoil() -> Vector2:
+	return current_recoil
+
+
+func update_recoil(delta: float) -> void:
+	# 慢慢使目标后坐力回到 0.0
+	target_recoil = target_recoil.lerp(Vector2.ZERO, RECOIL_RECOVER_SPEED * delta)
+	# 慢慢使当前后坐力改变到目标后坐力
+	var prev_recoil = current_recoil
+	current_recoil = current_recoil.lerp(target_recoil, RECOIL_APPLY_SPEED * delta)
+	var recoil_diff = current_recoil - prev_recoil
+	# 旋转玩家/相机向着当前后坐力
+	rotate_y(recoil_diff.y)
+	%Camera3D.rotate_x(recoil_diff.x)
+	%Camera3D.rotation.x = clamp(%Camera3D.rotation.x, deg_to_rad(-90), deg_to_rad(90))
+	%ThirdPersonCamPitch.rotation.x = %Camera3D.rotation.x
+
+
 @onready var animation_tree: AnimationTree = $WorldModel/DesertDroidContainer/AnimationTree
 @onready var state_machine_playback: AnimationNodeStateMachinePlayback = \
 	$WorldModel/DesertDroidContainer/AnimationTree.get("parameters/playback")
@@ -176,6 +204,7 @@ func _process(delta: float) -> void:
 		self.rotation.y += rot_towards
 		%ThirdPersonCamYaw.rotation.y -= rot_towards
 	
+	update_recoil(delta)
 	update_animations()
 
 
