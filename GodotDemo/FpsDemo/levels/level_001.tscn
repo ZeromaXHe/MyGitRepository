@@ -477,8 +477,8 @@ var max_hp: int
 var material: StandardMaterial3D
 
 func _ready() -> void:
-	$Label3D.text = \"HP: \" + str(hp) + \" / \" + str(max_hp)
 	max_hp = hp
+	$Label3D.text = \"HP: \" + str(hp) + \" / \" + str(max_hp)
 	material = $MeshInstance3D.mesh.material as StandardMaterial3D
 
 

@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://c0ruqtvupa450"]
+
+[ext_resource type="Texture2D" uid="uid://bksmi1rpaktaj" path="res://controllers/scripts/majikayo/weapon_manager/decals/bulletdecal.png" id="1_px0sv"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_8wfnq"]
+angle_min = 1.07288e-05
+angle_max = 360.0
+direction = Vector3(0, 1, 0)
+initial_velocity_min = 0.1
+initial_velocity_max = 1.0
+angular_velocity_min = -1.60933e-05
+angular_velocity_max = 31.0
+gravity = Vector3(0, -2, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6y2h2"]
+albedo_color = Color(0.34902, 0.34902, 0.34902, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_hwv00"]
+material = SubResource("StandardMaterial3D_6y2h2")
+size = Vector2(0.04, 0.025)
+
+[node name="BulletDecal" type="Decal"]
+size = Vector3(0.086, 0.086, 0.086)
+texture_albedo = ExtResource("1_px0sv")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 3
+lifetime = 0.43
+one_shot = true
+explosiveness = 0.69
+process_material = SubResource("ParticleProcessMaterial_8wfnq")
+draw_pass_1 = SubResource("QuadMesh_hwv00")
