@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="MeleeWeaponResource" load_steps=7 format=3 uid="uid://bwsc8rqv8sg31"]
+
+[ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/melee_weapon_resource.gd" id="1_e4174"]
+[ext_resource type="AudioStream" uid="uid://dw0af1qofhfsq" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-swoosh.wav" id="1_ohhy1"]
+[ext_resource type="AudioStream" uid="uid://2s4q8vrdwjuj" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-118792__lmbubec__1_knife_slash_a.wav" id="3_s05ts"]
+[ext_resource type="AudioStream" uid="uid://bil0vvb14drhx" path="res://controllers/scripts/majikayo/weapon_manager/sounds/cc0-377145__nioczkus__pistol-draw-unholster.wav" id="4_usi37"]
+[ext_resource type="PackedScene" uid="uid://bbbfn82banwfd" path="res://controllers/scripts/majikayo/weapon_manager/knife/knife viewmodel.glb" id="5_cles1"]
+[ext_resource type="PackedScene" uid="uid://qyynsbcaejgy" path="res://controllers/scripts/majikayo/weapon_manager/knife/knife.glb" id="6_fmkrx"]
+
+[resource]
+script = ExtResource("1_e4174")
+max_hit_dist = 2.3
+miss_sound = ExtResource("1_ohhy1")
+view_model = ExtResource("5_cles1")
+world_model = ExtResource("6_fmkrx")
+view_model_pos = Vector3(0, -0.33, 0.34)
+view_model_rot = Vector3(0, 3.142, 0)
+view_model_scale = Vector3(1, 1, 1)
+world_model_pos = Vector3(-0.063, 0.182, 0.015)
+world_model_rot = Vector3(-0.049, 2.258, 1.022)
+world_model_scale = Vector3(0.14, 0.14, 0.14)
+view_idle_anim = "Idle"
+view_equip_anim = "Unholster"
+view_shoot_anim = "Shoot"
+view_reload_anim = ""
+shoot_sound = ExtResource("3_s05ts")
+unholster_sound = ExtResource("4_usi37")
+damage = 10
+current_ammo = inf
+magazine_capacity = inf
+reserve_ammo = inf
+max_reserve_ammo = inf
+auto_fire = true
+max_fire_rate_ms = 500

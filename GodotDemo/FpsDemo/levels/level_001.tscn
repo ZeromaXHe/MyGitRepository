@@ -489,6 +489,10 @@ func take_damage(amount: int):
 	material.albedo_color = Color(1, hp_percent, hp_percent)
 	if hp <= 0:
 		self.queue_free()
+
+
+func take_backstab_damage(amount: int):
+	take_damage(amount * 10)
 "
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_lvob0"]

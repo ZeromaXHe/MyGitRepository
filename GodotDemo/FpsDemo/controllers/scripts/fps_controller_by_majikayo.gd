@@ -213,8 +213,11 @@ func get_interactable_component_at_shapecast() -> InteractableComponent:
 		# 允许和玩家碰撞
 		if i > 0 and %InteractShapeCast3D.get_collider(0) != $".":
 			return null
-		var c = (%InteractShapeCast3D.get_collider(i) as Node) \
-			.get_node_or_null("InteractableComponent")
+		# 自己加的逻辑，近战击杀敌人的时候，对方刚好销毁的时候会为空，导致报错（教程没有）
+		var node = %InteractShapeCast3D.get_collider(i) as Node
+		if !node:
+			continue
+		var c = node.get_node_or_null("InteractableComponent")
 		if c is InteractableComponent:
 			return c
 	return null
