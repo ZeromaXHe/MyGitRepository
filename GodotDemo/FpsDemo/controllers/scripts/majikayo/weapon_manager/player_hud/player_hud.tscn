@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://dpid6r2byfatg"]
+[gd_scene load_steps=19 format=3 uid="uid://dpid6r2byfatg"]
 
 [ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/player_hud/player_hud.gd" id="1_5yyje"]
 [ext_resource type="Texture2D" uid="uid://b060aig7de7iq" path="res://controllers/scripts/majikayo/weapon_manager/player_hud/crosshair/crosshair-dot.svg" id="1_dickr"]
@@ -61,6 +61,9 @@ corner_radius_bottom_left = 10
 
 [sub_resource type="LabelSettings" id="LabelSettings_7g4w4"]
 font_size = 36
+font_color = Color(0.439216, 0.803922, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_8kosc"]
 font_color = Color(0.439216, 0.803922, 1, 1)
 
 [node name="PlayerHUD" type="Control"]
@@ -241,3 +244,26 @@ text = "∞"
 label_settings = SubResource("LabelSettings_7g4w4")
 horizontal_alignment = 1
 vertical_alignment = 2
+
+[node name="KeyInfo" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 18.0
+offset_top = 196.0
+offset_right = 262.0
+offset_bottom = 504.0
+text = "操作说明：
+显示鼠标 - Esc
+切换武器 - 数字 1 ~ 4 / 滚轮
+移动 - WASD；跑 - Shift；
+蹲 - C；跳 - 空格；交互 - E
+开火 - 鼠标左键；换弹 - R
+
+切换 noclip 模式 - V
+调整 noclip 移速 - Ctrl + 滚轮
+noclip 下高速移动 - Shift
+切换第一/第三人称视角 - H
+调整摄像机镜头 - Ctrl + 滚轮
+"
+label_settings = SubResource("LabelSettings_8kosc")
+horizontal_alignment = 1

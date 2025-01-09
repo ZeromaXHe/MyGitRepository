@@ -665,6 +665,7 @@ shape = SubResource("ConcavePolygonShape3D_b3dgp")
 [node name="DoorComponent" type="Area3D" parent="RotateDoorWall/AnimatableBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.5, 10)
 top_level = true
+collision_mask = 3
 script = ExtResource("7_gd2wl")
 door_type = 1
 forward_direction = 2
