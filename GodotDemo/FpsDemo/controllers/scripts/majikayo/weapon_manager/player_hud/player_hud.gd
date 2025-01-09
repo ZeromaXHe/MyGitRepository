@@ -106,7 +106,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				hovered_weapon = weapons_in_slot[new_index]
 			update_weapon_switch_menu()
 	
-	if event is InputEventMouseButton and event.is_pressed():
+	# 判断是仅仅滚动滚轮，没有按 Ctrl 时才切换武器（否则是在调整 noclip 速度，或者调整相机距离）
+	if event is InputEventMouseButton and event.is_pressed() and not event.ctrl_pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			cycle_through_weapons(-1)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:

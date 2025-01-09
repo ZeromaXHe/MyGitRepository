@@ -96,8 +96,10 @@ func _unhandled_input(event: InputEvent) -> void:
 					camera_style = CameraStyle.FIRST_PERSON
 				CameraStyle.FIRST_PERSON:
 					camera_style = CameraStyle.THIRD_PERSON_VERTICAL_LOOK
+					%ThirdCamSpringArm.spring_length = 4.9
 				CameraStyle.THIRD_PERSON_VERTICAL_LOOK:
 					camera_style = CameraStyle.THIRD_PERSON_FREE_LOOK
+					%ThirdCamSpringArm.spring_length = 4.9
 		
 		if event is InputEventMouseMotion:
 			if camera_style == CameraStyle.THIRD_PERSON_FREE_LOOK:
@@ -114,13 +116,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			%ThirdPersonCamPitch.rotation.x = \
 				clamp(%ThirdPersonCamPitch.rotation.x, deg_to_rad(-90), deg_to_rad(90))
 	
-	# 滚轮调整 noclip 速度乘数
-	if event is InputEventMouseButton and event.is_pressed():
+	if event is InputEventMouseButton and event.is_pressed() and event.ctrl_pressed:
 		var e = event as InputEventMouseButton
-		if e.button_index == MOUSE_BUTTON_WHEEL_UP:
-			noclip_speed_mult = min(100.0, noclip_speed_mult * 1.1)
-		elif e.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			noclip_speed_mult = max(0.1, noclip_speed_mult * 0.9)
+		if noclip:
+			# Ctrl + 滚轮调整 noclip 速度乘数（防止和武器切换滚轮操作冲突）
+			if e.button_index == MOUSE_BUTTON_WHEEL_UP:
+				noclip_speed_mult = min(100.0, noclip_speed_mult * 1.1)
+			elif e.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				noclip_speed_mult = max(0.1, noclip_speed_mult * 0.9)
+		elif %ThirdPersonCamera3D.current and e.ctrl_pressed:
+			# 第三人称视角，通过 Ctrl + 滚轮调整相机距离
+			if e.button_index == MOUSE_BUTTON_WHEEL_UP:
+				if %ThirdCamSpringArm.spring_length <= 1.0001:
+					camera_style = CameraStyle.FIRST_PERSON
+				else:
+					%ThirdCamSpringArm.spring_length = max(1, %ThirdCamSpringArm.spring_length * 0.9)
+			elif e.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				%ThirdCamSpringArm.spring_length = min(20, %ThirdCamSpringArm.spring_length * 1.1)
+		elif %Camera3D.current and e.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			camera_style = CameraStyle.THIRD_PERSON_FREE_LOOK
+			%ThirdCamSpringArm.spring_length = 1
 
 
 func get_active_camera() -> Camera3D:
