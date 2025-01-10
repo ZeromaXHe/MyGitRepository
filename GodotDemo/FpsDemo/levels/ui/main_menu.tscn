@@ -30,9 +30,16 @@ text = "New Game"
 
 [node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button"]
 script = ExtResource("2_ih8tt")
+parallel_animations = false
+hover_time = 0.5
+hover_delay = 0.2
+hover_transition = 10
+hover_easing = 2
+hover_position = Vector2(20, 0)
 hover_scale = Vector2(1.5, 1.1)
-time = 0.5
-transition_type = 10
+hover_rotation = 5.0
+hover_size = Vector2(-20, 0)
+hover_modulate = Color(1, 1, 1, 0.392157)
 
 [node name="Button2" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
@@ -41,8 +48,6 @@ text = "Continue"
 [node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button2"]
 script = ExtResource("2_ih8tt")
 hover_scale = Vector2(1.1, 1.1)
-time = 0.2
-transition_type = 6
 
 [node name="Button3" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
