@@ -1,0 +1,46 @@
+[gd_resource type="Theme" load_steps=5 format=3 uid="uid://tmi6x6ou3kmq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45a0h"]
+content_margin_left = 20.0
+content_margin_top = 20.0
+content_margin_right = 20.0
+content_margin_bottom = 20.0
+bg_color = Color(0.192157, 0.192157, 0.192157, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_fsi6y"]
+content_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ku6g"]
+content_margin_left = 20.0
+content_margin_top = 20.0
+content_margin_right = 20.0
+content_margin_bottom = 20.0
+bg_color = Color(0.988235, 0.529412, 0.12549, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iqrt5"]
+content_margin_left = 50.0
+content_margin_top = 50.0
+content_margin_right = 50.0
+content_margin_bottom = 50.0
+bg_color = Color(0.0823529, 0.0823529, 0.0823529, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_blend = true
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0, 0, 0, 0.145098)
+shadow_size = 20
+shadow_offset = Vector2(4.6, 0)
+
+[resource]
+Button/styles/normal = SubResource("StyleBoxFlat_45a0h")
+Label/font_sizes/font_size = 30
+Label/styles/normal = SubResource("StyleBoxEmpty_fsi6y")
+NewGameButton/base_type = &"Button"
+NewGameButton/styles/normal = SubResource("StyleBoxFlat_6ku6g")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_iqrt5")
+VBoxContainer/constants/separation = 20
