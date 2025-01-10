@@ -15,6 +15,16 @@ theme = ExtResource("1_ca7c1")
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 
+[node name="AnimationComponent" type="Node" parent="PanelContainer"]
+script = ExtResource("2_ih8tt")
+enter_animation = true
+enter_time = 0.5
+enter_delay = 0.2
+enter_transition = 9
+enter_easing = 2
+enter_scale = Vector2(0, 0)
+enter_modulate = Color(1, 1, 1, 0)
+
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
 layout_mode = 2
 
@@ -28,9 +38,9 @@ layout_mode = 2
 theme_type_variation = &"NewGameButton"
 text = "New Game"
 
-[node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button"]
+[node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button" node_paths=PackedStringArray("wait_for")]
 script = ExtResource("2_ih8tt")
-parallel_animations = false
+enter_animation = true
 hover_time = 0.5
 hover_delay = 0.2
 hover_transition = 10
@@ -40,18 +50,33 @@ hover_scale = Vector2(1.5, 1.1)
 hover_rotation = 5.0
 hover_size = Vector2(-20, 0)
 hover_modulate = Color(1, 1, 1, 0.392157)
+wait_for = NodePath("../../../AnimationComponent")
+enter_time = 0.5
+enter_transition = 10
+enter_scale = Vector2(0, 0)
 
 [node name="Button2" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Continue"
 
-[node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button2"]
+[node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button2" node_paths=PackedStringArray("wait_for")]
 script = ExtResource("2_ih8tt")
+enter_animation = true
 hover_scale = Vector2(1.1, 1.1)
+wait_for = NodePath("../../Button/AnimationComponent")
+enter_time = 0.5
+enter_scale = Vector2(0, 0)
 
 [node name="Button3" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Settings"
+
+[node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button3" node_paths=PackedStringArray("wait_for")]
+script = ExtResource("2_ih8tt")
+enter_animation = true
+wait_for = NodePath("../../Button2/AnimationComponent")
+enter_time = 0.5
+enter_scale = Vector2(0, 0)
 
 [node name="Button4" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
