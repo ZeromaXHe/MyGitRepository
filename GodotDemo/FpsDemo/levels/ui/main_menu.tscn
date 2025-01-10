@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://y1ckkkhsiox7"]
+[gd_scene load_steps=3 format=3 uid="uid://y1ckkkhsiox7"]
 
 [ext_resource type="Theme" uid="uid://tmi6x6ou3kmq" path="res://ui/themes/main_menu.tres" id="1_ca7c1"]
+[ext_resource type="Script" path="res://scripts/menu/animation_component.gd" id="2_ih8tt"]
 
 [node name="CenterContainer" type="CenterContainer"]
 anchors_preset = 15
@@ -27,9 +28,21 @@ layout_mode = 2
 theme_type_variation = &"NewGameButton"
 text = "New Game"
 
+[node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button"]
+script = ExtResource("2_ih8tt")
+hover_scale = Vector2(1.5, 1.1)
+time = 0.5
+transition_type = 10
+
 [node name="Button2" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Continue"
+
+[node name="AnimationComponent" type="Node" parent="PanelContainer/VBoxContainer/Button2"]
+script = ExtResource("2_ih8tt")
+hover_scale = Vector2(1.1, 1.1)
+time = 0.2
+transition_type = 6
 
 [node name="Button3" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2

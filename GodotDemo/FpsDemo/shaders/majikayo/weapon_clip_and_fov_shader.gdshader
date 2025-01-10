@@ -33,9 +33,9 @@ uniform float viewmodel_fov = 75.0f;
 // | Fragment Shader
 // -> 归一化设备坐标 Normalized Device Coordinates -> 屏幕空间 Screen Space
 void vertex() {
-	
+
 	UV=UV*uv1_scale.xy+uv1_offset.xy;
-	
+
 	/* VIEW MODEL Z CLIP FIX CODE */
 	if (viewmodel_fov > 0.0) {
 		float onetanfov = 1.0f / tan(0.5f * (viewmodel_fov * PI / 180.0f));
@@ -44,7 +44,7 @@ void vertex() {
 		PROJECTION_MATRIX[1][1] = -onetanfov;
 		PROJECTION_MATRIX[0][0] = onetanfov / aspect;
 	}
-	
+
 	POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX.xyz, 1.0);
 	// Mix 顶点 Z 到超级接近 clip 平面, 仍然留了一点距离
 	//POSITION.z = mix(POSITION.z, 0.0, 0.999); // 老版本。 向 0.0 进行 Mix (接近 z 平面)
@@ -58,8 +58,8 @@ void vertex() {
 // POSITION.xyz = POSITION.xyz / POSITION.w;
 
 void fragment() {
-	
-	
+
+
 	// https://docs.godotengine.org/en/stable/tutorials/shaders/shader_reference/spatial_shader.html#fragment-built-ins
 	// in vec3 VERTEX
 	// Vertex that comes from vertex function (default, in view space).
@@ -67,7 +67,7 @@ void fragment() {
 	//vec4 clipSpace = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
 	//vec3 ndc = clipSpace.xyz / clipSpace.w; // NDC, Normalized Device Coordinates
 	//DEPTH = mix((ndc.z + 1.0) / 2.0, 1.0, 0.9);
-	
+
 	vec2 base_uv = UV;
 	vec4 albedo_tex = texture(texture_albedo,base_uv);
 	ALBEDO = albedo.rgb * albedo_tex.rgb;
