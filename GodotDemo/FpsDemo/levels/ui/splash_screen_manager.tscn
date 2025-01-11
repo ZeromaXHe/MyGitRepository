@@ -1,0 +1,46 @@
+[gd_scene load_steps=4 format=3 uid="uid://c6vjay6q5wd77"]
+
+[ext_resource type="Texture2D" uid="uid://dfs12xta3jc2d" path="res://icon.svg" id="1_irp7b"]
+[ext_resource type="Script" path="res://levels/ui/splash_screen_manager.gd" id="1_n773a"]
+[ext_resource type="PackedScene" uid="uid://y1ckkkhsiox7" path="res://levels/ui/main_menu.tscn" id="2_6rx8j"]
+
+[node name="SplashScreenManager" type="Control" node_paths=PackedStringArray("splash_screen_container")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_n773a")
+load_scene = ExtResource("2_6rx8j")
+splash_screen_container = NodePath("SplashScreenContainer")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.129412, 0.145098, 0.196078, 1)
+
+[node name="SplashScreenContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="SplashScreenContainer"]
+layout_mode = 2
+texture = ExtResource("1_irp7b")
+
+[node name="TextureRect2" type="TextureRect" parent="SplashScreenContainer"]
+layout_mode = 2
+texture = ExtResource("1_irp7b")
+flip_v = true
+
+[node name="TextureRect3" type="TextureRect" parent="SplashScreenContainer"]
+layout_mode = 2
+texture = ExtResource("1_irp7b")

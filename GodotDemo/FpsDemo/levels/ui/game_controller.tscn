@@ -1,0 +1,31 @@
+[gd_scene load_steps=4 format=3 uid="uid://d3h4ixhmq386u"]
+
+[ext_resource type="PackedScene" uid="uid://c6vjay6q5wd77" path="res://levels/ui/splash_screen_manager.tscn" id="1_15ugr"]
+[ext_resource type="Script" path="res://levels/ui/game_controller.gd" id="1_b6lsv"]
+[ext_resource type="PackedScene" uid="uid://bwopbpph41f5b" path="res://levels/ui/transition_controller.tscn" id="3_7yovp"]
+
+[node name="GameController" type="Node" node_paths=PackedStringArray("world_3d", "world_2d", "gui", "transition_controller")]
+script = ExtResource("1_b6lsv")
+world_3d = NodePath("World3D")
+world_2d = NodePath("World2D")
+gui = NodePath("GUI")
+transition_controller = NodePath("TransitionController")
+
+[node name="World3D" type="Node3D" parent="."]
+
+[node name="World2D" type="Node2D" parent="."]
+
+[node name="GUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="SplashScreenManager" parent="GUI" instance=ExtResource("1_15ugr")]
+layout_mode = 1
+mouse_filter = 2
+
+[node name="TransitionController" parent="." instance=ExtResource("3_7yovp")]
