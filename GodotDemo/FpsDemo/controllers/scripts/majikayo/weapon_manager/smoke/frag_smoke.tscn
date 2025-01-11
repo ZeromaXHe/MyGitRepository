@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://c6fmy0yinfilw"]
+
+[ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/smoke/smoke_fog_volume.gd" id="2_8nkb5"]
+
+[sub_resource type="FogMaterial" id="FogMaterial_kncif"]
+density = -5.0
+
+[node name="FragSmoke" type="Node3D"]
+
+[node name="FogVolume" type="FogVolume" parent="."]
+size = Vector3(10, 6, 10)
+shape = 0
+material = SubResource("FogMaterial_kncif")
+script = ExtResource("2_8nkb5")
+smoke_density = -8.0
+spawn_time = 0.1
+sustain_time = 0.0
+fade_time = 2.0

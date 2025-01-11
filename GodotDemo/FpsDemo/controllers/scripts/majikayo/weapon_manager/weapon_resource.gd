@@ -130,6 +130,8 @@ func reload():
 		reserve_ammo -= reload_amount
 
 
+var bullet_wake_scene: PackedScene = \
+	preload("res://controllers/scripts/majikayo/weapon_manager/smoke/bullet_wake.tscn")
 var num_shots_fired: int = 0
 
 func fire_shot():
@@ -155,6 +157,14 @@ func fire_shot():
 			obj.apply_impulse(-nrml * 5.0 / obj.mass, pt - obj.global_position)
 		if obj.has_method("take_damage"):
 			obj.take_damage(self.damage)
+	
+	# 穿烟效果
+	var wake: Node3D = bullet_wake_scene.instantiate()
+	weapon_manager.player.add_child(wake)
+	wake.global_position = (raycast.global_position + bullet_target_pos) / 2
+	wake.look_at(bullet_target_pos)
+	wake.set_length(raycast.global_position.distance_to(bullet_target_pos))
+	wake.top_level = true
 	
 	weapon_manager.show_muzzle_flash()
 	if num_shots_fired % 2 == 0:

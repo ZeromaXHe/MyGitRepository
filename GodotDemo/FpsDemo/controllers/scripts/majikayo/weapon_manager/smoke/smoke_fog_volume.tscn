@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://b1ak6drlnkskx"]
+
+[ext_resource type="Shader" path="res://controllers/scripts/majikayo/weapon_manager/smoke/smoke.gdshader" id="1_gbvn3"]
+[ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/smoke/smoke_fog_volume.gd" id="2_2io6k"]
+[ext_resource type="CompressedTexture3D" uid="uid://cqhnqr1wtbmkv" path="res://controllers/scripts/majikayo/weapon_manager/smoke/3d_noise.png" id="2_b4vsn"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dkxal"]
+shader = ExtResource("1_gbvn3")
+shader_parameter/density = 8.0
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/emission = Color(0, 0, 0, 1)
+shader_parameter/height_falloff = 0.0
+shader_parameter/edge_fade = 0.329
+shader_parameter/density_texture = ExtResource("2_b4vsn")
+
+[node name="SmokeFogVolume" type="FogVolume"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+size = Vector3(10, 10, 10)
+shape = 0
+material = SubResource("ShaderMaterial_dkxal")
+script = ExtResource("2_2io6k")
+density_path = "shader_parameter/density"

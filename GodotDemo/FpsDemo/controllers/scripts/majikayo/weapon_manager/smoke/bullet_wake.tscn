@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3 uid="uid://bt81f6jws5hx4"]
+
+[ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/smoke/bullet_wake.gd" id="1_fenhd"]
+[ext_resource type="Script" path="res://controllers/scripts/majikayo/weapon_manager/smoke/smoke_fog_volume.gd" id="2_wx2j0"]
+
+[sub_resource type="FogMaterial" id="FogMaterial_xcklh"]
+density = -8.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jvilm"]
+transparency = 1
+albedo_color = Color(1, 1, 1, 0.0627451)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_54sg1"]
+material = SubResource("StandardMaterial3D_jvilm")
+radius = 0.25
+height = 0.5
+
+[node name="BulletWake" type="Node3D"]
+script = ExtResource("1_fenhd")
+
+[node name="BulletWakeVolume" type="FogVolume" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+size = Vector3(0.5, 0.01, 0.5)
+shape = 2
+material = SubResource("FogMaterial_xcklh")
+script = ExtResource("2_wx2j0")
+smoke_density = -8.0
+spawn_time = 0.1
+sustain_time = 1.0
+fade_time = 2.0
+
+[node name="Debug" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+visible = false
+mesh = SubResource("CapsuleMesh_54sg1")

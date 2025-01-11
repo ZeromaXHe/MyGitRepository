@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://vep1hgv76ace"]
+
+[ext_resource type="Shader" path="res://controllers/scripts/majikayo/weapon_manager/smoke/smoke.gdshader" id="1_h4buh"]
+[ext_resource type="CompressedTexture3D" uid="uid://cqhnqr1wtbmkv" path="res://controllers/scripts/majikayo/weapon_manager/smoke/3d_noise.png" id="2_6r5tv"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_18lk0"]
+shader = ExtResource("1_h4buh")
+shader_parameter/density = 5.9406
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/emission = Color(0, 0, 0, 1)
+shader_parameter/height_falloff = 0.0
+shader_parameter/edge_fade = 0.1
+shader_parameter/density_texture = ExtResource("2_6r5tv")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wusfr"]
+
+[node name="SmokeFogVolume" type="FogVolume"]
+shape = 0
+material = SubResource("ShaderMaterial_18lk0")
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("BoxShape3D_wusfr")

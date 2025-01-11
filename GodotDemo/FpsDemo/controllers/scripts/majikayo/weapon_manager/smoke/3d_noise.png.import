@@ -1,0 +1,26 @@
+[remap]
+
+importer="3d_texture"
+type="CompressedTexture3D"
+uid="uid://cqhnqr1wtbmkv"
+path="res://.godot/imported/3d_noise.png-0bc7082411d988764ee01099cceb4179.ctex3d"
+metadata={
+"vram_texture": false
+}
+
+[deps]
+
+source_file="res://controllers/scripts/majikayo/weapon_manager/smoke/3d_noise.png"
+dest_files=["res://.godot/imported/3d_noise.png-0bc7082411d988764ee01099cceb4179.ctex3d"]
+
+[params]
+
+compress/mode=0
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/hdr_compression=1
+compress/channel_pack=0
+mipmaps/generate=false
+mipmaps/limit=-1
+slices/horizontal=4
+slices/vertical=4
