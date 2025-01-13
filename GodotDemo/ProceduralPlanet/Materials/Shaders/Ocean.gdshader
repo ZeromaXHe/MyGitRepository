@@ -86,7 +86,7 @@ vec2 derivative(vec2 uv, vec2 e) {
 
 void vertex() {
 	// Generate triangle in clip space
-	POSITION = vec4(vertices[VERTEX_ID],0.0,1.0);
+	POSITION = vec4(vertices[VERTEX_ID],1.0,1.0);
     UV = 0.5 * POSITION.xy + vec2(0.5, 0.5);
 
 	// View vector in world space

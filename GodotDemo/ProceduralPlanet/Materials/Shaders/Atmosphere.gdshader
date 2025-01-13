@@ -36,7 +36,7 @@ const vec2 vertices[3] = {vec2(-1,-1), vec2(3,-1), vec2(-1, 3)};
 
 void vertex() {
 	// Generate triangle in clip space
-	POSITION = vec4(vertices[VERTEX_ID],0.0,1.0);
+	POSITION = vec4(vertices[VERTEX_ID],1.0,1.0);
     UV = 0.5 * POSITION.xy + vec2(0.5, 0.5);
 	vUv = UV;
 
