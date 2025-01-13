@@ -16,7 +16,7 @@ public partial class OceanSettings : Resource
         set
         {
             _depthMultiplier = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -29,7 +29,7 @@ public partial class OceanSettings : Resource
         set
         {
             _alphaMultiplier = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -42,7 +42,7 @@ public partial class OceanSettings : Resource
         set
         {
             _colA = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -55,7 +55,7 @@ public partial class OceanSettings : Resource
         set
         {
             _colB = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -68,7 +68,7 @@ public partial class OceanSettings : Resource
         set
         {
             _specularCol = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -81,7 +81,7 @@ public partial class OceanSettings : Resource
         set
         {
             _waveNormalA = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -94,7 +94,7 @@ public partial class OceanSettings : Resource
         set
         {
             _waveNormalB = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -106,7 +106,7 @@ public partial class OceanSettings : Resource
         set
         {
             _waveStrength = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _waveScale = 15f;
@@ -117,7 +117,7 @@ public partial class OceanSettings : Resource
         set
         {
             _waveScale = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _waveSpeed = 0.5f;
@@ -128,7 +128,7 @@ public partial class OceanSettings : Resource
         set
         {
             _waveSpeed = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _shoreWaveHeight = 0.1f;
@@ -139,7 +139,7 @@ public partial class OceanSettings : Resource
         set
         {
             _shoreWaveHeight = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -151,7 +151,7 @@ public partial class OceanSettings : Resource
         set
         {
             _smoothness = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _specularIntensity = 0.5f;
@@ -162,7 +162,7 @@ public partial class OceanSettings : Resource
         set
         {
             _specularIntensity = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -174,7 +174,7 @@ public partial class OceanSettings : Resource
         set
         {
             _foamNoiseTexture = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -186,7 +186,7 @@ public partial class OceanSettings : Resource
         set
         {
             _foamColor = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -198,7 +198,7 @@ public partial class OceanSettings : Resource
         set
         {
             _foamNoiseScale = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _foamFalloffDistance = 0.5f;
@@ -209,7 +209,7 @@ public partial class OceanSettings : Resource
         set
         {
             _foamFalloffDistance = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _foamLeadingEdgeFalloff = 1f;
@@ -220,7 +220,7 @@ public partial class OceanSettings : Resource
         set
         {
             _foamLeadingEdgeFalloff = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _foamEdgeFalloffBias = 0.5f;
@@ -231,7 +231,7 @@ public partial class OceanSettings : Resource
         set
         {
             _foamEdgeFalloffBias = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
     private float _refractionScale = 1f;
@@ -242,7 +242,7 @@ public partial class OceanSettings : Resource
         set
         {
             _refractionScale = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 

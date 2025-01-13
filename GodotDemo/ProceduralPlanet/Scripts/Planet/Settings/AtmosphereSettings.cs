@@ -160,7 +160,7 @@ public partial class AtmosphereSettings : Resource
     private void OnDataChanged()
     {
         _opticalDepthBaked = false;
-        EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+        EmitChanged();
     }
 
     public void SetProperties(ShaderMaterial material, float bodyRadius)

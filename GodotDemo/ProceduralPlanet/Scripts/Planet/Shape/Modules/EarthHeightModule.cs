@@ -19,7 +19,7 @@ public partial class EarthHeightModule : HeightModule
         set
         {
             _continentsNoise = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _continentsNoise.Changed += OnDataChanged;
         }
     }
@@ -33,7 +33,7 @@ public partial class EarthHeightModule : HeightModule
         set
         {
             _mountainsNoise = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _mountainsNoise.Changed += OnDataChanged;
         }
     }
@@ -47,7 +47,7 @@ public partial class EarthHeightModule : HeightModule
         set
         {
             _maskNoise = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _maskNoise.Changed += OnDataChanged;
         }
     }
@@ -62,7 +62,7 @@ public partial class EarthHeightModule : HeightModule
         set
         {
             _oceanDepthMultiplier = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -75,7 +75,7 @@ public partial class EarthHeightModule : HeightModule
         set
         {
             _oceanFloorDepth = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -88,7 +88,7 @@ public partial class EarthHeightModule : HeightModule
         set
         {
             _oceanFloorSmoothing = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -101,13 +101,13 @@ public partial class EarthHeightModule : HeightModule
         set
         {
             _mountainBlend = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
     // 创建一个本地渲染设备
     private RenderingDevice _rd = RenderingServer.CreateLocalRenderingDevice();
-    private void OnDataChanged() => EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+    private void OnDataChanged() => EmitChanged();
 
     public override float[] Run(RandomNumberGenerator rng, Vector3[] vertices)
     {

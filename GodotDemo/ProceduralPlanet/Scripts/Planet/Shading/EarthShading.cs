@@ -18,7 +18,7 @@ public partial class EarthShading : CelestialBodyShading
         {
             _customizedColors = value;
             _customizedColors.ResourceName = "自定义颜色";
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _customizedColors.Changed += OnDateChanged;
         }
     }
@@ -33,12 +33,12 @@ public partial class EarthShading : CelestialBodyShading
         {
             _randomizedColors = value;
             _randomizedColors.ResourceName = "随机颜色";
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _randomizedColors.Changed += OnDateChanged;
         }
     }
 
-    private void OnDateChanged() => EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+    private void OnDateChanged() => EmitChanged();
 
     public override void SetTerrainProperties(ShaderMaterial material, Vector2 heightMinMax, float bodyScale)
     {

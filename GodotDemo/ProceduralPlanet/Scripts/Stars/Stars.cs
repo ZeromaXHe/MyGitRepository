@@ -254,7 +254,7 @@ public partial class Stars : Node3D
         arrays[(int)Mesh.ArrayType.Color] = cols.ToArray();
         // 创建网格
         mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-        CallDeferred(nameof(SetMesh), mesh);
+        Callable.From(() => SetMesh(mesh)).CallDeferred();
     }
 
     private void SetMesh(Mesh mesh)

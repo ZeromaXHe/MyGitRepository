@@ -16,9 +16,10 @@ public partial class CelestialBodyShape : Resource
         set
         {
             _randomize = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
+
     private int _seed;
 
     [Export]
@@ -28,12 +29,12 @@ public partial class CelestialBodyShape : Resource
         set
         {
             _seed = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
     private HeightModule _heightMapCompute;
-    
+
     [Export]
     public HeightModule HeightMapCompute
     {
@@ -42,13 +43,13 @@ public partial class CelestialBodyShape : Resource
         {
             _heightMapCompute = value;
             _heightMapCompute.ResourceName = "高度模块";
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _heightMapCompute.Changed += OnDataChanged;
         }
     }
 
     private bool _perturbVertices;
-    
+
     [Export]
     public bool PerturbVertices
     {
@@ -56,12 +57,12 @@ public partial class CelestialBodyShape : Resource
         set
         {
             _perturbVertices = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
-    
+
     private PerturbModule _perturbCompute;
-    
+
     [Export]
     public PerturbModule PerturbCompute
     {
@@ -70,13 +71,13 @@ public partial class CelestialBodyShape : Resource
         {
             _perturbCompute = value;
             _perturbCompute.ResourceName = "扰动模块";
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _perturbCompute.Changed += OnDataChanged;
         }
     }
 
     private float _perturbStrength = 0.7f;
-    
+
     [Export(PropertyHint.Range, "0.0, 1.0")]
     public float PerturbStrength
     {
@@ -84,14 +85,14 @@ public partial class CelestialBodyShape : Resource
         set
         {
             _perturbStrength = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
     private float[] _heightBuffer;
     private RandomNumberGenerator _rng = new();
-    
-    private void OnDataChanged() => EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+
+    private void OnDataChanged() => EmitChanged();
 
     public float[] CalculateHeights(Vector3[] vertexArray)
     {

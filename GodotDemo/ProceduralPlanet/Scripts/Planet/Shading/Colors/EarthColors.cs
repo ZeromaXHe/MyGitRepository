@@ -15,7 +15,7 @@ public partial class EarthColors : Resource
         set
         {
             _shoreColorLow = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -28,7 +28,7 @@ public partial class EarthColors : Resource
         set
         {
             _shoreColorHigh = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -41,7 +41,7 @@ public partial class EarthColors : Resource
         set
         {
             _flatColorLowA = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -54,7 +54,7 @@ public partial class EarthColors : Resource
         set
         {
             _flatColorHighA = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -67,7 +67,7 @@ public partial class EarthColors : Resource
         set
         {
             _flatColorLowB = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -80,7 +80,7 @@ public partial class EarthColors : Resource
         set
         {
             _flatColorHighB = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -93,7 +93,7 @@ public partial class EarthColors : Resource
         set
         {
             _steepLow = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -106,7 +106,7 @@ public partial class EarthColors : Resource
         set
         {
             _steepHigh = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 }

@@ -19,7 +19,7 @@ public partial class EarthShadingModule : ShadingDataModule
         set
         {
             _detailWarpNoise = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _detailWarpNoise.Changed += OnDataChanged;
         }
     }
@@ -33,7 +33,7 @@ public partial class EarthShadingModule : ShadingDataModule
         set
         {
             _detailNoise = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _detailNoise.Changed += OnDataChanged;
         }
     }
@@ -47,7 +47,7 @@ public partial class EarthShadingModule : ShadingDataModule
         set
         {
             _largeNoise = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _largeNoise.Changed += OnDataChanged;
         }
     }
@@ -61,7 +61,7 @@ public partial class EarthShadingModule : ShadingDataModule
         set
         {
             _smallNoise = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _smallNoise.Changed += OnDataChanged;
         }
     }
@@ -72,7 +72,7 @@ public partial class EarthShadingModule : ShadingDataModule
 
     // 创建本地渲染设备
     private RenderingDevice _rd = RenderingServer.CreateLocalRenderingDevice();
-    private void OnDataChanged() => EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+    private void OnDataChanged() => EmitChanged();
 
     public override Vector2[][] Run(RandomNumberGenerator rng, Vector3[] vertices)
     {

@@ -25,13 +25,20 @@ public partial class FreeLookCamera : Camera3D
     {
         if (!Current)
             return;
+        if (@event is InputEventMouseButton)
+            Input.SetMouseMode(Input.MouseModeEnum.Captured);
+        else if (@event.IsActionPressed("ui_cancel")) // Esc
+            Input.SetMouseMode(Input.MouseModeEnum.Visible);
+        
         if (Input.GetMouseMode() == Input.MouseModeEnum.Captured && @event is InputEventMouseMotion motion)
         {
-            var rot = Rotation;
-            rot.Y -= motion.Relative.X / 1000 * Sensitivity;
-            rot.X -= motion.Relative.Y / 1000 * Sensitivity;
-            rot.X = Mathf.Clamp(rot.X, Mathf.Pi / -2, Mathf.Pi / 2);
-            Rotation = rot;
+            // var rot = Rotation;
+            // rot.Y -= motion.Relative.X / 1000 * Sensitivity;
+            // rot.X -= motion.Relative.Y / 1000 * Sensitivity;
+            // rot.X = Mathf.Clamp(rot.X, Mathf.Pi / -2, Mathf.Pi / 2);
+            // Rotation = rot;
+            RotateObjectLocal(Vector3.Up, -motion.Relative.X / 1000 * Sensitivity);
+            RotateObjectLocal(Vector3.Right, -motion.Relative.Y / 1000 * Sensitivity);
         }
 
         if (@event is InputEventMouseButton button)
@@ -58,6 +65,6 @@ public partial class FreeLookCamera : Camera3D
                 (Input.IsKeyPressed(Key.E) ? 1f : 0f) - (Input.IsKeyPressed(Key.Q) ? 1f : 0f),
                 (Input.IsKeyPressed(Key.S) ? 1f : 0f) - (Input.IsKeyPressed(Key.W) ? 1f : 0f))
             .Normalized();
-        Translate(direction * _velocity * (float)delta);
+        TranslateObjectLocal(direction * _velocity * (float)delta);
     }
 }

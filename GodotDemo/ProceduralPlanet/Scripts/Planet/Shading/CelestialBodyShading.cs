@@ -18,7 +18,7 @@ public partial class CelestialBodyShading : Resource
         set
         {
             _randomize = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -31,7 +31,7 @@ public partial class CelestialBodyShading : Resource
         set
         {
             _seed = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -44,7 +44,7 @@ public partial class CelestialBodyShading : Resource
         set
         {
             _terrainMaterial = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -57,7 +57,7 @@ public partial class CelestialBodyShading : Resource
         set
         {
             _hasOcean = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -70,7 +70,7 @@ public partial class CelestialBodyShading : Resource
         set
         {
             _oceanLevel = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -84,7 +84,7 @@ public partial class CelestialBodyShading : Resource
         {
             _oceanSettings = value;
             _oceanSettings.ResourceName = "海洋设置";
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _oceanSettings.Changed += OnDataChanged;
         }
     }
@@ -98,7 +98,7 @@ public partial class CelestialBodyShading : Resource
         set
         {
             _hasAtmosphere = value;
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
         }
     }
 
@@ -112,7 +112,7 @@ public partial class CelestialBodyShading : Resource
         {
             _atmosphereSettings = value;
             _atmosphereSettings.ResourceName = "大气设置";
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _atmosphereSettings.Changed += OnDataChanged;
         }
     }
@@ -127,7 +127,7 @@ public partial class CelestialBodyShading : Resource
         {
             _shadingDataCompute = value;
             _shadingDataCompute.ResourceName = "着色数据计算着色器";
-            EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+            EmitChanged();
             _shadingDataCompute.Changed += OnDataChanged;
         }
     }
@@ -148,7 +148,7 @@ public partial class CelestialBodyShading : Resource
     public void SetOceanProperties(ShaderMaterial material) =>
         _oceanSettings.SetProperties(material, _seed, _randomize);
 
-    public void OnDataChanged() => EmitSignal(Resource.SignalName.Changed); // 等同于 EmitChanged();
+    public void OnDataChanged() => EmitChanged();
 
     public Vector2[][] GenerateShadingData(Vector3[] vertexArray)
     {

@@ -193,7 +193,7 @@ public partial class CelestialBodyGenerator : Node3D
                 else
                     _previewMesh.ClearSurfaces();
                 _heightMinMax = GenerateTerrainMesh(_previewMesh, PickTerrainRes());
-                CallDeferred(nameof(SetMesh), _previewMesh);
+                Callable.From(() => SetMesh(_previewMesh)).CallDeferred();
             }
 
             // 如果只有着色噪声修改了，从形状到保存时间分别地更新它
@@ -220,7 +220,7 @@ public partial class CelestialBodyGenerator : Node3D
                     arrays[(int)Mesh.ArrayType.TexUV2] = uv2;
                     _previewMesh.ClearSurfaces();
                     _previewMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-                    CallDeferred(nameof(SetMesh), _previewMesh);
+                    Callable.From(() => SetMesh(_previewMesh)).CallDeferred();
                 }
             }
 
@@ -238,7 +238,7 @@ public partial class CelestialBodyGenerator : Node3D
                 else
                     _previewMesh.ClearSurfaces();
                 GenerateOceanMesh(_previewMesh, PickTerrainRes());
-                CallDeferred(nameof(SetMesh), _previewMesh);
+                Callable.From(() => SetMesh(_previewMesh)).CallDeferred();
             }
         }
     }
@@ -250,7 +250,7 @@ public partial class CelestialBodyGenerator : Node3D
         if (lodIndex != _activeLodIndex)
         {
             _activeLodIndex = lodIndex;
-            CallDeferred(nameof(SetMesh), _lodMeshes[lodIndex]);
+            Callable.From(() => SetMesh(_lodMeshes[lodIndex])).CallDeferred();
         }
     }
 
@@ -354,7 +354,7 @@ public partial class CelestialBodyGenerator : Node3D
         arrays[(int)Mesh.ArrayType.Index] = triangles;
         // 创建网格
         _collisionMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-        CallDeferred(nameof(SetCollisionMesh), _collisionMesh);
+        Callable.From(() => SetCollisionMesh(_collisionMesh)).CallDeferred();
     }
 
     private void GenerateOceanMesh(ArrayMesh mesh, int resolution)
