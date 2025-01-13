@@ -1,0 +1,35 @@
+[gd_resource type="ShaderMaterial" load_steps=7 format=3 uid="uid://b67cpqviukpxk"]
+
+[ext_resource type="Shader" path="res://Materials/Shaders/Star.gdshader" id="1_uhjwb"]
+
+[sub_resource type="Gradient" id="Gradient_wme6u"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.534, 0.905)
+colors = PackedColorArray(0.870588, 0.0745098, 0.396078, 1, 0.501961, 0.219608, 0.690196, 1, 0.117647, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_xt4mc"]
+gradient = SubResource("Gradient_wme6u")
+height = 1
+use_hdr = true
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_5hrsw"]
+viewport_path = NodePath("AtmosphereLayer/AtmosphereViewportContainer/AtmosphereViewport")
+
+[sub_resource type="Gradient" id="Gradient_kuyav"]
+offsets = PackedFloat32Array(0.248, 0.44, 0.587, 0.807, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.972549, 0.945098, 0.792157, 1, 1, 0.788235, 0.768627, 1, 0.752941, 0.878431, 0.980392, 1, 0.890196, 0.819608, 0.992157, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ttsjn"]
+gradient = SubResource("Gradient_kuyav")
+height = 1
+use_hdr = true
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_uhjwb")
+shader_parameter/daytimeFade = 100.0
+shader_parameter/OceanRadius = 200.0
+shader_parameter/PlanetCentre = Vector3(0, 0, 0)
+shader_parameter/MainTex = SubResource("ViewportTexture_5hrsw")
+shader_parameter/Spectrum = SubResource("GradientTexture2D_ttsjn")
+shader_parameter/ClusterSpectrum = SubResource("GradientTexture2D_xt4mc")

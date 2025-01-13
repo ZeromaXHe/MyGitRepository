@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://diwcm0nbrk00a"
+path="res://.godot/imported/AtmosphereTexture.glsl-88b64e8467d70dd66cb332f12bec70c7.res"
+
+[deps]
+
+source_file="res://Materials/Shaders/Compute/AtmosphereTexture.glsl"
+dest_files=["res://.godot/imported/AtmosphereTexture.glsl-88b64e8467d70dd66cb332f12bec70c7.res"]
+
+[params]
+

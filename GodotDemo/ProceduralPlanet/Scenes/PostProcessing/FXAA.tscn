@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://wk2vedgsawih"]
+
+[ext_resource type="Shader" path="res://Materials/Shaders/PostProcessing/FXAA.gdshader" id="1_ipxyf"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ysv56"]
+shader = ExtResource("1_ipxyf")
+shader_parameter/qualitySubpix = 1.0
+shader_parameter/qualityEdgeThreshold = 0.063
+shader_parameter/qualityEdgeThresholdMin = 0.125
+shader_parameter/lumaScale = 6.0
+
+[node name="FXAA" type="ColorRect"]
+material = SubResource("ShaderMaterial_ysv56")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

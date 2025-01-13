@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://ctd8xtauquqlo"
+path="res://.godot/imported/PerturbPoints.glsl-8752aad686a38c3a5a2de7cc134afac6.res"
+
+[deps]
+
+source_file="res://Materials/Shaders/Compute/PerturbPoints.glsl"
+dest_files=["res://.godot/imported/PerturbPoints.glsl-8752aad686a38c3a5a2de7cc134afac6.res"]
+
+[params]
+

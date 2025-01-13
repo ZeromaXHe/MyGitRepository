@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AtmosphereSettings" load_steps=4 format=3 uid="uid://bxdq30no2uy15"]
+
+[ext_resource type="Texture2D" uid="uid://cxj0b63vmcj4g" path="res://Materials/Textures/HDR_L_0.png" id="1_kuj2l"]
+[ext_resource type="Script" path="res://Scripts/Planet/Settings/AtmosphereSettings.cs" id="2_ny1tu"]
+
+[sub_resource type="ImageTexture" id="ImageTexture_6v3qe"]
+
+[resource]
+resource_name = "大气设置"
+script = ExtResource("2_ny1tu")
+TextureSize = 256
+InScatteringPoints = 10
+OpticalDepthPoints = 50
+DensityFalloff = 4.0
+WaveLengths = Vector3(700, 530, 460)
+ScatteringStrength = 20.0
+Intensity = 0.5
+DitherStrength = 0.3
+DitherScale = 3.89
+AtmosphereScale = 0.23
+BlueNoiseTexture = ExtResource("1_kuj2l")
+OpticalDepthTexture = SubResource("ImageTexture_6v3qe")

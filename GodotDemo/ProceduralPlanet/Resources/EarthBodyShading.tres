@@ -1,0 +1,95 @@
+[gd_resource type="Resource" script_class="EarthShading" load_steps=15 format=3 uid="uid://ced1xon5b6awc"]
+
+[ext_resource type="Resource" uid="uid://bxdq30no2uy15" path="res://Resources/EarthAtmosphereSettings.tres" id="1_26cbx"]
+[ext_resource type="Script" path="res://Scripts/Planet/Shading/Colors/EarthColors.cs" id="1_q5upe"]
+[ext_resource type="Script" path="res://Scripts/Planet/Shading/EarthShading.cs" id="2_tvuqo"]
+[ext_resource type="Resource" uid="uid://buvd8ejw632ed" path="res://Resources/EarthOceanSettings.tres" id="3_uv7pu"]
+[ext_resource type="Script" path="res://Scripts/Planet/Settings/NoiseSettings/SimplexNoiseSettings.cs" id="4_wtdnw"]
+[ext_resource type="Script" path="res://Scripts/Planet/Shading/Modules/EarthShadingModule.cs" id="5_smt8s"]
+[ext_resource type="Material" uid="uid://b5k8m2jswgpth" path="res://Materials/Earth.tres" id="6_iybte"]
+
+[sub_resource type="Resource" id="Resource_qhevs"]
+resource_name = "自定义颜色"
+script = ExtResource("1_q5upe")
+ShoreColorLow = Color(0.980392, 1, 0.666667, 1)
+ShoreColorHigh = Color(0.952941, 0.85098, 0.380392, 1)
+FlatColorLowA = Color(0.788235, 0.858824, 0, 1)
+FlatColorHighA = Color(0.192157, 0.462745, 0, 1)
+FlatColorLowB = Color(0.584314, 1, 0, 1)
+FlatColorHighB = Color(0.192157, 0.462745, 0, 1)
+SteepLow = Color(0.529412, 0.490196, 0.188235, 1)
+SteepHigh = Color(0.14902, 0.0666667, 0, 1)
+
+[sub_resource type="Resource" id="Resource_rjgt6"]
+resource_name = "随机颜色"
+script = ExtResource("1_q5upe")
+ShoreColorLow = Color(0, 0, 0, 1)
+ShoreColorHigh = Color(0, 0, 0, 1)
+FlatColorLowA = Color(0, 0, 0, 1)
+FlatColorHighA = Color(0, 0, 0, 1)
+FlatColorLowB = Color(0, 0, 0, 1)
+FlatColorHighB = Color(0, 0, 0, 1)
+SteepLow = Color(0, 0, 0, 1)
+SteepHigh = Color(0, 0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_jfdfg"]
+script = ExtResource("4_wtdnw")
+NumLayers = 4
+Lacunarity = 2.0
+Persistence = 0.5
+Scale = 1.5
+Elevation = 1.0
+VerticalShift = 0.0
+Offset = Vector3(0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_lqc32"]
+script = ExtResource("4_wtdnw")
+NumLayers = 4
+Lacunarity = 2.0
+Persistence = 0.5
+Scale = 2.96
+Elevation = 9.41
+VerticalShift = 0.0
+Offset = Vector3(0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_22m30"]
+script = ExtResource("4_wtdnw")
+NumLayers = 4
+Lacunarity = 2.0
+Persistence = 0.5
+Scale = 1.77
+Elevation = 1.0
+VerticalShift = 0.0
+Offset = Vector3(0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_c3ygk"]
+script = ExtResource("4_wtdnw")
+NumLayers = 5
+Lacunarity = 4.13
+Persistence = 0.65
+Scale = 4.44
+Elevation = 0.52
+VerticalShift = 0.0
+Offset = Vector3(0.25, -0.09, 0)
+
+[sub_resource type="Resource" id="Resource_46n5c"]
+resource_name = "着色数据计算着色器"
+script = ExtResource("5_smt8s")
+DetailWarpNoise = SubResource("Resource_lqc32")
+DetailNoise = SubResource("Resource_jfdfg")
+LargeNoise = SubResource("Resource_22m30")
+SmallNoise = SubResource("Resource_c3ygk")
+
+[resource]
+script = ExtResource("2_tvuqo")
+CustomizedColors = SubResource("Resource_qhevs")
+RandomizedColors = SubResource("Resource_rjgt6")
+Randomize = false
+Seed = 0
+TerrainMaterial = ExtResource("6_iybte")
+HasOcean = true
+OceanLevel = 1.0
+OceanSettings = ExtResource("3_uv7pu")
+HasAtmosphere = true
+AtmosphereSettings = ExtResource("1_26cbx")
+ShadingDataCompute = SubResource("Resource_46n5c")

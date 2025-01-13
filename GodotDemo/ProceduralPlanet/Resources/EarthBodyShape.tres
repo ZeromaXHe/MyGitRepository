@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="CelestialBodyShape" load_steps=11 format=3 uid="uid://bna8sqf8tqfng"]
+
+[ext_resource type="Script" path="res://Scripts/Planet/Settings/NoiseSettings/SimplexNoiseSettings.cs" id="1_0fu2u"]
+[ext_resource type="Script" path="res://Scripts/Planet/Shape/CelestialBodyShape.cs" id="1_ot5nq"]
+[ext_resource type="Script" path="res://Scripts/Planet/Settings/NoiseSettings/RidgeNoiseSettings.cs" id="2_wnk45"]
+[ext_resource type="Script" path="res://Scripts/Planet/Shape/Modules/EarthHeightModule.cs" id="3_826tn"]
+[ext_resource type="Script" path="res://Scripts/Planet/Shape/Modules/PerturbPointsModule.cs" id="4_26vq8"]
+
+[sub_resource type="Resource" id="Resource_46y7j"]
+script = ExtResource("1_0fu2u")
+NumLayers = 5
+Lacunarity = 2.0
+Persistence = 0.5
+Scale = 1.0
+Elevation = 2.64
+VerticalShift = -0.63
+Offset = Vector3(0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_81df2"]
+script = ExtResource("1_0fu2u")
+NumLayers = 3
+Lacunarity = 1.66
+Persistence = 0.55
+Scale = 1.09
+Elevation = 1.0
+VerticalShift = 0.02
+Offset = Vector3(0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_wi52b"]
+script = ExtResource("2_wnk45")
+NumLayers = 5
+Lacunarity = 4.0
+Persistence = 0.5
+Scale = 1.5
+Power = 2.18
+Elevation = 8.7
+Gain = 0.8
+VerticalShift = 0.09
+PeakSmoothing = 1.0
+Offset = Vector3(0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_qnupv"]
+resource_name = "高度模块"
+script = ExtResource("3_826tn")
+ContinentsNoise = SubResource("Resource_46y7j")
+MountainsNoise = SubResource("Resource_wi52b")
+MaskNoise = SubResource("Resource_81df2")
+OceanDepthMultiplier = 5.0
+OceanFloorDepth = 1.36
+OceanFloorSmoothing = 0.5
+MountainBlend = 1.16
+
+[sub_resource type="Resource" id="Resource_dpvcc"]
+resource_name = "扰动模块"
+script = ExtResource("4_26vq8")
+
+[resource]
+script = ExtResource("1_ot5nq")
+Randomize = false
+Seed = 0
+HeightMapCompute = SubResource("Resource_qnupv")
+PerturbVertices = true
+PerturbCompute = SubResource("Resource_dpvcc")
+PerturbStrength = 0.698

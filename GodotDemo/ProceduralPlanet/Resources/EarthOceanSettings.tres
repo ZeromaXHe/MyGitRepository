@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="OceanSettings" load_steps=5 format=3 uid="uid://buvd8ejw632ed"]
+
+[ext_resource type="Script" path="res://Scripts/Planet/Settings/OceanSettings.cs" id="1_lj5ch"]
+[ext_resource type="Texture2D" uid="uid://c5res1ocpmhg3" path="res://Materials/Textures/water_foam.png" id="1_ni6h5"]
+[ext_resource type="Texture2D" uid="uid://ix6bk6plvf03" path="res://Materials/Textures/Wave B.png" id="2_61rv3"]
+[ext_resource type="Texture2D" uid="uid://cy704br26uhx" path="res://Materials/Textures/Wave A.png" id="2_wyl7f"]
+
+[resource]
+resource_name = "海洋设置"
+script = ExtResource("1_lj5ch")
+DepthMultiplier = 30.0
+AlphaMultiplier = 50.0
+ColA = Color(0, 0, 0.776471, 1)
+ColB = Color(0, 0.564706, 0.670588, 1)
+SpecularCol = Color(0.603922, 1, 1, 1)
+WaveNormalA = ExtResource("2_wyl7f")
+WaveNormalB = ExtResource("2_61rv3")
+WaveStrength = 0.704
+WaveScale = 5.0
+WaveSpeed = 0.1
+ShoreWaveHeight = 0.1
+Smoothness = 0.961
+SpecularIntensity = 0.5
+FoamNoiseTexture = ExtResource("1_ni6h5")
+FoamColor = Color(1, 1, 1, 1)
+FoamNoiseScale = 0.5
+FoamFalloffDistance = 1.0
+FoamLeadingEdgeFalloff = 0.5
+FoamEdgeFalloffBias = 0.6
+RefractionScale = 1.0

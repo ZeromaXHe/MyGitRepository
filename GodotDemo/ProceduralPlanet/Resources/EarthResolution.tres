@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ResolutionSettings" load_steps=6 format=3 uid="uid://dsutlc35algj4"]
+
+[ext_resource type="Script" path="res://Scripts/Planet/Settings/LodParameter.cs" id="1_8hsj8"]
+[ext_resource type="Script" path="res://Scripts/Planet/Settings/ResolutionSettings.cs" id="2_qwf50"]
+
+[sub_resource type="Resource" id="Resource_pc7i2"]
+script = ExtResource("1_8hsj8")
+Resolution = 300
+MinDistance = 300.0
+
+[sub_resource type="Resource" id="Resource_xoluh"]
+script = ExtResource("1_8hsj8")
+Resolution = 100
+MinDistance = 1000.0
+
+[sub_resource type="Resource" id="Resource_ikixl"]
+script = ExtResource("1_8hsj8")
+Resolution = 50
+MinDistance = inf
+
+[resource]
+resource_name = "分辨率设置"
+script = ExtResource("2_qwf50")
+LodParameters = [SubResource("Resource_pc7i2"), SubResource("Resource_xoluh"), SubResource("Resource_ikixl")]
+Collider = 100

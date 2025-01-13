@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://764giop6wbyh"
+path="res://.godot/imported/EarthShading.glsl-ff15d77697c175fdf0f0cf36af7e14c3.res"
+
+[deps]
+
+source_file="res://Materials/Shaders/Compute/EarthShading.glsl"
+dest_files=["res://.godot/imported/EarthShading.glsl-ff15d77697c175fdf0f0cf36af7e14c3.res"]
+
+[params]
+
