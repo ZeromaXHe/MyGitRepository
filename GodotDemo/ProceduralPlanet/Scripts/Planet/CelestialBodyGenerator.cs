@@ -85,18 +85,38 @@ public partial class CelestialBodyGenerator : Node3D
     private int _activeLodIndex = -1;
     private Dictionary<int, PlanetSphereMesh> _sphereGenerators = new();
 
+    private bool _readyToGenerate = false;
+
     public override void _Ready()
     {
+        _readyToGenerate = true;
         if (!Engine.IsEditorHint())
             HandleGameModeGeneration();
     }
 
-    private void OnShapeDataChanged() => _shapeSettingsUpdated = true;
-    private void OnShadeDataChanged() => _shadingNoiseSettingsUpdated = true;
-    private void OnResolutionDataChanged() => _resolutionSettings?.ClampResolutions();
+    private void OnShapeDataChanged()
+    {
+        if (_readyToGenerate)
+            _shapeSettingsUpdated = true;
+    }
+
+    private void OnShadeDataChanged()
+    {
+        if (_readyToGenerate)
+            _shadingNoiseSettingsUpdated = true;
+    }
+
+    private void OnResolutionDataChanged()
+    {
+        if (_readyToGenerate)
+            _resolutionSettings?.ClampResolutions();
+    }
 
     public override void _Process(double delta)
     {
+        if (!_readyToGenerate)
+            return;
+
         if (Engine.IsEditorHint())
         {
             HandleEditModeGeneration();

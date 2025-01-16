@@ -191,21 +191,28 @@ public partial class Stars : Node3D
     private bool _settingsUpdated = false;
     private RandomNumberGenerator _rng = new();
 
+    private bool _readyToGenerate;
+
     public override void _Ready()
     {
+        _readyToGenerate = true;
+
         _settingsUpdated = true;
         Initialize(_settingsUpdated);
     }
 
     public override void _Process(double delta)
     {
+        if (!_readyToGenerate)
+            return;
         Initialize(_settingsUpdated);
         _settingsUpdated = false;
     }
 
     private void OnDataUpdated()
     {
-        _settingsUpdated = true;
+        if (_readyToGenerate)
+            _settingsUpdated = true;
     }
 
     private void Initialize(bool regenerateMesh)
