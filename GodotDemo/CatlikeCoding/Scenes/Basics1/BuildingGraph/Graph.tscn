@@ -7,3 +7,4 @@
 script = ExtResource("1_7sl8j")
 PointPrefab = ExtResource("2_hdcau")
 Resolution = 50
+Function = 3

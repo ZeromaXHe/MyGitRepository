@@ -12,6 +12,8 @@ public partial class Graph : GraphFS
     [Export(PropertyHint.Range, "10, 100")]
     public override int Resolution { get; set; } = 10;
 
+    [Export(PropertyHint.Range, "0, 2")] public override FunctionLibrary.FunctionName Function { get; set; }
+
     public override void _Ready() => base._Ready();
     public override void _Process(double delta) => base._Process(delta);
 }
