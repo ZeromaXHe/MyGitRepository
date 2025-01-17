@@ -10,7 +10,6 @@ public partial class Clock : ClockFS
     [Export] public override Node3D HoursPivot { get; set; }
     [Export] public override Node3D MinutesPivot { get; set; }
     [Export] public override Node3D SecondsPivot { get; set; }
-
     public override void _Ready() => base._Ready();
     public override void _Process(double delta) => base._Process(delta);
 }

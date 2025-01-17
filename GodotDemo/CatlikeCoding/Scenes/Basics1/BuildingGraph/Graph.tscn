@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1y7sjrfurlwa"]
+
+[ext_resource type="Script" path="res://Scenes/Basics1/BuildingGraph/Graph.cs" id="1_7sl8j"]
+[ext_resource type="PackedScene" uid="uid://ndojrh2kpxrq" path="res://Scenes/Basics1/BuildingGraph/Point.tscn" id="2_hdcau"]
+
+[node name="Graph" type="Node3D"]
+script = ExtResource("1_7sl8j")
+PointPrefab = ExtResource("2_hdcau")
+Resolution = 50

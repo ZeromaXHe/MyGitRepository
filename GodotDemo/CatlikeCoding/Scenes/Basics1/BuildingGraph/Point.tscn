@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://ndojrh2kpxrq"]
+
+[ext_resource type="Shader" path="res://Shaders/Basics1/PointSurface.gdshader" id="1_yryvx"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fybnv"]
+render_priority = 0
+shader = ExtResource("1_yryvx")
+shader_parameter/smoothness = 0.5
+
+[node name="Point" type="CSGBox3D"]
+material = SubResource("ShaderMaterial_fybnv")

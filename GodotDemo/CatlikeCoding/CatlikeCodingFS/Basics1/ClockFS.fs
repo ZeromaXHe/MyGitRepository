@@ -13,9 +13,9 @@ type ClockFS() =
     
     let mutable ready = false;
 
-    abstract member HoursPivot : Node3D with get, set
-    abstract member MinutesPivot : Node3D with get, set
-    abstract member SecondsPivot : Node3D with get, set
+    abstract HoursPivot : Node3D with get, set
+    abstract MinutesPivot : Node3D with get, set
+    abstract SecondsPivot : Node3D with get, set
 
     member this.UpdatePivots() =
         let time = DateTime.Now.TimeOfDay
