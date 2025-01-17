@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://dbxnmy4wn18dy"]
+
+[ext_resource type="Texture2D" uid="uid://ylxb1fix0u8r" path="res://Assets/ProceduralMeshes3/base-map.png" id="1_uiap1"]
+[ext_resource type="Texture2D" uid="uid://d154t1psbqkr8" path="res://Assets/ProceduralMeshes3/normal-map.png" id="2_xwrc2"]
+
+[resource]
+albedo_texture = ExtResource("1_uiap1")
+normal_enabled = true
+normal_texture = ExtResource("2_xwrc2")

@@ -21,6 +21,7 @@ project/assembly_name="CatlikeCodingCSharp"
 [file_customization]
 
 folder_colors={
+"res://Assets/": "gray",
 "res://Materials/": "pink",
 "res://Scenes/": "green",
 "res://Shaders/": "purple"

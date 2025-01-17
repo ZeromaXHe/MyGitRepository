@@ -1,0 +1,29 @@
+[gd_scene load_steps=6 format=3 uid="uid://b0yoege5i55hs"]
+
+[ext_resource type="Script" path="res://Scenes/ProceduralMeshes3/SimpleProceduralMesh.cs" id="1_apj2y"]
+[ext_resource type="Material" uid="uid://dbxnmy4wn18dy" path="res://Materials/ProceduralMeshes3/BaseMap.tres" id="2_8t244"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mud22"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_ch467"]
+sky_material = SubResource("ProceduralSkyMaterial_mud22")
+
+[sub_resource type="Environment" id="Environment_iwdiq"]
+background_mode = 2
+sky = SubResource("Sky_ch467")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="SimpleProceduralMesh" type="Node3D"]
+script = ExtResource("1_apj2y")
+UseSurfaceTool = false
+AddedMaterial = ExtResource("2_8t244")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_iwdiq")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, 0.433013, -0.25, 0, 0.5, 0.866025, 0.5, -0.75, 0.433013, 0, 0, 0)
+shadow_enabled = true
