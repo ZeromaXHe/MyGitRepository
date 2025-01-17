@@ -1,0 +1,108 @@
+[gd_scene load_steps=9 format=3 uid="uid://dxmfxlqixbk2p"]
+
+[ext_resource type="Script" path="res://Scenes/Basics1/Clock.cs" id="1_ki8gc"]
+[ext_resource type="Material" uid="uid://drmqjd1xv6wy5" path="res://Materials/Basics1/HourIndicator.tres" id="1_nno6d"]
+[ext_resource type="Material" uid="uid://iltp7xyt41kw" path="res://Materials/Basics1/ClockArm.tres" id="2_kl0ac"]
+[ext_resource type="Material" uid="uid://robvf4m1fat7" path="res://Materials/Basics1/SecondsArm.tres" id="3_iiwqs"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_g41dc"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_v15uy"]
+sky_material = SubResource("ProceduralSkyMaterial_g41dc")
+
+[sub_resource type="Environment" id="Environment_2d21a"]
+background_mode = 2
+sky = SubResource("Sky_v15uy")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8l1ds"]
+
+[node name="Clock" type="Node3D" node_paths=PackedStringArray("HoursPivot", "MinutesPivot", "SecondsPivot")]
+script = ExtResource("1_ki8gc")
+HoursPivot = NodePath("HoursArmPivot")
+MinutesPivot = NodePath("MinutesArmPivot")
+SecondsPivot = NodePath("SecondsArmPivot")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, 0.433013, -0.25, 0, 0.5, 0.866025, 0.5, -0.75, 0.433013, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_2d21a")
+
+[node name="Face" type="CSGCylinder3D" parent="."]
+transform = Transform3D(10, 0, 0, 0, -8.74228e-09, -10, 0, 0.2, -4.37114e-07, 0, 0, 0)
+sides = 32
+material = SubResource("StandardMaterial3D_8l1ds")
+
+[node name="HourIndicator1" type="CSGBox3D" parent="."]
+transform = Transform3D(0.433013, 0.5, 0, -0.25, 0.866025, 0, 0, 0, 0.1, 2, 3.464, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator2" type="CSGBox3D" parent="."]
+transform = Transform3D(0.25, 0.866025, 0, -0.433013, 0.5, 0, 0, 0, 0.1, 3.464, 2, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator3" type="CSGBox3D" parent="."]
+transform = Transform3D(-2.18557e-08, -1, 0, 0.5, -4.37114e-08, 0, 0, 0, 0.1, 4, 0, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator4" type="CSGBox3D" parent="."]
+transform = Transform3D(0.25, -0.866025, 0, 0.433013, 0.5, 0, 0, 0, 0.1, 3.464, -2, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator5" type="CSGBox3D" parent="."]
+transform = Transform3D(0.433013, -0.5, 0, 0.25, 0.866025, 0, 0, 0, 0.1, 2, -3.464, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator6" type="CSGBox3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 1, 0, 0, 0, 0.1, 0, -4, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator7" type="CSGBox3D" parent="."]
+transform = Transform3D(0.433013, 0.5, 0, -0.25, 0.866025, 0, 0, 0, 0.1, -2, -3.464, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator8" type="CSGBox3D" parent="."]
+transform = Transform3D(0.25, 0.866025, 0, -0.433013, 0.5, 0, 0, 0, 0.1, -3.464, -2, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator9" type="CSGBox3D" parent="."]
+transform = Transform3D(-2.18557e-08, -1, 0, 0.5, -4.37114e-08, 0, 0, 0, 0.1, -4, 0, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator10" type="CSGBox3D" parent="."]
+transform = Transform3D(0.25, -0.866025, 0, 0.433013, 0.5, 0, 0, 0, 0.1, -3.464, 2, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator11" type="CSGBox3D" parent="."]
+transform = Transform3D(0.433013, -0.5, 0, 0.25, 0.866025, 0, 0, 0, 0.1, -2, 3.464, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HourIndicator12" type="CSGBox3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 1, 0, 0, 0, 0.1, 0, 4, 0.25)
+material = ExtResource("1_nno6d")
+
+[node name="HoursArmPivot" type="Node3D" parent="."]
+transform = Transform3D(0.998879, -0.0473306, 0, 0.0473306, 0.998879, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="HoursArm" type="CSGBox3D" parent="HoursArmPivot"]
+transform = Transform3D(0.3, 0, 0, 0, 2.5, 0, 0, 0, 0.1, 0, 0.75, 0.25)
+material = ExtResource("2_kl0ac")
+
+[node name="MinutesArmPivot" type="Node3D" parent="."]
+transform = Transform3D(0.842888, -0.538089, 0, 0.538089, 0.842888, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="MinutesArm" type="CSGBox3D" parent="MinutesArmPivot"]
+transform = Transform3D(0.2, 0, 0, 0, 4, 0, 0, 0, 0.1, 0, 1, 0.35)
+material = ExtResource("2_kl0ac")
+
+[node name="SecondsArmPivot" type="Node3D" parent="."]
+transform = Transform3D(-0.892779, -0.450496, 0, 0.450496, -0.892779, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="SecondsArm" type="CSGBox3D" parent="SecondsArmPivot"]
+transform = Transform3D(0.1, 0, 0, 0, 5, 0, 0, 0, 0.1, 0, 1.25, 0.45)
+material = ExtResource("3_iiwqs")
