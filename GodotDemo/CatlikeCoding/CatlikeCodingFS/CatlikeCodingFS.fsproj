@@ -8,6 +8,7 @@
     <ItemGroup>
         <Compile Include="Basics1\FunctionLibrary.fs" />
         <Compile Include="Basics1\ClockFS.fs" />
+        <Compile Include="Basics1\FrameRateCounterFS.fs" />
         <Compile Include="Basics1\GraphFS.fs" />
         <Content Include=".gdignore" />
     </ItemGroup>

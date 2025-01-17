@@ -65,3 +65,13 @@ module FunctionLibrary =
 
     let private functions: Function array = [| wave; multiWave; ripple; sphere; torus |]
     let getFunction (name: FunctionName) = functions[int name]
+
+    let getNextFunctionName (name: FunctionName) =
+        enum<FunctionName> (if int name < functions.Length - 1 then int name + 1 else 0)
+
+    let getRandomFunctionNameOtherThan (name: FunctionName) =
+        let choice = enum<FunctionName> <| GD.RandRange(1, functions.Length - 1)
+        if choice = name then enum<FunctionName> 0 else choice
+
+    let morph u v t (fromF: Function) (toF: Function) progress =
+        (fromF u v t).Lerp(toF u v t, Mathf.SmoothStep(0f, 1f, progress)) // Godot Lerp() 本身就没有进行 Clamp

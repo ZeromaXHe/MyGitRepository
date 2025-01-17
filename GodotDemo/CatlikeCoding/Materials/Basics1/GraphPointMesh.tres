@@ -1,0 +1,11 @@
+[gd_resource type="BoxMesh" load_steps=3 format=3 uid="uid://76djxi6u5ldc"]
+
+[ext_resource type="Shader" path="res://Shaders/Basics1/PointSurface.gdshader" id="1_nfbxx"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hus1s"]
+render_priority = 0
+shader = ExtResource("1_nfbxx")
+shader_parameter/smoothness = 0.5
+
+[resource]
+material = SubResource("ShaderMaterial_hus1s")
