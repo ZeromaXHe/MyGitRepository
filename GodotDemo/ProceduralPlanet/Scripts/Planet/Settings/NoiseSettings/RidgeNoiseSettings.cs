@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace ProceduralPlanet.Scripts.Planet.Settings.NoiseSettings;
@@ -14,8 +15,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _numLayers;
         set
         {
+            var emit = value != _numLayers;
             _numLayers = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -27,8 +29,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _lacunarity;
         set
         {
+            var emit = Math.Abs(value - _lacunarity) > 0.001f;
             _lacunarity = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -40,8 +43,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _persistence;
         set
         {
+            var emit = Math.Abs(value - _persistence) > 0.001f;
             _persistence = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -53,8 +57,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _scale;
         set
         {
+            var emit = Math.Abs(value - _scale) > 0.001f;
             _scale = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -66,8 +71,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _power;
         set
         {
+            var emit = Math.Abs(value - _power) > 0.001f;
             _power = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -79,8 +85,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _elevation;
         set
         {
+            var emit = Math.Abs(value - _elevation) > 0.001f;
             _elevation = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -92,8 +99,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _gain;
         set
         {
+            var emit = Math.Abs(value - _gain) > 0.001f;
             _gain = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -105,8 +113,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _verticalShift;
         set
         {
+            var emit = Math.Abs(value - _verticalShift) > 0.001f;
             _verticalShift = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -118,8 +127,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _peakSmoothing;
         set
         {
+            var emit = Math.Abs(value - _peakSmoothing) > 0.001f;
             _peakSmoothing = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -131,8 +141,9 @@ public partial class RidgeNoiseSettings : Resource
         get => _offset;
         set
         {
+            var emit = value != _offset;
             _offset = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 

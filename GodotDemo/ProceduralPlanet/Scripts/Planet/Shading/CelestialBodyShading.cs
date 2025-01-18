@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using ProceduralPlanet.Scripts.Planet.Settings;
 using ProceduralPlanet.Scripts.Planet.Shading.Modules;
@@ -17,8 +18,9 @@ public partial class CelestialBodyShading : Resource
         get => _randomize;
         set
         {
+            var emit = _randomize != value;
             _randomize = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -30,8 +32,9 @@ public partial class CelestialBodyShading : Resource
         get => _seed;
         set
         {
+            var emit = _seed != value;
             _seed = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -56,8 +59,9 @@ public partial class CelestialBodyShading : Resource
         get => _hasOcean;
         set
         {
+            var emit = _hasOcean != value;
             _hasOcean = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -69,8 +73,9 @@ public partial class CelestialBodyShading : Resource
         get => _oceanLevel;
         set
         {
+            var emit = Math.Abs(_oceanLevel - value) > 0.001f;
             _oceanLevel = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -97,8 +102,9 @@ public partial class CelestialBodyShading : Resource
         get => _hasAtmosphere;
         set
         {
+            var emit = _hasAtmosphere != value;
             _hasAtmosphere = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 

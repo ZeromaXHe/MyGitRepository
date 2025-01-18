@@ -29,8 +29,9 @@ public partial class ResolutionSettings : Resource
         get => _collider;
         set
         {
+            var emit = value != _collider;
             _collider = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 

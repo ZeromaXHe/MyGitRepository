@@ -96,20 +96,20 @@ public partial class CelestialBodyGenerator : Node3D
 
     private void OnShapeDataChanged()
     {
-        if (_readyToGenerate)
-            _shapeSettingsUpdated = true;
+        if (!_readyToGenerate) return;
+        _shapeSettingsUpdated = true;
     }
 
     private void OnShadeDataChanged()
     {
-        if (_readyToGenerate)
-            _shadingNoiseSettingsUpdated = true;
+        if (!_readyToGenerate) return;
+        _shadingNoiseSettingsUpdated = true;
     }
 
     private void OnResolutionDataChanged()
     {
-        if (_readyToGenerate)
-            _resolutionSettings?.ClampResolutions();
+        if (!_readyToGenerate) return;
+        _resolutionSettings?.ClampResolutions();
     }
 
     public override void _Process(double delta)

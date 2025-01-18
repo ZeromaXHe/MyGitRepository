@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using ProceduralPlanet.Scripts.Utils;
 
@@ -15,8 +16,9 @@ public partial class OceanSettings : Resource
         get => _depthMultiplier;
         set
         {
+            var emit = Math.Abs(value - _depthMultiplier) > 0.001f;
             _depthMultiplier = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -28,8 +30,9 @@ public partial class OceanSettings : Resource
         get => _alphaMultiplier;
         set
         {
+            var emit = Math.Abs(value - _alphaMultiplier) > 0.001f;
             _alphaMultiplier = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -41,8 +44,9 @@ public partial class OceanSettings : Resource
         get => _colA;
         set
         {
+            var emit = value != _colA;
             _colA = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -54,8 +58,9 @@ public partial class OceanSettings : Resource
         get => _colB;
         set
         {
+            var emit = value != _colB;
             _colB = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -67,8 +72,9 @@ public partial class OceanSettings : Resource
         get => _specularCol;
         set
         {
+            var emit = value != _specularCol;
             _specularCol = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -80,8 +86,9 @@ public partial class OceanSettings : Resource
         get => _waveNormalA;
         set
         {
+            var emit = value != _waveNormalA;
             _waveNormalA = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -93,161 +100,196 @@ public partial class OceanSettings : Resource
         get => _waveNormalB;
         set
         {
+            var emit = value != _waveNormalB;
             _waveNormalB = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
     private float _waveStrength = 0.15f;
+
     [Export(PropertyHint.Range, "0.0, 1.0")]
     public float WaveStrength
     {
         get => _waveStrength;
         set
         {
+            var emit = Math.Abs(value - _waveStrength) > 0.001f;
             _waveStrength = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _waveScale = 15f;
+
     [Export]
     public float WaveScale
     {
         get => _waveScale;
         set
         {
+            var emit = Math.Abs(value - _waveScale) > 0.001f;
             _waveScale = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _waveSpeed = 0.5f;
+
     [Export]
     public float WaveSpeed
     {
         get => _waveSpeed;
         set
         {
+            var emit = Math.Abs(value - _waveSpeed) > 0.001f;
             _waveSpeed = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _shoreWaveHeight = 0.1f;
+
     [Export]
     public float ShoreWaveHeight
     {
         get => _shoreWaveHeight;
         set
         {
+            var emit = Math.Abs(value - _shoreWaveHeight) > 0.001f;
             _shoreWaveHeight = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
     private float _smoothness = 0.92f;
+
     [Export(PropertyHint.Range, "0.0, 1.0")]
     public float Smoothness
     {
         get => _smoothness;
         set
         {
+            var emit = Math.Abs(value - _smoothness) > 0.001f;
             _smoothness = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _specularIntensity = 0.5f;
+
     [Export]
     public float SpecularIntensity
     {
         get => _specularIntensity;
         set
         {
+            var emit = Math.Abs(value - _specularIntensity) > 0.001f;
             _specularIntensity = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
     private Texture2D _foamNoiseTexture;
+
     [Export]
     public Texture2D FoamNoiseTexture
     {
         get => _foamNoiseTexture;
         set
         {
+            var emit = value != _foamNoiseTexture;
             _foamNoiseTexture = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
     private Color _foamColor;
+
     [Export]
     public Color FoamColor
     {
         get => _foamColor;
         set
         {
+            var emit = value != _foamColor;
             _foamColor = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
     private float _foamNoiseScale = 1f;
+
     [Export]
     public float FoamNoiseScale
     {
         get => _foamNoiseScale;
         set
         {
+            var emit = Math.Abs(value - _foamNoiseScale) > 0.001f;
             _foamNoiseScale = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _foamFalloffDistance = 0.5f;
+
     [Export]
     public float FoamFalloffDistance
     {
         get => _foamFalloffDistance;
         set
         {
+            var emit = Math.Abs(value - _foamFalloffDistance) > 0.001f;
             _foamFalloffDistance = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _foamLeadingEdgeFalloff = 1f;
+
     [Export]
     public float FoamLeadingEdgeFalloff
     {
         get => _foamLeadingEdgeFalloff;
         set
         {
+            var emit = Math.Abs(value - _foamLeadingEdgeFalloff) > 0.001f;
             _foamLeadingEdgeFalloff = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _foamEdgeFalloffBias = 0.5f;
+
     [Export]
     public float FoamEdgeFalloffBias
     {
         get => _foamEdgeFalloffBias;
         set
         {
+            var emit = Math.Abs(value - _foamEdgeFalloffBias) > 0.001f;
             _foamEdgeFalloffBias = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
+
     private float _refractionScale = 1f;
+
     [Export(PropertyHint.Range, "0.0, 2.0")]
     public float RefractionScale
     {
         get => _refractionScale;
         set
         {
+            var emit = Math.Abs(value - _refractionScale) > 0.001f;
             _refractionScale = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
     private RandomNumberGenerator _rng = new();
-    
+
     public void SetProperties(ShaderMaterial material, int seed, bool randomize)
     {
         material.SetShaderParameter("DepthMultiplier", _depthMultiplier);

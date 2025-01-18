@@ -23,16 +23,21 @@ public static class ConvertUtils
     public static byte[] FloatsToBytes(float[] floats)
     {
         var bytes = new byte[floats.Length * sizeof(float)];
-        for (var i = 0; i < floats.Length; i++)
-            Buffer.BlockCopy(BitConverter.GetBytes(floats[i]), 0, bytes, i * sizeof(float), sizeof(float));
+        Buffer.BlockCopy(floats, 0, bytes, 0, bytes.Length);
+        // 可以直接一起 Copy，AI 生成的下面的代码，有点蠢了：
+        // for (var i = 0; i < floats.Length; i++)
+        //     Buffer.BlockCopy(BitConverter.GetBytes(floats[i]), 0, bytes, i * sizeof(float), sizeof(float));
+        // Godot 计算着色器英文文档 https://docs.godotengine.org/en/stable/tutorials/shaders/compute_shaders.html
+        // 下面讨论区还提到了 Span 和 MemoryMarshal，可以参考
         return bytes;
     }
 
     public static byte[] DoublesToBytes(double[] doubles)
     {
         var bytes = new byte[doubles.Length * sizeof(double)];
-        for (var i = 0; i < doubles.Length; i++)
-            Buffer.BlockCopy(BitConverter.GetBytes(doubles[i]), 0, bytes, i * sizeof(double), sizeof(double));
+        Buffer.BlockCopy(doubles, 0, bytes, 0, bytes.Length);
+        // for (var i = 0; i < doubles.Length; i++)
+        //     Buffer.BlockCopy(BitConverter.GetBytes(doubles[i]), 0, bytes, i * sizeof(double), sizeof(double));
         return bytes;
     }
 

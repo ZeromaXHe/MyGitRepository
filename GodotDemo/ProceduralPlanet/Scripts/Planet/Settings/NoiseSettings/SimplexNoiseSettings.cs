@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace ProceduralPlanet.Scripts.Planet.Settings.NoiseSettings;
@@ -14,8 +15,9 @@ public partial class SimplexNoiseSettings : Resource
         get => _numLayers;
         set
         {
+            var emit = value != _numLayers;
             _numLayers = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -27,8 +29,9 @@ public partial class SimplexNoiseSettings : Resource
         get => _lacunarity;
         set
         {
+            var emit = Math.Abs(value - _lacunarity) > 0.001f;
             _lacunarity = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -40,8 +43,9 @@ public partial class SimplexNoiseSettings : Resource
         get => _persistence;
         set
         {
+            var emit = Math.Abs(value - _persistence) > 0.001f;
             _persistence = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -53,8 +57,9 @@ public partial class SimplexNoiseSettings : Resource
         get => _scale;
         set
         {
+            var emit = Math.Abs(value - _scale) > 0.001f;
             _scale = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -66,8 +71,9 @@ public partial class SimplexNoiseSettings : Resource
         get => _elevation;
         set
         {
+            var emit = Math.Abs(value - _elevation) > 0.001f;
             _elevation = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -79,8 +85,9 @@ public partial class SimplexNoiseSettings : Resource
         get => _verticalShift;
         set
         {
+            var emit = Math.Abs(value - _verticalShift) > 0.001f;
             _verticalShift = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -92,8 +99,9 @@ public partial class SimplexNoiseSettings : Resource
         get => _offset;
         set
         {
+            var emit = _offset != value;
             _offset = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 

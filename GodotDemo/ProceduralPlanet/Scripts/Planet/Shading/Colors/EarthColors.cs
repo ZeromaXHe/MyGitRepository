@@ -14,8 +14,9 @@ public partial class EarthColors : Resource
         get => _shoreColorLow;
         set
         {
+            var emit = value != _shoreColorLow;
             _shoreColorLow = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -27,8 +28,9 @@ public partial class EarthColors : Resource
         get => _shoreColorHigh;
         set
         {
+            var emit = value != _shoreColorHigh;
             _shoreColorHigh = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -40,8 +42,9 @@ public partial class EarthColors : Resource
         get => _flatColorLowA;
         set
         {
+            var emit = value != _flatColorLowA;
             _flatColorLowA = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -53,8 +56,9 @@ public partial class EarthColors : Resource
         get => _flatColorHighA;
         set
         {
+            var emit = value != _flatColorHighA;
             _flatColorHighA = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -66,8 +70,9 @@ public partial class EarthColors : Resource
         get => _flatColorLowB;
         set
         {
+            var emit = value != _flatColorLowB;
             _flatColorLowB = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -79,8 +84,9 @@ public partial class EarthColors : Resource
         get => _flatColorHighB;
         set
         {
+            var emit = value != _flatColorHighB;
             _flatColorHighB = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -92,8 +98,9 @@ public partial class EarthColors : Resource
         get => _steepLow;
         set
         {
+            var emit = value != _steepLow;
             _steepLow = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -105,8 +112,9 @@ public partial class EarthColors : Resource
         get => _steepHigh;
         set
         {
+            var emit = value != _steepHigh;
             _steepHigh = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 }

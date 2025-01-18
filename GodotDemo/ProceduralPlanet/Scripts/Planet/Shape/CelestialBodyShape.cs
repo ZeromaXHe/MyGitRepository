@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using ProceduralPlanet.Scripts.Planet.Shape.Modules;
 
@@ -15,8 +16,9 @@ public partial class CelestialBodyShape : Resource
         get => _randomize;
         set
         {
+            var emit = value != _randomize;
             _randomize = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -28,8 +30,9 @@ public partial class CelestialBodyShape : Resource
         get => _seed;
         set
         {
+            var emit = value != _seed;
             _seed = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -56,8 +59,9 @@ public partial class CelestialBodyShape : Resource
         get => _perturbVertices;
         set
         {
+            var emit = value != _perturbVertices;
             _perturbVertices = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -84,8 +88,9 @@ public partial class CelestialBodyShape : Resource
         get => _perturbStrength;
         set
         {
+            var emit = Math.Abs(value - _perturbStrength) > 0.001f;
             _perturbStrength = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 

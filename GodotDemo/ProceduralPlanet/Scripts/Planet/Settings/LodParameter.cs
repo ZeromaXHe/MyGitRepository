@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace ProceduralPlanet.Scripts.Planet.Settings;
@@ -14,8 +15,9 @@ public partial class LodParameter : Resource
         get => _resolution;
         set
         {
+            var emit = value != _resolution; 
             _resolution = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -27,8 +29,9 @@ public partial class LodParameter : Resource
         get => _minDistance;
         set
         {
+            var emit = Math.Abs(value - _minDistance) > 0.001f; 
             _minDistance = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 }

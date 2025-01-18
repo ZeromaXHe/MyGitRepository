@@ -12,7 +12,7 @@ gradient = SubResource("Gradient_wme6u")
 height = 1
 use_hdr = true
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_2q0h1"]
+[sub_resource type="ViewportTexture" id="ViewportTexture_s237n"]
 viewport_path = NodePath("AtmosphereLayer/AtmosphereViewportContainer/AtmosphereViewport")
 
 [sub_resource type="Gradient" id="Gradient_kuyav"]
@@ -30,6 +30,6 @@ shader = ExtResource("1_uhjwb")
 shader_parameter/daytimeFade = 100.0
 shader_parameter/OceanRadius = 200.0
 shader_parameter/PlanetCentre = Vector3(0, 0, 0)
-shader_parameter/MainTex = SubResource("ViewportTexture_2q0h1")
+shader_parameter/MainTex = SubResource("ViewportTexture_s237n")
 shader_parameter/Spectrum = SubResource("GradientTexture2D_ttsjn")
 shader_parameter/ClusterSpectrum = SubResource("GradientTexture2D_xt4mc")

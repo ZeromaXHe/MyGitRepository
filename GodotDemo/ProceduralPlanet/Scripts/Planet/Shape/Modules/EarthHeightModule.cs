@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Godot;
 using Godot.Collections;
@@ -61,8 +62,9 @@ public partial class EarthHeightModule : HeightModule
         get => _oceanDepthMultiplier;
         set
         {
+            var emit = Math.Abs(value - _oceanDepthMultiplier) > 0.001f;
             _oceanDepthMultiplier = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -74,8 +76,9 @@ public partial class EarthHeightModule : HeightModule
         get => _oceanFloorDepth;
         set
         {
+            var emit = Math.Abs(value - _oceanFloorDepth) > 0.001f;
             _oceanFloorDepth = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -87,8 +90,9 @@ public partial class EarthHeightModule : HeightModule
         get => _oceanFloorSmoothing;
         set
         {
+            var emit = Math.Abs(value - _oceanFloorSmoothing) > 0.001f;
             _oceanFloorSmoothing = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
@@ -100,8 +104,9 @@ public partial class EarthHeightModule : HeightModule
         get => _mountainBlend;
         set
         {
+            var emit = Math.Abs(value - _mountainBlend) > 0.001f;
             _mountainBlend = value;
-            EmitChanged();
+            if (emit) EmitChanged();
         }
     }
 
