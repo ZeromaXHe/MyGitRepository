@@ -1,0 +1,54 @@
+[gd_scene load_steps=6 format=3 uid="uid://kptvi47gfpvl"]
+
+[ext_resource type="Script" path="res://Scenes/Basics1/BuildingGraph/GpuGraph.cs" id="1_sffc4"]
+[ext_resource type="Script" path="res://Scenes/Basics1/BuildingGraph/FrameRateCounter.cs" id="3_eegpw"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_wn1i6"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_6pq6g"]
+sky_material = SubResource("ProceduralSkyMaterial_wn1i6")
+
+[sub_resource type="Environment" id="Environment_sxc2y"]
+background_mode = 2
+sky = SubResource("Sky_6pq6g")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="GpuGraph" type="Node3D"]
+script = ExtResource("1_sffc4")
+Resolution = 20
+Function = 1
+FunctionDuration = 3.0
+TransitionDuration = 3.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_sxc2y")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="FpsUI" type="Control" parent="." node_paths=PackedStringArray("Display")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_eegpw")
+Display = NodePath("Label")
+
+[node name="Label" type="Label" parent="FpsUI"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "FPS
+000
+000
+000"
+horizontal_alignment = 1
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-1, 6.18172e-08, -6.18172e-08, 0, 0.707107, 0.707107, 8.74228e-08, 0.707107, -0.707107, 0, 2, -2)
