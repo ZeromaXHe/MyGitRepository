@@ -18,8 +18,8 @@ glow_enabled = true
 
 [node name="GpuGraph" type="Node3D"]
 script = ExtResource("1_sffc4")
-Resolution = 20
-Function = 1
+Resolution = 100
+Function = 2
 FunctionDuration = 3.0
 TransitionDuration = 3.0
 
