@@ -27,7 +27,7 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout (set = 0, binding = 0, std430) restrict buffer Vertices {
     float data[]; // in ProceduralPlanet, vec3 splitted to 3 floats; we do it too, because Buffer.BlockCopy only apply to primitives' array
-} positions;
+} transforms;
 // TODO: What is the "uniform buffer" mentioned in ProceduralPlanet project?
 layout (set = 0, binding = 1, std430) restrict buffer UintParamsBlock {
     uint _Resolution;
@@ -44,12 +44,21 @@ vec2 GetUV(uvec3 id) {
     return (vec2(id.xy) + vec2(0.5)) * floatParams._Step - 1.0;
 }
 
-void SetPosition(uvec3 id, vec3 position) {
+void SetTransform(uvec3 id, vec3 position) {
     if (id.x < uintParams._Resolution && id.y < uintParams._Resolution) {
         uint idx = id.x + id.y * uintParams._Resolution;
-        positions.data[3 * idx] = position.x;
-        positions.data[3 * idx + 1] = position.y;
-        positions.data[3 * idx + 2] = position.z;
+        transforms.data[12 * idx] = floatParams._Step;
+        transforms.data[12 * idx + 1] = 0;
+        transforms.data[12 * idx + 2] = 0;
+        transforms.data[12 * idx + 3] = position.x;
+        transforms.data[12 * idx + 4] = 0;
+        transforms.data[12 * idx + 5] = floatParams._Step;
+        transforms.data[12 * idx + 6] = 0;
+        transforms.data[12 * idx + 7] = position.y;
+        transforms.data[12 * idx + 8] = 0;
+        transforms.data[12 * idx + 9] = 0;
+        transforms.data[12 * idx + 10] = floatParams._Step;
+        transforms.data[12 * idx + 11] = position.z;
     }
 }
 
@@ -108,7 +117,7 @@ vec3 Torus(float u, float v, float t) {
 #define KERNEL_FUNCTION(function) \
     void function##Kernel (uvec3 id) { \
         vec2 uv = GetUV(id); \
-        SetPosition(id, function(uv.x, uv.y, floatParams._Time)); \
+        SetTransform(id, function(uv.x, uv.y, floatParams._Time)); \
     }
 
 #define KERNEL_MORPH_FUNCTION(functionA, functionB) \
@@ -118,7 +127,7 @@ vec3 Torus(float u, float v, float t) {
             functionA(uv.x, uv.y, floatParams._Time), functionB(uv.x, uv.y, floatParams._Time), \
             floatParams._TransitionProgress \
         ); \
-        SetPosition(id, position); \
+        SetTransform(id, position); \
     }
 
 KERNEL_FUNCTION(Wave)
