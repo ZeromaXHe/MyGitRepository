@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://j6cywinw7672"
+path="res://.godot/imported/water_compute.glsl-606621f464a8450548c9e6226a07d33c.res"
+
+[deps]
+
+source_file="res://Shaders/GodotOfficialDemo/ComputeTexture/water_compute.glsl"
+dest_files=["res://.godot/imported/water_compute.glsl-606621f464a8450548c9e6226a07d33c.res"]
+
+[params]
+

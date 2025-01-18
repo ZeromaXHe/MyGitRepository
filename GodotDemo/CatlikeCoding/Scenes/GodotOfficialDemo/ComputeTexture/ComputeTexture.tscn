@@ -1,0 +1,73 @@
+[gd_scene load_steps=7 format=3 uid="uid://v14oycs75gtj"]
+
+[ext_resource type="Texture2D" uid="uid://cgqx6e5y0mty8" path="res://Assets/GodotOfficialDemo/ComputeTexture/industrial_sunset_puresky_2k.hdr" id="1_udjjp"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/ComputeTexture/ComputeTexture.cs" id="1_x4cqw"]
+[ext_resource type="PackedScene" uid="uid://qea0nufq4ggn" path="res://Scenes/GodotOfficialDemo/ComputeTexture/WaterPlane.tscn" id="1_yh44h"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_vxqfs"]
+panorama = ExtResource("1_udjjp")
+
+[sub_resource type="Sky" id="Sky_qvby5"]
+sky_material = SubResource("PanoramaSkyMaterial_vxqfs")
+
+[sub_resource type="Environment" id="Environment_liq0y"]
+background_mode = 2
+sky = SubResource("Sky_qvby5")
+
+[node name="ComputeTexture" type="Node3D"]
+script = ExtResource("1_x4cqw")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_liq0y")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.5, -0.75, 0.433013, 0, 0.5, 0.866025, -0.866025, -0.433013, 0.25, 0, 1, 0)
+shadow_enabled = true
+
+[node name="WaterPlane" parent="." instance=ExtResource("1_yh44h")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.900518, -0.141944, 0.410999, -0.114334, 0.834658, 0.538771, -0.419518, -0.532164, 0.735395, 1.553, 1.143, 2.431)
+
+[node name="Container" type="VBoxContainer" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 364.0
+offset_bottom = 109.0
+
+[node name="Rotate" type="CheckBox" parent="Container"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "旋转"
+
+[node name="RainSize" type="HBoxContainer" parent="Container"]
+layout_mode = 2
+
+[node name="HSlider" type="HSlider" parent="Container/RainSize"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 10.0
+step = 0.1
+value = 1.0
+
+[node name="Label" type="Label" parent="Container/RainSize"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "雨量"
+
+[node name="MouseSize" type="HBoxContainer" parent="Container"]
+layout_mode = 2
+
+[node name="HSlider" type="HSlider" parent="Container/MouseSize"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 10.0
+step = 0.1
+value = 1.0
+
+[node name="Label" type="Label" parent="Container/MouseSize"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "鼠标大小"

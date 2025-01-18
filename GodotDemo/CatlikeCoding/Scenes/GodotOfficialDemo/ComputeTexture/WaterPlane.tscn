@@ -1,0 +1,51 @@
+[gd_scene load_steps=11 format=3 uid="uid://qea0nufq4ggn"]
+
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/ComputeTexture/WaterPlane.cs" id="1_8suw7"]
+[ext_resource type="Texture2D" uid="uid://cgqx6e5y0mty8" path="res://Assets/GodotOfficialDemo/ComputeTexture/industrial_sunset_puresky_2k.hdr" id="1_ht2is"]
+[ext_resource type="Shader" path="res://Shaders/GodotOfficialDemo/ComputeTexture/water_shader.gdshader" id="3_vqpju"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tpxcd"]
+panorama = ExtResource("1_ht2is")
+
+[sub_resource type="Sky" id="Sky_gmq7i"]
+sky_material = SubResource("PanoramaSkyMaterial_tpxcd")
+
+[sub_resource type="Environment" id="Environment_qhjgw"]
+background_mode = 2
+sky = SubResource("Sky_gmq7i")
+
+[sub_resource type="Texture2DRD" id="Texture2DRD_banbi"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_35xb1"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("3_vqpju")
+shader_parameter/albedo = Color(0, 0.74902, 0.941176, 1)
+shader_parameter/metalic = 1.0
+shader_parameter/roughness = 0.0
+shader_parameter/effect_texture_size = null
+shader_parameter/effect_texture = SubResource("Texture2DRD_banbi")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_k2yyx"]
+size = Vector2(5, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0oun5"]
+size = Vector3(5, 0.1, 5)
+
+[node name="WaterPlane" type="Area3D"]
+script = ExtResource("1_8suw7")
+Damp = 2.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_qhjgw")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.983175, 0.000563771, 0.182664, -0.178625, 0.212124, 0.960779, -0.0382058, -0.977243, 0.208656, 0, 1.12, 0)
+shadow_enabled = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_35xb1")
+mesh = SubResource("PlaneMesh_k2yyx")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_0oun5")
