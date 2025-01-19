@@ -25,7 +25,7 @@
 // https://bitbucket.org/catlikecodingunitytutorials/basics-05-compute-shaders/src/master/Assets/Scripts/FunctionLibrary.compute
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-layout (set = 0, binding = 0, std430) restrict buffer Vertices {
+layout (set = 0, binding = 0, std430) writeonly buffer Vertices {
     float data[]; // in ProceduralPlanet, vec3 splitted to 3 floats; we do it too, because Buffer.BlockCopy only apply to primitives' array
 } transforms;
 // TODO: What is the "uniform buffer" mentioned in ProceduralPlanet project?
@@ -164,45 +164,31 @@ KERNEL_MORPH_FUNCTION(Torus, Sphere)
 void main() {
     uvec3 id = gl_GlobalInvocationID;
     uint idx = uintParams._FuncIndex;
-    if (idx < 12) {
-        if (idx < 6) {
-            if (idx < 3) {
-                if (idx == 0) WaveKernel(id);
-                else if (idx == 1) WaveToMultiWaveKernel(id);
-                else /*if (idx == 2)*/ WaveToRippleKernel(id);
-            } else { // 3 ~ 5
-                if (idx == 3) WaveToSphereKernel(id);
-                else if (idx == 4) WaveToTorusKernel(id);
-                else /*if (idx == 5)*/ MultiWaveToWaveKernel(id);
-            }
-        } else if (idx < 9) { // 6 ~ 8
-            if (idx == 6) MultiWaveKernel(id);
-            else if (idx == 7) MultiWaveToRippleKernel(id);
-            else /*if (idx == 8)*/ MultiWaveToSphereKernel(id);
-        } else { // 9 ~ 11
-            if (idx == 9) MultiWaveToTorusKernel(id);
-            else if (idx == 10) RippleToWaveKernel(id);
-            else /*if (idx == 11)*/ RippleToMultiWaveKernel(id);
-        }
-    } else if (idx < 18) { // 12 ~ 17
-        if (idx < 15) { // 12 ~ 14
-            if (idx == 12) RippleKernel(id);
-            else if (idx == 13) RippleToSphereKernel(id);
-            else /*if (idx == 14)*/ RippleToTorusKernel(id);
-        } else { // 15 ~ 17
-            if (idx == 15) SphereToWaveKernel(id);
-            else if (idx == 16) SphereToMultiWaveKernel(id);
-            else /*if (idx == 17)*/ SphereToRippleKernel(id);
-        }
-    } else if (idx < 21) { // 18 ~ 20
-        if (idx == 18) SphereKernel(id);
-        else if (idx == 19) SphereToTorusKernel(id);
-        else /*if (idx == 20)*/ TorusToWaveKernel(id);
-    } else if (idx < 23) { // 21 ~ 22
-        if (idx == 21) TorusToMultiWaveKernel(id);
-        else /**if (idx == 22)*/ TorusToRippleKernel(id);
-    } else { // 23 ~ 24
-        if (idx == 23) TorusToSphereKernel(id);
-        else /*if (idx == 24)*/ TorusKernel(id);
+    switch(idx) {
+        case 0: WaveKernel(id); break;
+        case 1: WaveToMultiWaveKernel(id); break;
+        case 2: WaveToRippleKernel(id); break;
+        case 3: WaveToSphereKernel(id); break;
+        case 4: WaveToTorusKernel(id); break;
+        case 5: MultiWaveToWaveKernel(id); break;
+        case 6: MultiWaveKernel(id); break;
+        case 7: MultiWaveToRippleKernel(id); break;
+        case 8: MultiWaveToSphereKernel(id); break;
+        case 9: MultiWaveToTorusKernel(id); break;
+        case 10: RippleToWaveKernel(id); break;
+        case 11: RippleToMultiWaveKernel(id); break;
+        case 12: RippleKernel(id); break;
+        case 13: RippleToSphereKernel(id); break;
+        case 14: RippleToTorusKernel(id); break;
+        case 15: SphereToWaveKernel(id); break;
+        case 16: SphereToMultiWaveKernel(id); break;
+        case 17: SphereToRippleKernel(id); break;
+        case 18: SphereKernel(id); break;
+        case 19: SphereToTorusKernel(id); break;
+        case 20: TorusToWaveKernel(id); break;
+        case 21: TorusToMultiWaveKernel(id); break;
+        case 22: TorusToRippleKernel(id); break;
+        case 23: TorusToSphereKernel(id); break;
+        case 24: TorusKernel(id); break;
     }
 }

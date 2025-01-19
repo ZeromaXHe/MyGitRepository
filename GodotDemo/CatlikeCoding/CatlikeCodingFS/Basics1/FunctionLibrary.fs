@@ -75,3 +75,5 @@ module FunctionLibrary =
 
     let morph u v t (fromF: Function) (toF: Function) progress =
         (fromF u v t).Lerp(toF u v t, Mathf.SmoothStep(0f, 1f, progress)) // Godot Lerp() 本身就没有进行 Clamp
+    
+    let getFunctionCount() = uint functions.Length

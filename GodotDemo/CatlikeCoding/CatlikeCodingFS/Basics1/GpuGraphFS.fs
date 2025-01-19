@@ -55,9 +55,10 @@ type GpuGraphFS() =
 
     member this.GetKernelIndex() =
         if transitioning then
-            uint transitionFunction * 5u + uint this.Function
+            uint transitionFunction * FunctionLibrary.getFunctionCount ()
+            + uint this.Function
         else
-            uint this.Function * 6u
+            uint this.Function * (FunctionLibrary.getFunctionCount () + 1u)
 
     member this.PickNextFunction() =
         this.Function <-
@@ -78,70 +79,62 @@ type GpuGraphFS() =
         uniformVertices.UniformType <- RenderingDevice.UniformType.StorageBuffer
         uniformVertices.Binding <- 0
         uniformVertices.AddId verticesBuffer
-        // 创建流水线
-        pipeline <- rd.ComputePipelineCreate shader
-        let count = this.Resolution * this.Resolution
-        output <- Array.zeroCreate<float32> <| count * 3
-        this.RenderProcess()
-
-    member this.RenderProcess() =
-        let count = this.Resolution * this.Resolution
-        // 更新 uint 参数数组
-        let kernelIdx = this.GetKernelIndex()
-        uintParams[0] <- uint this.Resolution
-        uintParams[1] <- kernelIdx
-        Buffer.BlockCopy(uintParams, 0, uintParamsBytes, 0, uintParamsBytes.Length)
-        // 更新 float 参数数组
-        let step = 2f / float32 this.Resolution
-        let time = float32 (Time.GetTicksMsec()) / 1000f
-        let progress = duration / this.TransitionDuration
-        floatParams[0] <- step
-        floatParams[1] <- time
-        floatParams[2] <- progress
-        Buffer.BlockCopy(floatParams, 0, floatParamsBytes, 0, floatParamsBytes.Length)
-
-        // 必须在此更新 uintParamsBuffer，floatParamsBuffer，否则放在初始化里仅创建一次的话，结果就会固定只重复第一次
-        // 更新 uint 参数存储缓冲区
+        // 创建 uint 参数存储缓冲区
         uintParamsBuffer <- rd.StorageBufferCreate(uint uintParamsBytes.Length, uintParamsBytes)
         uniformUintParams.UniformType <- RenderingDevice.UniformType.StorageBuffer
         uniformUintParams.Binding <- 1
-        uniformUintParams.ClearIds()
         uniformUintParams.AddId uintParamsBuffer
-        // 更新 float 参数存储缓冲区
+        // 创建 float 参数存储缓冲区
         floatParamsBuffer <- rd.StorageBufferCreate(uint floatParamsBytes.Length, floatParamsBytes)
         uniformFloatParams.UniformType <- RenderingDevice.UniformType.StorageBuffer
         uniformFloatParams.Binding <- 2
-        uniformFloatParams.ClearIds()
         uniformFloatParams.AddId floatParamsBuffer
-
-        // 开启新计算
+        // uniform 集
         uniformSet <-
             rd.UniformSetCreate(
                 Array<RDUniform>([| uniformVertices; uniformUintParams; uniformFloatParams |]),
                 shader,
                 0u
             )
+        // 创建流水线
+        pipeline <- rd.ComputePipelineCreate shader
+        let count = this.Resolution * this.Resolution
+        output <- Array.zeroCreate<float32> <| count * 3
+        this.RenderProcess()
 
-        let computeList = rd.ComputeListBegin()
-        rd.ComputeListBindComputePipeline(computeList, pipeline)
-        rd.ComputeListBindUniformSet(computeList, uniformSet, 0u)
-        // 计算被舍入划分到大小和计算着色器 local_size 一致的大小的工作组
-        rd.ComputeListDispatch(
-            computeList,
-            uint <| Mathf.CeilToInt(float32 count / 8f),
-            uint <| Mathf.CeilToInt(float32 count / 8f),
-            1u
-        )
+    member this.UpdateParams() =
+        // 更新 uint 参数数组
+        let kernelIdx = this.GetKernelIndex()
+        uintParams[0] <- uint this.Resolution
+        uintParams[1] <- kernelIdx
+        Buffer.BlockCopy(uintParams, 0, uintParamsBytes, 0, uintParamsBytes.Length)
+        // 可以使用 BufferUpdate 更新参数
+        let errUint =
+            rd.BufferUpdate(uintParamsBuffer, 0u, uint uintParamsBytes.Length, uintParamsBytes)
+        // 更新 float 参数数组
+        let step = 2f / float32 this.Resolution
+        let time = float32 (Time.GetTicksMsec()) / 1000f
+        let progress = Mathf.SmoothStep(0f, 1f, duration / this.TransitionDuration)
+        floatParams[0] <- step
+        floatParams[1] <- time
+        floatParams[2] <- progress
+        Buffer.BlockCopy(floatParams, 0, floatParamsBytes, 0, floatParamsBytes.Length)
+        // 可以使用 BufferUpdate 更新参数
+        let errFloat =
+            rd.BufferUpdate(floatParamsBuffer, 0u, uint floatParamsBytes.Length, floatParamsBytes)
 
-        rd.ComputeListEnd()
-        // 提交到 GPU 和等待同步
-        rd.Submit()
-        computeStartTime <- Time.GetTicksMsec()
+        if errUint <> Error.Ok || errFloat <> Error.Ok then
+            GD.PrintErr $"更新参数时出错：uint: {errUint}, float: {errFloat}"
+            false // 失败说明计算列表当前处于活动状态，本轮不执行
+        else
+            true
 
+    member this.AsyncHandleOutput count =
         async { // 用异步等待可以快一点，但感觉还是慢
             let startTime = computeStartTime // 得记录一下，不然外面异步更新了 computeStartTime
             rd.Sync()
-            GD.Print $"计算着色器同步耗时 {Time.GetTicksMsec() - startTime} ms"
+            let syncEndTime = Time.GetTicksMsec()
+            GD.Print $"{Time.GetTicksMsec() - startTime} ms 同步耗时"
             let outputBytes = rd.BufferGetData verticesBuffer
 
             if output.Length <> count * verticesComponentsCount then
@@ -152,12 +145,36 @@ type GpuGraphFS() =
             if count > 0 then
                 if multiMeshIns.Multimesh.InstanceCount <> count then
                     multiMeshIns.Multimesh.InstanceCount <- count
-                // 好像并没有快多少……
+                // 好像并没有快多少…… 使用 RenderingServer.CallOnRenderThread <| Callable.From(fun () -> xx) 甚至更卡
                 RenderingServer.MultimeshSetBuffer(multiMeshIns.Multimesh.GetRid(), output)
 
-            GD.Print $"计算着色器总耗时 {Time.GetTicksMsec() - startTime} ms"
+            GD.Print $"{Time.GetTicksMsec() - syncEndTime} ms 结果写入网格耗时"
         }
         |> Async.Start
+
+    member this.RenderProcess() =
+        computeStartTime <- Time.GetTicksMsec()
+        let count = this.Resolution * this.Resolution
+        // 更新参数
+        if this.UpdateParams() then
+            let computeList = rd.ComputeListBegin()
+            rd.ComputeListBindComputePipeline(computeList, pipeline)
+            rd.ComputeListBindUniformSet(computeList, uniformSet, 0u)
+            // 计算被舍入划分到大小和计算着色器 local_size 一致的大小的工作组
+            rd.ComputeListDispatch(
+                computeList,
+                uint <| Mathf.CeilToInt(float32 count / 8f),
+                uint <| Mathf.CeilToInt(float32 count / 8f),
+                1u
+            )
+
+            rd.ComputeListEnd()
+            // 提交到 GPU 和等待同步
+            GD.Print $"{Time.GetTicksMsec() - computeStartTime} ms 准备参数耗时"
+            computeStartTime <- Time.GetTicksMsec()
+            rd.Submit()
+            // 异步等待 rd.Sync() 并处理结果
+            this.AsyncHandleOutput count
 
     override this._Ready() =
         // 必须在代码里初始化 MultiMeshInstance3D 节点，不然场景里面既有的节点会被持久化

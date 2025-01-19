@@ -114,5 +114,7 @@ KERNEL_MORPH_FUNCTION(Torus, Ripple)
 KERNEL_MORPH_FUNCTION(Torus, Sphere)
 
 void main() {
-	WaveKernel(uvec3(1));
+	switch (1) {
+		case 1: WaveKernel(uvec3(1)); break;
+	}
 }
