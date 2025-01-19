@@ -1,0 +1,8 @@
+[gd_resource type="SphereMesh" load_steps=2 format=3 uid="uid://c3fgxmb7m0ce0"]
+
+[ext_resource type="Material" uid="uid://b1j3mtchv8c1a" path="res://Materials/Basics1/FractalMaterial.tres" id="1_sqigv"]
+
+[resource]
+material = ExtResource("1_sqigv")
+radial_segments = 8
+rings = 4

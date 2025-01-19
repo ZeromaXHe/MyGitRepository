@@ -1,0 +1,11 @@
+[gd_scene load_steps=4 format=3 uid="uid://ds5tqfepyl832"]
+
+[ext_resource type="Script" path="res://Scenes/Basics1/Job/Fractal.cs" id="1_gwsb3"]
+[ext_resource type="SphereMesh" uid="uid://c3fgxmb7m0ce0" path="res://Materials/Basics1/FractalSphereMesh.tres" id="2_1505f"]
+[ext_resource type="Material" uid="uid://b1j3mtchv8c1a" path="res://Materials/Basics1/FractalMaterial.tres" id="3_b8qm7"]
+
+[node name="Fractal" type="Node3D"]
+script = ExtResource("1_gwsb3")
+Depth = 5
+MeshF = ExtResource("2_1505f")
+MaterialF = ExtResource("3_b8qm7")
