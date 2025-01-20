@@ -12,6 +12,7 @@
         <Compile Include="Basics1\GraphFS.fs" />
         <Compile Include="Basics1\GpuGraphFS.fs" />
         <Compile Include="Basics1\FractalFS.fs" />
+        <Compile Include="PseudorandomNoise2\HashVisualizationFS.fs" />
         <Compile Include="ProceduralMeshes3\SimpleProceduralMeshFS.fs" />
         <Compile Include="GodotOfficialDemo\ComputeTexture\WaterPlaneFS.fs" />
         <Compile Include="GodotOfficialDemo\ComputeTexture\ComputeTextureFS.fs" />

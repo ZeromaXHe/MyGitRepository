@@ -55,8 +55,12 @@ git commit
 # 仓库内容
 
 - **GodotDemo**: Godot 引擎开发的一些项目
+  - **CatlikeCoding**: 基于 .NET 版 Godot，用 C#/F# 语言学习 [Catlike Coding 图文教程](https://catlikecoding.com/unity/tutorials/)的项目
+    - **Scenes/GodotOfficialDemo**：还包含部分 [Godot 官方 Demo](https://github.com/godotengine/godot-demo-projects) 的学习
   - **Civ6Copy**: 仿《文明6》项目
+  - **FpsDemo**：参考 StayAtHomeDev FPS/UI 教程、[Majikayo Games FPS 教程](https://github.com/majikayogames/SimpleFPSController)、[仿 CS 响应式烟雾弹教程](https://github.com/CBerry22/Reactive-Smoke-in-Godot-4/tree/master)等做的 3D 第一人称射击项目
   - **GodotProjects**: 俯视角射击游戏项目
+  - **ProceduralPlanet**：参考 Sebastian Lague 的太阳系教程与 athillion 在 Godot 4.1 实现的 [ProceduralPlanetGodot 开源项目](https://github.com/athillion/ProceduralPlanetGodot)，做的程序式生成星球项目（包括大气层、海洋、星空）
   - **TestInGDScript**: GDScript 测试项目
     - **mytest_global_hex_tile**: 球体六边形地块项目
     - **mytest_war_thunder_like**: 仿战争雷霆项目
