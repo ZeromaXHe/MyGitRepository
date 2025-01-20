@@ -9,7 +9,9 @@ vertex_color_use_as_albedo = true
 material = SubResource("StandardMaterial3D_2t3ca")
 
 [node name="HashVisualization" type="Node3D"]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0, 0, 0)
 script = ExtResource("1_ellt1")
 InstanceMesh = SubResource("BoxMesh_ywi5a")
 Material = SubResource("StandardMaterial3D_2t3ca")
-Resolution = 41
+Resolution = 32
+RotationD = Vector3(0, 30, 0)
