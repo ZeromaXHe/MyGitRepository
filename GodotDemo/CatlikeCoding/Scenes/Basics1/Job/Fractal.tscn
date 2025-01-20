@@ -6,6 +6,6 @@
 
 [node name="Fractal" type="Node3D"]
 script = ExtResource("1_gwsb3")
-Depth = 5
+Depth = 7
 MeshF = ExtResource("2_1505f")
 MaterialF = ExtResource("3_b8qm7")
