@@ -1,11 +1,28 @@
-[gd_scene load_steps=4 format=3 uid="uid://ds5tqfepyl832"]
+[gd_scene load_steps=7 format=3 uid="uid://ds5tqfepyl832"]
 
 [ext_resource type="Script" path="res://Scenes/Basics1/Job/Fractal.cs" id="1_gwsb3"]
 [ext_resource type="SphereMesh" uid="uid://c3fgxmb7m0ce0" path="res://Materials/Basics1/FractalSphereMesh.tres" id="2_1505f"]
 [ext_resource type="Material" uid="uid://b1j3mtchv8c1a" path="res://Materials/Basics1/FractalMaterial.tres" id="3_b8qm7"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_lf3wt"]
+material = ExtResource("3_b8qm7")
+
+[sub_resource type="Gradient" id="Gradient_lra0m"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.639216, 0.227451, 0.180392, 1, 1, 0, 0, 1, 0, 0, 0, 1)
+
+[sub_resource type="Gradient" id="Gradient_rxf52"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.460938, 0.118835, 0, 1, 0.902344, 0.359528, 0, 1, 0.909804, 0.756863, 0.254902, 1)
+
 [node name="Fractal" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 0, 0)
 script = ExtResource("1_gwsb3")
 Depth = 7
 MeshF = ExtResource("2_1505f")
+LeafMesh = SubResource("BoxMesh_lf3wt")
 MaterialF = ExtResource("3_b8qm7")
+GradientA = SubResource("Gradient_lra0m")
+GradientB = SubResource("Gradient_rxf52")
+LeafColorA = Color(0.406661, 0.992188, 0.224792, 1)
+LeafColorB = Color(0.154771, 0.371094, 0.0898743, 1)
