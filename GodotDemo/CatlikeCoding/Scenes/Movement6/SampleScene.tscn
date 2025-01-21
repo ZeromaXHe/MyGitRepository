@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bd2wiukgb2nu1"]
+[gd_scene load_steps=51 format=3 uid="uid://bd2wiukgb2nu1"]
 
 [ext_resource type="Script" path="res://Scenes/Movement6/MovingSphere.cs" id="1_fprfu"]
 
@@ -15,6 +15,12 @@ sky = SubResource("Sky_3kknv")
 tonemap_mode = 2
 glow_enabled = true
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ypb8r"]
+friction = 0.0
+rough = true
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_kti8p"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g0p2y"]
 albedo_color = Color(0, 0, 0, 1)
 
@@ -29,8 +35,147 @@ material = SubResource("StandardMaterial3D_1v3bs")
 radius = 0.1
 height = 0.2
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_doccn"]
-albedo_color = Color(0.636719, 0.636719, 0.636719, 1)
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_qa7fp"]
+friction = 0.0
+rough = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7s08i"]
+size = Vector3(100, 1, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h43j2"]
+albedo_color = Color(0.449263, 0.667969, 0.446182, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nqncy"]
+material = SubResource("StandardMaterial3D_h43j2")
+size = Vector3(100, 1, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1btdg"]
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7cgvy"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fpie0"]
+albedo_color = Color(0.901961, 0.854902, 0.372549, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_co15k"]
+albedo_color = Color(0.901961, 0.854902, 0.372549, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_owsuc"]
+albedo_color = Color(0.901961, 0.854902, 0.372549, 1)
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_2g0h0"]
+friction = 0.0
+rough = true
+
+[sub_resource type="PrismMesh" id="PrismMesh_5r25l"]
+material = SubResource("StandardMaterial3D_7cgvy")
+size = Vector3(20, 1, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_03j3f"]
+data = PackedVector3Array(0, 0.5, 1.5, 10, -0.5, 1.5, -10, -0.5, 1.5, 0, 0.5, -1.5, -10, -0.5, -1.5, 10, -0.5, -1.5, 0, 0.5, 1.5, 0, 0.5, -1.5, 10, -0.5, 1.5, 0, 0.5, -1.5, 10, -0.5, -1.5, 10, -0.5, 1.5, 0, 0.5, -1.5, 0, 0.5, 1.5, -10, -0.5, -1.5, 0, 0.5, 1.5, -10, -0.5, 1.5, -10, -0.5, -1.5, -10, -0.5, 1.5, 10, -0.5, 1.5, -10, -0.5, -1.5, 10, -0.5, 1.5, 10, -0.5, -1.5, -10, -0.5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_e7m1a"]
+material = SubResource("StandardMaterial3D_fpie0")
+size = Vector3(20, 2, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_s8wmj"]
+data = PackedVector3Array(0, 1, 1.5, 10, -1, 1.5, -10, -1, 1.5, 0, 1, -1.5, -10, -1, -1.5, 10, -1, -1.5, 0, 1, 1.5, 0, 1, -1.5, 10, -1, 1.5, 0, 1, -1.5, 10, -1, -1.5, 10, -1, 1.5, 0, 1, -1.5, 0, 1, 1.5, -10, -1, -1.5, 0, 1, 1.5, -10, -1, 1.5, -10, -1, -1.5, -10, -1, 1.5, 10, -1, 1.5, -10, -1, -1.5, 10, -1, 1.5, 10, -1, -1.5, -10, -1, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_dev6s"]
+material = SubResource("StandardMaterial3D_7cgvy")
+size = Vector3(20, 3, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_iilk3"]
+data = PackedVector3Array(0, 1.5, 1.5, 10, -1.5, 1.5, -10, -1.5, 1.5, 0, 1.5, -1.5, -10, -1.5, -1.5, 10, -1.5, -1.5, 0, 1.5, 1.5, 0, 1.5, -1.5, 10, -1.5, 1.5, 0, 1.5, -1.5, 10, -1.5, -1.5, 10, -1.5, 1.5, 0, 1.5, -1.5, 0, 1.5, 1.5, -10, -1.5, -1.5, 0, 1.5, 1.5, -10, -1.5, 1.5, -10, -1.5, -1.5, -10, -1.5, 1.5, 10, -1.5, 1.5, -10, -1.5, -1.5, 10, -1.5, 1.5, 10, -1.5, -1.5, -10, -1.5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_hhpsc"]
+material = SubResource("StandardMaterial3D_fpie0")
+size = Vector3(20, 4, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_ed3bd"]
+data = PackedVector3Array(0, 2, 1.5, 10, -2, 1.5, -10, -2, 1.5, 0, 2, -1.5, -10, -2, -1.5, 10, -2, -1.5, 0, 2, 1.5, 0, 2, -1.5, 10, -2, 1.5, 0, 2, -1.5, 10, -2, -1.5, 10, -2, 1.5, 0, 2, -1.5, 0, 2, 1.5, -10, -2, -1.5, 0, 2, 1.5, -10, -2, 1.5, -10, -2, -1.5, -10, -2, 1.5, 10, -2, 1.5, -10, -2, -1.5, 10, -2, 1.5, 10, -2, -1.5, -10, -2, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_wqbdo"]
+material = SubResource("StandardMaterial3D_7cgvy")
+size = Vector3(20, 5, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_th2hv"]
+data = PackedVector3Array(0, 2.5, 1.5, 10, -2.5, 1.5, -10, -2.5, 1.5, 0, 2.5, -1.5, -10, -2.5, -1.5, 10, -2.5, -1.5, 0, 2.5, 1.5, 0, 2.5, -1.5, 10, -2.5, 1.5, 0, 2.5, -1.5, 10, -2.5, -1.5, 10, -2.5, 1.5, 0, 2.5, -1.5, 0, 2.5, 1.5, -10, -2.5, -1.5, 0, 2.5, 1.5, -10, -2.5, 1.5, -10, -2.5, -1.5, -10, -2.5, 1.5, 10, -2.5, 1.5, -10, -2.5, -1.5, 10, -2.5, 1.5, 10, -2.5, -1.5, -10, -2.5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_es4lj"]
+material = SubResource("StandardMaterial3D_fpie0")
+size = Vector3(20, 6, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_je6nu"]
+data = PackedVector3Array(0, 3, 1.5, 10, -3, 1.5, -10, -3, 1.5, 0, 3, -1.5, -10, -3, -1.5, 10, -3, -1.5, 0, 3, 1.5, 0, 3, -1.5, 10, -3, 1.5, 0, 3, -1.5, 10, -3, -1.5, 10, -3, 1.5, 0, 3, -1.5, 0, 3, 1.5, -10, -3, -1.5, 0, 3, 1.5, -10, -3, 1.5, -10, -3, -1.5, -10, -3, 1.5, 10, -3, 1.5, -10, -3, -1.5, 10, -3, 1.5, 10, -3, -1.5, -10, -3, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_p252n"]
+material = SubResource("StandardMaterial3D_7cgvy")
+size = Vector3(20, 7, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_ajqvm"]
+data = PackedVector3Array(0, 3.5, 1.5, 10, -3.5, 1.5, -10, -3.5, 1.5, 0, 3.5, -1.5, -10, -3.5, -1.5, 10, -3.5, -1.5, 0, 3.5, 1.5, 0, 3.5, -1.5, 10, -3.5, 1.5, 0, 3.5, -1.5, 10, -3.5, -1.5, 10, -3.5, 1.5, 0, 3.5, -1.5, 0, 3.5, 1.5, -10, -3.5, -1.5, 0, 3.5, 1.5, -10, -3.5, 1.5, -10, -3.5, -1.5, -10, -3.5, 1.5, 10, -3.5, 1.5, -10, -3.5, -1.5, 10, -3.5, 1.5, 10, -3.5, -1.5, -10, -3.5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_yqyg1"]
+material = SubResource("StandardMaterial3D_fpie0")
+size = Vector3(20, 8, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_rue2c"]
+data = PackedVector3Array(0, 4, 1.5, 10, -4, 1.5, -10, -4, 1.5, 0, 4, -1.5, -10, -4, -1.5, 10, -4, -1.5, 0, 4, 1.5, 0, 4, -1.5, 10, -4, 1.5, 0, 4, -1.5, 10, -4, -1.5, 10, -4, 1.5, 0, 4, -1.5, 0, 4, 1.5, -10, -4, -1.5, 0, 4, 1.5, -10, -4, 1.5, -10, -4, -1.5, -10, -4, 1.5, 10, -4, 1.5, -10, -4, -1.5, 10, -4, 1.5, 10, -4, -1.5, -10, -4, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_c8bkd"]
+material = SubResource("StandardMaterial3D_7cgvy")
+size = Vector3(20, 9, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_xi6dr"]
+data = PackedVector3Array(0, 4.5, 1.5, 10, -4.5, 1.5, -10, -4.5, 1.5, 0, 4.5, -1.5, -10, -4.5, -1.5, 10, -4.5, -1.5, 0, 4.5, 1.5, 0, 4.5, -1.5, 10, -4.5, 1.5, 0, 4.5, -1.5, 10, -4.5, -1.5, 10, -4.5, 1.5, 0, 4.5, -1.5, 0, 4.5, 1.5, -10, -4.5, -1.5, 0, 4.5, 1.5, -10, -4.5, 1.5, -10, -4.5, -1.5, -10, -4.5, 1.5, 10, -4.5, 1.5, -10, -4.5, -1.5, 10, -4.5, 1.5, 10, -4.5, -1.5, -10, -4.5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_x0o82"]
+material = SubResource("StandardMaterial3D_fpie0")
+size = Vector3(20, 10, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_m85oo"]
+data = PackedVector3Array(0, 5, 1.5, 10, -5, 1.5, -10, -5, 1.5, 0, 5, -1.5, -10, -5, -1.5, 10, -5, -1.5, 0, 5, 1.5, 0, 5, -1.5, 10, -5, 1.5, 0, 5, -1.5, 10, -5, -1.5, 10, -5, 1.5, 0, 5, -1.5, 0, 5, 1.5, -10, -5, -1.5, 0, 5, 1.5, -10, -5, 1.5, -10, -5, -1.5, -10, -5, 1.5, 10, -5, 1.5, -10, -5, -1.5, 10, -5, 1.5, 10, -5, -1.5, -10, -5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_xid33"]
+material = SubResource("StandardMaterial3D_7cgvy")
+left_to_right = 0.4
+size = Vector3(20, 10, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_4o6db"]
+data = PackedVector3Array(-2, 5, 1.5, 10, -5, 1.5, -10, -5, 1.5, -2, 5, -1.5, -10, -5, -1.5, 10, -5, -1.5, -2, 5, 1.5, -2, 5, -1.5, 10, -5, 1.5, -2, 5, -1.5, 10, -5, -1.5, 10, -5, 1.5, -2, 5, -1.5, -2, 5, 1.5, -10, -5, -1.5, -2, 5, 1.5, -10, -5, 1.5, -10, -5, -1.5, -10, -5, 1.5, 10, -5, 1.5, -10, -5, -1.5, 10, -5, 1.5, 10, -5, -1.5, -10, -5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_4qx0h"]
+material = SubResource("StandardMaterial3D_fpie0")
+left_to_right = 0.3
+size = Vector3(20, 10, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_xa4dx"]
+data = PackedVector3Array(-4, 5, 1.5, 10, -5, 1.5, -10, -5, 1.5, -4, 5, -1.5, -10, -5, -1.5, 10, -5, -1.5, -4, 5, 1.5, -4, 5, -1.5, 10, -5, 1.5, -4, 5, -1.5, 10, -5, -1.5, 10, -5, 1.5, -4, 5, -1.5, -4, 5, 1.5, -10, -5, -1.5, -4, 5, 1.5, -10, -5, 1.5, -10, -5, -1.5, -10, -5, 1.5, 10, -5, 1.5, -10, -5, -1.5, 10, -5, 1.5, 10, -5, -1.5, -10, -5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_waljs"]
+material = SubResource("StandardMaterial3D_7cgvy")
+left_to_right = 0.2
+size = Vector3(20, 10, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_mlhcn"]
+data = PackedVector3Array(-6, 5, 1.5, 10, -5, 1.5, -10, -5, 1.5, -6, 5, -1.5, -10, -5, -1.5, 10, -5, -1.5, -6, 5, 1.5, -6, 5, -1.5, 10, -5, 1.5, -6, 5, -1.5, 10, -5, -1.5, 10, -5, 1.5, -6, 5, -1.5, -6, 5, 1.5, -10, -5, -1.5, -6, 5, 1.5, -10, -5, 1.5, -10, -5, -1.5, -10, -5, 1.5, 10, -5, 1.5, -10, -5, -1.5, 10, -5, 1.5, 10, -5, -1.5, -10, -5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_lidlu"]
+material = SubResource("StandardMaterial3D_fpie0")
+left_to_right = 0.1
+size = Vector3(20, 10, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_ek35l"]
+data = PackedVector3Array(-8, 5, 1.5, 10, -5, 1.5, -10, -5, 1.5, -8, 5, -1.5, -10, -5, -1.5, 10, -5, -1.5, -8, 5, 1.5, -8, 5, -1.5, 10, -5, 1.5, -8, 5, -1.5, 10, -5, -1.5, 10, -5, 1.5, -8, 5, -1.5, -8, 5, 1.5, -10, -5, -1.5, -8, 5, 1.5, -10, -5, 1.5, -10, -5, -1.5, -10, -5, 1.5, 10, -5, 1.5, -10, -5, -1.5, 10, -5, 1.5, 10, -5, -1.5, -10, -5, -1.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_p2xm7"]
+material = SubResource("StandardMaterial3D_7cgvy")
+left_to_right = 0.0
+size = Vector3(20, 10, 3)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_h4scd"]
+data = PackedVector3Array(-10, 5, 1.5, 10, -5, 1.5, -10, -5, 1.5, -10, 5, -1.5, -10, -5, -1.5, 10, -5, -1.5, -10, 5, 1.5, -10, 5, -1.5, 10, -5, 1.5, -10, 5, -1.5, 10, -5, -1.5, 10, -5, 1.5, -10, 5, -1.5, -10, 5, 1.5, -10, -5, -1.5, -10, 5, 1.5, -10, -5, 1.5, -10, -5, -1.5, -10, -5, 1.5, 10, -5, 1.5, -10, -5, -1.5, 10, -5, 1.5, 10, -5, -1.5, -10, -5, -1.5)
 
 [node name="SampleScene" type="Node3D"]
 
@@ -39,24 +184,377 @@ environment = SubResource("Environment_q3n8c")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
 
-[node name="MainCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 25, 0)
-projection = 1
-size = 26.0
-
-[node name="Sphere" type="CSGSphere3D" parent="."]
+[node name="Ball" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-material = SubResource("StandardMaterial3D_g0p2y")
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+physics_material_override = SubResource("PhysicsMaterial_ypb8r")
+contact_monitor = true
+max_contacts_reported = 4
 script = ExtResource("1_fprfu")
+MaxAirJumps = 1
 
-[node name="GPUParticles3D" type="GPUParticles3D" parent="Sphere"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ball"]
+shape = SubResource("SphereShape3D_kti8p")
+
+[node name="Sphere" type="CSGSphere3D" parent="Ball"]
+material = SubResource("StandardMaterial3D_g0p2y")
+
+[node name="Trail" type="GPUParticles3D" parent="Ball"]
 amount = 500
 lifetime = 5.0
 process_material = SubResource("ParticleProcessMaterial_xphv1")
 draw_pass_1 = SubResource("SphereMesh_dobma")
 
-[node name="Plane" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
-size = Vector3(25, 0.1, 25)
-material = SubResource("StandardMaterial3D_doccn")
+[node name="CameraPivot" type="Node3D" parent="Ball"]
+transform = Transform3D(0.965926, -0.183013, -0.183013, 0, 0.707107, -0.707107, 0.258819, 0.683013, 0.683013, 0, 0, 0)
+
+[node name="MainCamera" type="Camera3D" parent="Ball/CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 25, 0)
+size = 26.0
+
+[node name="Plane" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+physics_material_override = SubResource("PhysicsMaterial_qa7fp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Plane"]
+shape = SubResource("BoxShape3D_7s08i")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Plane"]
+mesh = SubResource("BoxMesh_nqncy")
+
+[node name="Frame" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+use_collision = true
+size = Vector3(101, 1, 101)
+material = SubResource("StandardMaterial3D_1btdg")
+
+[node name="Field" type="CSGBox3D" parent="Frame"]
+operation = 2
+size = Vector3(100, 1, 100)
+
+[node name="CsgSlopeTest" type="Node3D" parent="."]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -15, 0, 0)
+
+[node name="Slope1" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 30)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 1)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope2" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 27)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 2)
+depth = 3.0
+material = SubResource("StandardMaterial3D_fpie0")
+
+[node name="Slope3" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 24)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 3)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope4" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 21)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 4)
+depth = 3.0
+material = SubResource("StandardMaterial3D_co15k")
+
+[node name="Slope5" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 18)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 5)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope6" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 15)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 6)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="Slope7" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 7)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope8" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 8)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="Slope9" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 9)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope10" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, 0, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="Slope11" type="CSGPolygon3D" parent="CsgSlopeTest"]
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -1, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope12" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -2, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="Slope13" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -3, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope14" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -4, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="Slope15" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -5, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope16" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -6, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="Slope17" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -18)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -7, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope18" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -21)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -8, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="Slope19" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -24)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -9, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_7cgvy")
+
+[node name="Slope20" type="CSGPolygon3D" parent="CsgSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -27)
+use_collision = true
+polygon = PackedVector2Array(10, 0, -10, 0, -10, 10)
+depth = 3.0
+material = SubResource("StandardMaterial3D_owsuc")
+
+[node name="StaticSlopeTest" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
+
+[node name="S1" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 30)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S1"]
+mesh = SubResource("PrismMesh_5r25l")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S1"]
+shape = SubResource("ConcavePolygonShape3D_03j3f")
+
+[node name="S2" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 27)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S2"]
+mesh = SubResource("PrismMesh_e7m1a")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S2"]
+shape = SubResource("ConcavePolygonShape3D_s8wmj")
+
+[node name="S3" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 24)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S3"]
+mesh = SubResource("PrismMesh_dev6s")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S3"]
+shape = SubResource("ConcavePolygonShape3D_iilk3")
+
+[node name="S4" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 21)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S4"]
+mesh = SubResource("PrismMesh_hhpsc")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S4"]
+shape = SubResource("ConcavePolygonShape3D_ed3bd")
+
+[node name="S5" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 18)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S5"]
+mesh = SubResource("PrismMesh_wqbdo")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S5"]
+shape = SubResource("ConcavePolygonShape3D_th2hv")
+
+[node name="S6" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 15)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S6"]
+mesh = SubResource("PrismMesh_es4lj")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S6"]
+shape = SubResource("ConcavePolygonShape3D_je6nu")
+
+[node name="S7" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 12)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S7"]
+mesh = SubResource("PrismMesh_p252n")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S7"]
+shape = SubResource("ConcavePolygonShape3D_ajqvm")
+
+[node name="S8" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 9)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S8"]
+mesh = SubResource("PrismMesh_yqyg1")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S8"]
+shape = SubResource("ConcavePolygonShape3D_rue2c")
+
+[node name="S9" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 6)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S9"]
+mesh = SubResource("PrismMesh_c8bkd")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S9"]
+shape = SubResource("ConcavePolygonShape3D_xi6dr")
+
+[node name="S10" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 3)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S10"]
+mesh = SubResource("PrismMesh_x0o82")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S10"]
+shape = SubResource("ConcavePolygonShape3D_m85oo")
+
+[node name="S11" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S11"]
+mesh = SubResource("PrismMesh_xid33")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S11"]
+shape = SubResource("ConcavePolygonShape3D_4o6db")
+
+[node name="S12" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -3)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S12"]
+mesh = SubResource("PrismMesh_4qx0h")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S12"]
+shape = SubResource("ConcavePolygonShape3D_xa4dx")
+
+[node name="S13" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -6)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S13"]
+mesh = SubResource("PrismMesh_waljs")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S13"]
+shape = SubResource("ConcavePolygonShape3D_mlhcn")
+
+[node name="S14" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -9)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S14"]
+mesh = SubResource("PrismMesh_lidlu")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S14"]
+shape = SubResource("ConcavePolygonShape3D_ek35l")
+
+[node name="S15" type="StaticBody3D" parent="StaticSlopeTest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -12)
+physics_material_override = SubResource("PhysicsMaterial_2g0h0")
+
+[node name="Mesh" type="MeshInstance3D" parent="StaticSlopeTest/S15"]
+mesh = SubResource("PrismMesh_p2xm7")
+skeleton = NodePath("../../../CsgSlopeTest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticSlopeTest/S15"]
+shape = SubResource("ConcavePolygonShape3D_h4scd")
+
+[node name="PitTest" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -15)
+
+[node name="Slope" type="CSGPolygon3D" parent="PitTest"]
+use_collision = true
+polygon = PackedVector2Array(-10, 0, 10, 10, 10, 0)
+depth = 20.0
+
+[node name="Pit" type="CSGBox3D" parent="PitTest/Slope"]
+transform = Transform3D(0.353553, 0.353553, -0.866025, -0.612372, -0.612372, -0.5, -0.707107, 0.707107, -3.78552e-08, -4.5, 8, -9)
+operation = 2
+size = Vector3(10, 10, 10)
