@@ -1,0 +1,62 @@
+[gd_scene load_steps=10 format=3 uid="uid://bd2wiukgb2nu1"]
+
+[ext_resource type="Script" path="res://Scenes/Movement6/MovingSphere.cs" id="1_fprfu"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ass08"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_3kknv"]
+sky_material = SubResource("ProceduralSkyMaterial_ass08")
+
+[sub_resource type="Environment" id="Environment_q3n8c"]
+background_mode = 2
+sky = SubResource("Sky_3kknv")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g0p2y"]
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_xphv1"]
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1v3bs"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_dobma"]
+material = SubResource("StandardMaterial3D_1v3bs")
+radius = 0.1
+height = 0.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_doccn"]
+albedo_color = Color(0.636719, 0.636719, 0.636719, 1)
+
+[node name="SampleScene" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_q3n8c")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+
+[node name="MainCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 25, 0)
+projection = 1
+size = 26.0
+
+[node name="Sphere" type="CSGSphere3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+material = SubResource("StandardMaterial3D_g0p2y")
+script = ExtResource("1_fprfu")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="Sphere"]
+amount = 500
+lifetime = 5.0
+process_material = SubResource("ParticleProcessMaterial_xphv1")
+draw_pass_1 = SubResource("SphereMesh_dobma")
+
+[node name="Plane" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+size = Vector3(25, 0.1, 25)
+material = SubResource("StandardMaterial3D_doccn")

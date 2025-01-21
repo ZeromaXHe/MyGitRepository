@@ -16,6 +16,7 @@
         <Compile Include="ProceduralMeshes3\SimpleProceduralMeshFS.fs" />
         <Compile Include="GodotOfficialDemo\ComputeTexture\WaterPlaneFS.fs" />
         <Compile Include="GodotOfficialDemo\ComputeTexture\ComputeTextureFS.fs" />
+        <Compile Include="Movement6\MovingSphereFS.fs" />
     </ItemGroup>
 
 </Project>
