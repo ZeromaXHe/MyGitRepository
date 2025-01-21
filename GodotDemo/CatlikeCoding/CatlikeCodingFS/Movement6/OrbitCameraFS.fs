@@ -12,6 +12,9 @@ type OrbitCameraFS() =
     let mutable orbitAngles = Vector3(Mathf.DegToRad -45f, 0f, 0f)
     let mutable lastManualRotationTime = 0.0
 
+    let mutable gravityAlignment = Quaternion.Identity
+    let mutable orbitRotation = Quaternion.Identity
+
     let constrainAngle (angle: float32) =
         if angle < 0f then angle + Mathf.Tau
         elif angle > Mathf.Tau then angle - Mathf.Tau
@@ -36,7 +39,7 @@ type OrbitCameraFS() =
         elif t > c then t - c - Mathf.Tau
         else t - c + Mathf.Tau
 
-    abstract Focus: Node3D with get, set
+    abstract Focus: PhysicsBody3D with get, set
     abstract FocusShapeCast: ShapeCast3D with get, set
     abstract Distance: float32 with get, set
     abstract FocusRadius: float32 with get, set
@@ -75,9 +78,8 @@ type OrbitCameraFS() =
         if Time.GetUnixTimeFromSystem() - lastManualRotationTime < this.AlignDelay then
             false
         else
-            let movement =
-                Vector2(focusPoint.X - previousFocusPoint.X, focusPoint.Z - previousFocusPoint.Z)
-
+            let alignedDelta = gravityAlignment.Inverse() * (focusPoint - previousFocusPoint)
+            let movement = Vector2(alignedDelta.X, alignedDelta.Z)
             let movementDeltaSqr = movement.LengthSquared()
 
             if movementDeltaSqr < 0.0001f then
@@ -128,24 +130,33 @@ type OrbitCameraFS() =
     override this._Ready() =
         focusPoint <- this.Focus.GlobalPosition
         this.Quaternion <- Quaternion.FromEuler orbitAngles
+        orbitRotation <- Quaternion.FromEuler orbitAngles
         this.OnValidate()
 
     override this._Process(delta) =
+        gravityAlignment <-
+            (Quaternion(gravityAlignment * Vector3.Up, CustomGravity.getUpAxis focusPoint)
+            * gravityAlignment).Normalized()
+
         let df = float32 delta
         this.UpdateFocusPoint df
 
-        let lookRotation =
-            if this.ManualRotation df || this.AutomaticRotation df then
-                this.ConstrainAngles()
-                Quaternion.FromEuler orbitAngles
-            else
-                this.Quaternion
+        if this.ManualRotation df || this.AutomaticRotation df then
+            this.ConstrainAngles()
+            orbitRotation <- Quaternion.FromEuler orbitAngles
 
+        let lookRotation = gravityAlignment * orbitRotation
         let lookDirection = lookRotation * Vector3.Forward
         let mutable lookPosition = focusPoint - lookDirection * this.Distance
 
         let spaceState = this.GetWorld3D().DirectSpaceState
-        let queryRay = PhysicsRayQueryParameters3D.Create(focusPoint, lookPosition)
+
+        let queryRay =
+            PhysicsRayQueryParameters3D.Create(
+                focusPoint,
+                lookPosition,
+                exclude = Array<Rid>([| this.Focus.GetRid() |])
+            )
         // let queryShape = new PhysicsShapeQueryParameters3D()
         // let box = new BoxShape3D()
         // let mutable boxSize = this.CameraHalfExtends
@@ -153,11 +164,9 @@ type OrbitCameraFS() =
         // box.Size <- boxSize
         // queryShape.Shape <- box
         // queryShape.Transform <- Transform3D(Basis(lookRotation.Inverse()), focusPoint)
-        if this.Focus :? CollisionObject3D then
-            // queryShape.Exclude <- Array<Rid>([| (this.Focus :?> CollisionObject3D).GetRid() |])
-            queryRay.Exclude <- Array<Rid>([| (this.Focus :?> CollisionObject3D).GetRid() |])
-        
+        // queryShape.Exclude <- Array<Rid>([| this.Focus.GetRid() |])
         let resultRay = spaceState.IntersectRay queryRay
+
         if resultRay <> null && resultRay.Count > 0 then
             let distance = resultRay["position"].As<Vector3>().DistanceTo focusPoint
             lookPosition <- focusPoint - lookDirection * distance
@@ -166,7 +175,7 @@ type OrbitCameraFS() =
         // if resultShape <> null && resultShape.Count > 0 then
         //     let distance = resultShape[0].["position"].As<Vector3>().DistanceTo focusPoint
         //     lookPosition <- focusPoint - lookDirection * (distance + this.Near)
-        
+
         // ShapeCast 本身目前也是不太适合原来 Unity 那个思路，BUG 解不了，写的我有点烦了，先走 RayCast 逻辑吧……
         if this.FocusShapeCast <> null then
             // 没看懂这里在干嘛，bug 又一堆…… 调不好，不搞了……

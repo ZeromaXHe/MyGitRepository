@@ -1,4 +1,4 @@
-[gd_scene load_steps=53 format=3 uid="uid://bd2wiukgb2nu1"]
+[gd_scene load_steps=54 format=3 uid="uid://bd2wiukgb2nu1"]
 
 [ext_resource type="Script" path="res://Scenes/Movement6/MovingSphere.cs" id="1_fprfu"]
 [ext_resource type="Script" path="res://Scenes/Movement6/OrbitCamera.cs" id="1_y3xjj"]
@@ -39,6 +39,11 @@ height = 0.2
 [sub_resource type="BoxShape3D" id="BoxShape3D_ckouq"]
 size = Vector3(1, 1, 20)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uucww"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1btdg"]
+albedo_color = Color(0, 0, 0, 1)
+
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_qa7fp"]
 friction = 0.0
 rough = true
@@ -52,9 +57,6 @@ albedo_color = Color(0.449263, 0.667969, 0.446182, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_nqncy"]
 material = SubResource("StandardMaterial3D_h43j2")
 size = Vector3(100, 1, 100)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1btdg"]
-albedo_color = Color(0, 0, 0, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7cgvy"]
 
@@ -198,11 +200,12 @@ Focus = NodePath("../Ball")
 Distance = 20.0
 
 [node name="Ball" type="RigidBody3D" parent="." node_paths=PackedStringArray("PlayerInputSpace")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 axis_lock_angular_z = true
 physics_material_override = SubResource("PhysicsMaterial_ypb8r")
+gravity_scale = 0.0
 contact_monitor = true
 max_contacts_reported = 4
 script = ExtResource("1_fprfu")
@@ -222,36 +225,90 @@ lifetime = 5.0
 process_material = SubResource("ParticleProcessMaterial_xphv1")
 draw_pass_1 = SubResource("SphereMesh_dobma")
 
-[node name="RayCast3D" type="RayCast3D" parent="Ball"]
-
 [node name="ShapeCast3D" type="ShapeCast3D" parent="Ball"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 7.5, 7.5)
 shape = SubResource("BoxShape3D_ckouq")
 target_position = Vector3(0, 0, 0)
 debug_shape_custom_color = Color(0.851563, 0, 1, 1)
 
-[node name="Plane" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-physics_material_override = SubResource("PhysicsMaterial_qa7fp")
+[node name="GravityBox" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Plane"]
-shape = SubResource("BoxShape3D_7s08i")
+[node name="SpherePlanet" type="CSGSphere3D" parent="GravityBox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
+use_collision = true
+radius = 30.0
+radial_segments = 24
+rings = 12
+material = SubResource("StandardMaterial3D_uucww")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Plane"]
-mesh = SubResource("BoxMesh_nqncy")
+[node name="CSGBox3D" type="CSGBox3D" parent="GravityBox/SpherePlanet"]
+transform = Transform3D(0.435596, -0.789149, 0.433013, 0.612372, 0.612372, 0.5, -0.65974, 0.0473672, 0.75, 0, 30, 0)
+operation = 2
+size = Vector3(5, 5, 5)
 
-[node name="Frame" type="CSGBox3D" parent="."]
+[node name="BottomFrame" type="CSGBox3D" parent="GravityBox"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 use_collision = true
 size = Vector3(101, 1, 101)
 material = SubResource("StandardMaterial3D_1btdg")
 
-[node name="Field" type="CSGBox3D" parent="Frame"]
+[node name="Field" type="CSGBox3D" parent="GravityBox/BottomFrame"]
 operation = 2
 size = Vector3(100, 1, 100)
 
+[node name="Plane" type="StaticBody3D" parent="GravityBox/BottomFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+physics_material_override = SubResource("PhysicsMaterial_qa7fp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GravityBox/BottomFrame/Plane"]
+shape = SubResource("BoxShape3D_7s08i")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GravityBox/BottomFrame/Plane"]
+mesh = SubResource("BoxMesh_nqncy")
+
+[node name="LeftFrame" type="CSGBox3D" parent="GravityBox"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 50, 50.5, 0)
+use_collision = true
+size = Vector3(101, 1, 101)
+material = SubResource("StandardMaterial3D_1btdg")
+
+[node name="Field" type="CSGBox3D" parent="GravityBox/LeftFrame"]
+operation = 2
+size = Vector3(100, 1, 100)
+
+[node name="Plane" type="StaticBody3D" parent="GravityBox/LeftFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+physics_material_override = SubResource("PhysicsMaterial_qa7fp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GravityBox/LeftFrame/Plane"]
+shape = SubResource("BoxShape3D_7s08i")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GravityBox/LeftFrame/Plane"]
+mesh = SubResource("BoxMesh_nqncy")
+
+[node name="RightFrame" type="CSGBox3D" parent="GravityBox"]
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -50, 50.5, 0)
+use_collision = true
+size = Vector3(101, 1, 101)
+material = SubResource("StandardMaterial3D_1btdg")
+
+[node name="Field" type="CSGBox3D" parent="GravityBox/RightFrame"]
+operation = 2
+size = Vector3(100, 1, 100)
+
+[node name="Plane" type="StaticBody3D" parent="GravityBox/RightFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+physics_material_override = SubResource("PhysicsMaterial_qa7fp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GravityBox/RightFrame/Plane"]
+shape = SubResource("BoxShape3D_7s08i")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GravityBox/RightFrame/Plane"]
+mesh = SubResource("BoxMesh_nqncy")
+
 [node name="CsgSlopeTest" type="Node3D" parent="."]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -15, 0, 0)
+transform = Transform3D(4.37114e-08, -1, -8.74228e-08, -1, -4.37114e-08, 0, -3.82137e-15, 8.74228e-08, -1, -25, 0, 0)
 
 [node name="Slope1" type="CSGPolygon3D" parent="CsgSlopeTest"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 30)
@@ -393,7 +450,7 @@ depth = 3.0
 material = SubResource("StandardMaterial3D_owsuc")
 
 [node name="StaticSlopeTest" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 25, 0, 0)
 
 [node name="S1" type="StaticBody3D" parent="StaticSlopeTest"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 30)
@@ -561,7 +618,7 @@ skeleton = NodePath("../../../CsgSlopeTest")
 shape = SubResource("ConcavePolygonShape3D_h4scd")
 
 [node name="PitTest" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -15)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -10, 28)
 
 [node name="Slope" type="CSGPolygon3D" parent="PitTest"]
 use_collision = true
@@ -574,6 +631,6 @@ operation = 2
 size = Vector3(10, 10, 10)
 
 [node name="SteepTest" type="CSGBox3D" parent="PitTest"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 10, -10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 5, -10)
 use_collision = true
 size = Vector3(5, 20, 20)

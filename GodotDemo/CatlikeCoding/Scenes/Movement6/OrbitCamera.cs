@@ -5,7 +5,7 @@ namespace CatlikeCodingCSharp.Scenes.Movement6;
 
 public partial class OrbitCamera : OrbitCameraFS
 {
-    [Export] public override Node3D Focus { get; set; }
+    [Export] public override PhysicsBody3D Focus { get; set; }
     [Export] public override ShapeCast3D FocusShapeCast { get; set; }
     [Export(PropertyHint.Range, "1, 20")] public override float Distance { get; set; } = 5f;
     [Export(PropertyHint.Range, "0, 100")] public override float FocusRadius { get; set; } = 1f;
