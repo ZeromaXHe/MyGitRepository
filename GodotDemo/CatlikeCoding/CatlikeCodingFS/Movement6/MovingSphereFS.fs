@@ -13,10 +13,14 @@ type MovingSphereFS() =
     let mutable desiredJump = false
     let mutable jumpPhase = 0
     let mutable groundContactCount = 0
-    let mutable preGroundContactCount = 0
     let onGround () = groundContactCount > 0
+    let mutable steepContactCount = 0
+    let onSteep () = steepContactCount > 0
     let mutable minGroudDotProduct = 0f
     let mutable contactNormal = Vector3.Zero
+    let mutable steepNormal = Vector3.Zero
+    let mutable stepsSinceLastGrounded = 0
+    let mutable stepsSinceLastJump = 0
 
     abstract MaxSpeed: float32 with get, set
     abstract MaxAcceleration: float32 with get, set
@@ -24,12 +28,62 @@ type MovingSphereFS() =
     abstract JumpHeight: float32 with get, set
     abstract MaxAirJumps: int with get, set
     abstract MaxGroundAngle: float32 with get, set
+    abstract MaxSnapSpeed: float32 with get, set
+
+    member this.Sphere = this.GetNode<CsgSphere3D> "Sphere"
+    member this.RayCast = this.GetNode<RayCast3D> "RayCast3D"
+
+    member private this.SnapToGround() =
+        if stepsSinceLastGrounded > 1 || stepsSinceLastJump <= 2 then
+            false
+        else
+            let speed = velocity.Length()
+
+            if
+                speed > this.MaxSnapSpeed
+                || not <| this.RayCast.IsColliding()
+                || this.RayCast.GetCollisionNormal().Y < this.GetMinDot()
+            then
+                false
+            else
+                groundContactCount <- 1
+                let normal = this.RayCast.GetCollisionNormal()
+
+                GD.Print
+                    $"vel: {velocity}, normal: {normal}, colPos: {this.RayCast.GetCollisionPoint()}, dist: {this.Position.DistanceTo <| this.RayCast.GetCollisionPoint()}"
+
+                contactNormal <- normal
+                let dot = velocity.Dot normal
+
+                if dot > 0f then
+                    // BUG: 这种方式感觉有 BUG 啊……最后那几个偏置的斜坡（一边陡一边缓的）从缓坡上去的话就直接上天了……
+                    velocity <- (velocity - normal * dot).Normalized() * speed
+
+                true
+
+    member private this.CheckSteepContacts() =
+        if steepContactCount > 1 then
+            steepNormal <- steepNormal.Normalized()
+
+            if steepNormal.Y >= minGroudDotProduct then
+                groundContactCount <- 1
+                contactNormal <- steepNormal
+                true
+            else
+                false
+        else
+            false
 
     member this.UpdateState() =
+        stepsSinceLastGrounded <- stepsSinceLastGrounded + 1
+        stepsSinceLastJump <- stepsSinceLastJump + 1
         velocity <- this.LinearVelocity
 
-        if onGround () then
-            jumpPhase <- 0
+        if onGround () || this.SnapToGround() || this.CheckSteepContacts() then
+            stepsSinceLastGrounded <- 0
+
+            if stepsSinceLastJump > 1 then
+                jumpPhase <- 0
 
             if groundContactCount > 1 then
                 contactNormal <- contactNormal.Normalized()
@@ -37,15 +91,35 @@ type MovingSphereFS() =
             contactNormal <- Vector3.Up
 
     member this.Jump() =
-        if onGround () || jumpPhase < this.MaxAirJumps then
+        let mutable jumpDirection =
+            if onGround () then
+                contactNormal
+            elif onSteep () then
+                jumpPhase <- 0
+                steepNormal
+            elif this.MaxAirJumps > 0 && jumpPhase <= this.MaxAirJumps then
+                if jumpPhase = 0 then
+                    jumpPhase <- 1
+
+                contactNormal
+            else
+                Vector3.Zero
+
+        if jumpDirection <> Vector3.Zero then
+            stepsSinceLastJump <- 0
             jumpPhase <- jumpPhase + 1
             let mutable jumpSpeed = Mathf.Sqrt(-2f * this.GetGravity().Y * this.JumpHeight)
-            let alignedSpeed = velocity.Dot(contactNormal)
+            // 我这里修改了一下，增加的 Vector3.Up 与投射在水平面上的方向向量长度成正二次比（90 度时达到 1）
+            // 从而减少其他斜面上的起跳方向
+            let verticalRatio = Vector2(jumpDirection.X, jumpDirection.Z).Length()
+            jumpDirection <- (jumpDirection + verticalRatio * verticalRatio * Vector3.Up).Normalized()
+
+            let alignedSpeed = velocity.Dot(jumpDirection)
 
             if alignedSpeed > 0f then
                 jumpSpeed <- Mathf.Max(jumpSpeed - alignedSpeed, 0f)
 
-            velocity <- velocity + contactNormal * jumpSpeed
+            velocity <- velocity + jumpDirection * jumpSpeed
 
     // member this.EvaluateCollision() =
     //     // CharacterBody3D 用的
@@ -80,11 +154,13 @@ type MovingSphereFS() =
         minGroudDotProduct <- Mathf.Cos(Mathf.DegToRad this.MaxGroundAngle)
 
     member this.ClearState() =
-        preGroundContactCount <- groundContactCount
+        (this.Sphere.Material :?> StandardMaterial3D).AlbedoColor <- Colors.White * float32 groundContactCount * 0.25f
         groundContactCount <- 0
+        steepContactCount <- 0
         contactNormal <- Vector3.Zero
+        steepNormal <- Vector3.Zero
 
-    member this.Sphere = this.GetNode<CsgSphere3D> "Sphere"
+    member this.GetMinDot() = minGroudDotProduct // TODO: Surface Contact 的 2 Stairs 楼梯逻辑没写
 
     override this._Ready() = ready <- true
 
@@ -93,9 +169,6 @@ type MovingSphereFS() =
             let playerInput = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down")
             desiredVelocity <- Vector3(playerInput.X, 0f, playerInput.Y) * this.MaxSpeed
             desiredJump <- desiredJump || Input.IsActionJustPressed "Jump"
-
-            (this.Sphere.Material :?> StandardMaterial3D).AlbedoColor <-
-                Colors.White * float32 preGroundContactCount * 0.25f
 
     override this._PhysicsProcess(delta) =
         // onGround <- this.IsOnFloor() // CharacterBody3D 用的
@@ -115,9 +188,14 @@ type MovingSphereFS() =
     // this.MoveAndSlide() |> ignore // CharacterBody3D 用的
 
     override this._IntegrateForces(state) =
+        let minDot = this.GetMinDot()
+
         for i in 0 .. state.GetContactCount() - 1 do
             let normal = state.GetContactLocalNormal(i)
 
-            if normal.Y >= minGroudDotProduct then
+            if normal.Y >= minDot then
                 groundContactCount <- groundContactCount + 1
                 contactNormal <- contactNormal + normal
+            elif normal.Y > -0.01f then
+                steepContactCount <- steepContactCount + 1
+                steepNormal <- steepNormal + normal
