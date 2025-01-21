@@ -17,6 +17,7 @@
         <Compile Include="GodotOfficialDemo\ComputeTexture\WaterPlaneFS.fs" />
         <Compile Include="GodotOfficialDemo\ComputeTexture\ComputeTextureFS.fs" />
         <Compile Include="Movement6\MovingSphereFS.fs" />
+        <Compile Include="Movement6\OrbitCameraFS.fs" />
     </ItemGroup>
 
 </Project>

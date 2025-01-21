@@ -22,6 +22,7 @@ type MovingSphereFS() =
     let mutable stepsSinceLastGrounded = 0
     let mutable stepsSinceLastJump = 0
 
+    abstract PlayerInputSpace: Node3D with get, set
     abstract MaxSpeed: float32 with get, set
     abstract MaxAcceleration: float32 with get, set
     abstract MaxAirAcceleration: float32 with get, set
@@ -48,10 +49,8 @@ type MovingSphereFS() =
             else
                 groundContactCount <- 1
                 let normal = this.RayCast.GetCollisionNormal()
-
-                GD.Print
-                    $"vel: {velocity}, normal: {normal}, colPos: {this.RayCast.GetCollisionPoint()}, dist: {this.Position.DistanceTo <| this.RayCast.GetCollisionPoint()}"
-
+                // GD.Print
+                //     $"vel: {velocity}, normal: {normal}, colPos: {this.RayCast.GetCollisionPoint()}, dist: {this.Position.DistanceTo <| this.RayCast.GetCollisionPoint()}"
                 contactNormal <- normal
                 let dot = velocity.Dot normal
 
@@ -166,8 +165,19 @@ type MovingSphereFS() =
 
     override this._Process(delta) =
         if ready then
-            let playerInput = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down")
-            desiredVelocity <- Vector3(playerInput.X, 0f, playerInput.Y) * this.MaxSpeed
+            let playerInput = Input.GetVector("MoveLeft", "MoveRight", "MoveUp", "MoveDown")
+
+            if this.PlayerInputSpace <> null then
+                let mutable forward = this.PlayerInputSpace.Quaternion * Vector3.Back // Godot 和 Unity 前后相反
+                forward.Y <- 0f
+                forward <- forward.Normalized()
+                let mutable right = this.PlayerInputSpace.Quaternion * Vector3.Right
+                right.Y <- 0f
+                right <- right.Normalized()
+                desiredVelocity <- (forward * playerInput.Y + right * playerInput.X) * this.MaxSpeed
+            else
+                desiredVelocity <- Vector3(playerInput.X, 0f, playerInput.Y) * this.MaxSpeed
+
             desiredJump <- desiredJump || Input.IsActionJustPressed "Jump"
 
     override this._PhysicsProcess(delta) =

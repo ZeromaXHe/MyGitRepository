@@ -5,6 +5,7 @@ namespace CatlikeCodingCSharp.Scenes.Movement6;
 
 public partial class MovingSphere : MovingSphereFS
 {
+    [Export] public override Node3D PlayerInputSpace { get; set; }
     [Export(PropertyHint.Range, "0, 100")] public override float MaxSpeed { get; set; } = 10f;
     [Export(PropertyHint.Range, "0, 100")] public override float MaxAcceleration { get; set; } = 10f;
     [Export(PropertyHint.Range, "0, 100")] public override float MaxAirAcceleration { get; set; } = 1f;
