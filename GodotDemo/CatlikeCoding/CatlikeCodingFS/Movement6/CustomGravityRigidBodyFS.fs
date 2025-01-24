@@ -27,4 +27,4 @@ type CustomGravityRigidBodyFS() =
                 false
 
         if not directReturn then
-            this.ApplyForce <| this.Mass * CustomGravity.getGravity this.Position
+            this.ApplyForce <| this.Mass * CustomGravity.getGravity this.GlobalPosition

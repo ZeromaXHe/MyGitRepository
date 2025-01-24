@@ -49,6 +49,7 @@ type OrbitCameraFS() =
     abstract MaxVerticalAngle: float32 with get, set
     abstract AlignDelay: float with get, set
     abstract AlignSmoothRange: float32 with get, set
+    abstract UpAlignmentSpeed: float32 with get, set
 
     member this.CameraHalfExtends =
         let y = this.Near * Mathf.Tan(0.5f * Mathf.DegToRad this.Fov)
@@ -123,6 +124,19 @@ type OrbitCameraFS() =
 
         orbitAngles.Y <- constrainAngle orbitAngles.Y
 
+    member this.UpdateGravityAlignment delta =
+        let fromUp = gravityAlignment * Vector3.Up
+        let toUp = CustomGravity.getUpAxis focusPoint
+        let dot = Mathf.Clamp(fromUp.Dot toUp, -1f, 1f)
+        let angle = Mathf.RadToDeg(Mathf.Acos dot)
+        let maxAngle = this.UpAlignmentSpeed * delta
+        let newAlignment = (Quaternion(fromUp, toUp) * gravityAlignment).Normalized()
+
+        if angle <= maxAngle then
+            gravityAlignment <- newAlignment
+        else
+            gravityAlignment <- gravityAlignment.Slerp(newAlignment, maxAngle / angle) // Godot 默认就没有 Clamp
+
     member this.OnValidate() =
         if this.MaxVerticalAngle < this.MinVerticalAngle then
             this.MaxVerticalAngle <- this.MinVerticalAngle
@@ -134,11 +148,8 @@ type OrbitCameraFS() =
         this.OnValidate()
 
     override this._Process(delta) =
-        gravityAlignment <-
-            (Quaternion(gravityAlignment * Vector3.Up, CustomGravity.getUpAxis focusPoint)
-            * gravityAlignment).Normalized()
-
         let df = float32 delta
+        this.UpdateGravityAlignment df
         this.UpdateFocusPoint df
 
         if this.ManualRotation df || this.AutomaticRotation df then

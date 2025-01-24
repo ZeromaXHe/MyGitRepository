@@ -109,7 +109,7 @@ type MovingSphereFS() =
         else
             contactNormal <- upAxis
 
-    member this.Jump (gravity: Vector3) =
+    member this.Jump(gravity: Vector3) =
         let mutable jumpDirection =
             if onGround () then
                 contactNormal
@@ -128,8 +128,7 @@ type MovingSphereFS() =
             stepsSinceLastJump <- 0
             jumpPhase <- jumpPhase + 1
 
-            let mutable jumpSpeed =
-                Mathf.Sqrt(2f * gravity.Length() * this.JumpHeight)
+            let mutable jumpSpeed = Mathf.Sqrt(2f * gravity.Length() * this.JumpHeight)
             // 我这里修改了一下，增加的 Vector3.Up 与投射在水平面上的方向向量长度成正二次比（90 度时达到 1）
             // 从而减少其他斜面上的起跳方向
             let verticalRatio = Vector2(jumpDirection.X, jumpDirection.Z).Length()
@@ -152,7 +151,7 @@ type MovingSphereFS() =
     //             contactNormal <- normal
 
     member this.ProjectDirectionOnPlane (direction: Vector3) (normal: Vector3) =
-        (direction - normal * direction.Dot normal).Normalized()
+        (direction - normal * (direction.Dot normal)).Normalized()
 
     member this.AdjustVelocity delta =
         let xAxis = (this.ProjectDirectionOnPlane rightAxis contactNormal).Normalized()
@@ -167,6 +166,8 @@ type MovingSphereFS() =
                 this.MaxAirAcceleration
 
         let maxSpeedChange = acceleration * delta
+        // GD.Print
+        //     $"xAx: {xAxis}, zAx: {zAxis}, rAx: {rightAxis}, bAx: {backAxis}, cntNom: {contactNormal}, curX: {currentX}, curZ: {currentZ}, desVel: {desiredVelocity}, maxSpdChg: {maxSpeedChange}"
         let newX = Mathf.MoveToward(currentX, desiredVelocity.X, maxSpeedChange)
         let newZ = Mathf.MoveToward(currentZ, desiredVelocity.Z, maxSpeedChange)
         velocity <- velocity + xAxis * (newX - currentX) + zAxis * (newZ - currentZ)
@@ -202,13 +203,13 @@ type MovingSphereFS() =
             desiredJump <- desiredJump || Input.IsActionJustPressed "Jump"
 
     override this._PhysicsProcess(delta) =
-        let gravity, upAx = CustomGravity.getGravityAndUpAxis this.Position
+        let gravity, upAx = CustomGravity.getGravityAndUpAxis this.GlobalPosition
         upAxis <- upAx
         // onGround <- this.IsOnFloor() // CharacterBody3D 用的
         // this.EvaluateCollision() // CharacterBody3D 用的
         this.UpdateState()
         this.AdjustVelocity <| float32 delta
-        
+
 
         if desiredJump then
             desiredJump <- false

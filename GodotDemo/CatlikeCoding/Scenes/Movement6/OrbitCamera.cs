@@ -20,6 +20,7 @@ public partial class OrbitCamera : OrbitCameraFS
 
     [Export(PropertyHint.Range, "0, 100")] public override double AlignDelay { get; set; } = 5;
     [Export(PropertyHint.Range, "0, 90")] public override float AlignSmoothRange { get; set; } = 45f;
+    [Export(PropertyHint.Range, "0, 10000")] public override float UpAlignmentSpeed { get; set; } = 360f;
 
     // 需要忽略 IDE 省略 partial、_Ready 等的提示，必须保留它们
     public override void _Ready() => base._Ready();

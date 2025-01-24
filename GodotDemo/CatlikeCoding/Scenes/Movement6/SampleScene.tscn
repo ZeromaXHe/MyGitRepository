@@ -1,7 +1,10 @@
-[gd_scene load_steps=54 format=3 uid="uid://bd2wiukgb2nu1"]
+[gd_scene load_steps=58 format=3 uid="uid://bd2wiukgb2nu1"]
 
 [ext_resource type="Script" path="res://Scenes/Movement6/MovingSphere.cs" id="1_fprfu"]
 [ext_resource type="Script" path="res://Scenes/Movement6/OrbitCamera.cs" id="1_y3xjj"]
+[ext_resource type="Script" path="res://Scenes/Movement6/Gravity/GravityBox.cs" id="3_hfg4a"]
+[ext_resource type="Script" path="res://Scenes/Movement6/Gravity/GravitySphere.cs" id="4_q2b6s"]
+[ext_resource type="Script" path="res://Scenes/Movement6/Gravity/GravityPlane.cs" id="5_c3eq0"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ass08"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -57,6 +60,10 @@ albedo_color = Color(0.449263, 0.667969, 0.446182, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_nqncy"]
 material = SubResource("StandardMaterial3D_h43j2")
 size = Vector3(100, 1, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bc0lh"]
+transparency = 1
+albedo_color = Color(0.0941176, 0.682353, 1, 0.309804)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7cgvy"]
 
@@ -200,7 +207,7 @@ Focus = NodePath("../Ball")
 Distance = 20.0
 
 [node name="Ball" type="RigidBody3D" parent="." node_paths=PackedStringArray("PlayerInputSpace")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 40, 0)
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 axis_lock_angular_z = true
@@ -231,10 +238,20 @@ shape = SubResource("BoxShape3D_ckouq")
 target_position = Vector3(0, 0, 0)
 debug_shape_custom_color = Color(0.851563, 0, 1, 1)
 
-[node name="GravityBox" type="Node3D" parent="."]
+[node name="Box" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
 
-[node name="SpherePlanet" type="CSGSphere3D" parent="GravityBox"]
+[node name="GravityBox" type="Node3D" parent="Box"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
+script = ExtResource("3_hfg4a")
+Gravity = -9.81
+BoundaryDistance = Vector3(50, 50, 50)
+InnerDistance = 5.0
+InnerFalloffDistance = 10.0
+OuterDistance = 5.0
+OuterFalloffDistance = 10.0
+
+[node name="SpherePlanet" type="CSGSphere3D" parent="Box"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
 use_collision = true
 radius = 30.0
@@ -242,70 +259,98 @@ radial_segments = 24
 rings = 12
 material = SubResource("StandardMaterial3D_uucww")
 
-[node name="CSGBox3D" type="CSGBox3D" parent="GravityBox/SpherePlanet"]
+[node name="CSGBox3D" type="CSGBox3D" parent="Box/SpherePlanet"]
 transform = Transform3D(0.435596, -0.789149, 0.433013, 0.612372, 0.612372, 0.5, -0.65974, 0.0473672, 0.75, 0, 30, 0)
 operation = 2
 size = Vector3(5, 5, 5)
 
-[node name="BottomFrame" type="CSGBox3D" parent="GravityBox"]
+[node name="GravitySphere" type="Node3D" parent="Box/SpherePlanet"]
+script = ExtResource("4_q2b6s")
+OuterRadius = 35.0
+OuterFalloffRadius = 45.0
+InnerRadius = 0.0
+InnerFalloffRadius = 0.0
+
+[node name="BottomFrame" type="CSGBox3D" parent="Box"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 use_collision = true
 size = Vector3(101, 1, 101)
 material = SubResource("StandardMaterial3D_1btdg")
 
-[node name="Field" type="CSGBox3D" parent="GravityBox/BottomFrame"]
+[node name="Field" type="CSGBox3D" parent="Box/BottomFrame"]
 operation = 2
 size = Vector3(100, 1, 100)
 
-[node name="Plane" type="StaticBody3D" parent="GravityBox/BottomFrame"]
+[node name="Plane" type="StaticBody3D" parent="Box/BottomFrame"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 physics_material_override = SubResource("PhysicsMaterial_qa7fp")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GravityBox/BottomFrame/Plane"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Box/BottomFrame/Plane"]
 shape = SubResource("BoxShape3D_7s08i")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GravityBox/BottomFrame/Plane"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Box/BottomFrame/Plane"]
 mesh = SubResource("BoxMesh_nqncy")
 
-[node name="LeftFrame" type="CSGBox3D" parent="GravityBox"]
+[node name="LeftFrame" type="CSGBox3D" parent="Box"]
 transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 50, 50.5, 0)
 use_collision = true
 size = Vector3(101, 1, 101)
 material = SubResource("StandardMaterial3D_1btdg")
 
-[node name="Field" type="CSGBox3D" parent="GravityBox/LeftFrame"]
+[node name="Field" type="CSGBox3D" parent="Box/LeftFrame"]
 operation = 2
 size = Vector3(100, 1, 100)
 
-[node name="Plane" type="StaticBody3D" parent="GravityBox/LeftFrame"]
+[node name="Plane" type="StaticBody3D" parent="Box/LeftFrame"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 physics_material_override = SubResource("PhysicsMaterial_qa7fp")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GravityBox/LeftFrame/Plane"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Box/LeftFrame/Plane"]
 shape = SubResource("BoxShape3D_7s08i")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GravityBox/LeftFrame/Plane"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Box/LeftFrame/Plane"]
 mesh = SubResource("BoxMesh_nqncy")
 
-[node name="RightFrame" type="CSGBox3D" parent="GravityBox"]
+[node name="RightFrame" type="CSGBox3D" parent="Box"]
 transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, -50, 50.5, 0)
 use_collision = true
 size = Vector3(101, 1, 101)
 material = SubResource("StandardMaterial3D_1btdg")
 
-[node name="Field" type="CSGBox3D" parent="GravityBox/RightFrame"]
+[node name="Field" type="CSGBox3D" parent="Box/RightFrame"]
 operation = 2
 size = Vector3(100, 1, 100)
 
-[node name="Plane" type="StaticBody3D" parent="GravityBox/RightFrame"]
+[node name="Plane" type="StaticBody3D" parent="Box/RightFrame"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 physics_material_override = SubResource("PhysicsMaterial_qa7fp")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GravityBox/RightFrame/Plane"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Box/RightFrame/Plane"]
 shape = SubResource("BoxShape3D_7s08i")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GravityBox/RightFrame/Plane"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Box/RightFrame/Plane"]
 mesh = SubResource("BoxMesh_nqncy")
+
+[node name="SlopeToSphere" type="CSGBox3D" parent="Box"]
+transform = Transform3D(0.866025, -0.5, 0, 0.5, 0.866025, 0, 0, 0, 1, -7.71252, 11.889, 0)
+use_collision = true
+size = Vector3(50, 1, 10)
+
+[node name="SlopeToSphere2" type="CSGBox3D" parent="Box"]
+transform = Transform3D(0.866025, -0.5, 0, 0.5, 0.866025, 0, 0, 0, 1, 7.713, 87.8681, 0)
+use_collision = true
+size = Vector3(50, 1, 10)
+
+[node name="Plane" type="CSGBox3D" parent="Box"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 120, 0)
+use_collision = true
+size = Vector3(150, 1, 150)
+material = SubResource("StandardMaterial3D_bc0lh")
+
+[node name="GravityPlane" type="Node3D" parent="Box/Plane"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0)
+script = ExtResource("5_c3eq0")
+Range = 10.0
 
 [node name="CsgSlopeTest" type="Node3D" parent="."]
 transform = Transform3D(4.37114e-08, -1, -8.74228e-08, -1, -4.37114e-08, 0, -3.82137e-15, 8.74228e-08, -1, -25, 0, 0)
