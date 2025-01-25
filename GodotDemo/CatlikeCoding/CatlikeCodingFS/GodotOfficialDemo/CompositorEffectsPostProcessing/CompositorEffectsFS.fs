@@ -22,7 +22,7 @@ type CompositorEffectsFS() =
 
         this.GetNode<Label>("Info").Text <-
             $"""Grayscale effect: {g}
-            Shader effect: {s}"""
+Shader effect: {s}"""
 
     override this._Input(event) =
         if event.IsActionPressed "toggle_grayscale_effect" then
