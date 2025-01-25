@@ -16,6 +16,9 @@
         <Compile Include="ProceduralMeshes3\SimpleProceduralMeshFS.fs" />
         <Compile Include="GodotOfficialDemo\ComputeTexture\WaterPlaneFS.fs" />
         <Compile Include="GodotOfficialDemo\ComputeTexture\ComputeTextureFS.fs" />
+        <Compile Include="GodotOfficialDemo\CompositorEffectsPostProcessing\CompositorEffectsFS.fs" />
+        <Compile Include="GodotOfficialDemo\CompositorEffectsPostProcessing\PostProcessGrayScaleFS.fs" />
+        <Compile Include="GodotOfficialDemo\CompositorEffectsPostProcessing\PostProcessShaderFS.fs" />
         <Compile Include="Movement6\CustomGravity.fs" />
         <Compile Include="Movement6\GravitySourceFS.fs" />
         <Compile Include="Movement6\GravityPlaneFS.fs" />

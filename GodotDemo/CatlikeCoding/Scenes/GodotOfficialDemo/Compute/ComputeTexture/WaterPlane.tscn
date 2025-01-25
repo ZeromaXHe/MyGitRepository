@@ -1,7 +1,7 @@
 [gd_scene load_steps=11 format=3 uid="uid://qea0nufq4ggn"]
 
-[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/ComputeTexture/WaterPlane.cs" id="1_8suw7"]
-[ext_resource type="Texture2D" uid="uid://cgqx6e5y0mty8" path="res://Assets/GodotOfficialDemo/ComputeTexture/industrial_sunset_puresky_2k.hdr" id="1_ht2is"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/Compute/ComputeTexture/WaterPlane.cs" id="1_8suw7"]
+[ext_resource type="Texture2D" uid="uid://cgqx6e5y0mty8" path="res://Assets/GodotOfficialDemo/Compute/ComputeTexture/industrial_sunset_puresky_2k.hdr" id="1_ht2is"]
 [ext_resource type="Shader" path="res://Shaders/GodotOfficialDemo/ComputeTexture/water_shader.gdshader" id="3_vqpju"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tpxcd"]

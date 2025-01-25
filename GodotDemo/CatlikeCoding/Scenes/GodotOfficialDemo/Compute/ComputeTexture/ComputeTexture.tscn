@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://v14oycs75gtj"]
 
-[ext_resource type="Texture2D" uid="uid://cgqx6e5y0mty8" path="res://Assets/GodotOfficialDemo/ComputeTexture/industrial_sunset_puresky_2k.hdr" id="1_udjjp"]
-[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/ComputeTexture/ComputeTexture.cs" id="1_x4cqw"]
-[ext_resource type="PackedScene" uid="uid://qea0nufq4ggn" path="res://Scenes/GodotOfficialDemo/ComputeTexture/WaterPlane.tscn" id="1_yh44h"]
+[ext_resource type="Texture2D" uid="uid://cgqx6e5y0mty8" path="res://Assets/GodotOfficialDemo/Compute/ComputeTexture/industrial_sunset_puresky_2k.hdr" id="1_udjjp"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/Compute/ComputeTexture/ComputeTexture.cs" id="1_x4cqw"]
+[ext_resource type="PackedScene" uid="uid://qea0nufq4ggn" path="res://Scenes/GodotOfficialDemo/Compute/ComputeTexture/WaterPlane.tscn" id="1_yh44h"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_vxqfs"]
 panorama = ExtResource("1_udjjp")

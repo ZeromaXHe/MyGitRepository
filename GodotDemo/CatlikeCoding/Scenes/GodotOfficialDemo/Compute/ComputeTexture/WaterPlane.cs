@@ -1,7 +1,7 @@
 using CatlikeCodingFS.GodotOfficialDemo.ComputeTexture;
 using Godot;
 
-namespace CatlikeCodingCSharp.Scenes.GodotOfficialDemo.ComputeTexture;
+namespace CatlikeCodingCSharp.Scenes.GodotOfficialDemo.Compute.ComputeTexture;
 
 [Tool]
 public partial class WaterPlane : WaterPlaneFS

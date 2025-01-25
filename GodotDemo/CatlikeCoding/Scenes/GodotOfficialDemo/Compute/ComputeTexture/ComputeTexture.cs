@@ -1,7 +1,6 @@
 using CatlikeCodingFS.GodotOfficialDemo.ComputeTexture;
-using Godot;
 
-namespace CatlikeCodingCSharp.Scenes.GodotOfficialDemo.ComputeTexture;
+namespace CatlikeCodingCSharp.Scenes.GodotOfficialDemo.Compute.ComputeTexture;
 
 public partial class ComputeTexture : ComputeTextureFS
 {
