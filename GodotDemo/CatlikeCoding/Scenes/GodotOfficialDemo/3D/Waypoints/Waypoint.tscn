@@ -1,0 +1,34 @@
+[gd_scene load_steps=3 format=3 uid="uid://dds7nsb6gntwd"]
+
+[ext_resource type="Texture2D" uid="uid://ca0lelvmlkdu7" path="res://Assets/GodotOfficialDemo/3D/Waypoints/waypoint.svg" id="1_dcq1b"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/Waypoints/Waypoint.cs" id="1_mvv10"]
+
+[node name="Waypoint" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_mvv10")
+Text = "Waypoint"
+Sticky = true
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = -200.0
+offset_top = -44.0
+offset_right = 200.0
+offset_bottom = -15.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "Waypoint"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Marker" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -8.0
+offset_top = -16.0
+offset_right = 8.0
+texture = ExtResource("1_dcq1b")
+expand_mode = 1

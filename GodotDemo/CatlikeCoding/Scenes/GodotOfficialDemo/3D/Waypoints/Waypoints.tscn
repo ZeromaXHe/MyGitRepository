@@ -1,0 +1,144 @@
+[gd_scene load_steps=18 format=3 uid="uid://k1554c70b6w"]
+
+[ext_resource type="PackedScene" uid="uid://dds7nsb6gntwd" path="res://Scenes/GodotOfficialDemo/3D/Waypoints/Waypoint.tscn" id="1_usaoj"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/Waypoints/Camera.cs" id="2_60idt"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ybj1w"]
+albedo_color = Color(0.25098, 0.470588, 0.996078, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dw3bm"]
+material = SubResource("StandardMaterial3D_ybj1w")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pcjnr"]
+albedo_color = Color(0.435294, 0.917647, 0.380392, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hxiwc"]
+material = SubResource("StandardMaterial3D_pcjnr")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0c0bl"]
+albedo_color = Color(0.862745, 0.764706, 0.12549, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_meys2"]
+material = SubResource("StandardMaterial3D_0c0bl")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_orn1j"]
+albedo_color = Color(0.996078, 0.266667, 0.25098, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4bs4j"]
+material = SubResource("StandardMaterial3D_orn1j")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k5ru3"]
+albedo_color = Color(0.6, 0.564706, 0.423529, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_us2ym"]
+material = SubResource("StandardMaterial3D_k5ru3")
+size = Vector3(16, 2, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dhqpw"]
+albedo_color = Color(0.788235, 0.788235, 0.788235, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lhuo5"]
+material = SubResource("StandardMaterial3D_dhqpw")
+size = Vector3(4, 1.5, 4)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_eagg0"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_raxbj"]
+sky_material = SubResource("ProceduralSkyMaterial_eagg0")
+
+[sub_resource type="Environment" id="Environment_a1d3q"]
+background_mode = 2
+sky = SubResource("Sky_raxbj")
+tonemap_mode = 3
+tonemap_white = 6.0
+glow_enabled = true
+
+[node name="Waypoints" type="Node3D"]
+
+[node name="BlueCube" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -5)
+mesh = SubResource("BoxMesh_dw3bm")
+
+[node name="WaypointAnchor" type="Marker3D" parent="BlueCube"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Waypoint" parent="BlueCube/WaypointAnchor" instance=ExtResource("1_usaoj")]
+modulate = Color(0.501961, 0.764706, 1, 1)
+offset_right = 0.0
+offset_bottom = 0.0
+Text = "Blue Waypoint"
+
+[node name="GreenCube" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 5)
+mesh = SubResource("BoxMesh_hxiwc")
+
+[node name="WaypointAnchor" type="Marker3D" parent="GreenCube"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Waypoint" parent="GreenCube/WaypointAnchor" instance=ExtResource("1_usaoj")]
+modulate = Color(0.419608, 1, 0.427451, 1)
+offset_right = 0.0
+offset_bottom = 0.0
+Text = "Green Waypoint"
+
+[node name="YellowCube" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 5)
+mesh = SubResource("BoxMesh_meys2")
+
+[node name="WaypointAnchor" type="Marker3D" parent="YellowCube"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Waypoint" parent="YellowCube/WaypointAnchor" instance=ExtResource("1_usaoj")]
+modulate = Color(1, 0.992157, 0.419608, 1)
+offset_right = 0.0
+offset_bottom = 0.0
+Text = "Yellow Waypoint (non-sticky)"
+Sticky = false
+
+[node name="RedCube" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -5)
+mesh = SubResource("BoxMesh_4bs4j")
+
+[node name="WaypointAnchor" type="Marker3D" parent="RedCube"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Waypoint" parent="RedCube/WaypointAnchor" instance=ExtResource("1_usaoj")]
+modulate = Color(1, 0.466667, 0.427451, 1)
+offset_right = 0.0
+offset_bottom = 0.0
+Text = "Red Waypoint"
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 8)
+script = ExtResource("2_60idt")
+
+[node name="Label" type="Label" parent="."]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 364.0
+offset_bottom = 36.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "按下 Esc 或 F10 来切换鼠标捕获"
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5, 0)
+mesh = SubResource("BoxMesh_us2ym")
+
+[node name="WhiteCube" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_lhuo5")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_a1d3q")
+
+[node name="Sun" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+shadow_bias = 0.04
+shadow_blur = 1.5
+directional_shadow_mode = 0
+directional_shadow_fade_start = 1.0
+directional_shadow_max_distance = 40.0
