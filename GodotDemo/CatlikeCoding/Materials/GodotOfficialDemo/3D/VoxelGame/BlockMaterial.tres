@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://ca11hwa5kwyv5"]
+
+[ext_resource type="Texture2D" uid="uid://dnuqg6mijugg" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/World/texture_sheet.png" id="1_6ilft"]
+
+[resource]
+transparency = 4
+albedo_texture = ExtResource("1_6ilft")
+texture_filter = 4
+texture_repeat = false

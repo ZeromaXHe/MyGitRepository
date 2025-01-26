@@ -1,0 +1,54 @@
+[gd_scene load_steps=9 format=3 uid="uid://xjycgnpmuuu8"]
+
+[ext_resource type="PackedScene" uid="uid://dguayl4fs3qxv" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Player/Player.tscn" id="1_0q10r"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Menu/Debug.cs" id="2_f6fdd"]
+[ext_resource type="PackedScene" uid="uid://bu4kwoa73drl6" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Menu/InGame/PauseMenu.tscn" id="2_y4rql"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/World/VoxelWorld.cs" id="3_56d1j"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/World/Environment.cs" id="5_6t0j3"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h18yd"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_hhiop"]
+sky_material = SubResource("ProceduralSkyMaterial_h18yd")
+
+[sub_resource type="Environment" id="Environment_cmd2t"]
+background_mode = 2
+sky = SubResource("Sky_hhiop")
+tonemap_mode = 2
+fog_enabled = true
+fog_sun_scatter = 0.3
+fog_sky_affect = 0.5
+
+[node name="World3D" type="Node3D"]
+
+[node name="Player" parent="." instance=ExtResource("1_0q10r")]
+
+[node name="Debug" type="Label" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_f6fdd")
+
+[node name="PauseMenu" parent="." instance=ExtResource("2_y4rql")]
+
+[node name="VoxelWorld" type="Node" parent="."]
+script = ExtResource("3_56d1j")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_cmd2t")
+script = ExtResource("5_6t0j3")
+
+[node name="Sun" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+shadow_bias = 0.06
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]

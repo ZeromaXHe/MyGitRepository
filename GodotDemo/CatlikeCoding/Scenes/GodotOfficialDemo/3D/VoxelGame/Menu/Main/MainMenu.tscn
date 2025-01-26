@@ -1,0 +1,210 @@
+[gd_scene load_steps=10 format=3 uid="uid://c08yyhmn5rbl5"]
+
+[ext_resource type="PackedScene" uid="uid://bsrjskyshk6wm" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Menu/Options/Options.tscn" id="1_fxm4h"]
+[ext_resource type="Texture2D" uid="uid://b0bvaroqn6ix6" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/Main/dark_dirt.png" id="1_lf4xu"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Menu/Main/MainMenu.cs" id="1_t00fm"]
+[ext_resource type="Texture2D" uid="uid://c2prcl0ybpdwg" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/Main/title.png" id="2_u6b01"]
+[ext_resource type="Texture2D" uid="uid://bi81s7u3mahp1" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button.png" id="3_xvan2"]
+[ext_resource type="Texture2D" uid="uid://sbranu41d5jl" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button_pressed.png" id="4_r71cu"]
+[ext_resource type="Texture2D" uid="uid://dim6w7blitdwu" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button_hover.png" id="5_xwqpq"]
+[ext_resource type="Texture2D" uid="uid://b66no7k7u23th" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button_focus.png" id="6_hl8i8"]
+
+[sub_resource type="GDScript" id="GDScript_vy207"]
+script/source = "extends Control
+
+var time := 0.0
+
+func _process(delta: float) -> void:
+	time += delta
+	scale = Vector2.ONE * (1 - abs(sin(time * 4)) / 4)
+"
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_t00fm")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+texture = ExtResource("1_lf4xu")
+stretch_mode = 1
+
+[node name="TitleScreen" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+
+[node name="Logo" type="CenterContainer" parent="TitleScreen"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+
+[node name="Logo" type="TextureRect" parent="TitleScreen/Logo"]
+layout_mode = 2
+texture = ExtResource("2_u6b01")
+
+[node name="SplashHolder" type="Control" parent="TitleScreen/Logo/Logo"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -36.0
+offset_right = -36.0
+grow_horizontal = 0
+grow_vertical = 0
+script = SubResource("GDScript_vy207")
+
+[node name="SplashText" type="Label" parent="TitleScreen/Logo/Logo/SplashHolder"]
+modulate = Color(1, 1, 0, 1)
+texture_filter = 1
+layout_mode = 0
+offset_left = -120.0
+offset_right = 143.0
+offset_bottom = 52.0
+rotation = -0.261799
+theme_override_font_sizes/font_size = 32
+text = "Godot 引擎制作！"
+
+[node name="ButtonHolder" type="HBoxContainer" parent="TitleScreen"]
+layout_mode = 2
+size_flags_vertical = 2
+alignment = 1
+
+[node name="MainButtons" type="VBoxContainer" parent="TitleScreen/ButtonHolder"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Start" type="TextureButton" parent="TitleScreen/ButtonHolder/MainButtons"]
+layout_mode = 2
+texture_normal = ExtResource("3_xvan2")
+texture_pressed = ExtResource("4_r71cu")
+texture_hover = ExtResource("5_xwqpq")
+texture_focused = ExtResource("6_hl8i8")
+
+[node name="Label" type="Label" parent="TitleScreen/ButtonHolder/MainButtons/Start"]
+texture_filter = 1
+layout_mode = 0
+offset_top = -1.5
+offset_right = 384.0
+offset_bottom = 46.5
+theme_override_font_sizes/font_size = 44
+text = "开始游戏"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Options" type="TextureButton" parent="TitleScreen/ButtonHolder/MainButtons"]
+layout_mode = 2
+texture_normal = ExtResource("3_xvan2")
+texture_pressed = ExtResource("4_r71cu")
+texture_hover = ExtResource("5_xwqpq")
+texture_focused = ExtResource("6_hl8i8")
+
+[node name="Label" type="Label" parent="TitleScreen/ButtonHolder/MainButtons/Options"]
+texture_filter = 1
+layout_mode = 0
+offset_top = -1.5
+offset_right = 384.0
+offset_bottom = 46.5
+theme_override_font_sizes/font_size = 44
+text = "选项"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Exit" type="TextureButton" parent="TitleScreen/ButtonHolder/MainButtons"]
+layout_mode = 2
+texture_normal = ExtResource("3_xvan2")
+texture_pressed = ExtResource("4_r71cu")
+texture_hover = ExtResource("5_xwqpq")
+texture_focused = ExtResource("6_hl8i8")
+
+[node name="Label" type="Label" parent="TitleScreen/ButtonHolder/MainButtons/Exit"]
+texture_filter = 1
+layout_mode = 0
+offset_top = -1.5
+offset_right = 384.0
+offset_bottom = 21.5
+theme_override_font_sizes/font_size = 44
+text = "退出游戏"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="TitleScreen"]
+layout_mode = 2
+
+[node name="StartGame" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+alignment = 1
+
+[node name="StartButtons" type="VBoxContainer" parent="StartGame"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Spacer" type="Control" parent="StartGame/StartButtons"]
+layout_mode = 2
+
+[node name="RandomBlocks" type="TextureButton" parent="StartGame/StartButtons"]
+layout_mode = 2
+texture_normal = ExtResource("3_xvan2")
+texture_pressed = ExtResource("4_r71cu")
+texture_hover = ExtResource("5_xwqpq")
+texture_focused = ExtResource("6_hl8i8")
+
+[node name="Label" type="Label" parent="StartGame/StartButtons/RandomBlocks"]
+layout_mode = 0
+offset_top = -1.5
+offset_right = 384.0
+offset_bottom = 21.5
+theme_override_font_sizes/font_size = 44
+text = "随机方块"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FlatGrass" type="TextureButton" parent="StartGame/StartButtons"]
+layout_mode = 2
+texture_normal = ExtResource("3_xvan2")
+texture_pressed = ExtResource("4_r71cu")
+texture_hover = ExtResource("5_xwqpq")
+texture_focused = ExtResource("6_hl8i8")
+
+[node name="Label" type="Label" parent="StartGame/StartButtons/FlatGrass"]
+layout_mode = 0
+offset_top = -1.5
+offset_right = 384.0
+offset_bottom = 21.5
+theme_override_font_sizes/font_size = 44
+text = "草平原"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BackToTitle" type="TextureButton" parent="StartGame/StartButtons"]
+layout_mode = 2
+texture_normal = ExtResource("3_xvan2")
+texture_pressed = ExtResource("4_r71cu")
+texture_hover = ExtResource("5_xwqpq")
+texture_focused = ExtResource("6_hl8i8")
+
+[node name="Label" type="Label" parent="StartGame/StartButtons/BackToTitle"]
+layout_mode = 0
+offset_top = -1.5
+offset_right = 384.0
+offset_bottom = 21.5
+theme_override_font_sizes/font_size = 44
+text = "返回"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Options" parent="." instance=ExtResource("1_fxm4h")]
+visible = false
+layout_mode = 1

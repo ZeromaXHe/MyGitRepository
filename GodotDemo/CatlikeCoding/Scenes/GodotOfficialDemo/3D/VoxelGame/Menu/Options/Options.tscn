@@ -1,0 +1,113 @@
+[gd_scene load_steps=7 format=3 uid="uid://bsrjskyshk6wm"]
+
+[ext_resource type="Texture2D" uid="uid://bi81s7u3mahp1" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button.png" id="1_g4nif"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Menu/Options/Options.cs" id="1_rt6sh"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Menu/Options/OptionButtons.cs" id="2_abodg"]
+[ext_resource type="Texture2D" uid="uid://sbranu41d5jl" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button_pressed.png" id="2_o6dyo"]
+[ext_resource type="Texture2D" uid="uid://dim6w7blitdwu" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button_hover.png" id="3_0wnyx"]
+[ext_resource type="Texture2D" uid="uid://b66no7k7u23th" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/Menu/button_focus.png" id="4_f7ch0"]
+
+[node name="Options" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rt6sh")
+
+[node name="CenterAnchor" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OptionsBackground" type="ColorRect" parent="CenterAnchor"]
+self_modulate = Color(0.45098, 0.45098, 0.45098, 1)
+custom_minimum_size = Vector2(1000, 250)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -170.0
+offset_right = 500.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.25098, 0.25098, 0.25098, 0.627451)
+
+[node name="OptionButtons" type="GridContainer" parent="CenterAnchor/OptionsBackground"]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 59.0
+offset_right = 900.0
+offset_bottom = 191.0
+theme_override_constants/h_separation = 20
+columns = 2
+script = ExtResource("2_abodg")
+
+[node name="RenderDistanceLabel" type="Label" parent="CenterAnchor/OptionsBackground/OptionButtons"]
+layout_mode = 2
+size_flags_vertical = 5
+theme_override_font_sizes/font_size = 60
+text = "渲染距离: 3"
+horizontal_alignment = 2
+
+[node name="RenderDistanceSlider" type="HSlider" parent="CenterAnchor/OptionsBackground/OptionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+min_value = 3.0
+max_value = 10.0
+value = 7.0
+
+[node name="FogLabel" type="Label" parent="CenterAnchor/OptionsBackground/OptionButtons"]
+layout_mode = 2
+size_flags_vertical = 5
+theme_override_font_sizes/font_size = 60
+text = "开启雾"
+horizontal_alignment = 2
+
+[node name="FogCheckBox" type="CheckBox" parent="CenterAnchor/OptionsBackground/OptionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterAnchor"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = 110.0
+offset_right = 500.0
+offset_bottom = 174.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Back" type="TextureButton" parent="CenterAnchor/HBoxContainer"]
+layout_mode = 2
+texture_normal = ExtResource("1_g4nif")
+texture_pressed = ExtResource("2_o6dyo")
+texture_hover = ExtResource("3_0wnyx")
+texture_focused = ExtResource("4_f7ch0")
+
+[node name="Label" type="Label" parent="CenterAnchor/HBoxContainer/Back"]
+layout_mode = 0
+offset_top = -1.5
+offset_right = 384.0
+offset_bottom = 46.5
+theme_override_font_sizes/font_size = 60
+text = "返回"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -1,0 +1,48 @@
+[gd_scene load_steps=6 format=3 uid="uid://dguayl4fs3qxv"]
+
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/VoxelGame/Player/Player.cs" id="1_8ugjl"]
+[ext_resource type="Texture2D" uid="uid://dnuqg6mijugg" path="res://Assets/GodotOfficialDemo/3D/VoxelGame/World/texture_sheet.png" id="1_kd84c"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1vuyd"]
+height = 1.75
+radius = 0.375
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_2f3bh"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_658wf"]
+atlas = ExtResource("1_kd84c")
+region = Rect2(0, 0, 64, 64)
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 0
+script = ExtResource("1_8ugjl")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
+shape = SubResource("CylinderShape3D_1vuyd")
+
+[node name="Head" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Head"]
+attributes = SubResource("CameraAttributesPractical_2f3bh")
+fov = 74.0
+near = 0.02
+far = 1000.0
+
+[node name="RayCast3D" type="RayCast3D" parent="Head"]
+target_position = Vector3(0, 0, -4)
+
+[node name="SelectedBlock" type="TextureRect" parent="."]
+texture_filter = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -128.0
+offset_top = -128.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = SubResource("AtlasTexture_658wf")
+expand_mode = 1

@@ -21,6 +21,17 @@
         <Compile Include="GodotOfficialDemo\CompositorEffectsPostProcessing\PostProcessShaderFS.fs" />
         <Compile Include="GodotOfficialDemo\3D\Waypoints\WaypointFS.fs" />
         <Compile Include="GodotOfficialDemo\3D\Waypoints\CameraFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\TerrainGenerator.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\SettingsFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\OptionsFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\OptionButtonsFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\MainMenuFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\ChunkFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\VoxelWorldFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\PlayerFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\DebugFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\EnvironmentFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\VoxelGame\PauseMenuFS.fs" />
         <Compile Include="Movement6\CustomGravity.fs" />
         <Compile Include="Movement6\GravitySourceFS.fs" />
         <Compile Include="Movement6\GravityPlaneFS.fs" />
