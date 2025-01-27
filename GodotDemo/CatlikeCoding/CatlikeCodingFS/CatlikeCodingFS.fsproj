@@ -41,6 +41,7 @@
         <Compile Include="GodotOfficialDemo\3D\Navigation\Line3dFS.fs" />
         <Compile Include="GodotOfficialDemo\3D\Navigation\RobotBaseFS.fs" />
         <Compile Include="GodotOfficialDemo\3D\Navigation\NavMeshFS.fs" />
+        <Compile Include="GodotOfficialDemo\Viewport\ScreenCapture\ScreenCaptureFS.fs" />
         <Compile Include="Movement6\CustomGravity.fs" />
         <Compile Include="Movement6\GravitySourceFS.fs" />
         <Compile Include="Movement6\GravityPlaneFS.fs" />
