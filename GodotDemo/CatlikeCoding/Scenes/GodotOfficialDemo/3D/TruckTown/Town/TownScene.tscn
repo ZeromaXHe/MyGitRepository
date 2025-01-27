@@ -1,0 +1,283 @@
+[gd_scene load_steps=13 format=3 uid="uid://dre1udu6vjq1r"]
+
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/TruckTown/Town/TownScene.cs" id="1_3jdmf"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/TruckTown/Town/Speedometer.cs" id="2_olwl5"]
+[ext_resource type="PackedScene" uid="uid://csucj4oj3q3qt" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Town/Model/town_model.gltf" id="2_uaoen"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ejwmn"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_3n58f"]
+sky_material = SubResource("ProceduralSkyMaterial_ejwmn")
+
+[sub_resource type="Environment" id="Environment_2vxkm"]
+background_mode = 2
+sky = SubResource("Sky_3n58f")
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.619608, 0.6, 0.6, 1)
+fog_density = 0.0015
+fog_sky_affect = 0.0
+
+[sub_resource type="InputEventAction" id="InputEventAction_l7nl5"]
+action = &"cycle_speedometer_unit"
+
+[sub_resource type="Shortcut" id="Shortcut_6n41s"]
+events = [SubResource("InputEventAction_l7nl5")]
+
+[sub_resource type="Gradient" id="Gradient_52kgw"]
+offsets = PackedFloat32Array(0)
+colors = PackedColorArray(1, 1, 1, 0.25098)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_6sokm"]
+gradient = SubResource("Gradient_52kgw")
+width = 128
+height = 128
+
+[sub_resource type="Gradient" id="Gradient_qbndh"]
+offsets = PackedFloat32Array(0)
+colors = PackedColorArray(1, 0, 0, 0.25098)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_206r8"]
+gradient = SubResource("Gradient_qbndh")
+width = 128
+height = 128
+
+[node name="TownScene" type="Node3D"]
+script = ExtResource("1_3jdmf")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_2vxkm")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.793955, 0.350561, -0.496732, -0.295414, 0.491651, 0.819152, 0.531381, 0.797111, -0.286788, 11.008, 12.345, -31.315)
+light_energy = 1.45
+shadow_enabled = true
+shadow_bias = 0.015
+shadow_blur = 1.5
+directional_shadow_mode = 0
+directional_shadow_max_distance = 80.0
+
+[node name="ArtificialLights" type="Node3D" parent="."]
+visible = false
+
+[node name="OmniLight3D" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, 38.103, 10.587, 14.825)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, 13.103, 11.587, 20.825)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D3" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, 14.103, 11.587, -6.175)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D4" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, 36.103, 13.587, -7.175)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D5" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, 45.103, 13.587, -17.17)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D6" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, -20.89, 7.587, 4.825)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D7" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, -15.89, 7.587, 20.825)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D8" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, -44.89, 10.587, 4.825)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D9" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, -43.89, 10.587, -15.17)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="OmniLight3D10" type="OmniLight3D" parent="ArtificialLights"]
+transform = Transform3D(0.747798, 0.367411, -0.552998, 0, 0.832921, 0.553392, 0.663926, -0.413825, 0.622857, -15.797, 3.587, -71.175)
+light_color = Color(1, 0.941176, 0.705882, 1)
+light_energy = 2.0
+shadow_enabled = true
+shadow_bias = 0.06
+shadow_blur = 2.0
+distance_fade_enabled = true
+distance_fade_begin = 100.0
+distance_fade_shadow = 35.0
+distance_fade_length = 15.0
+omni_range = 15.0
+
+[node name="InstancePos" type="Marker3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 35.48, 8.724, 14.335)
+
+[node name="TownModel" parent="." instance=ExtResource("2_uaoen")]
+
+[node name="Speedometer" type="Button" parent="."]
+custom_minimum_size = Vector2(140, 40)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -164.0
+offset_top = -64.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+action_mode = 0
+shortcut = SubResource("Shortcut_6n41s")
+shortcut_feedback = false
+shortcut_in_tooltip = false
+text = "速度: ???"
+script = ExtResource("2_olwl5")
+
+[node name="Back" type="Button" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 92.0
+offset_bottom = 56.0
+text = "<< 返回"
+
+[node name="TouchTurnLeft" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+grow_vertical = 2
+
+[node name="TurnLeft" type="TouchScreenButton" parent="TouchTurnLeft"]
+modulate = Color(1, 1, 1, 0)
+position = Vector2(0, -256)
+scale = Vector2(2.5, 4)
+texture_normal = SubResource("GradientTexture2D_6sokm")
+texture_pressed = SubResource("GradientTexture2D_206r8")
+passby_press = true
+action = "MoveLeft"
+visibility_mode = 1
+
+[node name="TouchReverse" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Reverse" type="TouchScreenButton" parent="TouchReverse"]
+modulate = Color(1, 1, 1, 0)
+position = Vector2(-256, -256)
+scale = Vector2(4, 4)
+texture_normal = SubResource("GradientTexture2D_6sokm")
+texture_pressed = SubResource("GradientTexture2D_206r8")
+passby_press = true
+action = "MoveDown"
+visibility_mode = 1
+
+[node name="TouchTurnRight" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="TurnRight" type="TouchScreenButton" parent="TouchTurnRight"]
+modulate = Color(1, 1, 1, 0)
+position = Vector2(-320, -256)
+scale = Vector2(2.5, 4)
+texture_normal = SubResource("GradientTexture2D_6sokm")
+texture_pressed = SubResource("GradientTexture2D_206r8")
+passby_press = true
+action = "MoveRight"
+visibility_mode = 1

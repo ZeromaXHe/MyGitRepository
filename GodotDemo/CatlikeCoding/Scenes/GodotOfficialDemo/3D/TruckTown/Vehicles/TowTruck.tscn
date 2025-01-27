@@ -1,0 +1,382 @@
+[gd_scene load_steps=24 format=3 uid="uid://cr4v1cje1sexc"]
+
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/TruckTown/Vehicles/Vehicle.cs" id="1_s2d5t"]
+[ext_resource type="ArrayMesh" uid="uid://bqrwin8ccgptt" path="res://Materials/GodotOfficialDemo/3D/TruckTown/Vehicles/Meshes/wheel.res" id="2_ehuua"]
+[ext_resource type="ArrayMesh" uid="uid://cbpqxxd14g8un" path="res://Materials/GodotOfficialDemo/3D/TruckTown/Vehicles/Meshes/tow_truck.res" id="3_bvior"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/TruckTown/Vehicles/FollowCamera.cs" id="4_j7up8"]
+[ext_resource type="AudioStream" uid="uid://dxn4s2ngqd414" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/engine.wav" id="5_3byef"]
+[ext_resource type="AudioStream" uid="uid://6i3eucf7cwrp" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_1.wav" id="6_p7yva"]
+[ext_resource type="AudioStream" uid="uid://1ycovi02xblv" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_2.wav" id="7_l8cdw"]
+[ext_resource type="AudioStream" uid="uid://d4iceddvomuiu" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_3.wav" id="8_qcexn"]
+[ext_resource type="AudioStream" uid="uid://cccmyws1b5o0" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_4.wav" id="9_wdcl5"]
+[ext_resource type="Texture2D" uid="uid://bco6vhgxp73g2" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/particle_smoke.png" id="10_27gif"]
+[ext_resource type="Texture2D" uid="uid://dufqv6c6ksxt1" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/blob_shadow.png" id="11_806a5"]
+[ext_resource type="ArrayMesh" uid="uid://ctglc27jx8xe2" path="res://Materials/GodotOfficialDemo/3D/TruckTown/Vehicles/Meshes/truck_cab.res" id="12_wnn2c"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qjp3l"]
+size = Vector3(1.176, 0.696, 2.24)
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_yv6c5"]
+random_pitch = 1.05
+random_volume_offset_db = 2.0
+streams_count = 4
+stream_0/stream = ExtResource("6_p7yva")
+stream_1/stream = ExtResource("7_l8cdw")
+stream_2/stream = ExtResource("8_qcexn")
+stream_3/stream = ExtResource("9_wdcl5")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aiqvq"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.462745, 0.462745, 0.462745, 0.501961)
+albedo_texture = ExtResource("10_27gif")
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+proximity_fade_enabled = true
+proximity_fade_distance = 0.5
+
+[sub_resource type="QuadMesh" id="QuadMesh_cutpt"]
+material = SubResource("StandardMaterial3D_aiqvq")
+
+[sub_resource type="Curve" id="Curve_osdgw"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_mlr3k"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_yi15v"]
+radius = 0.05
+height = 0.42
+radial_segments = 12
+rings = 3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tm64l"]
+albedo_color = Color(0.635294, 0.635294, 0.635294, 1)
+metallic = 1.0
+roughness = 0.5
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_o1co0"]
+radius = 0.05
+height = 0.3
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_w432c"]
+friction = 0.5
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6fj0h"]
+size = Vector3(0.954, 1, 2.327)
+
+[node name="TowTruck" type="Node3D"]
+
+[node name="Body" type="VehicleBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002, 0.223, -0.096)
+center_of_mass_mode = 1
+script = ExtResource("1_s2d5t")
+
+[node name="Wheel1" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, 0.001, 1.104)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.18
+wheel_friction_slip = 1.0
+suspension_stiffness = 30.0
+damping_compression = 0.88
+
+[node name="Wheel1" type="MeshInstance3D" parent="Body/Wheel1"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Wheel2" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, 0.001, -0.783)
+use_as_traction = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.18
+wheel_friction_slip = 1.0
+suspension_stiffness = 30.0
+damping_compression = 0.88
+
+[node name="Wheel2" type="MeshInstance3D" parent="Body/Wheel2"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Wheel3" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, 0.001, 1.104)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.18
+wheel_friction_slip = 1.0
+suspension_stiffness = 30.0
+damping_compression = 0.88
+
+[node name="Wheel3" type="MeshInstance3D" parent="Body/Wheel3"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Wheel4" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, 0.001, -0.783)
+use_as_traction = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.18
+wheel_friction_slip = 1.0
+suspension_stiffness = 30.0
+damping_compression = 0.88
+
+[node name="Wheel4" type="MeshInstance3D" parent="Body/Wheel4"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Body" type="MeshInstance3D" parent="Body"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("3_bvior")
+
+[node name="CameraBase" type="Node3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.974, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Body/CameraBase"]
+transform = Transform3D(-1, -2.11495e-08, 8.48259e-08, 0, 0.970296, 0.241922, -8.74228e-08, 0.241922, -0.970296, 0, 2.032, -4.394)
+current = true
+fov = 74.0
+near = 0.1
+script = ExtResource("4_j7up8")
+MinDistance = 5.0
+MaxDistance = 7.0
+Height = 1.75
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.391, 0.158)
+shape = SubResource("BoxShape3D_qjp3l")
+
+[node name="EngineSound" type="AudioStreamPlayer3D" parent="Body"]
+stream = ExtResource("5_3byef")
+pitch_scale = 0.05
+autoplay = true
+attenuation_filter_cutoff_hz = 20500.0
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.391, 0.158)
+stream = SubResource("AudioStreamRandomizer_yv6c5")
+volume_db = -10.0
+max_polyphony = 3
+attenuation_filter_cutoff_hz = 20500.0
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.202, -0.023, -1.104)
+amount = 125
+lifetime = 1.25
+mesh = SubResource("QuadMesh_cutpt")
+direction = Vector3(0, 1, -0.5)
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 1.0
+damping_min = 0.05
+damping_max = 0.05
+angle_max = 360.0
+scale_amount_curve = SubResource("Curve_osdgw")
+color_ramp = SubResource("Gradient_mlr3k")
+
+[node name="BlobShadow" type="Decal" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002, -0.223, 0.146)
+size = Vector3(1.6, 4, 3)
+texture_albedo = ExtResource("11_806a5")
+upper_fade = 2.0
+lower_fade = 1.0
+cull_mask = 1048573
+
+[node name="AudioListener3D" type="AudioListener3D" parent="Body"]
+current = true
+
+[node name="InteriorCameraPosition" type="Marker3D" parent="Body"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0.9, 0.3)
+
+[node name="TopDownCameraPosition" type="Marker3D" parent="Body"]
+transform = Transform3D(-1, -8.74228e-08, -3.82137e-15, 0, -4.37114e-08, 1, -8.74228e-08, 1, 4.37114e-08, 0.002, 15.777, 0.096)
+
+[node name="ChainB1" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.846193, -0.532876, 0, 0.532876, 0.846193, 0, 1.108, -1.557)
+
+[node name="Chain1" type="MeshInstance3D" parent="ChainB1"]
+layers = 2
+gi_mode = 2
+mesh = SubResource("CapsuleMesh_yi15v")
+surface_material_override/0 = SubResource("StandardMaterial3D_tm64l")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ChainB1"]
+shape = SubResource("CapsuleShape3D_o1co0")
+
+[node name="ChainB2" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.846193, -0.532876, 0, 0.532876, 0.846193, 0, 0.803, -1.758)
+
+[node name="Chain1" type="MeshInstance3D" parent="ChainB2"]
+layers = 2
+gi_mode = 2
+mesh = SubResource("CapsuleMesh_yi15v")
+surface_material_override/0 = SubResource("StandardMaterial3D_tm64l")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ChainB2"]
+shape = SubResource("CapsuleShape3D_o1co0")
+
+[node name="ChainB3" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.846193, -0.532876, 0, 0.532876, 0.846193, 0, 0.49, -1.961)
+
+[node name="Chain1" type="MeshInstance3D" parent="ChainB3"]
+layers = 2
+gi_mode = 2
+mesh = SubResource("CapsuleMesh_yi15v")
+surface_material_override/0 = SubResource("StandardMaterial3D_tm64l")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ChainB3"]
+shape = SubResource("CapsuleShape3D_o1co0")
+
+[node name="ChainB4" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.447759, -0.894154, 0, 0.894154, 0.447759, 0, 0.29, -2.194)
+
+[node name="Chain1" type="MeshInstance3D" parent="ChainB4"]
+layers = 2
+gi_mode = 2
+mesh = SubResource("CapsuleMesh_yi15v")
+surface_material_override/0 = SubResource("StandardMaterial3D_tm64l")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ChainB4"]
+shape = SubResource("CapsuleShape3D_o1co0")
+
+[node name="ChainB5" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.0993198, -0.995056, 0, 0.995056, 0.0993198, 0, 0.206, -2.502)
+
+[node name="Chain1" type="MeshInstance3D" parent="ChainB5"]
+layers = 2
+gi_mode = 2
+mesh = SubResource("CapsuleMesh_yi15v")
+surface_material_override/0 = SubResource("StandardMaterial3D_tm64l")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ChainB5"]
+shape = SubResource("CapsuleShape3D_o1co0")
+
+[node name="PinJoint1" type="PinJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, -1.415)
+node_a = NodePath("../Body")
+node_b = NodePath("../ChainB1")
+
+[node name="PinJoint2" type="PinJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.963, -1.649)
+node_a = NodePath("../ChainB1")
+node_b = NodePath("../ChainB2")
+
+[node name="PinJoint3" type="PinJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.645, -1.857)
+node_a = NodePath("../ChainB2")
+node_b = NodePath("../ChainB3")
+params/bias = 0.5
+
+[node name="PinJoint4" type="PinJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.351, -2.043)
+node_a = NodePath("../ChainB3")
+node_b = NodePath("../ChainB4")
+params/bias = 0.5
+
+[node name="PinJoint5" type="PinJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.218, -2.334)
+node_a = NodePath("../ChainB4")
+node_b = NodePath("../ChainB5")
+params/bias = 0.5
+
+[node name="Body2" type="VehicleBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002, 0.223, -3.975)
+mass = 10.0
+physics_material_override = SubResource("PhysicsMaterial_w432c")
+center_of_mass_mode = 1
+
+[node name="Wheel1" type="VehicleWheel3D" parent="Body2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, 0.115, 1.104)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel1" type="MeshInstance3D" parent="Body2/Wheel1"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Wheel2" type="VehicleWheel3D" parent="Body2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, 0.115, -0.783)
+use_as_traction = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel2" type="MeshInstance3D" parent="Body2/Wheel2"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Wheel3" type="VehicleWheel3D" parent="Body2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, 0.115, 1.104)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel3" type="MeshInstance3D" parent="Body2/Wheel3"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Wheel4" type="VehicleWheel3D" parent="Body2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, 0.115, -0.783)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel4" type="MeshInstance3D" parent="Body2/Wheel4"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_ehuua")
+
+[node name="Body" type="MeshInstance3D" parent="Body2"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("12_wnn2c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.588, 0.077)
+shape = SubResource("BoxShape3D_6fj0h")
+
+[node name="BlobShadow" type="Decal" parent="Body2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002, -0.123, 0.025)
+size = Vector3(1.6, 4, 3)
+texture_albedo = ExtResource("11_806a5")
+upper_fade = 2.0
+lower_fade = 1.0
+cull_mask = 1048573
+
+[node name="PinJoint6" type="PinJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.148, -2.649)
+node_a = NodePath("../ChainB5")
+node_b = NodePath("../Body2")

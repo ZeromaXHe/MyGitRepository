@@ -1,0 +1,302 @@
+[gd_scene load_steps=23 format=3 uid="uid://u58lxwqs60jb"]
+
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/TruckTown/Vehicles/Vehicle.cs" id="1_dc0b2"]
+[ext_resource type="ArrayMesh" uid="uid://bqrwin8ccgptt" path="res://Materials/GodotOfficialDemo/3D/TruckTown/Vehicles/Meshes/wheel.res" id="1_l8heo"]
+[ext_resource type="ArrayMesh" uid="uid://ctglc27jx8xe2" path="res://Materials/GodotOfficialDemo/3D/TruckTown/Vehicles/Meshes/truck_cab.res" id="2_l3gx8"]
+[ext_resource type="Texture2D" uid="uid://dufqv6c6ksxt1" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/blob_shadow.png" id="3_bd38p"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/3D/TruckTown/Vehicles/FollowCamera.cs" id="5_o35cp"]
+[ext_resource type="AudioStream" uid="uid://dxn4s2ngqd414" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/engine.wav" id="6_bghkk"]
+[ext_resource type="AudioStream" uid="uid://6i3eucf7cwrp" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_1.wav" id="7_67d2s"]
+[ext_resource type="AudioStream" uid="uid://1ycovi02xblv" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_2.wav" id="8_hl041"]
+[ext_resource type="AudioStream" uid="uid://d4iceddvomuiu" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_3.wav" id="9_b853w"]
+[ext_resource type="AudioStream" uid="uid://cccmyws1b5o0" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/impact_4.wav" id="10_upt5c"]
+[ext_resource type="Texture2D" uid="uid://bco6vhgxp73g2" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/particle_smoke.png" id="11_hbd1s"]
+[ext_resource type="ArrayMesh" uid="uid://d0n61oj27qnya" path="res://Materials/GodotOfficialDemo/3D/TruckTown/Vehicles/Meshes/truck_trailer.res" id="12_t41ei"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1jpbm"]
+size = Vector3(1.308, 1.053, 0.757)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7ywwp"]
+size = Vector3(1.308, 0.594, 0.996)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_h7d48"]
+size = Vector3(1.308, 0.315, 0.925)
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_hm8c8"]
+random_pitch = 1.05
+random_volume_offset_db = 2.0
+streams_count = 4
+stream_0/stream = ExtResource("7_67d2s")
+stream_1/stream = ExtResource("8_hl041")
+stream_2/stream = ExtResource("9_b853w")
+stream_3/stream = ExtResource("10_upt5c")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_im6x4"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.462745, 0.462745, 0.462745, 0.501961)
+albedo_texture = ExtResource("11_hbd1s")
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+proximity_fade_enabled = true
+proximity_fade_distance = 0.5
+
+[sub_resource type="QuadMesh" id="QuadMesh_i2dv1"]
+material = SubResource("StandardMaterial3D_im6x4")
+
+[sub_resource type="Curve" id="Curve_l07bb"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_rdhyo"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_opaer"]
+size = Vector3(1.24, 1.122, 4.199)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rku2b"]
+size = Vector3(1.24, 0.429, 1.853)
+
+[node name="TrailerTruck" type="Node3D"]
+
+[node name="Body" type="VehicleBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002, 0.223, -0.096)
+center_of_mass_mode = 1
+script = ExtResource("1_dc0b2")
+
+[node name="Wheel1" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, 0.115, 1.104)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel1" type="MeshInstance3D" parent="Body/Wheel1"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="Wheel2" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, 0.115, -0.783)
+use_as_traction = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel2" type="MeshInstance3D" parent="Body/Wheel2"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="Wheel3" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, 0.115, 1.104)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel3" type="MeshInstance3D" parent="Body/Wheel3"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="Wheel4" type="VehicleWheel3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, 0.115, -0.783)
+use_as_traction = true
+use_as_steering = true
+wheel_roll_influence = 0.4
+wheel_radius = 0.25
+wheel_friction_slip = 1.0
+suspension_travel = 2.0
+suspension_stiffness = 40.0
+damping_compression = 0.88
+
+[node name="Wheel4" type="MeshInstance3D" parent="Body/Wheel4"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="Body" type="MeshInstance3D" parent="Body"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("2_l3gx8")
+
+[node name="Shape1" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.527, 0.06)
+shape = SubResource("BoxShape3D_1jpbm")
+
+[node name="Shape2" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.297, 0.937)
+shape = SubResource("BoxShape3D_7ywwp")
+
+[node name="Shape3" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.158, -0.781)
+shape = SubResource("BoxShape3D_h7d48")
+
+[node name="CameraBase" type="Node3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.974, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Body/CameraBase"]
+transform = Transform3D(0.560639, -0.476139, 0.677477, 0, 0.81815, 0.575005, -0.82806, -0.32237, 0.458687, 3.174, 0.915, 1.883)
+current = true
+fov = 74.0
+near = 0.1
+script = ExtResource("5_o35cp")
+MinDistance = 5.0
+MaxDistance = 7.0
+Height = 2.5
+
+[node name="EngineSound" type="AudioStreamPlayer3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002, -0.223, 0.096)
+stream = ExtResource("6_bghkk")
+pitch_scale = 0.05
+autoplay = true
+attenuation_filter_cutoff_hz = 20500.0
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002, -0.223, 0.096)
+stream = SubResource("AudioStreamRandomizer_hm8c8")
+volume_db = -10.0
+max_polyphony = 3
+attenuation_filter_cutoff_hz = 20500.0
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.202, -0.023, -1.104)
+amount = 125
+lifetime = 1.25
+mesh = SubResource("QuadMesh_i2dv1")
+direction = Vector3(0, 1, -0.5)
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 1.0
+damping_min = 0.05
+damping_max = 0.05
+angle_max = 360.0
+scale_amount_curve = SubResource("Curve_l07bb")
+color_ramp = SubResource("Gradient_rdhyo")
+
+[node name="BlobShadow" type="Decal" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002, -0.223, 0.146)
+size = Vector3(1.6, 4, 3)
+texture_albedo = ExtResource("3_bd38p")
+upper_fade = 2.0
+lower_fade = 1.0
+cull_mask = 1048573
+
+[node name="AudioListener3D" type="AudioListener3D" parent="Body"]
+current = true
+
+[node name="InteriorCameraPosition" type="Marker3D" parent="Body"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0.9, 0.3)
+
+[node name="TopDownCameraPosition" type="Marker3D" parent="Body"]
+transform = Transform3D(-1, -8.74228e-08, -3.82137e-15, 0, -4.37114e-08, 1, -8.74228e-08, 1, 4.37114e-08, 0.002, 15.777, 0.096)
+
+[node name="Trailer" type="VehicleBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002, 0.638, -2.781)
+center_of_mass_mode = 1
+
+[node name="TWheel1" type="VehicleWheel3D" parent="Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, -0.403, -1.533)
+wheel_roll_influence = 0.4
+wheel_radius = 0.1
+wheel_friction_slip = 1.0
+suspension_stiffness = 28.0
+damping_compression = 0.88
+
+[node name="TWheel1" type="MeshInstance3D" parent="Trailer/TWheel1"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="TWheel2" type="VehicleWheel3D" parent="Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.574, -0.403, -0.601)
+wheel_roll_influence = 0.4
+wheel_radius = 0.23
+wheel_friction_slip = 1.0
+suspension_stiffness = 28.0
+damping_compression = 0.88
+
+[node name="TWheel1" type="MeshInstance3D" parent="Trailer/TWheel2"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="TWheel3" type="VehicleWheel3D" parent="Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, -0.403, -1.533)
+wheel_roll_influence = 0.4
+wheel_radius = 0.1
+wheel_friction_slip = 1.0
+suspension_stiffness = 28.0
+damping_compression = 0.88
+
+[node name="TWheel1" type="MeshInstance3D" parent="Trailer/TWheel3"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="TWheel4" type="VehicleWheel3D" parent="Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.574, -0.403, -0.601)
+wheel_roll_influence = 0.4
+wheel_radius = 0.23
+wheel_friction_slip = 1.0
+suspension_stiffness = 28.0
+damping_compression = 0.88
+
+[node name="TWheel1" type="MeshInstance3D" parent="Trailer/TWheel4"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("1_l8heo")
+
+[node name="Trailer" type="MeshInstance3D" parent="Trailer"]
+layers = 2
+gi_mode = 2
+mesh = ExtResource("12_t41ei")
+
+[node name="BlobShadow" type="Decal" parent="Trailer/Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.003, -0.161, 0.077)
+size = Vector3(1.2, 4, 4.2)
+texture_albedo = ExtResource("3_bd38p")
+upper_fade = 2.0
+lower_fade = 1.0
+cull_mask = 1048573
+
+[node name="Shape1" type="CollisionShape3D" parent="Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.005, 0.553, 0.094)
+shape = SubResource("BoxShape3D_opaer")
+
+[node name="Shape2" type="CollisionShape3D" parent="Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.005, -0.222, -1.055)
+shape = SubResource("BoxShape3D_rku2b")
+
+[node name="BlobShadow" type="Decal" parent="Trailer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.003, -0.661, -1.05)
+size = Vector3(1.6, 4, 1.8)
+texture_albedo = ExtResource("3_bd38p")
+upper_fade = 2.0
+lower_fade = 1.0
+cull_mask = 1048573
+
+[node name="TrailerJoint" type="Generic6DOFJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.705, -0.96)
+node_a = NodePath("../Trailer")
+node_b = NodePath("../Body")
+angular_limit_x/upper_angle = 0.785398
+angular_limit_x/lower_angle = -0.785398
+angular_limit_y/upper_angle = 1.22173
+angular_limit_y/lower_angle = -1.22173

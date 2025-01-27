@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://bm5k5ogwx0vwi"]
+
+[ext_resource type="Texture2D" uid="uid://calsq7g5n7gqa" path="res://Assets/GodotOfficialDemo/3D/TruckTown/Vehicles/truck_trailer.png" id="1_qoflu"]
+
+[resource]
+albedo_texture = ExtResource("1_qoflu")
+roughness = 0.6
+texture_filter = 5

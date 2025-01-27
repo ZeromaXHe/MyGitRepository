@@ -32,6 +32,11 @@
         <Compile Include="GodotOfficialDemo\3D\VoxelGame\DebugFS.fs" />
         <Compile Include="GodotOfficialDemo\3D\VoxelGame\EnvironmentFS.fs" />
         <Compile Include="GodotOfficialDemo\3D\VoxelGame\PauseMenuFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\TruckTown\SpeedometerFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\TruckTown\TownSceneFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\TruckTown\CarSelectFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\TruckTown\VehicleFS.fs" />
+        <Compile Include="GodotOfficialDemo\3D\TruckTown\FollowCameraFS.fs" />
         <Compile Include="Movement6\CustomGravity.fs" />
         <Compile Include="Movement6\GravitySourceFS.fs" />
         <Compile Include="Movement6\GravityPlaneFS.fs" />
