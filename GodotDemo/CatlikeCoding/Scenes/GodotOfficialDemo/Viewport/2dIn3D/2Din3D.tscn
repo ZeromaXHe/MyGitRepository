@@ -1,0 +1,180 @@
+[gd_scene load_steps=28 format=3 uid="uid://coa427p2ote1n"]
+
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/Viewport/2dIn3D/C2Din3D.cs" id="1_lmsgh"]
+[ext_resource type="Texture2D" uid="uid://dafkn60ifucpf" path="res://Assets/GodotOfficialDemo/Viewport/2Din3D/ball.png" id="1_p4u7l"]
+[ext_resource type="Texture2D" uid="uid://4mjfic00g1f2" path="res://Assets/GodotOfficialDemo/Viewport/2Din3D/left_pallete.png" id="2_34x5e"]
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/Viewport/2dIn3D/Pong.cs" id="2_hd410"]
+[ext_resource type="Texture2D" uid="uid://broj4aa2ntu84" path="res://Assets/GodotOfficialDemo/Viewport/2Din3D/right_pallete.png" id="3_t68lw"]
+[ext_resource type="Texture2D" uid="uid://cdlab8j4qadok" path="res://Assets/GodotOfficialDemo/Viewport/2Din3D/separator.png" id="4_l7nex"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bwpkj"]
+metallic_specular = 0.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_rc32u"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_dljg1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xfyhf"]
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="BoxMesh_sgl4u"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tyxuw"]
+albedo_color = Color(0.501961, 0.752941, 0.752941, 1)
+roughness = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_q86x8"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pcfhv"]
+albedo_color = Color(0.501961, 0.752941, 0.752941, 1)
+roughness = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_hgm1v"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v1ev0"]
+albedo_color = Color(0.501961, 0.752941, 0.752941, 1)
+roughness = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_r5x1d"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_08grf"]
+albedo_color = Color(0.752941, 0.501961, 0.752941, 1)
+roughness = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_fq48l"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hfdgv"]
+albedo_color = Color(0.752941, 0.501961, 0.752941, 1)
+roughness = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_27bbj"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yk6cl"]
+albedo_color = Color(0.752941, 0.501961, 0.752941, 1)
+roughness = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_mgcyn"]
+size = Vector3(1.1, 0.8, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6ea46"]
+albedo_color = Color(0.4, 0.4, 0.4, 1)
+roughness = 0.0
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_g7yrc"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_j75qi"]
+sky_material = SubResource("ProceduralSkyMaterial_g7yrc")
+
+[sub_resource type="Environment" id="Environment_m6886"]
+background_mode = 2
+sky = SubResource("Sky_j75qi")
+tonemap_mode = 2
+tonemap_white = 2.0
+
+[node name="2Din3D" type="Node3D"]
+script = ExtResource("1_lmsgh")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.5)
+fov = 60.0
+
+[node name="ViewportQuad" type="MeshInstance3D" parent="."]
+transform = Transform3D(2, 0, 0, 0, -4.37114e-08, -1.333, 0, 1, -5.82673e-08, 0, 1.2, -4.25)
+material_override = SubResource("StandardMaterial3D_bwpkj")
+mesh = SubResource("PlaneMesh_rc32u")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+size = Vector2i(600, 400)
+render_target_update_mode = 4
+
+[node name="Pong" type="Node2D" parent="SubViewport"]
+script = ExtResource("2_hd410")
+
+[node name="Background" type="Panel" parent="SubViewport/Pong"]
+offset_right = 600.0
+offset_bottom = 400.0
+
+[node name="Ball" type="Sprite2D" parent="SubViewport/Pong"]
+position = Vector2(300, 200)
+texture = ExtResource("1_p4u7l")
+
+[node name="LeftPaddle" type="Sprite2D" parent="SubViewport/Pong"]
+position = Vector2(20, 200)
+texture = ExtResource("2_34x5e")
+
+[node name="RightPaddle" type="Sprite2D" parent="SubViewport/Pong"]
+position = Vector2(580, 200)
+texture = ExtResource("3_t68lw")
+
+[node name="Separator" type="Sprite2D" parent="SubViewport/Pong"]
+position = Vector2(298, 200)
+texture = ExtResource("4_l7nex")
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="Floor" type="MeshInstance3D" parent="Environment"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, -1, -2)
+mesh = SubResource("PlaneMesh_dljg1")
+surface_material_override/0 = SubResource("StandardMaterial3D_xfyhf")
+
+[node name="Pillar1" type="Node3D" parent="Environment"]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -3, -0.2, -4)
+
+[node name="PillarBottom" type="MeshInstance3D" parent="Environment/Pillar1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_sgl4u")
+surface_material_override/0 = SubResource("StandardMaterial3D_tyxuw")
+
+[node name="PillarTop" type="MeshInstance3D" parent="Environment/Pillar1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
+mesh = SubResource("BoxMesh_q86x8")
+surface_material_override/0 = SubResource("StandardMaterial3D_pcfhv")
+
+[node name="PillarMiddle" type="MeshInstance3D" parent="Environment/Pillar1"]
+transform = Transform3D(0.7, 0, 0, 0, 2, 0, 0, 0, 0.7, 0, 2.5, 0)
+mesh = SubResource("BoxMesh_hgm1v")
+surface_material_override/0 = SubResource("StandardMaterial3D_v1ev0")
+
+[node name="Pillar2" type="Node3D" parent="Environment"]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 3, -0.2, -4)
+
+[node name="PillarBottom" type="MeshInstance3D" parent="Environment/Pillar2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_r5x1d")
+surface_material_override/0 = SubResource("StandardMaterial3D_08grf")
+
+[node name="PillarTop" type="MeshInstance3D" parent="Environment/Pillar2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
+mesh = SubResource("BoxMesh_fq48l")
+surface_material_override/0 = SubResource("StandardMaterial3D_hfdgv")
+
+[node name="PillarMiddle" type="MeshInstance3D" parent="Environment/Pillar2"]
+transform = Transform3D(0.7, 0, 0, 0, 2, 0, 0, 0, 0.7, 0, 2.5, 0)
+mesh = SubResource("BoxMesh_27bbj")
+surface_material_override/0 = SubResource("StandardMaterial3D_yk6cl")
+
+[node name="PillarBack" type="MeshInstance3D" parent="Environment"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 1.2, -4.5)
+mesh = SubResource("BoxMesh_mgcyn")
+surface_material_override/0 = SubResource("StandardMaterial3D_6ea46")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
+environment = SubResource("Environment_m6886")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(0.623013, -0.733525, 0.271654, 0.321394, 0.55667, 0.766044, -0.713134, -0.389948, 0.582563, 0, 10, 0)
+light_energy = 0.15
+shadow_enabled = true
+shadow_bias = 0.03
+shadow_blur = 1.5
+directional_shadow_mode = 0
+directional_shadow_fade_start = 1.0
+directional_shadow_max_distance = 10.0
