@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3 uid="uid://27yly164j2g6"]
+
+[ext_resource type="Script" path="res://Scenes/GodotOfficialDemo/Viewport/3dScaling/Scaling3dHud.cs" id="1_26ev5"]
+[ext_resource type="PackedScene" uid="uid://x7wp7s1dgo1v" path="res://Scenes/GodotOfficialDemo/Viewport/3dScaling/Cubes.tscn" id="1_t2k75"]
+
+[node name="Scaling3dHud" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_26ev5")
+
+[node name="Cubes" parent="." instance=ExtResource("1_t2k75")]
+
+[node name="Help" type="Label" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 542.0
+offset_right = 554.0
+offset_bottom = 632.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+text = "此文本将始终以本机分辨率呈现。
+按空格键调整三维视口的分辨率比例。
+按Enter键循环过滤模式。"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 212.0
+offset_bottom = 76.0
+
+[node name="Scale" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+text = "缩放: 100%"
+
+[node name="Filter" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+text = "缩放 3D 模式: 双线性"

@@ -1,0 +1,120 @@
+[gd_scene load_steps=15 format=3 uid="uid://x7wp7s1dgo1v"]
+
+[sub_resource type="Gradient" id="Gradient_x1alo"]
+offsets = PackedFloat32Array(0, 0.26, 0.53, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.211765, 0.270588, 0.384314, 1, 0.247059, 0.560784, 0.647059, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_nl6mf"]
+fractal_type = 2
+fractal_gain = 0.333
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_fqxhi"]
+height = 256
+seamless = true
+color_ramp = SubResource("Gradient_x1alo")
+noise = SubResource("FastNoiseLite_nl6mf")
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_fwkjh"]
+panorama = SubResource("NoiseTexture2D_fqxhi")
+
+[sub_resource type="Sky" id="Sky_5sqbq"]
+sky_material = SubResource("PanoramaSkyMaterial_fwkjh")
+
+[sub_resource type="Environment" id="Environment_i1i8h"]
+background_mode = 2
+sky = SubResource("Sky_5sqbq")
+tonemap_mode = 2
+tonemap_white = 6.0
+glow_enabled = true
+
+[sub_resource type="Gradient" id="Gradient_6yjm2"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_2w0rm"]
+frequency = 0.001
+fractal_type = 2
+fractal_lacunarity = 3.0
+fractal_gain = 1.4
+fractal_weighted_strength = 0.25
+domain_warp_enabled = true
+domain_warp_type = 2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ihaih"]
+seamless = true
+color_ramp = SubResource("Gradient_6yjm2")
+noise = SubResource("FastNoiseLite_2w0rm")
+
+[sub_resource type="Gradient" id="Gradient_6ad1a"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_j3fci"]
+frequency = 0.001
+fractal_type = 2
+fractal_octaves = 2
+fractal_lacunarity = 3.0
+fractal_gain = 1.4
+fractal_weighted_strength = 0.25
+domain_warp_enabled = true
+domain_warp_type = 2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_qovfp"]
+seamless = true
+as_normal_map = true
+bump_strength = 10.0
+color_ramp = SubResource("Gradient_6ad1a")
+noise = SubResource("FastNoiseLite_j3fci")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rif8p"]
+albedo_texture = SubResource("NoiseTexture2D_ihaih")
+normal_enabled = true
+normal_texture = SubResource("NoiseTexture2D_qovfp")
+uv1_scale = Vector3(6, 4, 1)
+texture_filter = 5
+
+[sub_resource type="BoxMesh" id="BoxMesh_0evpe"]
+material = SubResource("StandardMaterial3D_rif8p")
+size = Vector3(2, 2, 2)
+
+[node name="Cubes" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_i1i8h")
+
+[node name="MeshInstance1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="MeshInstance2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, -1)
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="MeshInstance3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0)
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="MeshInstance4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, -1)
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="MeshInstance5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="MeshInstance6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 1, -1)
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="MeshInstance7" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 0)
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="MeshInstance8" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, -1)
+mesh = SubResource("BoxMesh_0evpe")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.877983, 0.229146, -0.420283, 0, 0.877983, 0.478692, 0.478692, -0.420283, 0.770854, -1.683, 2.256, 3.081)
+fov = 60.0
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 2, 1)
+light_energy = 3.0
+shadow_enabled = true
+shadow_bias = 0.02

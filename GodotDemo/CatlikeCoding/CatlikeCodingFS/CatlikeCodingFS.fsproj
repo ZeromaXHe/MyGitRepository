@@ -45,6 +45,7 @@
         <Compile Include="GodotOfficialDemo\Viewport\GuiIn3D\GuiPanel3dFS.fs" />
         <Compile Include="GodotOfficialDemo\Viewport\DynamicSplitScreen\PlayerFS.fs" />
         <Compile Include="GodotOfficialDemo\Viewport\DynamicSplitScreen\CamerasFS.fs" />
+        <Compile Include="GodotOfficialDemo\Viewport\3dScaling\Scaling3dHudFS.fs" />
         <Compile Include="Movement6\CustomGravity.fs" />
         <Compile Include="Movement6\GravitySourceFS.fs" />
         <Compile Include="Movement6\GravityPlaneFS.fs" />
