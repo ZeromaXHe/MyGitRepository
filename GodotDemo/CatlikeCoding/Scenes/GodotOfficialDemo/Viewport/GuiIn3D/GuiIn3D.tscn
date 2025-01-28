@@ -1,0 +1,162 @@
+[gd_scene load_steps=17 format=3 uid="uid://cohgadtkuk2bw"]
+
+[ext_resource type="PackedScene" uid="uid://swq460lss5df" path="res://Scenes/GodotOfficialDemo/Viewport/GuiIn3D/GuiPanel3D.tscn" id="1_xhlf3"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_cxpsg"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_t2k3y"]
+sky_material = SubResource("ProceduralSkyMaterial_cxpsg")
+
+[sub_resource type="Environment" id="Environment_s15w7"]
+background_mode = 2
+sky = SubResource("Sky_t2k3y")
+tonemap_mode = 2
+tonemap_white = 2.0
+
+[sub_resource type="Animation" id="Animation_g0hji"]
+resource_name = "MoveCamera"
+length = 6.0
+loop_mode = 1
+step = 1.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 2, 4, 6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 3), Vector3(-1.5, 0, 2), Vector3(1.5, 0, 2), Vector3(0, 0, 3)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 2, 4, 6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, -0.523599, 0), Vector3(0, 0.523599, 0), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_pbjad"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 3)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_x7weu"]
+_data = {
+"MoveCamera": SubResource("Animation_g0hji"),
+"RESET": SubResource("Animation_pbjad")
+}
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_74l58"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_63tl7"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_56yn5"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_dber1"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_teb57"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_lx421"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0i475"]
+albedo_color = Color(0.721569, 0.792157, 1, 1)
+roughness = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_ptibb"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mlvaj"]
+albedo_color = Color(0.721569, 0.792157, 1, 1)
+roughness = 0.0
+
+[node name="GuiIn3D" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_s15w7")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+visible = false
+shadow_enabled = true
+
+[node name="GuiPanel3D" parent="." instance=ExtResource("1_xhlf3")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+fov = 74.0
+near = 0.1
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.389, 1.241, 2.721)
+shadow_enabled = true
+shadow_blur = 3.0
+omni_range = 10.0
+
+[node name="CameraMove" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_x7weu")
+}
+autoplay = "MoveCamera"
+
+[node name="Background" type="Node3D" parent="."]
+
+[node name="Wall" type="MeshInstance3D" parent="Background"]
+transform = Transform3D(4, 0, 0, 0, -1.74846e-07, -4, 0, 4, -1.74846e-07, -2.608, 0.589, -2.089)
+mesh = SubResource("PlaneMesh_74l58")
+
+[node name="Wall2" type="MeshInstance3D" parent="Background"]
+transform = Transform3D(4, 0, 0, 0, -1.74846e-07, -4, 0, 4, -1.74846e-07, 5.081, 0.589, -2.089)
+mesh = SubResource("PlaneMesh_63tl7")
+
+[node name="Wall3" type="MeshInstance3D" parent="Background"]
+transform = Transform3D(-1.74846e-07, -4, 1.74846e-07, 0, -1.74846e-07, -4, 4, -1.74846e-07, 7.64274e-15, 9.044, 0.589, 1.621)
+mesh = SubResource("PlaneMesh_56yn5")
+
+[node name="Floor" type="MeshInstance3D" parent="Background"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -2.608, -2.688, 1.465)
+mesh = SubResource("PlaneMesh_dber1")
+
+[node name="Floor2" type="MeshInstance3D" parent="Background"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 5.081, -2.688, 1.465)
+mesh = SubResource("PlaneMesh_teb57")
+
+[node name="Cube" type="MeshInstance3D" parent="Background"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.259, -0.599, 0.375)
+mesh = SubResource("BoxMesh_lx421")
+surface_material_override/0 = SubResource("StandardMaterial3D_0i475")
+
+[node name="Cube2" type="MeshInstance3D" parent="Background"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.888, 2.013, 0.375)
+mesh = SubResource("BoxMesh_ptibb")
+surface_material_override/0 = SubResource("StandardMaterial3D_mlvaj")
