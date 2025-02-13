@@ -7,6 +7,7 @@ namespace CatlikeCodingCSharp.Scenes.Hexasphere;
 // MIT 协议参考：https://github.com/Em3rgencyLT/Hexasphere/blob/master/Assets/Code/Hexasphere/Tile.cs
 public class Tile
 {
+    private static Dictionary<Point, Tile> _centerToTileDict = new();
     private readonly Point _center;
     private readonly float _radius;
     private readonly float _size;
@@ -27,17 +28,16 @@ public class Tile
         var icosahedronFaces = center.GetOrderedFaces();
         StoreNeighbourCenters(icosahedronFaces);
         BuildFaces(icosahedronFaces);
+
+        _centerToTileDict[center] = this;
     }
 
     public List<Point> Points { get; }
     public List<Face> Faces { get; }
     public List<Tile> Neighbours { get; private set; }
 
-    public void ResolveNeighbourTiles(List<Tile> allTiles)
-    {
-        var neighbourIds = _neighbourCenters.Select(center => center.Id).ToList();
-        Neighbours = allTiles.Where(tile => neighbourIds.Contains(tile._center.Id)).ToList();
-    }
+    public void ResolveNeighbourTiles() =>
+        Neighbours = _neighbourCenters.Select(center => _centerToTileDict[center]).ToList();
 
     public override string ToString() => $"{_center.Position.X},{_center.Position.Y},{_center.Position.Z}";
 

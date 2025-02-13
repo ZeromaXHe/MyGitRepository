@@ -12,21 +12,36 @@ public class Hexasphere
     private readonly float _hexSize;
 
     private readonly List<Point> _points;
+    private readonly List<Point> _framePoints;
     private readonly List<Face> _icosahedronFaces;
 
     public Hexasphere(float radius, int divisions, float hexSize)
     {
+        var time = Time.GetTicksMsec();
+        GD.Print($"new Hexasphere with divisions {divisions}, start at: {time}");
         _radius = radius;
         _divisions = divisions;
         _hexSize = hexSize;
 
         Tiles = [];
         _points = [];
+        _framePoints = [];
 
         _icosahedronFaces = ConstructIcosahedron();
+        var time2 = Time.GetTicksMsec();
+        GD.Print($"ConstructIcosahedron cost: {time2 - time} ms");
+
         SubdivideIcosahedron();
+        time = Time.GetTicksMsec();
+        GD.Print($"SubdivideIcosahedron cost: {time - time2} ms");
+
         ConstructTiles();
+        time2 = Time.GetTicksMsec();
+        GD.Print($"ConstructTiles cost: {time2 - time} ms");
+
         MeshDetails = StoreMeshDetails();
+        time = Time.GetTicksMsec();
+        GD.Print($"StoreMeshDetails cost: {time - time2} ms");
     }
 
     public List<Tile> Tiles { get; }
@@ -70,7 +85,7 @@ public class Hexasphere
             new Point(new Vector3(tao * defaultSize, 0f, -defaultSize)),
             new Point(new Vector3(-tao * defaultSize, 0f, -defaultSize))
         ];
-        icosahedronCorners.ForEach(point => CachePoint(point));
+        icosahedronCorners.ForEach(point => CachePoint(true, point));
 
         return
         [
@@ -97,12 +112,15 @@ public class Hexasphere
         ];
     }
 
-    private Point CachePoint(Point point)
+    private Point CachePoint(bool checkFrameExist, Point point)
     {
-        var existingPoint = _points.FirstOrDefault(candidatePoint => Point.IsOverlapping(candidatePoint, point));
-        if (existingPoint != null)
+        if (checkFrameExist)
         {
-            return existingPoint;
+            var existingPoint =
+                _framePoints.FirstOrDefault(candidatePoint => Point.IsOverlapping(candidatePoint, point));
+            if (existingPoint != null)
+                return existingPoint;
+            _framePoints.Add(point);
         }
 
         _points.Add(point);
@@ -115,12 +133,13 @@ public class Hexasphere
         {
             var facePoints = icoFace.Points;
             var bottomSide = new List<Point> { facePoints[0] };
-            var leftSide = facePoints[0].Subdivide(facePoints[1], _divisions, CachePoint);
-            var rightSide = facePoints[0].Subdivide(facePoints[2], _divisions, CachePoint);
+            var leftSide = facePoints[0].Subdivide(facePoints[1], _divisions, p => CachePoint(true, p));
+            var rightSide = facePoints[0].Subdivide(facePoints[2], _divisions, p => CachePoint(true, p));
             for (var i = 1; i <= _divisions; i++)
             {
                 var previousPoints = bottomSide;
-                bottomSide = leftSide[i].Subdivide(rightSide[i], i, CachePoint);
+                var checkFrameExist = i == _divisions;
+                bottomSide = leftSide[i].Subdivide(rightSide[i], i, p => CachePoint(checkFrameExist, p));
                 for (var j = 0; j < i; j++)
                 {
                     //Don't need to store faces, their points will have references to them.
@@ -135,25 +154,38 @@ public class Hexasphere
     private void ConstructTiles()
     {
         _points.ForEach(point => { Tiles.Add(new Tile(point, _radius, _hexSize)); });
-        Tiles.ForEach(tile => tile.ResolveNeighbourTiles(Tiles));
+        Tiles.ForEach(tile => tile.ResolveNeighbourTiles());
     }
 
     private MeshDetails StoreMeshDetails()
     {
         List<Point> vertices = [];
         List<int> triangles = [];
-        Tiles.ForEach(tile =>
+        Dictionary<string, int> vertexIdToIndex = new();
+        var pi = 0;
+        foreach (var tile in Tiles)
         {
-            tile.Points.ForEach(point => { vertices.Add(point); });
-            tile.Faces.ForEach(face =>
+            foreach (var point in tile.Points)
             {
+                vertices.Add(point);
+                vertexIdToIndex[point.Id] = pi++;
+            }
+            tile.Faces.ForEach(face =>
                 face.Points.ForEach(point =>
-                {
-                    var vertexIndex = vertices.FindIndex(vertex => vertex.Id == point.Id);
-                    triangles.Add(vertexIndex);
-                });
-            });
-        });
+                    triangles.Add(vertexIdToIndex[point.Id])));
+        }
+        // Tiles.ForEach(tile =>
+        // {
+        //     tile.Points.ForEach(point => { vertices.Add(point); });
+        //     tile.Faces.ForEach(face =>
+        //     {
+        //         face.Points.ForEach(point =>
+        //         {
+        //             var vertexIndex = vertices.FindIndex(vertex => vertex.Id == point.Id);
+        //             triangles.Add(vertexIndex);
+        //         });
+        //     });
+        // });
 
         return new MeshDetails(vertices.Select(point => point.Position).ToList(), triangles);
     }

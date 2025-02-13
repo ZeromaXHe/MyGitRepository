@@ -4,3 +4,5 @@
 
 [node name="HexasphereNode" type="Node3D"]
 script = ExtResource("1_kupns")
+_radius = 100.0
+_divisions = 100

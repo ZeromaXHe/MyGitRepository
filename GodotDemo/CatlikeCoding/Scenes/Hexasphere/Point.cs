@@ -43,7 +43,7 @@ public class Point
     {
         var segments = new List<Point> { this };
 
-        for (var i = 1; i <= count; i++)
+        for (var i = 1; i < count; i++)
         {
             var x = _position.X * (1 - (float)i / count) + target.Position.X * ((float)i / count);
             var y = _position.Y * (1 - (float)i / count) + target.Position.Y * ((float)i / count);

@@ -8,7 +8,7 @@ public partial class HexasphereNode : Node3D
     [Export(PropertyHint.Range, "5, 1000")]
     private float _radius = 10f;
 
-    [Export(PropertyHint.Range, "1, 15")] private int _divisions = 4;
+    [Export(PropertyHint.Range, "1, 100")] private int _divisions = 4;
 
     [Export(PropertyHint.Range, "0.1f, 1f")]
     private float _hexSize = 1f;
