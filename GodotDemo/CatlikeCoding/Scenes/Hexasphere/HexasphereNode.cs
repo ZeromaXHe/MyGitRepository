@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace CatlikeCodingCSharp.Scenes.Hexasphere;
@@ -52,6 +53,7 @@ public partial class HexasphereNode : Node3D
 
         _surfaceTool.Clear();
         _surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
+        _surfaceTool.SetSmoothGroup(uint.MaxValue);
         foreach (var v in _hexasphere.MeshDetails.Vertices)
         {
             _surfaceTool.AddVertex(v);
