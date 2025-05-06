@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://bdujohda3p0c7"]
+
+[ext_resource type="Script" uid="uid://bvyu1npklxs88" path="res://Scenes/Nodes/TestGui.cs" id="1_xv2kr"]
+[ext_resource type="Script" uid="uid://bqf3h8d823rnq" path="res://Scenes/Nodes/MyCenterUi.cs" id="2_qiapc"]
+
+[node name="TestGui" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_xv2kr")
+
+[node name="MyCenterUi" type="CenterContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("2_qiapc")

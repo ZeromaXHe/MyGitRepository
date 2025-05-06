@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://wilxwc86iyja"]
+
+[ext_resource type="Script" uid="uid://dklrn31v5usm4" path="res://Scenes/Nodes/GDScripts/test_gui_gds.gd" id="1_u5m66"]
+[ext_resource type="Script" uid="uid://da3yihpidaurj" path="res://Scenes/Nodes/GDScripts/my_center_ui_gds.gd" id="2_nk002"]
+
+[node name="TestGuiGds" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_u5m66")
+
+[node name="MyCenterUiGds" type="CenterContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("2_nk002")

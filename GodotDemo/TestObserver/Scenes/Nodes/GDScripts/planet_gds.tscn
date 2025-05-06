@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dqka32rxe8g68"]
+
+[ext_resource type="Script" uid="uid://dchprjyapftj" path="res://Scenes/Nodes/GDScripts/planet_gds.gd" id="1_m5jnv"]
+
+[node name="PlanetGds" type="Node3D"]
+script = ExtResource("1_m5jnv")
