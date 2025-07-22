@@ -1,0 +1,7 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://be7i3u88kckwh"]
+
+[ext_resource type="FontFile" uid="uid://dskmdk146n4rq" path="res://assets/pixel_rpg.ttf" id="1_f5rfs"]
+
+[resource]
+default_font = ExtResource("1_f5rfs")
+default_font_size = 6
