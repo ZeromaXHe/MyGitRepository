@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="Slay the Spire Clone"
+run/main_scene="uid://b2ug8sekdw1g5"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="uid://bloomag022x4f"
+
+[autoload]
+
+Events="*res://globals/events.gd"
 
 [display]
 
@@ -30,6 +35,7 @@ project/assembly_name="Slay the Spire Clone"
 
 folder_colors={
 "res://assets/": "yellow",
+"res://custom_resources/": "teal",
 "res://resources/": "pink",
 "res://scenes/": "green"
 }
@@ -51,6 +57,7 @@ right_mouse={
 
 2d_physics/layer_1="卡片目标选择器"
 2d_physics/layer_2="卡片放置区域"
+2d_physics/layer_3="敌人"
 
 [rendering]
 
