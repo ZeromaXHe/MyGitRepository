@@ -1,13 +1,14 @@
-[gd_scene load_steps=15 format=3 uid="uid://b2ug8sekdw1g5"]
+[gd_scene load_steps=16 format=3 uid="uid://b2ug8sekdw1g5"]
 
 [ext_resource type="Script" uid="uid://cstgbaryxx8af" path="res://scenes/battles/battle.gd" id="1_alwxn"]
 [ext_resource type="Texture2D" uid="uid://cp4iq5fd6j8be" path="res://assets/background.png" id="1_wvl2i"]
 [ext_resource type="Script" uid="uid://b6ru4klpkwifc" path="res://scenes/uis/hand.gd" id="2_jeurd"]
 [ext_resource type="PackedScene" uid="uid://d1qqyewqvdyyd" path="res://scenes/enemies/enemy.tscn" id="2_mxf8o"]
-[ext_resource type="Resource" uid="uid://qdjnlg820f5i" path="res://enemies/crabs/test_enemy.tres" id="3_kut58"]
 [ext_resource type="PackedScene" uid="uid://dmv50tvomdbib" path="res://scenes/card_target_selector/card_target_selector.tscn" id="3_m7hvh"]
 [ext_resource type="PackedScene" uid="uid://b38k0fa13rxj2" path="res://scenes/players/player.tscn" id="3_p1d8k"]
+[ext_resource type="Script" uid="uid://biy6anh065jmf" path="res://scenes/enemies/enemy_handler.gd" id="4_alwxn"]
 [ext_resource type="Resource" uid="uid://diotmf5t4owf7" path="res://characters/warriors/warrior.tres" id="4_mxf8o"]
+[ext_resource type="Resource" uid="uid://40rqxoggco4e" path="res://enemies/crabs/crab_enemy.tres" id="5_ngw5r"]
 [ext_resource type="Script" uid="uid://cety1j2yw1xw7" path="res://scenes/uis/battle_ui.gd" id="7_ngw5r"]
 [ext_resource type="Script" uid="uid://db20jvvkgq7gg" path="res://scenes/players/player_handler.gd" id="8_epspk"]
 [ext_resource type="PackedScene" uid="uid://cl147mk7chqcf" path="res://scenes/uis/mana_ui.tscn" id="11_tnccn"]
@@ -35,9 +36,13 @@ position = Vector2(128, 50)
 shape = SubResource("RectangleShape2D_wvl2i")
 debug_color = Color(0, 0.6, 0.701961, 0.117647)
 
-[node name="Enemy" parent="." instance=ExtResource("2_mxf8o")]
+[node name="EnemyHandler" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("4_alwxn")
+
+[node name="Enemy" parent="EnemyHandler" instance=ExtResource("2_mxf8o")]
 position = Vector2(202, 75)
-stats = ExtResource("3_kut58")
+stats = ExtResource("5_ngw5r")
 
 [node name="Player" parent="." instance=ExtResource("3_p1d8k")]
 unique_name_in_owner = true
