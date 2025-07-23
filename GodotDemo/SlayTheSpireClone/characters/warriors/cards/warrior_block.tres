@@ -1,10 +1,14 @@
-[gd_resource type="Resource" script_class="Card" load_steps=2 format=3 uid="uid://dp3li40e0kvfy"]
+[gd_resource type="Resource" load_steps=3 format=3 uid="uid://dp3li40e0kvfy"]
 
-[ext_resource type="Script" uid="uid://dycerkbgu3m6" path="res://custom_resources/card.gd" id="1_04lns"]
+[ext_resource type="Texture2D" uid="uid://oe7v35ii8vrs" path="res://assets/tile_0102.png" id="1_rfvch"]
+[ext_resource type="Script" uid="uid://dut1csit75epd" path="res://characters/warriors/cards/warrior_block.gd" id="2_rfvch"]
 
 [resource]
-script = ExtResource("1_04lns")
+script = ExtResource("2_rfvch")
 id = "warrior_block"
 type = 1
 target = 0
+cost = 1
+icon = ExtResource("1_rfvch")
+tooltip_text = ""
 metadata/_custom_type_script = "uid://dycerkbgu3m6"

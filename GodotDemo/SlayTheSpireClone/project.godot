@@ -37,6 +37,7 @@ folder_colors={
 "res://assets/": "yellow",
 "res://characters/": "pink",
 "res://custom_resources/": "teal",
+"res://effects/": "pink",
 "res://enemies/": "pink",
 "res://globals/": "teal",
 "res://resources/": "pink",
