@@ -13,6 +13,7 @@ enum Target {SELF, SINGLE_ENEMY, ALL_ENEMIES, EVERYONE}
 @export_group("Card Visuals")
 @export var icon: Texture
 @export_multiline var tooltip_text: String
+@export var sound: AudioStream
 
 
 func is_single_targeted() -> bool:

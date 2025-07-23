@@ -19,6 +19,8 @@ config/icon="uid://bloomag022x4f"
 
 Events="*res://globals/events.gd"
 Shaker="*res://globals/shaker.gd"
+MusicPlayer="*res://globals/music_player.tscn"
+SFXPlayer="*res://globals/sfx_player.tscn"
 
 [display]
 

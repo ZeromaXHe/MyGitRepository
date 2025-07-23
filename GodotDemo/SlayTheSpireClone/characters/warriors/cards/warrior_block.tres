@@ -1,7 +1,8 @@
-[gd_resource type="Resource" load_steps=3 format=3 uid="uid://dp3li40e0kvfy"]
+[gd_resource type="Resource" load_steps=4 format=3 uid="uid://dp3li40e0kvfy"]
 
 [ext_resource type="Texture2D" uid="uid://oe7v35ii8vrs" path="res://assets/tile_0102.png" id="1_rfvch"]
 [ext_resource type="Script" uid="uid://dut1csit75epd" path="res://characters/warriors/cards/warrior_block.gd" id="2_rfvch"]
+[ext_resource type="AudioStream" uid="uid://df64e7qat73gs" path="res://assets/block.ogg" id="3_nrjog"]
 
 [resource]
 script = ExtResource("2_rfvch")
@@ -11,4 +12,5 @@ target = 0
 cost = 1
 icon = ExtResource("1_rfvch")
 tooltip_text = "[center]Gain [color=\"0044ff\"]6[/color] block.[/center]"
+sound = ExtResource("3_nrjog")
 metadata/_custom_type_script = "uid://dycerkbgu3m6"
