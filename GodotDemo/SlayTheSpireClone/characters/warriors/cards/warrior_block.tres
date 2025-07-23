@@ -10,5 +10,5 @@ type = 1
 target = 0
 cost = 1
 icon = ExtResource("1_rfvch")
-tooltip_text = ""
+tooltip_text = "[center]Gain [color=\"0044ff\"]6[/color] block.[/center]"
 metadata/_custom_type_script = "uid://dycerkbgu3m6"

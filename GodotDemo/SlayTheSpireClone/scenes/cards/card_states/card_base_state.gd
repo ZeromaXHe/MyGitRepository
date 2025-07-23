@@ -8,6 +8,7 @@ func enter() -> void:
 	card_ui.panel.set("theme_override_styles/panel", card_ui.BASE_STYLEBOX)
 	card_ui.reparent_requested.emit(card_ui)
 	card_ui.pivot_offset = Vector2.ZERO
+	Events.tooltip_hide_requested.emit()
 
 
 func on_gui_input(event: InputEvent) -> void:
@@ -22,9 +23,11 @@ func on_mouse_entered() -> void:
 	if not card_ui.playable or card_ui.disabled:
 		return
 	card_ui.panel.set("theme_override_styles/panel", card_ui.HOVER_STYLEBOX)
+	Events.card_tooltip_requested.emit(card_ui.card.icon, card_ui.card.tooltip_text)
 
 
 func on_mouse_exited() -> void:
 	if not card_ui.playable or card_ui.disabled:
 		return
 	card_ui.panel.set("theme_override_styles/panel", card_ui.BASE_STYLEBOX)
+	Events.tooltip_hide_requested.emit()
