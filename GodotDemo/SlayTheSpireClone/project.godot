@@ -18,6 +18,7 @@ config/icon="uid://bloomag022x4f"
 [autoload]
 
 Events="*res://globals/events.gd"
+Shaker="*res://globals/shaker.gd"
 
 [display]
 
@@ -43,6 +44,10 @@ folder_colors={
 "res://resources/": "pink",
 "res://scenes/": "green"
 }
+
+[gui]
+
+theme/custom="uid://be7i3u88kckwh"
 
 [input]
 

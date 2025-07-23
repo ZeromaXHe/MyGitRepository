@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3 uid="uid://cs2hyasea2e5u"]
+
+[ext_resource type="Texture2D" uid="uid://bq4im540nk025" path="res://assets/tile_0106.png" id="1_6p53h"]
+[ext_resource type="Script" uid="uid://cmbijqiuw0dnx" path="res://scenes/uis/intent_ui.gd" id="1_mh77m"]
+
+[node name="IntentUI" type="HBoxContainer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 14.0
+grow_horizontal = 2
+theme_override_constants/separation = 0
+alignment = 1
+script = ExtResource("1_mh77m")
+
+[node name="Icon" type="TextureRect" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+texture = ExtResource("1_6p53h")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Number" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 1
+text = "7"
+horizontal_alignment = 1
+vertical_alignment = 1

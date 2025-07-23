@@ -15,8 +15,8 @@ const HOVER_STYLEBOX := preload("res://resources/card_hover_stylebox.tres")
 @onready var icon: TextureRect = %Icon
 @onready var drop_point_detector: Area2D = %DropPointDetector
 @onready var card_state_machine: CardStateMachine = %CardStateMachine
-@onready var original_index := self.get_index()
 
+var original_index := 0
 var targets: Array[Node] = []
 var parent: Control
 var tween: Tween
