@@ -35,7 +35,10 @@ project/assembly_name="Slay the Spire Clone"
 
 folder_colors={
 "res://assets/": "yellow",
+"res://characters/": "pink",
 "res://custom_resources/": "teal",
+"res://enemies/": "pink",
+"res://globals/": "teal",
 "res://resources/": "pink",
 "res://scenes/": "green"
 }
