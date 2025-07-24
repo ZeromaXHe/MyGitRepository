@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://digkltv5a26md"]
+[gd_scene load_steps=7 format=3 uid="uid://digkltv5a26md"]
 
 [ext_resource type="PackedScene" uid="uid://dww84n0piry31" path="res://scenes/maps/map.tscn" id="1_lvgux"]
 [ext_resource type="Script" uid="uid://bhcqik21o3rmj" path="res://scenes/runs/run.gd" id="1_mxdaw"]
 [ext_resource type="Resource" uid="uid://0ddvlmtcphjm" path="res://resources/run_startup.tres" id="2_qviva"]
+[ext_resource type="PackedScene" uid="uid://b2tt0h8d6smtl" path="res://scenes/uis/card_pile_opener.tscn" id="4_tmqg5"]
+[ext_resource type="Texture2D" uid="uid://bf71wthj843cd" path="res://assets/deck.png" id="5_3qthc"]
+[ext_resource type="PackedScene" uid="uid://usqbq3payxni" path="res://scenes/uis/card_pile_view.tscn" id="6_3qthc"]
 
 [node name="Run" type="Node"]
 script = ExtResource("1_mxdaw")
@@ -17,6 +20,7 @@ unique_name_in_owner = true
 anchors_preset = 9
 anchor_bottom = 1.0
 grow_vertical = 2
+alignment = 1
 
 [node name="MapButton" type="Button" parent="DebugButtons"]
 unique_name_in_owner = true
@@ -47,3 +51,44 @@ text = "Rewards"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Campfire"
+
+[node name="TopBar" type="CanvasLayer" parent="."]
+layer = 3
+
+[node name="Background" type="ColorRect" parent="TopBar"]
+custom_minimum_size = Vector2(0, 18)
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 0.501961)
+
+[node name="BarItems" type="HBoxContainer" parent="TopBar"]
+custom_minimum_size = Vector2(0, 18)
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+
+[node name="Placeholder" type="Control" parent="TopBar/BarItems"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DeckButton" parent="TopBar/BarItems" node_paths=PackedStringArray("counter") instance=ExtResource("4_tmqg5")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+texture_normal = ExtResource("5_3qthc")
+counter = NodePath("Counter")
+
+[node name="Counter" type="Label" parent="TopBar/BarItems/DeckButton"]
+layout_mode = 0
+offset_left = -4.0
+offset_top = 12.0
+offset_right = 6.0
+offset_bottom = 18.0
+text = "99"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DeckView" parent="TopBar" instance=ExtResource("6_3qthc")]
+unique_name_in_owner = true
+visible = false

@@ -25,6 +25,7 @@ func _ready() -> void:
 	Events.player_died.connect(_on_player_died)
 	
 	start_battle(new_stats)
+	battle_ui.initialize_card_pile_ui()
 
 
 func start_battle(stats: CharacterStats) -> void:
