@@ -1,0 +1,128 @@
+[gd_scene load_steps=11 format=3 uid="uid://hm2k170wfjij"]
+
+[ext_resource type="Texture2D" uid="uid://dpfqok8tuy4r7" path="res://assets/tile_0084.png" id="1_bbokv"]
+[ext_resource type="Script" uid="uid://dhny2i0c7wx8g" path="res://scenes/uis/main_menu.gd" id="1_yfuaq"]
+[ext_resource type="Texture2D" uid="uid://cwf6dyi56tgo" path="res://assets/tile_0088.png" id="2_yfuaq"]
+[ext_resource type="Texture2D" uid="uid://cpydvk8mq66o5" path="res://assets/tile_0087.png" id="3_3wgmo"]
+[ext_resource type="Texture2D" uid="uid://con6y7mc74c5a" path="res://assets/tile_0120.png" id="4_wrpo0"]
+[ext_resource type="Texture2D" uid="uid://1u3b3hwqd8yh" path="res://assets/tile_0110.png" id="5_bfbqf"]
+[ext_resource type="Texture2D" uid="uid://c24y6l0ivlqp7" path="res://assets/tile_0108.png" id="6_h8liu"]
+
+[sub_resource type="Gradient" id="Gradient_hyaek"]
+colors = PackedColorArray(0.2, 0.117647, 0.0509804, 1, 0.054902, 0, 0.0588235, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_sl07t"]
+gradient = SubResource("Gradient_hyaek")
+width = 50
+
+[sub_resource type="LabelSettings" id="LabelSettings_7dfy3"]
+line_spacing = 10.0
+shadow_size = 4
+shadow_color = Color(0.54902, 0.443137, 0.376471, 0.333333)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_yfuaq")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture1D_sl07t")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -104.5
+offset_top = -61.0
+offset_right = 104.5
+offset_bottom = -17.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "My Awesome
+Roguelike Deckbuilder"
+label_settings = SubResource("LabelSettings_7dfy3")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.0
+offset_top = -4.0
+offset_right = 30.0
+offset_bottom = 54.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Continue" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+text = "Continue"
+
+[node name="NewRun" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+text = "New Run"
+
+[node name="Exit" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+text = "Exit"
+
+[node name="Wizard" type="Sprite2D" parent="."]
+position = Vector2(21, 103)
+scale = Vector2(2, 2)
+texture = ExtResource("1_bbokv")
+
+[node name="Assassin" type="Sprite2D" parent="."]
+position = Vector2(52, 97)
+scale = Vector2(2, 2)
+texture = ExtResource("2_yfuaq")
+
+[node name="Warrior" type="Sprite2D" parent="."]
+position = Vector2(38, 119)
+scale = Vector2(2, 2)
+texture = ExtResource("3_3wgmo")
+
+[node name="Bat" type="Sprite2D" parent="."]
+position = Vector2(200, 101)
+scale = Vector2(2, 2)
+texture = ExtResource("4_wrpo0")
+flip_h = true
+
+[node name="Crab" type="Sprite2D" parent="."]
+position = Vector2(211, 122)
+scale = Vector2(2, 2)
+texture = ExtResource("5_bfbqf")
+flip_h = true
+
+[node name="Ghost" type="Sprite2D" parent="."]
+position = Vector2(228, 99)
+scale = Vector2(2, 2)
+texture = ExtResource("6_h8liu")
+flip_h = true
+
+[connection signal="pressed" from="VBoxContainer/Continue" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="VBoxContainer/NewRun" to="." method="_on_new_run_pressed"]
+[connection signal="pressed" from="VBoxContainer/Exit" to="." method="_on_exit_pressed"]

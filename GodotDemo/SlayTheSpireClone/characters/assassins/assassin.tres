@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CharacterStats" load_steps=4 format=3 uid="uid://dd242lxskt67t"]
+
+[ext_resource type="Script" uid="uid://huwci3pfr73m" path="res://custom_resources/character_stats.gd" id="1_dsj37"]
+[ext_resource type="Texture2D" uid="uid://cwf6dyi56tgo" path="res://assets/tile_0088.png" id="1_wk45v"]
+[ext_resource type="Resource" uid="uid://cfgfekx28eobp" path="res://characters/warriors/warrior_starting_deck.tres" id="3_7su8i"]
+
+[resource]
+script = ExtResource("1_dsj37")
+character_name = "Assassin"
+description = "Sneaky lil' boi."
+portrait = ExtResource("1_wk45v")
+starting_deck = ExtResource("3_7su8i")
+cards_per_turn = 5
+max_mana = 3
+max_health = 24
+art = ExtResource("1_wk45v")
+metadata/_custom_type_script = "uid://huwci3pfr73m"
