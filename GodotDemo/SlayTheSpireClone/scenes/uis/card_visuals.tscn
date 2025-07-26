@@ -1,0 +1,71 @@
+[gd_scene load_steps=7 format=3 uid="uid://be0r5p180h68x"]
+
+[ext_resource type="Theme" uid="uid://be7i3u88kckwh" path="res://resources/main_theme.tres" id="1_mueg5"]
+[ext_resource type="Script" uid="uid://bj0jyv62neo3r" path="res://scenes/uis/card_visuals.gd" id="2_6gshv"]
+[ext_resource type="StyleBox" uid="uid://ijjbkj7qx7sf" path="res://resources/card_base_stylebox.tres" id="2_i5vfe"]
+[ext_resource type="Texture2D" uid="uid://c6rme2o6dyaoj" path="res://assets/tile_0104.png" id="3_6gshv"]
+[ext_resource type="Resource" uid="uid://b1xfaob003112" path="res://characters/warriors/cards/warrior_slash.tres" id="3_tgk1t"]
+[ext_resource type="Texture2D" uid="uid://c6ssosqqy0dh8" path="res://assets/rarity.png" id="4_tgk1t"]
+
+[node name="Visuals" type="Control"]
+custom_minimum_size = Vector2(25, 30)
+layout_mode = 3
+anchors_preset = 0
+theme = ExtResource("1_mueg5")
+script = ExtResource("2_6gshv")
+card = ExtResource("3_tgk1t")
+
+[node name="Panel" type="Panel" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("2_i5vfe")
+
+[node name="Cost" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 10.0
+offset_bottom = 10.0
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_6gshv")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Rarity" type="TextureRect" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(6, 6)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -8.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = 8.0
+grow_horizontal = 0
+texture = ExtResource("4_tgk1t")
+expand_mode = 1
+stretch_mode = 5

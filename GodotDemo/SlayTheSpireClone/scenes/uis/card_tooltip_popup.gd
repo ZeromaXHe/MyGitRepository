@@ -3,6 +3,9 @@ extends Control
 
 const CARD_MENU_UI_SCENE = preload("res://scenes/uis/card_menu_ui.tscn")
 
+@export var background_color: Color = Color("000000b0")
+
+@onready var background: ColorRect = %Background
 @onready var tooltip_card: CenterContainer = %TooltipCard
 @onready var card_description: RichTextLabel = %CardDescription
 
@@ -10,6 +13,7 @@ const CARD_MENU_UI_SCENE = preload("res://scenes/uis/card_menu_ui.tscn")
 func _ready() -> void:
 	for card: CardMenuUI in tooltip_card.get_children():
 		card.queue_free()
+	background.color = background_color
 	#hide_tooltip()
 	#await get_tree().create_timer(3.0).timeout
 	#show_tooltip(preload("res://characters/warriors/cards/warrior_slash.tres"))

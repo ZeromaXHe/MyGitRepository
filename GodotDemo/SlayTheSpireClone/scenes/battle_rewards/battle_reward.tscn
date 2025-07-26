@@ -1,6 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://b6ko0nkk4dvtn"]
+[gd_scene load_steps=8 format=3 uid="uid://b6ko0nkk4dvtn"]
 
 [ext_resource type="Script" uid="uid://lctpk2rs0ysd" path="res://scenes/battle_rewards/battle_reward.gd" id="1_l1605"]
+[ext_resource type="Texture2D" uid="uid://cp4iq5fd6j8be" path="res://assets/background.png" id="2_6ucnr"]
+[ext_resource type="PackedScene" uid="uid://cn7gq3f022jpf" path="res://scenes/uis/reward_button.tscn" id="3_vrhhx"]
+[ext_resource type="Texture2D" uid="uid://codxh7w6tvhqt" path="res://assets/gold.png" id="4_dge8x"]
+[ext_resource type="Texture2D" uid="uid://c6ssosqqy0dh8" path="res://assets/rarity.png" id="5_32o2g"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_nicpo"]
+font_size = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ucnr"]
+bg_color = Color(0, 0, 0, 0.501961)
 
 [node name="BattleReward" type="Control"]
 layout_mode = 3
@@ -12,7 +22,18 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_l1605")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_6ucnr")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BackgroundDimmer" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +41,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0, 0, 0, 0.568627)
+color = Color(0, 0, 0, 0.784314)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -29,22 +50,50 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_left = -55.0
+offset_top = -46.0
+offset_right = 55.0
+offset_bottom = 68.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Battle Reward"
+text = "Rewards"
+label_settings = SubResource("LabelSettings_nicpo")
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Button" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 13)
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(110, 80)
 layout_mode = 2
-text = "Go Back"
+theme_override_styles/panel = SubResource("StyleBoxFlat_6ucnr")
 
-[connection signal="pressed" from="VBoxContainer/Button" to="." method="_on_button_pressed"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Rewards" type="VBoxContainer" parent="VBoxContainer/PanelContainer/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="GoldReward" parent="VBoxContainer/PanelContainer/MarginContainer/Rewards" instance=ExtResource("3_vrhhx")]
+layout_mode = 2
+reward_icon = ExtResource("4_dge8x")
+reward_text = "127 gold"
+
+[node name="CardReward" parent="VBoxContainer/PanelContainer/MarginContainer/Rewards" instance=ExtResource("3_vrhhx")]
+layout_mode = 2
+reward_icon = ExtResource("5_32o2g")
+reward_text = "Add New Card"
+
+[node name="BackButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(50, 14)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Continue"
+
+[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

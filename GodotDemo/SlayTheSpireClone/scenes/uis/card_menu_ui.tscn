@@ -1,10 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://drch6fwf7tha1"]
+[gd_scene load_steps=4 format=3 uid="uid://drch6fwf7tha1"]
 
-[ext_resource type="Theme" uid="uid://be7i3u88kckwh" path="res://resources/main_theme.tres" id="1_d5qcc"]
 [ext_resource type="Script" uid="uid://bpold2tfhgugi" path="res://scenes/uis/card_menu_ui.gd" id="1_d8slg"]
 [ext_resource type="Resource" uid="uid://b1xfaob003112" path="res://characters/warriors/cards/warrior_slash.tres" id="2_thekv"]
-[ext_resource type="StyleBox" uid="uid://ijjbkj7qx7sf" path="res://resources/card_base_stylebox.tres" id="3_3tqt8"]
-[ext_resource type="Texture2D" uid="uid://c6rme2o6dyaoj" path="res://assets/tile_0104.png" id="4_f4cdj"]
+[ext_resource type="PackedScene" uid="uid://be0r5p180h68x" path="res://scenes/uis/card_visuals.tscn" id="3_44dc0"]
 
 [node name="CardMenuUI" type="CenterContainer"]
 offset_right = 25.0
@@ -13,49 +11,9 @@ size_flags_horizontal = 3
 script = ExtResource("1_d8slg")
 card = ExtResource("2_thekv")
 
-[node name="Visuals" type="Control" parent="."]
-custom_minimum_size = Vector2(25, 30)
+[node name="Visuals" parent="." instance=ExtResource("3_44dc0")]
+unique_name_in_owner = true
 layout_mode = 2
-theme = ExtResource("1_d5qcc")
-
-[node name="Panel" type="Panel" parent="Visuals"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_styles/panel = ExtResource("3_3tqt8")
-
-[node name="Cost" type="Label" parent="Visuals"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_right = 10.0
-offset_bottom = 10.0
-text = "2"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Icon" type="TextureRect" parent="Visuals"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -5.0
-offset_top = -5.0
-offset_right = 5.0
-offset_bottom = 5.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("4_f4cdj")
-expand_mode = 1
-stretch_mode = 5
 
 [connection signal="gui_input" from="Visuals" to="." method="_on_visuals_gui_input"]
 [connection signal="mouse_entered" from="Visuals" to="." method="_on_visuals_mouse_entered"]
