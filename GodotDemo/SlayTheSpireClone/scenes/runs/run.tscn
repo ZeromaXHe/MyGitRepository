@@ -13,6 +13,7 @@ script = ExtResource("1_mxdaw")
 run_startup = ExtResource("2_qviva")
 
 [node name="Map" parent="." instance=ExtResource("1_lvgux")]
+unique_name_in_owner = true
 
 [node name="CurrentView" type="Node" parent="."]
 unique_name_in_owner = true
