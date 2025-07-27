@@ -77,7 +77,7 @@ hand = NodePath("../BattleUI/Hand")
 unique_name_in_owner = true
 script = ExtResource("7_ngw5r")
 
-[node name="Hand" type="HBoxContainer" parent="BattleUI"]
+[node name="Hand" type="HBoxContainer" parent="BattleUI" node_paths=PackedStringArray("player")]
 unique_name_in_owner = true
 anchors_preset = 7
 anchor_left = 0.5
@@ -91,6 +91,7 @@ grow_horizontal = 2
 grow_vertical = 0
 alignment = 1
 script = ExtResource("2_jeurd")
+player = NodePath("../../Player")
 
 [node name="ManaUI" parent="BattleUI" instance=ExtResource("11_tnccn")]
 unique_name_in_owner = true

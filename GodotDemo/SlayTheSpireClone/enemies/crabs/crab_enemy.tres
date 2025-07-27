@@ -7,6 +7,6 @@
 [resource]
 script = ExtResource("1_apmld")
 ai = ExtResource("1_kvtis")
-max_health = 10
+max_health = 25
 art = ExtResource("1_cjj8s")
 metadata/_custom_type_script = "uid://b6xmqdkyia5md"

@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://b38k0fa13rxj2"]
+[gd_scene load_steps=7 format=3 uid="uid://b38k0fa13rxj2"]
 
 [ext_resource type="Script" uid="uid://cr5vkn4udodth" path="res://scenes/players/player.gd" id="1_kc87p"]
 [ext_resource type="Texture2D" uid="uid://cpydvk8mq66o5" path="res://assets/tile_0087.png" id="1_ldeu4"]
 [ext_resource type="PackedScene" uid="uid://dt4nk135lyedn" path="res://scenes/uis/stats_ui.tscn" id="2_kc87p"]
 [ext_resource type="PackedScene" uid="uid://dvrx6hq8b5l1a" path="res://scenes/status_handler/status_handler.tscn" id="4_edvpf"]
+[ext_resource type="PackedScene" uid="uid://bflqqcxf8kq2h" path="res://scenes/modifier_handler/modifier_handler.tscn" id="5_sguum"]
+[ext_resource type="PackedScene" uid="uid://bhp8kkag36xjm" path="res://scenes/modifier_handler/modifier.tscn" id="6_jwv1m"]
 
 [node name="Player" type="Node2D" groups=["player"]]
 script = ExtResource("1_kc87p")
@@ -26,3 +28,14 @@ offset_top = 23.0
 offset_right = -19.0
 offset_bottom = 23.0
 status_owner = NodePath("..")
+
+[node name="ModifierHandler" parent="." instance=ExtResource("5_sguum")]
+unique_name_in_owner = true
+
+[node name="DamageDealtModifier" parent="ModifierHandler" instance=ExtResource("6_jwv1m")]
+
+[node name="DamageTakenModifier" parent="ModifierHandler" instance=ExtResource("6_jwv1m")]
+type = 1
+
+[node name="CardCostModifier" parent="ModifierHandler" instance=ExtResource("6_jwv1m")]
+type = 2
