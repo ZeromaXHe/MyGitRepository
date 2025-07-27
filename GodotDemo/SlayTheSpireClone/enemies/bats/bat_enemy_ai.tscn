@@ -11,13 +11,13 @@
 
 [sub_resource type="Resource" id="Resource_r6ecv"]
 script = ExtResource("4_k8ini")
-number = "2x4"
+base_text = "2x%s"
 icon = ExtResource("3_4tff3")
 metadata/_custom_type_script = "uid://bb2i0xql213t7"
 
 [sub_resource type="Resource" id="Resource_5pe44"]
 script = ExtResource("4_k8ini")
-number = ""
+base_text = "4"
 icon = ExtResource("7_jqdmw")
 metadata/_custom_type_script = "uid://bb2i0xql213t7"
 

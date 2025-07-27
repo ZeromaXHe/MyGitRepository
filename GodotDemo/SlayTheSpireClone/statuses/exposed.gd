@@ -4,6 +4,10 @@ extends Status
 const MODIFIER := 0.5
 
 
+func get_tooltip() -> String:
+	return tooltip % duration
+
+
 func initialize_status(target: Node) -> void:
 	assert(target.get("modifier_handler"), "No modifier on %s" % target)
 	var dmg_taken_modifier: Modifier = target.modifier_handler.get_modifier(Modifier.Type.DMG_TAKEN)

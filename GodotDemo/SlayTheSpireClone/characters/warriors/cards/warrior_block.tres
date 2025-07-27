@@ -11,7 +11,8 @@ type = 1
 rarity = 0
 target = 0
 cost = 1
+exhausts = false
 icon = ExtResource("1_rfvch")
-tooltip_text = "[center]Gain [color=\"0044ff\"]6[/color] block.[/center]"
+tooltip_text = "[center]Gain [color=\"0044ff\"]%s[/color] block.[/center]"
 sound = ExtResource("3_nrjog")
 metadata/_custom_type_script = "uid://dycerkbgu3m6"

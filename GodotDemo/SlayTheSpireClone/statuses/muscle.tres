@@ -12,5 +12,5 @@ can_expire = false
 duration = 0
 stacks = 2
 icon = ExtResource("1_odh2a")
-tooltip = "TODO"
+tooltip = "Muscle: attacks deal %s more damage."
 metadata/_custom_type_script = "uid://dan03hkxm1v3y"

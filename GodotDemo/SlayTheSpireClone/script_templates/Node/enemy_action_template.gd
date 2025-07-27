@@ -13,3 +13,13 @@ func perform_action() -> void:
 	SFXPlayer.play(sound)
 	
 	Events.enemy_action_completed.emit(enemy)
+
+
+# If the enemy has dynamic intent text you can override the base behavior here
+# e.g. for attack actions, the Player's DMG TAKEN modifier modifiers the resulting damage number
+func update_intent_text() -> void:
+	var player := target as Player
+	if not player:
+		return
+	var modified_dmg := player.modifier_handler.get_modified_value(6, Modifier.Type.DMG_TAKEN)
+	intent.current_text = intent.base_text % modified_dmg

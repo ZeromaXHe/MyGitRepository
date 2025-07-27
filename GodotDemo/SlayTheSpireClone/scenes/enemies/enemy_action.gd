@@ -1,7 +1,6 @@
 class_name EnemyAction
 extends Node
 
-
 enum Type {CONDITIONAL, CHANCE_BASED}
 
 @export var intent: Intent
@@ -20,3 +19,7 @@ func is_performable() -> bool:
 
 func perform_action() -> void:
 	pass
+
+
+func update_intent_text() -> void:
+	intent.current_text = intent.base_text

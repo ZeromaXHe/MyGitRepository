@@ -2,6 +2,10 @@ class_name MuscleStatus
 extends Status
 
 
+func get_tooltip() -> String:
+	return tooltip % stacks
+
+
 func initialize_status(target: Node) -> void:
 	status_changed.connect(func(): _on_status_changed(target))
 	_on_status_changed(target)
