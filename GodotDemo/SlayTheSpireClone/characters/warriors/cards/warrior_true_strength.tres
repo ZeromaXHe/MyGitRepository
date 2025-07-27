@@ -11,6 +11,7 @@ type = 2
 rarity = 2
 target = 0
 cost = 3
+exhausts = false
 icon = ExtResource("1_m3u3r")
 tooltip_text = "[center]At the start of your turn, gain 2 [color=\"ffdf00\"]Muscle[/color].[/center]"
 sound = ExtResource("3_wbdvi")

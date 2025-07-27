@@ -7,6 +7,7 @@ const WHITE_SPRITE_MATERIAL := preload("res://assets/white_sprite_material.tres"
 
 @onready var sprite_2d: Sprite2D = %Sprite2D
 @onready var stats_ui: StatsUI = %StatsUI
+@onready var status_handler: StatusHandler = %StatusHandler
 
 
 func set_character_stats(value: CharacterStats) -> void:

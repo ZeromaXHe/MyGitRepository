@@ -1,5 +1,5 @@
 # meta-name: Effect
-# mata-description: Create an effect which can be applied to a target.
+# meta-description: Create an effect which can be applied to a target.
 class_name MyAwesomeEffect
 extends Effect
 
