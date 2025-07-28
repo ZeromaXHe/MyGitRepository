@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Relic" load_steps=2 format=3 uid="uid://cfbk68xlgmr2k"]
+
+[ext_resource type="Script" uid="uid://cupsq26gr5a7l" path="res://custom_resources/relic.gd" id="1_31mc3"]
+
+[resource]
+script = ExtResource("1_31mc3")
+relic_name = "Coupons"
+id = "coupons"
+type = 4
+character_type = 0
+starter_relic = false
+tooltip = "[color=\"ffdf00\"]Coupons[/color]
+All items in the shop are discounted by 50%."
+metadata/_custom_type_script = "uid://cupsq26gr5a7l"

@@ -44,6 +44,7 @@ folder_colors={
 "res://effects/": "pink",
 "res://enemies/": "pink",
 "res://globals/": "teal",
+"res://relics/": "pink",
 "res://resources/": "pink",
 "res://scenes/": "green",
 "res://statuses/": "pink"

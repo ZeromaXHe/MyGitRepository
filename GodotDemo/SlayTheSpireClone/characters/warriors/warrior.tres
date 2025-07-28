@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="CharacterStats" load_steps=5 format=3 uid="uid://diotmf5t4owf7"]
+[gd_resource type="Resource" script_class="CharacterStats" load_steps=6 format=3 uid="uid://diotmf5t4owf7"]
 
 [ext_resource type="Script" uid="uid://huwci3pfr73m" path="res://custom_resources/character_stats.gd" id="1_a3k7h"]
 [ext_resource type="Texture2D" uid="uid://cpydvk8mq66o5" path="res://assets/tile_0087.png" id="1_yt6xa"]
 [ext_resource type="Resource" uid="uid://dbbrxwe58qrmp" path="res://characters/warriors/warrior_draftable_cards.tres" id="2_jhpcx"]
 [ext_resource type="Resource" uid="uid://cfgfekx28eobp" path="res://characters/warriors/warrior_starting_deck.tres" id="3_jhpcx"]
+[ext_resource type="Resource" uid="uid://b45xfx5e1gu0y" path="res://relics/reinforced_armor.tres" id="5_bior1"]
 
 [resource]
 script = ExtResource("1_a3k7h")
@@ -14,6 +15,7 @@ starting_deck = ExtResource("3_jhpcx")
 draftable_cards = ExtResource("2_jhpcx")
 cards_per_turn = 4
 max_mana = 3
+starting_relic = ExtResource("5_bior1")
 max_health = 35
 art = ExtResource("1_yt6xa")
 metadata/_custom_type_script = "uid://huwci3pfr73m"
