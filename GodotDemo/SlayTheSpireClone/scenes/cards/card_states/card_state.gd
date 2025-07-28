@@ -9,7 +9,12 @@ signal transition_requested(from: CardState, to: State)
 
 var card_ui: CardUI
 
+
 func enter() -> void:
+	pass
+
+
+func post_enter() -> void:
 	pass
 
 
