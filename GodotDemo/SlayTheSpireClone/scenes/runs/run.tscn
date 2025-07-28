@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://digkltv5a26md"]
+[gd_scene load_steps=13 format=3 uid="uid://digkltv5a26md"]
 
 [ext_resource type="PackedScene" uid="uid://dww84n0piry31" path="res://scenes/maps/map.tscn" id="1_lvgux"]
 [ext_resource type="Script" uid="uid://bhcqik21o3rmj" path="res://scenes/runs/run.gd" id="1_mxdaw"]
@@ -10,6 +10,9 @@
 [ext_resource type="PackedScene" uid="uid://usqbq3payxni" path="res://scenes/uis/card_pile_view.tscn" id="6_3qthc"]
 [ext_resource type="PackedScene" uid="uid://d1qeqnl8oalhe" path="res://scenes/relic_handler/relic_handler.tscn" id="6_mqlqe"]
 [ext_resource type="PackedScene" uid="uid://qe26laow8ug2" path="res://scenes/relic_handler/relic_tooltip.tscn" id="10_dglbb"]
+[ext_resource type="Script" uid="uid://b4k78b3tcv0nj" path="res://scenes/runs/pause_menu.gd" id="11_8yw1k"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_dglbb"]
 
 [node name="Run" type="Node"]
 script = ExtResource("1_mxdaw")
@@ -117,3 +120,55 @@ visible = false
 [node name="RelicTooltip" parent="TopBar" instance=ExtResource("10_dglbb")]
 unique_name_in_owner = true
 visible = false
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+process_mode = 3
+layer = 5
+visible = false
+script = ExtResource("11_8yw1k")
+
+[node name="ColorRect" type="ColorRect" parent="PauseMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.705882)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -47.0
+offset_top = -20.0
+offset_right = 47.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Label" type="Label" parent="PauseMenu/VBoxContainer"]
+layout_mode = 2
+text = "Paused"
+label_settings = SubResource("LabelSettings_dglbb")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PauseMenu/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BackToGameButton" type="Button" parent="PauseMenu/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 14)
+layout_mode = 2
+text = "Back"
+
+[node name="SaveAndQuitButton" type="Button" parent="PauseMenu/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "Main Menu"

@@ -29,7 +29,7 @@ func get_first_conditional_action() -> EnemyAction:
 
 
 func get_chance_based_action() -> EnemyAction:
-	var roll := randf_range(0.0, total_weight)
+	var roll := RNG.instance.randf_range(0.0, total_weight)
 	for action: EnemyAction in get_children():
 		if not action or action.type != EnemyAction.Type.CHANCE_BASED:
 			continue
