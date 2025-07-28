@@ -10,6 +10,7 @@ const CARD_TEXT := "Add New Card"
 
 @export var run_stats: RunStats
 @export var character_stats: CharacterStats
+@export var relic_handler: RelicHandler
 
 @onready var rewards: VBoxContainer = %Rewards
 
@@ -46,6 +47,14 @@ func add_card_reward() -> void:
 	card_reward.reward_text = CARD_TEXT
 	card_reward.pressed.connect(_show_card_rewards)
 	rewards.add_child.call_deferred(card_reward)
+
+
+func add_relic_reward(relic: Relic) -> void:
+	var relic_reward := REWARD_BUTTON.instantiate() as RewardButton
+	relic_reward.reward_icon = relic.icon
+	relic_reward.reward_text = relic.relic_name
+	relic_reward.pressed.connect(func(): _on_relic_reward_taken(relic))
+	rewards.add_child.call_deferred(relic_reward)
 
 
 func _show_card_rewards() -> void:
@@ -103,6 +112,12 @@ func _on_card_reward_taken(card: Card) -> void:
 	if not character_stats or not card:
 		return
 	character_stats.deck.add_card(card)
+
+
+func _on_relic_reward_taken(relic: Relic) -> void:
+	if not relic or not relic_handler:
+		return
+	relic_handler.add_relic(relic)
 
 
 func _on_back_button_pressed() -> void:
