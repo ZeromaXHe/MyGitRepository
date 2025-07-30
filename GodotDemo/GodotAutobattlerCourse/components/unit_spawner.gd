@@ -1,7 +1,7 @@
 class_name UnitSpawner
 extends Node
 
-signal unit_spawner(unit: Unit)
+signal unit_spawned(unit: Unit)
 
 const UNIT = preload("res://scenes/units/unit.tscn")
 
@@ -35,4 +35,4 @@ func spawn_unit(unit: UnitStats) -> void:
 	area.unit_grid.add_unit(tile, new_unit)
 	new_unit.global_position = area.get_global_from_tile(tile) - Arena.HALF_CELL_SIZE
 	new_unit.stats = unit
-	unit_spawner.emit(new_unit)
+	unit_spawned.emit(new_unit)

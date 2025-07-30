@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PlayerStats" load_steps=2 format=3 uid="uid://dlkk68eyng5ax"]
+
+[ext_resource type="Script" uid="uid://pjaoye8f8bwa" path="res://data/players/player_stats.gd" id="1_twnbv"]
+
+[resource]
+script = ExtResource("1_twnbv")
+gold = 50
+xp = 0
+level = 0
+metadata/_custom_type_script = "uid://pjaoye8f8bwa"
