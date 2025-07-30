@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="Godot Autobattler Course"
+run/main_scene="uid://d333ua3xxjk5d"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="uid://lsaoufblggvl"
 
@@ -31,6 +32,7 @@ project/assembly_name="Godot Autobattler Course"
 
 folder_colors={
 "res://assets/": "yellow",
+"res://components/": "teal",
 "res://data/": "teal",
 "res://scenes/": "green"
 }
@@ -51,3 +53,4 @@ cancel_drag={
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true

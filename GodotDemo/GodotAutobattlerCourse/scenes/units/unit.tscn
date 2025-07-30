@@ -1,9 +1,12 @@
-[gd_scene load_steps=10 format=3 uid="uid://boqbsab2s67rs"]
+[gd_scene load_steps=13 format=3 uid="uid://boqbsab2s67rs"]
 
 [ext_resource type="Script" uid="uid://vesb8gcybxsd" path="res://scenes/units/unit.gd" id="1_6e3tn"]
 [ext_resource type="Texture2D" uid="uid://cx1ivjobggp8n" path="res://assets/sprites/rogues.png" id="1_qgilm"]
 [ext_resource type="Resource" uid="uid://erpn45k2vcba" path="res://data/units/bjorn.tres" id="2_cx6aj"]
+[ext_resource type="Material" uid="uid://bb8m5fhpi4wqn" path="res://assets/shaders/2d_outline_shader.tres" id="3_rk2mp"]
 [ext_resource type="Script" uid="uid://bhbbrrrq6prgi" path="res://components/drag_and_drop.gd" id="4_6k8ya"]
+[ext_resource type="Script" uid="uid://s7p6ku0vnrf8" path="res://components/velocity_based_rotation.gd" id="5_mgebg"]
+[ext_resource type="Script" uid="uid://ci5lfba1gyl4v" path="res://components/outline_highlighter.gd" id="7_44d7s"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qgilm"]
 size = Vector2(36, 36)
@@ -33,12 +36,15 @@ border_color = Color(0.231373, 0.113725, 0.0980392, 1)
 [node name="Unit" type="Area2D"]
 script = ExtResource("1_6e3tn")
 stats = ExtResource("2_cx6aj")
+metadata/_edit_group_ = true
 
-[node name="Skin" type="Sprite2D" parent="."]
+[node name="Visuals" type="CanvasGroup" parent="."]
+material = ExtResource("3_rk2mp")
+
+[node name="Skin" type="Sprite2D" parent="Visuals"]
 unique_name_in_owner = true
-position = Vector2(0, -8)
+position = Vector2(16, 8)
 texture = ExtResource("1_qgilm")
-centered = false
 region_enabled = true
 region_rect = Rect2(32, 96, 32, 32)
 
@@ -69,5 +75,23 @@ value = 50.0
 show_percentage = false
 
 [node name="DragAndDrop" type="Node" parent="." node_paths=PackedStringArray("target")]
+unique_name_in_owner = true
 script = ExtResource("4_6k8ya")
 target = NodePath("..")
+
+[node name="VelocityBasedRotation" type="Node" parent="." node_paths=PackedStringArray("target")]
+unique_name_in_owner = true
+script = ExtResource("5_mgebg")
+target = NodePath("../Visuals/Skin")
+lerp_seconds = 0.3
+rotation_multiplier = 40
+
+[node name="OutlineHighlighter" type="Node" parent="." node_paths=PackedStringArray("visuals")]
+unique_name_in_owner = true
+script = ExtResource("7_44d7s")
+visuals = NodePath("../Visuals")
+outline_color = Color(1, 1, 1, 1)
+outline_thickness = 2
+
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
