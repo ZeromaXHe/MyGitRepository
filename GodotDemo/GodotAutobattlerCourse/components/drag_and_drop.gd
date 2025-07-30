@@ -11,6 +11,7 @@ signal dropped(starting_position: Vector2)
 var starting_position: Vector2
 var offset := Vector2.ZERO
 var dragging := false
+var just_dropped := false # 我增加的变量，防止刚放下的又被选中
 
 
 func _ready() -> void:
@@ -19,6 +20,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	just_dropped = false
 	if dragging and target:
 		target.global_position = target.get_global_mouse_position() + offset
 
@@ -29,6 +31,7 @@ func _input(event: InputEvent) -> void:
 		_cancel_dragging()
 	elif dragging and event.is_action_pressed("select"):
 		print("drop!")
+		just_dropped = true
 		_drop()
 
 
@@ -63,6 +66,6 @@ func _on_target_input_event(_viewport: Node, event: InputEvent) -> void:
 	var dragging_object := get_tree().get_first_node_in_group("dragging")
 	if not dragging and dragging_object:
 		return
-	if not dragging and event.is_action_pressed("select"):
+	if not dragging and event.is_action_pressed("select") and not just_dropped:
 		print("start dragging")
 		_start_dragging()
