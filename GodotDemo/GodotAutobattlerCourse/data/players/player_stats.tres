@@ -6,5 +6,5 @@
 script = ExtResource("1_twnbv")
 gold = 50
 xp = 0
-level = 0
+level = 1
 metadata/_custom_type_script = "uid://pjaoye8f8bwa"

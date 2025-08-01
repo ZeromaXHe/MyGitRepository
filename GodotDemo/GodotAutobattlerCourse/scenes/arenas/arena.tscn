@@ -12,7 +12,7 @@
 [ext_resource type="Resource" uid="uid://cw4ink5n87762" path="res://data/units/robin.tres" id="8_xdra5"]
 [ext_resource type="Script" uid="uid://uialh01wojmw" path="res://components/unit_spawner.gd" id="11_llenk"]
 [ext_resource type="PackedScene" uid="uid://snkrnv6wx1jt" path="res://scenes/sell_portals/sell_portal.tscn" id="12_yl2ms"]
-[ext_resource type="Resource" uid="uid://dlkk68eyng5ax" path="res://data/players/player_stats.tres" id="13_6lg8y"]
+[ext_resource type="PackedScene" uid="uid://dynohcp2myetm" path="res://scenes/shops/shop.tscn" id="14_ag6is"]
 
 [sub_resource type="Curve" id="Curve_s0xri"]
 _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.19697, 1), 0.0, 0.0, 0, 0, Vector2(0.795455, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
@@ -144,4 +144,8 @@ game_area = NodePath("../GameArea")
 [node name="SellPortal" parent="." instance=ExtResource("12_yl2ms")]
 unique_name_in_owner = true
 position = Vector2(80, 288)
-player_stats = ExtResource("13_6lg8y")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Shop" parent="UI" instance=ExtResource("14_ag6is")]
+unique_name_in_owner = true

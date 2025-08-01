@@ -1,0 +1,58 @@
+[gd_scene load_steps=11 format=3 uid="uid://be5gw4i8ipr5"]
+
+[ext_resource type="StyleBox" uid="uid://5qdjlavnhcfk" path="res://assets/theme/shop_button_hover.tres" id="1_bia77"]
+[ext_resource type="StyleBox" uid="uid://mgcn15cjl08u" path="res://assets/theme/shop_button_pressed.tres" id="2_jfror"]
+[ext_resource type="StyleBox" uid="uid://c3ias4kwkl52j" path="res://assets/theme/shop_button_normal.tres" id="3_23jeq"]
+[ext_resource type="Script" uid="uid://2mtfusoks0uu" path="res://scenes/reroll_buttons/reroll_button.gd" id="4_jfror"]
+[ext_resource type="FontFile" uid="uid://8di0jvr25vat" path="res://assets/font/m5x7.ttf" id="4_oretl"]
+[ext_resource type="Resource" uid="uid://dlkk68eyng5ax" path="res://data/players/player_stats.tres" id="5_23jeq"]
+[ext_resource type="Texture2D" uid="uid://c4awhqfup7o2k" path="res://assets/sprites/gold.png" id="5_snsfo"]
+[ext_resource type="Texture2D" uid="uid://b8ht5o2amn6iw" path="res://assets/sprites/refresh.png" id="6_byj0g"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kf48q"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_1kjm5"]
+font = ExtResource("4_oretl")
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 0.709804)
+
+[node name="RerollButton" type="Button"]
+custom_minimum_size = Vector2(80, 24)
+offset_right = 8.0
+offset_bottom = 8.0
+theme_override_styles/focus = SubResource("StyleBoxEmpty_kf48q")
+theme_override_styles/hover = ExtResource("1_bia77")
+theme_override_styles/pressed = ExtResource("2_jfror")
+theme_override_styles/normal = ExtResource("3_23jeq")
+script = ExtResource("4_jfror")
+player_stats = ExtResource("5_23jeq")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Text" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+text = "reroll 2"
+label_settings = SubResource("LabelSettings_1kjm5")
+
+[node name="GoldIcon" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5_snsfo")
+stretch_mode = 5
+
+[node name="RerollIcon" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("6_byj0g")
+stretch_mode = 5
+
+[connection signal="pressed" from="." to="." method="_on_pressed"]
