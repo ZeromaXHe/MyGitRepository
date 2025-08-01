@@ -1,6 +1,9 @@
-[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3 uid="uid://erpn45k2vcba"]
+[gd_resource type="Resource" script_class="UnitStats" load_steps=5 format=3 uid="uid://erpn45k2vcba"]
 
 [ext_resource type="Script" uid="uid://c8ujjhjt53r26" path="res://data/units/unit_stats.gd" id="1_d6p4t"]
+[ext_resource type="Script" uid="uid://bg1t5pje44tje" path="res://data/traits/trait.gd" id="2_jemec"]
+[ext_resource type="Resource" uid="uid://dpafhp1xp5v4o" path="res://data/traits/fighter.tres" id="3_shr7q"]
+[ext_resource type="Resource" uid="uid://g0tor6p8ewnh" path="res://data/traits/viking.tres" id="4_shr7q"]
 
 [resource]
 script = ExtResource("1_d6p4t")
@@ -8,6 +11,7 @@ name = "Bjorn"
 rarity = 0
 gold_cost = 1
 tier = 1
+traits = Array[ExtResource("2_jemec")]([ExtResource("3_shr7q"), ExtResource("4_shr7q")])
 pool_count = 5
 skin_coordinates = Vector2i(1, 3)
 metadata/_custom_type_script = "uid://c8ujjhjt53r26"

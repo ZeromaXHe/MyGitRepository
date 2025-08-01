@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Trait" load_steps=2 format=3 uid="uid://ck2ls0bedkqhu"]
+
+[ext_resource type="Script" uid="uid://bg1t5pje44tje" path="res://data/traits/trait.gd" id="1_e665p"]
+
+[resource]
+script = ExtResource("1_e665p")
+name = "Human"
+description = ""
+levels = 3
+unit_requirements = Array[int]([2, 4, 6])
+unit_modifiers = Array[PackedScene]([null, null, null])
+metadata/_custom_type_script = "uid://bg1t5pje44tje"
