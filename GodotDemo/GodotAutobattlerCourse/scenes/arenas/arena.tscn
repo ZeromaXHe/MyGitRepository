@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=4 uid="uid://d333ua3xxjk5d"]
+[gd_scene load_steps=18 format=4 uid="uid://d333ua3xxjk5d"]
 
 [ext_resource type="TileSet" uid="uid://1fej5f5woqfj" path="res://scenes/arenas/tile_set.tres" id="1_0ohrk"]
 [ext_resource type="Script" uid="uid://b31qqf1ricm48" path="res://scenes/arenas/arena.gd" id="1_s0xri"]
@@ -12,6 +12,7 @@
 [ext_resource type="Resource" uid="uid://cw4ink5n87762" path="res://data/units/robin.tres" id="8_xdra5"]
 [ext_resource type="Script" uid="uid://uialh01wojmw" path="res://components/unit_spawner.gd" id="11_llenk"]
 [ext_resource type="PackedScene" uid="uid://snkrnv6wx1jt" path="res://scenes/sell_portals/sell_portal.tscn" id="12_yl2ms"]
+[ext_resource type="Script" uid="uid://cjaau2ehlo7i2" path="res://components/unit_combiner.gd" id="13_ag6is"]
 [ext_resource type="PackedScene" uid="uid://dynohcp2myetm" path="res://scenes/shops/shop.tscn" id="14_ag6is"]
 
 [sub_resource type="Curve" id="Curve_s0xri"]
@@ -130,6 +131,10 @@ play_area = NodePath("..")
 highlight_layer = NodePath("../Hightlight")
 tile = Vector2i(3, 0)
 
+[node name="SellPortal" parent="." instance=ExtResource("12_yl2ms")]
+unique_name_in_owner = true
+position = Vector2(80, 288)
+
 [node name="UnitMover" type="Node" parent="." node_paths=PackedStringArray("play_areas")]
 unique_name_in_owner = true
 script = ExtResource("8_eghbc")
@@ -141,9 +146,14 @@ script = ExtResource("11_llenk")
 bench = NodePath("../Bench")
 game_area = NodePath("../GameArea")
 
-[node name="SellPortal" parent="." instance=ExtResource("12_yl2ms")]
+[node name="UnitCombiner" type="Node" parent="." node_paths=PackedStringArray("buffer_timer")]
 unique_name_in_owner = true
-position = Vector2(80, 288)
+script = ExtResource("13_ag6is")
+buffer_timer = NodePath("BufferTimer")
+metadata/_custom_type_script = "uid://cjaau2ehlo7i2"
+
+[node name="BufferTimer" type="Timer" parent="UnitCombiner"]
+one_shot = true
 
 [node name="UI" type="CanvasLayer" parent="."]
 
