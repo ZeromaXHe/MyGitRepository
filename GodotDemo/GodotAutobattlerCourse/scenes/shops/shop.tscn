@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dynohcp2myetm"]
+[gd_scene load_steps=10 format=3 uid="uid://dynohcp2myetm"]
 
 [ext_resource type="PackedScene" uid="uid://bnywchetx6syj" path="res://scenes/gold_displays/gold_display.tscn" id="1_26a21"]
 [ext_resource type="Script" uid="uid://bceep07xdtyk2" path="res://scenes/shops/shop.gd" id="1_jnpbw"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://b4ret5ytibnrc" path="res://scenes/xp_buttons/xp_button.tscn" id="3_yvxet"]
 [ext_resource type="PackedScene" uid="uid://be5gw4i8ipr5" path="res://scenes/reroll_buttons/reroll_button.tscn" id="4_a176q"]
 [ext_resource type="PackedScene" uid="uid://c646loprer1og" path="res://scenes/xp_trackers/xp_tracker.tscn" id="5_t48rc"]
+[ext_resource type="Script" uid="uid://b2cfwseqd8ek" path="res://components/scene_spawner.gd" id="9_t48rc"]
 
 [node name="Shop" type="VBoxContainer"]
 anchors_preset = 1
@@ -65,5 +66,11 @@ layout_mode = 2
 [node name="XPTracker" parent="Bottom/RerollAndXPTracker" instance=ExtResource("5_t48rc")]
 layout_mode = 2
 size_flags_horizontal = 8
+
+[node name="SceneSpawner" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("9_t48rc")
+scene = ExtResource("2_jnpbw")
+metadata/_custom_type_script = "uid://b2cfwseqd8ek"
 
 [connection signal="pressed" from="Bottom/RerollAndXPTracker/RerollButton" to="." method="_on_reroll_button_pressed"]

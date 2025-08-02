@@ -38,6 +38,7 @@ project/assembly_name="Godot Autobattler Course"
 folder_colors={
 "res://assets/": "yellow",
 "res://components/": "teal",
+"res://custom_nodes/": "teal",
 "res://data/": "teal",
 "res://scenes/": "green"
 }
