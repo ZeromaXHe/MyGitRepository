@@ -27,10 +27,10 @@ func _process(delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	if dragging and event.is_action_pressed("cancel_drag"):
-		print("cancel dragging!")
+		#print("cancel dragging!")
 		_cancel_dragging()
 	elif dragging and event.is_action_pressed("select"):
-		print("drop!")
+		#print("drop!")
 		just_dropped = true
 		_drop()
 
@@ -67,5 +67,5 @@ func _on_target_input_event(_viewport: Node, event: InputEvent) -> void:
 	if not dragging and dragging_object:
 		return
 	if not dragging and event.is_action_pressed("select") and not just_dropped:
-		print("start dragging")
+		#print("start dragging")
 		_start_dragging()
