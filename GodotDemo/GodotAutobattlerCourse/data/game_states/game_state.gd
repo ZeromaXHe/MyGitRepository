@@ -2,7 +2,7 @@ class_name GameState
 extends Resource
 
 enum Phase {
-	PREPERATION,
+	PREPARATION,
 	BATTLE
 }
 

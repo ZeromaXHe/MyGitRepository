@@ -1,6 +1,8 @@
 class_name PlayerStats
 extends Resource
 
+const MAX_LEVEL := 10
+
 const XP_REQUIREMENTS := {
 	1: 0,
 	2: 2,
