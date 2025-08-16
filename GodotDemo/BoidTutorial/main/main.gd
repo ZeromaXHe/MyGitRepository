@@ -1,6 +1,6 @@
 extends Node2D
 
-var NUM_BOIDS := 20000
+var NUM_BOIDS := 100000
 var boid_pos: Array[Vector2] = []
 var boid_vel: Array[Vector2] = []
 
@@ -39,7 +39,7 @@ enum BoidColorMode { SOLID, HEADING, FRIEND }
 var SIMULATE_GPU = true
 var rd: RenderingDevice
 var boid_compute_shader: RID
-var pipeline: RID
+var boid_pipeline: RID
 var bindings: Array
 var uniform_set: RID
 
@@ -49,16 +49,41 @@ var params_buffer: RID
 var params_uniform: RDUniform
 var boid_data_buffer: RID
 
+# BIN Variable
+var BIN_SIZE = 16
+var BINS = Vector2i.ZERO
+var NUM_BINS = 0
+
+var bin_sum_shader: RID
+var bin_sum_pipeline: RID
+var bin_prefix_sum_shader: RID
+var bin_prefix_sum_pipeline: RID
+var bin_reindex_shader: RID
+var bin_reindex_pipeline: RID
+
+var bin_buffer: RID
+var bin_sum_buffer: RID
+var bin_prefix_sum_buffer: RID
+var bin_index_tracker_buffer: RID
+var bin_reindex_buffer: RID
+var bin_params_buffer: RID
+
 
 func _ready() -> void:
-	_generate_boids()
-	#for i in boid_pos.size():
-		#print("Boid: ", i, " Pos: ", boid_pos[i], " Vel: ", boid_vel[i])
 	boid_data = Image.create(IMAGE_SIZE, IMAGE_SIZE, false, Image.FORMAT_RGBAH)
 	boid_data_texture = ImageTexture.create_from_image(boid_data)
 	boid_color = boid_color
 	boid_color_mode = boid_color_mode
 	boid_max_friends = boid_max_friends
+	
+	BINS = Vector2i(snapped(get_viewport_rect().size.x / BIN_SIZE + .4, 1),
+					snapped(get_viewport_rect().size.y / BIN_SIZE + .4, 1))
+	NUM_BINS = BINS.x * BINS.y
+	
+	_generate_boids()
+	#for i in boid_pos.size():
+		#print("Boid: ", i, " Pos: ", boid_pos[i], " Vel: ", boid_vel[i])	
+	
 	%BoidParticles.amount = NUM_BOIDS
 	%BoidParticles.process_material.set_shader_parameter("boid_data", boid_data_texture)
 	if SIMULATE_GPU:
@@ -134,10 +159,10 @@ func _update_boids_cpu(delta):
 
 func _setup_compute_shader():
 	rd = RenderingServer.create_local_rendering_device()
-	var shader_file := load("res://compute_shaders/boid_simulation.glsl")
+	var shader_file: RDShaderFile = load("res://compute_shaders/boid_simulation.glsl")
 	var shader_spirv: RDShaderSPIRV = shader_file.get_spirv()
 	boid_compute_shader = rd.shader_create_from_spirv(shader_spirv)
-	pipeline = rd.compute_pipeline_create(boid_compute_shader)
+	boid_pipeline = rd.compute_pipeline_create(boid_compute_shader)
 	boid_pos_buffer = _generate_vec2_buffer(boid_pos)
 	var boid_pos_uniform = _generate_uniform(boid_pos_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 0)
 	boid_vel_buffer = _generate_vec2_buffer(boid_vel)
@@ -154,12 +179,53 @@ func _setup_compute_shader():
 	var view := RDTextureView.new()
 	boid_data_buffer = rd.texture_create(fmt, view, [boid_data.get_data()])
 	var boid_data_buffer_uniform = _generate_uniform(boid_data_buffer, RenderingDevice.UNIFORM_TYPE_IMAGE, 3)
-	bindings = [boid_pos_uniform, boid_vel_uniform, params_uniform, boid_data_buffer_uniform]
+	
+	shader_file = load("res://compute_shaders/bin_sum.glsl")
+	shader_spirv = shader_file.get_spirv()
+	bin_sum_shader = rd.shader_create_from_spirv(shader_spirv)
+	bin_sum_pipeline = rd.compute_pipeline_create(bin_sum_shader)
+	
+	shader_file = load("res://compute_shaders/bin_prefix_sum.glsl")
+	shader_spirv = shader_file.get_spirv()
+	bin_prefix_sum_shader = rd.shader_create_from_spirv(shader_spirv)
+	bin_prefix_sum_pipeline = rd.compute_pipeline_create(bin_prefix_sum_shader)
+	
+	shader_file = load("res://compute_shaders/bin_reindex.glsl")
+	shader_spirv = shader_file.get_spirv()
+	bin_reindex_shader = rd.shader_create_from_spirv(shader_spirv)
+	bin_reindex_pipeline = rd.compute_pipeline_create(bin_reindex_shader)
+	
+	var bin_params_buffer_bytes = PackedInt32Array([BIN_SIZE, BINS.x, BINS.y, NUM_BINS]).to_byte_array()
+	bin_params_buffer = rd.storage_buffer_create(bin_params_buffer_bytes.size(), bin_params_buffer_bytes)
+	var bin_params_uniform = _generate_uniform(bin_params_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 4)
+	
+	bin_buffer = _generate_int_buffer(NUM_BOIDS)
+	var bin_buffer_uniform = _generate_uniform(bin_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 5)
+	bin_sum_buffer = _generate_int_buffer(NUM_BINS)
+	var bin_sum_uniform = _generate_uniform(bin_sum_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 6)
+	bin_prefix_sum_buffer = _generate_int_buffer(NUM_BINS)
+	var bin_prefix_sum_uniform = _generate_uniform(bin_prefix_sum_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 7)
+	bin_index_tracker_buffer = _generate_int_buffer(NUM_BINS)
+	var bin_index_tracker_uniform = _generate_uniform(bin_index_tracker_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 8)
+	bin_reindex_buffer = _generate_int_buffer(NUM_BOIDS)
+	var bin_reindex_uniform = _generate_uniform(bin_reindex_buffer, RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER, 9)
+	
+	bindings = [boid_pos_uniform, boid_vel_uniform, params_uniform, boid_data_buffer_uniform,
+		bin_params_uniform, bin_buffer_uniform, bin_sum_uniform, bin_prefix_sum_uniform,
+		bin_index_tracker_uniform, bin_reindex_uniform]
 
 
 func _generate_vec2_buffer(data):
 	var data_buffer_types := PackedVector2Array(data).to_byte_array()
 	var data_buffer = rd.storage_buffer_create(data_buffer_types.size(), data_buffer_types)
+	return data_buffer
+
+
+func _generate_int_buffer(size):
+	var data = []
+	data.resize(size)
+	var data_buffer_bytes = PackedInt32Array(data).to_byte_array()
+	var data_buffer = rd.storage_buffer_create(data_buffer_bytes.size(), data_buffer_bytes)
 	return data_buffer
 
 
@@ -186,6 +252,16 @@ func _update_boids_gpu(delta):
 	params_uniform.clear_ids()
 	params_uniform.add_id(params_buffer)
 	uniform_set = rd.uniform_set_create(bindings, boid_compute_shader, 0)
+	_run_compute_shader(bin_sum_pipeline)
+	rd.sync()
+	_run_compute_shader(bin_prefix_sum_pipeline)
+	rd.sync()
+	_run_compute_shader(bin_reindex_pipeline)
+	rd.sync()
+	_run_compute_shader(boid_pipeline)
+
+
+func _run_compute_shader(pipeline):
 	var compute_list := rd.compute_list_begin()
 	rd.compute_list_bind_compute_pipeline(compute_list, pipeline)
 	rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
@@ -206,6 +282,18 @@ func _exit_tree() -> void:
 		rd.free_rid(params_buffer)
 		rd.free_rid(boid_pos_buffer)
 		rd.free_rid(boid_vel_buffer)
-		rd.free_rid(pipeline)
+		rd.free_rid(boid_pipeline)
 		rd.free_rid(boid_compute_shader)
+		rd.free_rid(bin_buffer)
+		rd.free_rid(bin_sum_buffer)
+		rd.free_rid(bin_prefix_sum_buffer)
+		rd.free_rid(bin_index_tracker_buffer)
+		rd.free_rid(bin_reindex_buffer)
+		rd.free_rid(bin_params_buffer)
+		rd.free_rid(bin_sum_pipeline)
+		rd.free_rid(bin_sum_shader)
+		rd.free_rid(bin_prefix_sum_pipeline)
+		rd.free_rid(bin_prefix_sum_shader)
+		rd.free_rid(bin_reindex_pipeline)
+		rd.free_rid(bin_reindex_shader)
 		rd.free()
