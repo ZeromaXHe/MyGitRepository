@@ -7,6 +7,7 @@ uniform uint color_mode;
 uniform sampler2D heading_map;
 uniform sampler2D friend_map;
 uniform uint max_friends = 10;
+uniform sampler2D detection_map;
 
 void start() {
 	// Called when a particle is spawned.
@@ -33,6 +34,16 @@ void process() {
 			break;
 		case 2u:
 			COLOR = texture(friend_map, vec2(clamp(boid_pos_rot.a / float(max_friends), .01, .99), 0));
+			break;
+		case 3u:
+			if (bool(boid_pos_rot.a)) {
+				COLOR = color;
+			} else {
+				COLOR = vec4(1. - color.r, 1. - color.g, 1. - color.b, color.a);
+			}
+			break;
+		case 4u:
+			COLOR = texelFetch(detection_map, ivec2(int(boid_pos_rot.a), 0), 0);
 			break;
 	}
 }

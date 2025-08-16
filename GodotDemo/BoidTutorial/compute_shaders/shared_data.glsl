@@ -19,6 +19,8 @@ layout(set = 0, binding = 2, std430) restrict buffer Params {
     float viewport_x;
     float viewport_y;
     float delta_time;
+    float pause; // bool
+    float color_mode;
 } params;
 
 layout(rgba16f, binding = 3) uniform image2D boid_data;

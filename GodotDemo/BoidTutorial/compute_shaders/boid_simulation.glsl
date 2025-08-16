@@ -20,6 +20,8 @@ void main() {
     bool use_bins = true;
     int my_bin = bin.data[my_index];
 
+    int color_mode = int(params.color_mode);
+
     if (use_bins) {
         vec2 my_bin_x_y = one_to_two(my_bin, bin_params.bins_x);
         vec2 starting_bin = my_bin_x_y - vec2(1, 1);
@@ -32,19 +34,27 @@ void main() {
                 if (current_bin.x < 0 || current_bin.x > bin_params.bins_x) continue;
                 int bin_index = two_to_one(current_bin, bin_params.bins_x);
                 for (int i = bin_prefix_sum.data[bin_index - 1]; i < bin_prefix_sum.data[bin_index]; i++) {
+                    int detection_type = 1;
                     int other_index = bin_reindex.data[i];
                     if (other_index != my_index) {
                         vec2 other_pos = boid_pos.data[other_index];
                         vec2 other_vel = boid_vel.data[other_index];
                         float dist = distance(my_pos, other_pos);
                         if (dist < params.friend_radius) {
+                            detection_type = 2;
                             num_friends += 1;
                             avg_vel += other_vel;
                             midpoint += other_pos;
                             if (dist < params.avoid_radius) {
+                                detection_type = 3;
                                 avoids += 1;
                                 separation_vec += my_pos - other_pos;
                             }
+                        }
+                        if (my_index == 0 && color_mode == 4) {
+                            ivec2 pixel_pos = ivec2(int(mod(other_index, params.image_size)), int(other_index / params.image_size));
+                            vec4 pos_rot = imageLoad(boid_data, pixel_pos);
+                            imageStore(boid_data, pixel_pos, vec4(pos_rot.x, pos_rot.y, pos_rot.z, detection_type));
                         }
                     }
                 }
@@ -92,10 +102,34 @@ void main() {
     my_pos += my_vel * params.delta_time;
     my_pos = vec2(mod(my_pos.x, params.viewport_x), mod(my_pos.y, params.viewport_y));
 
-    boid_vel.data[my_index] = my_vel;
-    boid_pos.data[my_index] = my_pos;
+    if (!bool(params.pause)) {
+        boid_vel.data[my_index] = my_vel;
+        boid_pos.data[my_index] = my_pos;
+    }
     bin.data[my_index] = int(my_pos.x / bin_params.bin_size) + int(my_pos.y / bin_params.bin_size) * bin_params.bins_x;
 
     ivec2 pixel_pos = ivec2(int(mod(my_index, params.image_size)), int(my_index / params.image_size));
-    imageStore(boid_data, pixel_pos, vec4(my_pos.x, my_pos.y, my_rot, num_friends));
+
+    switch (color_mode) {
+        case 0:
+        case 1:
+        case 2:
+            imageStore(boid_data, pixel_pos, vec4(my_pos.x, my_pos.y, my_rot, num_friends));
+            break;
+        case 3:
+            int bin_even_odd_row_col = (bin.data[my_index] % 2 + int(bin.data[my_index] / float(bin_params.bins_x))) % 2;
+            if (bin_params.bins_x % 2 == 1) {
+                bin_even_odd_row_col = bin.data[my_index] % 2;
+            }
+            imageStore(boid_data, pixel_pos, vec4(my_pos.x, my_pos.y, my_rot, bin_even_odd_row_col));
+            break;
+        case 4:
+            vec4 pos_rot = imageLoad(boid_data, pixel_pos);
+            int detection_type = int(pos_rot.a);
+            if (my_index == 0) {
+                detection_type = 4;
+            }
+            imageStore(boid_data, pixel_pos, vec4(my_pos.x, my_pos.y, my_rot, detection_type));
+            break;
+    }
 }

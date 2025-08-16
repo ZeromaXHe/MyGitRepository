@@ -1,13 +1,24 @@
-[gd_scene load_steps=3 format=3 uid="uid://cnx7va4b6co5n"]
+[gd_scene load_steps=4 format=3 uid="uid://cnx7va4b6co5n"]
 
 [ext_resource type="Script" uid="uid://5n1sreby7d3l" path="res://main/main.gd" id="1_53q0u"]
 [ext_resource type="PackedScene" uid="uid://dec3mghmjof01" path="res://boid_particles/boid_particles.tscn" id="2_pjrb6"]
+[ext_resource type="PackedScene" uid="uid://blb71huw2ieb4" path="res://grid/grid.tscn" id="3_xwkvk"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_53q0u")
+friend_radius = 16.0
+avoid_radius = 8.0
+min_vel = 50.0
+max_vel = 75.0
+separation_factor = 20.0
 boid_color = Color(0, 0.601563, 1, 1)
-boid_color_mode = 2
-boid_max_friends = 100
+boid_color_mode = 4
+boid_max_friends = 25
+boid_scale = 0.43
+bin_grid = true
 
 [node name="BoidParticles" parent="." instance=ExtResource("2_pjrb6")]
+unique_name_in_owner = true
+
+[node name="Grid" parent="." instance=ExtResource("3_xwkvk")]
 unique_name_in_owner = true

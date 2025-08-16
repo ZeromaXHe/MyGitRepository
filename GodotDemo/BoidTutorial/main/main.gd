@@ -23,7 +23,7 @@ var boid_data_texture: ImageTexture
 		boid_color = new_color
 		if is_inside_tree():
 			%BoidParticles.process_material.set_shader_parameter("color", boid_color)
-enum BoidColorMode { SOLID, HEADING, FRIEND }
+enum BoidColorMode { SOLID, HEADING, FRIENDS, BIN, DETECTION }
 @export var boid_color_mode: BoidColorMode :
 	set(new_color_mode):
 		boid_color_mode = new_color_mode
@@ -34,6 +34,21 @@ enum BoidColorMode { SOLID, HEADING, FRIEND }
 		boid_max_friends = new_count
 		if is_inside_tree():
 			%BoidParticles.process_material.set_shader_parameter("max_friends", boid_max_friends)
+@export_range(.1, 1.) var boid_scale := .5 :
+	set(new_scale):
+		boid_scale = new_scale
+		if is_inside_tree():
+			%BoidParticles.process_material.set_shader_parameter("scale", boid_scale)
+@export var bin_grid := false :
+	set(new_grid):
+		bin_grid = new_grid
+		if is_inside_tree():
+			%Grid.visible = bin_grid
+
+@export_category("Other")
+@export var pause := false :
+	set(new_value):
+		pause = new_value
 
 # GPU Variables
 var SIMULATE_GPU = true
@@ -50,7 +65,7 @@ var params_uniform: RDUniform
 var boid_data_buffer: RID
 
 # BIN Variable
-var BIN_SIZE = 16
+var BIN_SIZE = 32
 var BINS = Vector2i.ZERO
 var NUM_BINS = 0
 
@@ -75,11 +90,17 @@ func _ready() -> void:
 	boid_color = boid_color
 	boid_color_mode = boid_color_mode
 	boid_max_friends = boid_max_friends
+	boid_scale = boid_scale
+	bin_grid = bin_grid
 	
 	BINS = Vector2i(snapped(get_viewport_rect().size.x / BIN_SIZE + .4, 1),
 					snapped(get_viewport_rect().size.y / BIN_SIZE + .4, 1))
 	NUM_BINS = BINS.x * BINS.y
 	
+	%Grid.bin_size = BIN_SIZE
+	%Grid.bins_x = BINS.x
+	%Grid.bins_y = BINS.y
+	print(NUM_BINS)
 	_generate_boids()
 	#for i in boid_pos.size():
 		#print("Boid: ", i, " Pos: ", boid_pos[i], " Vel: ", boid_vel[i])	
@@ -114,6 +135,8 @@ func _process(delta: float) -> void:
 		_sync_boids_gpu()
 	else:
 		_update_boids_cpu(delta)
+	#var test_output = rd.buffer_get_data(bin_prefix_sum_buffer).to_int32_array()
+	#print("bin_prefix_sum: ", test_output)
 	_update_data_texture()
 	if SIMULATE_GPU:
 		_update_boids_gpu(delta)
@@ -241,7 +264,8 @@ func _generate_parameter_buffer(delta):
 	var params_buffer_bytes: PackedByteArray = PackedFloat32Array(
 		[NUM_BOIDS, IMAGE_SIZE, friend_radius, avoid_radius, min_vel, max_vel,
 		 alignment_factor, cohesion_factor, separation_factor,
-		 get_viewport_rect().size.x, get_viewport_rect().size.y, delta]
+		 get_viewport_rect().size.x, get_viewport_rect().size.y,
+		 delta, pause, boid_color_mode]
 	).to_byte_array()
 	return rd.storage_buffer_create(params_buffer_bytes.size(), params_buffer_bytes)
 
