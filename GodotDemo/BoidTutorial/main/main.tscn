@@ -5,6 +5,9 @@
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_53q0u")
+boid_color = Color(0, 0.601563, 1, 1)
+boid_color_mode = 2
+boid_max_friends = 100
 
 [node name="BoidParticles" parent="." instance=ExtResource("2_pjrb6")]
 unique_name_in_owner = true

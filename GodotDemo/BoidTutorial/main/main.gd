@@ -1,9 +1,14 @@
 extends Node2D
 
-var NUM_BOIDS := 1000
+var NUM_BOIDS := 20000
 var boid_pos: Array[Vector2] = []
 var boid_vel: Array[Vector2] = []
 
+var IMAGE_SIZE = int(ceil(sqrt(NUM_BOIDS)))
+var boid_data: Image
+var boid_data_texture: ImageTexture
+
+@export_category("Boid Settings")
 @export_range(0, 50) var friend_radius := 30.0
 @export_range(0, 50) var avoid_radius := 15.0
 @export_range(0, 100) var min_vel := 25.0
@@ -12,9 +17,23 @@ var boid_vel: Array[Vector2] = []
 @export_range(0, 100) var cohesion_factor := 1.0
 @export_range(0, 100) var separation_factor := 2.0
 
-var IMAGE_SIZE = int(ceil(sqrt(NUM_BOIDS)))
-var boid_data: Image
-var boid_data_texture: ImageTexture
+@export_category("Rendering")
+@export var boid_color := Color.WHITE :
+	set(new_color):
+		boid_color = new_color
+		if is_inside_tree():
+			%BoidParticles.process_material.set_shader_parameter("color", boid_color)
+enum BoidColorMode { SOLID, HEADING, FRIEND }
+@export var boid_color_mode: BoidColorMode :
+	set(new_color_mode):
+		boid_color_mode = new_color_mode
+		if is_inside_tree():
+			%BoidParticles.process_material.set_shader_parameter("color_mode", boid_color_mode)
+@export var boid_max_friends: int = 50 :
+	set(new_count):
+		boid_max_friends = new_count
+		if is_inside_tree():
+			%BoidParticles.process_material.set_shader_parameter("max_friends", boid_max_friends)
 
 # GPU Variables
 var SIMULATE_GPU = true
@@ -37,6 +56,9 @@ func _ready() -> void:
 		#print("Boid: ", i, " Pos: ", boid_pos[i], " Vel: ", boid_vel[i])
 	boid_data = Image.create(IMAGE_SIZE, IMAGE_SIZE, false, Image.FORMAT_RGBAH)
 	boid_data_texture = ImageTexture.create_from_image(boid_data)
+	boid_color = boid_color
+	boid_color_mode = boid_color_mode
+	boid_max_friends = boid_max_friends
 	%BoidParticles.amount = NUM_BOIDS
 	%BoidParticles.process_material.set_shader_parameter("boid_data", boid_data_texture)
 	if SIMULATE_GPU:

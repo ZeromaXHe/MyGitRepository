@@ -80,5 +80,5 @@ void main() {
     boid_pos.data[my_index] = my_pos;
 
     ivec2 pixel_pos = ivec2(int(mod(my_index, params.image_size)), int(my_index / params.image_size));
-    imageStore(boid_data, pixel_pos, vec4(my_pos.x, my_pos.y, my_rot, 0));
+    imageStore(boid_data, pixel_pos, vec4(my_pos.x, my_pos.y, my_rot, num_friends));
 }
