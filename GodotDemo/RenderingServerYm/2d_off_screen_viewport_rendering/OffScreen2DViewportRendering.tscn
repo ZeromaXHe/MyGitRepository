@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://25xhr0853irm"]
+
+[ext_resource type="Script" uid="uid://b55mvcalbhf1e" path="res://2d_off_screen_viewport_rendering/off_screen_2d_viewport_rendering.gd" id="1_jwjea"]
+
+[node name="OffScreen2dViewportRendering" type="Node"]
+script = ExtResource("1_jwjea")

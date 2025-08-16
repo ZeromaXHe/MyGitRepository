@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://fm3o2ae1nco4"]
+
+[ext_resource type="Script" uid="uid://c64khq7ylljf5" path="res://basic_texture_rendering/basic_texture_rendering.gd" id="1_ot824"]
+
+[node name="BasicTextureRendering" type="Node2D"]
+script = ExtResource("1_ot824")
