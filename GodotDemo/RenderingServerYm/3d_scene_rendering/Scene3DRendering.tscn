@@ -1,0 +1,20 @@
+[gd_scene load_steps=6 format=3 uid="uid://bnxh5kb6hcia5"]
+
+[ext_resource type="Script" uid="uid://djolkj8grck8t" path="res://3d_scene_rendering/scene_3d_rendering.gd" id="1_ur556"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ur556"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ur556"]
+
+[sub_resource type="Sky" id="Sky_qqlob"]
+sky_material = SubResource("ProceduralSkyMaterial_ur556")
+
+[sub_resource type="Environment" id="Environment_cww8p"]
+background_mode = 2
+sky = SubResource("Sky_qqlob")
+tonemap_mode = 2
+
+[node name="Scene3dRendering" type="Node3D"]
+script = ExtResource("1_ur556")
+mesh = SubResource("BoxMesh_ur556")
+environment = SubResource("Environment_cww8p")
