@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://um4esti8hdf4"]
+
+[ext_resource type="Script" uid="uid://b4g5w2qcbpt2o" path="res://2d_primitive_and_shader/primitive_2d_and_shader.gd" id="1_yo454"]
+
+[node name="CanvasItem2dAndShader" type="Node2D"]
+script = ExtResource("1_yo454")

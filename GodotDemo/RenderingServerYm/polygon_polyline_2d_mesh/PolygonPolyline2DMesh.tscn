@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://b2v6b4mmi3auh"]
+
+[ext_resource type="Script" uid="uid://dfku8pcu8skmj" path="res://polygon_polyline_2d_mesh/polygon_polyline_2d_mesh.gd" id="1_q3k1c"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_q3k1c"]
+radius = 100.0
+height = 100.0
+
+[node name="PolygonPolyline2dMesh" type="Node2D"]
+script = ExtResource("1_q3k1c")
+mesh = SubResource("SphereMesh_q3k1c")

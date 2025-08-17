@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cii7xy55110kx"]
+
+[ext_resource type="Script" uid="uid://6pmcfbg05p4c" path="res://surface_tool_multimesh/surface_tool_multi_mesh.gd" id="1_388b2"]
+
+[node name="SurfaceToolMultiMesh" type="Node2D"]
+script = ExtResource("1_388b2")
